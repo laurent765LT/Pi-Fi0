@@ -14,6 +14,7 @@ import {
   Calculator,
   BookOpen,
   TrendingUp,
+  FileSearch,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useAuthStore } from '@/stores/auth-store';
@@ -31,6 +32,7 @@ const mainNav = [
 
 const toolsNav = [
   { href: '/pricing', label: 'Pricing', icon: Calculator },
+  { href: '/rfq', label: 'RFQ Screener', icon: FileSearch },
   { href: '/research', label: 'Research', icon: BookOpen },
   { href: '/notifications', label: 'Notifications', icon: Bell },
 ];

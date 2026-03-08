@@ -203,3 +203,265 @@ model Webhook {
 
   @@map("webhooks")
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PRICING ENGINE & RFQ SIMULATOR
+// ═══════════════════════════════════════════════════════════════════════════════
+
+enum StructureType {
+  AUTOCALL
+  PHOENIX_AUTOCALL
+  MEMORY_COUPON
+  REVERSE_CONVERTIBLE
+  CAPITAL_PROTECTED_NOTE
+  CAPPED_PARTICIPATION
+  UNCAPPED_PARTICIPATION
+  DIGITAL_PAYOFF
+  BONUS_CERTIFICATE
+  BARRIER_REVERSE_CONVERTIBLE
+  CREDIT_LINKED_NOTE
+  COUPON_EXPRESS
+  DEFENSIVE_INCOME
+  CUSTOM
+}
+
+enum UnderlyingType {
+  SINGLE_STOCK
+  INDEX
+  ETF
+  BASKET_EQUAL
+  BASKET_CUSTOM
+  BASKET_WORST_OF
+  BASKET_BEST_OF
+}
+
+enum BarrierMonitoringType {
+  EUROPEAN
+  CONTINUOUS
+  DAILY_CLOSE
+}
+
+enum CouponType {
+  FIXED
+  CONDITIONAL
+  MEMORY
+  ACCUMULATOR
+  NONE
+}
+
+enum PricingModel {
+  BLACK_SCHOLES
+  MONTE_CARLO
+  SEMI_ANALYTICAL
+  HEURISTIC
+}
+
+enum RfqStatus {
+  DRAFT
+  INTERNALLY_PRICED
+  RFQ_SENT
+  PARTIALLY_QUOTED
+  FULLY_QUOTED
+  SELECTED
+  APPROVED
+  EXPIRED
+  CANCELLED
+}
+
+enum RfqMode {
+  MAX_COUPON_AT_PAR
+  BEST_PRICE_FOR_TARGET_COUPON
+  STRONGEST_PROTECTION
+  ISSUER_COMPETITION
+  CLIENT_MANDATE
+}
+
+enum QuoteStatus {
+  PENDING
+  QUOTED
+  REJECTED
+  EXPIRED
+  ACCEPTED
+  DECLINED
+}
+
+// ── Pricing Run ──────────────────────────────────────────────────────────────
+
+model PricingRun {
+  id                String       @id @default(cuid())
+  structuredProduct Json         // Full product config snapshot
+  modelUsed         PricingModel
+  fairValue         Float
+  issuePrice        Float
+  indicativeCoupon  Float?
+  expectedRedemption Float?
+  expectedReturn    Float?
+  annualizedReturn  Float?
+  breakEven         Float?
+  maxGain           Float?
+  maxLoss           Float?
+  scenarioTable     Json?        // Spot scenarios grid
+  scenarioGrid      Json?        // Full multi-factor grid
+  costBreakdown     Json?        // { structuringMargin, distributionFee, hedgingCost... }
+  riskSummary       Json?        // { downsideRisk, probAutocall, probCoupon, probCapitalLoss }
+  greeksApprox      Json?        // { delta, gamma, vega, theta, rho }
+  payoffChartData   Json?        // Array of {spot, payoff} points
+  assumptions       Json?        // Array of strings
+  warnings          String[]
+  modelLimitations  String[]
+  mcPaths           Int?
+  mcSeed            Int?
+  computeTimeMs     Int?
+  createdBy         String?
+  createdAt         DateTime     @default(now())
+
+  rfqQuotes RfqQuote[]
+
+  @@map("pricing_runs")
+}
+
+// ── Market Data Snapshot ─────────────────────────────────────────────────────
+
+model MarketDataSnapshot {
+  id            String   @id @default(cuid())
+  ticker        String
+  spot          Float
+  volatility    Float?
+  dividendYield Float?
+  riskFreeRate  Float?
+  timestamp     DateTime @default(now())
+
+  @@index([ticker, timestamp])
+  @@map("market_data_snapshots")
+}
+
+// ── Issuer Profile (Simulated) ───────────────────────────────────────────────
+
+model IssuerProfile {
+  id                       String   @id @default(cuid())
+  name                     String   @unique
+  shortName                String
+  fundingSpread            Float    @default(0.005)    // 50bps
+  volMarkup                Float    @default(0.01)     // 1 vol point
+  structuringMargin        Float    @default(0.015)    // 1.5%
+  distributionFriendliness Float    @default(0.7)      // 0-1 score
+  couponAggressiveness     Float    @default(0.5)      // 0-1
+  protectionAggressiveness Float    @default(0.5)      // 0-1
+  barrierPreference        Float    @default(60)       // preferred barrier %
+  maxMaturityMonths        Int      @default(120)      // 10 years
+  minTicket                Float    @default(100000)    // 100k
+  supportedStructures      String[]
+  unsupportedStructures    String[]
+  rejectionProbability     Float    @default(0.1)      // 10%
+  quoteDelayMs             Int      @default(2000)     // 2 seconds simulated
+  commentStyle             String   @default("neutral") // neutral, aggressive, conservative
+  pricingModePreference    String   @default("monte_carlo")
+  isActive                 Boolean  @default(true)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  rfqQuotes RfqQuote[]
+
+  @@map("issuer_profiles")
+}
+
+// ── RFQ Request ──────────────────────────────────────────────────────────────
+
+model RfqRequest {
+  id                   String    @id @default(cuid())
+  internalRef          String    @unique @default(cuid())
+  productConfig        Json      // Full product configuration
+  rfqMode              RfqMode   @default(ISSUER_COMPETITION)
+  status               RfqStatus @default(DRAFT)
+  // Client constraints
+  targetCoupon         Float?
+  targetIssuePrice     Float?    @default(100)
+  targetProtection     Float?
+  maxMaturityMonths    Int?
+  maxFee               Float?
+  targetCurrency       String    @default("EUR")
+  preferredUnderlyings String[]
+  excludedUnderlyings  String[]
+  acceptedIssuers      String[]
+  excludedIssuers      String[]
+  // Scoring weights
+  yieldWeight          Float     @default(0.3)
+  protectionWeight     Float     @default(0.25)
+  costWeight           Float     @default(0.2)
+  qualityWeight        Float     @default(0.15)
+  simplicityWeight     Float     @default(0.1)
+  // Metadata
+  createdBy            String?
+  deskName             String?
+  clientName           String?
+  clientSegment        String?
+  expiresAt            DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  quotes RfqQuote[]
+
+  @@map("rfq_requests")
+}
+
+// ── RFQ Quote ────────────────────────────────────────────────────────────────
+
+model RfqQuote {
+  id                   String      @id @default(cuid())
+  rfqRequestId         String
+  issuerProfileId      String
+  pricingRunId         String?
+  status               QuoteStatus @default(PENDING)
+  // Quote terms
+  indicativeCoupon     Float?
+  issuePrice           Float?
+  couponBarrier        Float?
+  autocallBarrier      Float?
+  protectionBarrier    Float?
+  capitalLevel         Float?
+  maturityMonths       Int?
+  // Costs
+  feesTotal            Float?
+  issuerSpread         Float?
+  structuringMargin    Float?
+  manufacturingFee     Float?
+  distributionFee      Float?
+  // Scoring
+  rankingScore         Float?
+  bestExecutionScore   Float?
+  yieldScore           Float?
+  protectionScore      Float?
+  costScore            Float?
+  qualityScore         Float?
+  simplicityScore      Float?
+  // Metadata
+  comments             String?
+  rejectionReason      String?
+  legalDisclaimer      String    @default("SIMULATED QUOTE — This is a synthetic quote generated for educational/analytical purposes. Not a binding offer.")
+  validUntil           DateTime?
+  quotedAt             DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  rfqRequest    RfqRequest    @relation(fields: [rfqRequestId], references: [id], onDelete: Cascade)
+  issuerProfile IssuerProfile @relation(fields: [issuerProfileId], references: [id])
+  pricingRun    PricingRun?   @relation(fields: [pricingRunId], references: [id])
+
+  @@map("rfq_quotes")
+}
+
+// ── Saved Templates ──────────────────────────────────────────────────────────
+
+model ProductTemplate {
+  id            String   @id @default(cuid())
+  name          String
+  description   String?
+  structureType StructureType
+  config        Json     // Full product configuration as template
+  isDefault     Boolean  @default(false)
+  createdBy     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("product_templates")
+}

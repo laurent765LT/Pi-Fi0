@@ -196,6 +196,100 @@ class ApiClient {
       body: JSON.stringify({ message }),
     });
   }
+
+  // ── Pricing Engine ─────────────────────────────────────────────────────────
+
+  async priceProduct(config: any, saveRun: boolean = true) {
+    return this.request<{
+      result: any;
+      validation: any[];
+      runId?: string;
+    }>('/pricing/price', {
+      method: 'POST',
+      body: JSON.stringify({ config, saveRun }),
+    });
+  }
+
+  async validatePricingConfig(config: any) {
+    return this.request<{ valid: boolean; errors: any[] }>('/pricing/validate', {
+      method: 'POST',
+      body: JSON.stringify({ config }),
+    });
+  }
+
+  async runScenarios(config: any, shocks?: number[]) {
+    return this.request<{
+      scenarios: Array<{ shock: number; result: any }>;
+    }>('/pricing/scenarios', {
+      method: 'POST',
+      body: JSON.stringify({ config, shocks }),
+    });
+  }
+
+  async getPricingHistory(limit?: number, offset?: number) {
+    const params = new URLSearchParams();
+    if (limit) params.set('limit', String(limit));
+    if (offset) params.set('offset', String(offset));
+    const qs = params.toString();
+    return this.request<{ runs: any[]; total: number }>(`/pricing/history${qs ? '?' + qs : ''}`);
+  }
+
+  async getPricingRun(id: string) {
+    return this.request<any>(`/pricing/runs/${id}`);
+  }
+
+  async getProductTemplates() {
+    return this.request<any[]>('/pricing/templates');
+  }
+
+  async getProductTemplate(id: string) {
+    return this.request<any>(`/pricing/templates/${id}`);
+  }
+
+  async createProductTemplate(data: { name: string; description?: string; structureType: string; config: any }) {
+    return this.request<any>('/pricing/templates', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // ── RFQ Simulator ──────────────────────────────────────────────────────────
+
+  async createRfq(data: any) {
+    return this.request<any>('/rfq', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async sendRfq(rfqId: string) {
+    return this.request<{ rfq: any; quotes: any[] }>(`/rfq/${rfqId}/send`, {
+      method: 'POST',
+    });
+  }
+
+  async getRfq(rfqId: string) {
+    return this.request<any>(`/rfq/${rfqId}`);
+  }
+
+  async listRfqs(opts?: { limit?: number; offset?: number; status?: string }) {
+    const params = new URLSearchParams();
+    if (opts?.limit) params.set('limit', String(opts.limit));
+    if (opts?.offset) params.set('offset', String(opts.offset));
+    if (opts?.status) params.set('status', opts.status);
+    const qs = params.toString();
+    return this.request<{ rfqs: any[]; total: number }>(`/rfq${qs ? '?' + qs : ''}`);
+  }
+
+  async selectRfqQuote(rfqId: string, quoteId: string) {
+    return this.request<any>(`/rfq/${rfqId}/select/${quoteId}`, {
+      method: 'POST',
+    });
+  }
+
+  async getRfqIssuers() {
+    return this.request<any[]>('/rfq/issuers/all');
+  }
 }
 
 export const api = new ApiClient();

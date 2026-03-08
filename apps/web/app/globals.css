@@ -1,0 +1,108 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+  --violet: #3B1FA8;
+  --violet-d: #270F7A;
+  --violet-m: #5535C4;
+  --violet-l: #7B5FE0;
+  --violet-p: #EDE8FF;
+  --cobalt: #0A2799;
+  --cobalt-m: #1A3FCC;
+  --cobalt-l: #3D63F5;
+  --cobalt-p: #E4EAFF;
+  --bg: #FAFAF8;
+  --bg-2: #F4F3EF;
+  --white: #FFFFFF;
+  --ink: #1A0A3E;
+  --ink-2: #3D2C6E;
+  --ink-3: #7B6FA0;
+  --border: #E2DFF5;
+  --border-2: #CCC8EA;
+  --teal: #00B894;
+  --gold: #D4A017;
+  --red: #E8334A;
+  --font-d: 'Syne', sans-serif;
+  --font-b: 'DM Sans', sans-serif;
+  --font-m: 'DM Mono', monospace;
+}
+
+/* ─── Base ────────────────────────────────────────────────────────────────── */
+
+body {
+  font-family: var(--font-b);
+  background-color: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3 { font-family: var(--font-d); }
+
+/* Smooth page content */
+main { animation: fadeIn 0.3s ease-out; }
+
+/* ─── Scrollbar ───────────────────────────────────────────────────────────── */
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--ink-3); }
+
+/* ─── Selection ───────────────────────────────────────────────────────────── */
+
+::selection { background: var(--violet-p); color: var(--violet-d); }
+
+/* ─── Component Utilities ─────────────────────────────────────────────────── */
+
+@layer components {
+  .label-section {
+    @apply uppercase tracking-[0.25em] text-[10px] font-bold text-violet;
+  }
+
+  .gradient-bar {
+    background: linear-gradient(90deg, #270F7A, #3B1FA8, #5535C4, #1A3FCC, #3D63F5);
+  }
+
+  /* Premium data table */
+  .data-table { @apply w-full text-sm font-body; }
+  .data-table th {
+    @apply px-4 py-3 text-left text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold;
+    background: rgba(237,232,255,0.3);
+  }
+  .data-table td { @apply px-4 py-3 border-b border-border/50; }
+  .data-table tbody tr { @apply transition-colors duration-150; }
+  .data-table tbody tr:hover { background: rgba(237,232,255,0.15); }
+
+  /* Section with subtle gradient underline */
+  .section-header { @apply relative pb-3 mb-6; }
+  .section-header::after {
+    content: '';
+    @apply absolute bottom-0 left-0 h-[2px] w-12 rounded-full;
+    background: linear-gradient(90deg, var(--violet), var(--cobalt-l));
+  }
+}
+
+/* ─── Animations ──────────────────────────────────────────────────────────── */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Staggered entrance for card grids */
+.stagger-children > * { animation: slideUp 0.4s ease-out both; }
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 60ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 80ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 120ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 160ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 200ms; }

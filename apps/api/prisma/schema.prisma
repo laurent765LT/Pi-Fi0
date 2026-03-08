@@ -1,0 +1,205 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Enums ────────────────────────────────────────────────────────────────────
+
+enum OrgType {
+  INSURER
+  BROKER
+  ADMIN
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ORG_ADMIN
+  MANAGER
+  VIEWER
+}
+
+enum OnboardingStatus {
+  PENDING
+  DOCS_UPLOADED
+  VERIFIED
+  ACTIVE
+  SUSPENDED
+}
+
+enum PayoffType {
+  AUTOCALL_PHOENIX
+  AUTOCALL_COUPON
+  CAPITAL_PROTECTED
+  CONDITIONAL_RATE
+  BARRIER_NOTE
+  CUSTOM
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  CLOSED
+  MATURED
+  RECALLED
+}
+
+enum ShelfStatus {
+  OPEN
+  FULL
+  CLOSED
+  CANCELLED
+}
+
+enum CommitmentStatus {
+  PENDING
+  CONFIRMED
+  WAITING
+  CANCELLED
+}
+
+// ── Models ───────────────────────────────────────────────────────────────────
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  type      OrgType
+  slug      String   @unique
+  settings  Json     @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users       User[]
+  products    Product[]
+  shelves     Shelf[]
+  commitments Commitment[]
+  webhooks    Webhook[]
+
+  @@map("organizations")
+}
+
+model User {
+  id               String           @id @default(cuid())
+  email            String           @unique
+  passwordHash     String
+  firstName        String
+  lastName         String
+  role             UserRole         @default(VIEWER)
+  orgId            String
+  oriasNumber      String?
+  oriasValidUntil  DateTime?
+  rcpInsurer       String?
+  rcpAmount        Float?
+  onboardingStatus OnboardingStatus @default(PENDING)
+  refreshToken     String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  organization Organization @relation(fields: [orgId], references: [id])
+  commitments  Commitment[]
+
+  @@map("users")
+}
+
+model Product {
+  id                  String        @id @default(cuid())
+  isin                String        @unique
+  name                String
+  payoffType          PayoffType
+  issuerName          String
+  guarantorName       String?
+  underlyingName      String
+  underlyingYahoo     String
+  initialPrice        Float?
+  barrierCapPct       Float
+  autocallBarrierPct  Float?
+  couponPct           Float?
+  maxGainPct          Float
+  sri                 Int
+  maturityDate        DateTime
+  observationDates    DateTime[]
+  entryFeePct         Float
+  managementFeePct    Float        @default(0)
+  reference           String?
+  kidUrl              String?
+  description         String?
+  status              ProductStatus @default(DRAFT)
+  orgId               String?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  organization Organization? @relation(fields: [orgId], references: [id])
+  shelves      Shelf[]
+  riskMetrics  RiskMetrics?
+
+  @@map("products")
+}
+
+model RiskMetrics {
+  id              String   @id @default(cuid())
+  productId       String   @unique
+  volatility1Y    Float?
+  sharpeRatio     Float?
+  maxDrawdown     Float?
+  mcSimulations   Int?
+  mcScenarios     Json?
+  calculatedAt    DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("risk_metrics")
+}
+
+model Shelf {
+  id             String      @id @default(cuid())
+  productId      String
+  orgId          String?
+  status         ShelfStatus @default(OPEN)
+  targetAmount   Float
+  surbookingPct  Float       @default(15)
+  closingDate    DateTime
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  product      Product       @relation(fields: [productId], references: [id])
+  organization Organization? @relation(fields: [orgId], references: [id])
+  commitments  Commitment[]
+
+  @@map("shelves")
+}
+
+model Commitment {
+  id        String           @id @default(cuid())
+  shelfId   String
+  userId    String
+  orgId     String?
+  amount    Float
+  status    CommitmentStatus @default(PENDING)
+  rank      Int?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  shelf        Shelf         @relation(fields: [shelfId], references: [id])
+  user         User          @relation(fields: [userId], references: [id])
+  organization Organization? @relation(fields: [orgId], references: [id])
+
+  @@map("commitments")
+}
+
+model Webhook {
+  id        String   @id @default(cuid())
+  orgId     String
+  url       String
+  events    String[]
+  secret    String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization @relation(fields: [orgId], references: [id])
+
+  @@map("webhooks")
+}

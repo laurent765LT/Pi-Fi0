@@ -123,6 +123,48 @@ class ApiClient {
     return this.request<any>(`/market/forex/${from}/${to}`);
   }
 
+  // AI (Perplexity)
+  async getAiStatus() {
+    return this.request<{ perplexity: boolean; features: Record<string, boolean> }>('/ai/status');
+  }
+
+  async aiChat(message: string, context?: { productNames?: string[]; productTypes?: string[] }) {
+    return this.request<{ content: string; citations: string[]; model: string; tokensUsed: number }>('/ai/chat', {
+      method: 'POST',
+      body: JSON.stringify({ message, context }),
+    });
+  }
+
+  async analyzeUnderlying(ticker: string, name?: string) {
+    const params = name ? `?name=${encodeURIComponent(name)}` : '';
+    return this.request<{ content: string; citations: string[]; model: string; tokensUsed: number }>(
+      `/ai/analyze/${encodeURIComponent(ticker)}${params}`,
+    );
+  }
+
+  async getMarketSentiment(topic?: string) {
+    const params = topic ? `?topic=${encodeURIComponent(topic)}` : '';
+    return this.request<{ content: string; citations: string[]; model: string; tokensUsed: number }>(
+      `/ai/sentiment${params}`,
+    );
+  }
+
+  async assessProductRisk(product: {
+    name: string;
+    payoffType: string;
+    underlyingName: string;
+    underlyingTicker: string;
+    barrierPct: number | null;
+    couponPct: number | null;
+    maturityDate: string;
+    sri: number;
+  }) {
+    return this.request<{ content: string; citations: string[]; model: string; tokensUsed: number }>(
+      '/ai/risk-assessment',
+      { method: 'POST', body: JSON.stringify(product) },
+    );
+  }
+
   // Onboarding
   async uploadOrias(oriasNumber: string) {
     return this.request<any>('/onboarding/upload-orias', {

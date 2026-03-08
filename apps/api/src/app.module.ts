@@ -10,6 +10,7 @@ import { MarketDataModule } from './market-data/market-data.module';
 import { OnboardingModule } from './onboarding/onboarding.module';
 import { AdminModule } from './admin/admin.module';
 import { ChatModule } from './chat/chat.module';
+import { AiModule } from './ai/ai.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { ChatModule } from './chat/chat.module';
     OnboardingModule,
     AdminModule,
     ChatModule,
+    AiModule,
   ],
 })
 export class AppModule {}

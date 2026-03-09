@@ -659,6 +659,120 @@ async function main() {
   }
   console.log(`Created ${issuerProfiles.length} issuer profiles`);
 
+  // ── Commission Rules ───────────────────────────────────────────────────────
+  const commissionRulesData = [
+    // Global default rules (no org/product specificity = lowest priority)
+    {
+      id: 'cr-global-entry',
+      commissionType: 'ENTRY_FEE' as const,
+      ratePct: 5.0,
+      splitPlatformPct: 30,
+      splitDistributorPct: 70,
+      isActive: true,
+    },
+    {
+      id: 'cr-global-mgmt',
+      commissionType: 'MANAGEMENT_FEE' as const,
+      ratePct: 1.0,
+      splitPlatformPct: 25,
+      splitDistributorPct: 75,
+      isActive: true,
+    },
+    {
+      id: 'cr-global-dist',
+      commissionType: 'DISTRIBUTION_FEE' as const,
+      ratePct: 2.0,
+      splitPlatformPct: 20,
+      splitDistributorPct: 80,
+      isActive: true,
+    },
+    // Cardiff-specific rules
+    {
+      id: 'cr-cardiff-entry',
+      commissionType: 'ENTRY_FEE' as const,
+      ratePct: 4.5,
+      splitPlatformPct: 35,
+      splitDistributorPct: 65,
+      orgId: cardiffOrg.id,
+      isActive: true,
+    },
+    {
+      id: 'cr-cardiff-trailer',
+      commissionType: 'TRAILER_FEE' as const,
+      ratePct: 0.5,
+      splitPlatformPct: 20,
+      splitDistributorPct: 80,
+      orgId: cardiffOrg.id,
+      isActive: true,
+    },
+    // Celentia-specific rules
+    {
+      id: 'cr-celentia-entry',
+      commissionType: 'ENTRY_FEE' as const,
+      ratePct: 3.5,
+      splitPlatformPct: 40,
+      splitDistributorPct: 60,
+      orgId: celentiaOrg.id,
+      isActive: true,
+    },
+  ];
+
+  for (const cr of commissionRulesData) {
+    await prisma.commissionRule.upsert({
+      where: { id: cr.id },
+      update: {},
+      create: cr as any,
+    });
+  }
+  console.log(`Created ${commissionRulesData.length} commission rules`);
+
+  // ── Insurer Rules ──────────────────────────────────────────────────────────
+  const insurerRulesData = [
+    // Cardiff — broad acceptance, standard limits
+    {
+      id: 'ir-cardiff-main',
+      orgId: cardiffOrg.id,
+      ruleName: 'Regles Cardiff principales',
+      allowedPayoffTypes: ['AUTOCALL_PHOENIX', 'AUTOCALL_COUPON', 'CAPITAL_PROTECTED', 'CONDITIONAL_RATE'],
+      allowedIssuers: [],
+      maxSri: 6,
+      minBarrierPct: 50,
+      maxMaturityMonths: 144,
+      maxEntryFeePct: 8,
+      maxManagementFeePct: 2.5,
+      minNominal: 1000,
+      allowedCurrencies: ['EUR'],
+      isActive: true,
+      priority: 1,
+    },
+    // Celentia — stricter rules
+    {
+      id: 'ir-celentia-main',
+      orgId: celentiaOrg.id,
+      ruleName: 'Regles Celentia principales',
+      allowedPayoffTypes: ['AUTOCALL_PHOENIX', 'CAPITAL_PROTECTED'],
+      allowedIssuers: [],
+      maxSri: 5,
+      minBarrierPct: 60,
+      maxMaturityMonths: 120,
+      maxEntryFeePct: 6,
+      maxManagementFeePct: 2.0,
+      minNominal: 5000,
+      allowedCurrencies: ['EUR'],
+      isActive: true,
+      priority: 1,
+    },
+  ];
+
+  for (const ir of insurerRulesData) {
+    await prisma.insurerRule.upsert({
+      where: { id: ir.id },
+      update: {},
+      create: ir as any,
+    });
+  }
+  console.log(`Created ${insurerRulesData.length} insurer rules`);
+
   // ── Product Templates ───────────────────────────────────────────────────
   const templates = [
     {
@@ -987,6 +1101,8 @@ async function main() {
   console.log(`Commitments: ${commitmentData.length}`);
   console.log(`Issuer Profiles: ${issuerProfiles.length}`);
   console.log(`Product Templates: ${templates.length}`);
+  console.log(`Commission Rules: ${commissionRulesData.length}`);
+  console.log(`Insurer Rules: ${insurerRulesData.length}`);
   console.log('');
   console.log('Demo accounts:');
   console.log('  Admin:    admin@strickin.com / Strickin2025!');

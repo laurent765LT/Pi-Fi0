@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { Calendar, ArrowUpRight } from 'lucide-react';
+import { Calendar, ArrowUpRight, Heart } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { useToggleFavorite } from '@/hooks/use-favorites';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -35,6 +36,8 @@ export interface Product {
 interface ProductCardProps {
   product: Product;
   className?: string;
+  isFavorited?: boolean;
+  recommendationScore?: number | null;
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -86,7 +89,7 @@ function formatCompact(amount: number): string {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export function ProductCard({ product, className }: ProductCardProps) {
+export function ProductCard({ product, className, isFavorited = false, recommendationScore }: ProductCardProps) {
   const {
     id,
     name,
@@ -103,10 +106,17 @@ export function ProductCard({ product, className }: ProductCardProps) {
     status,
   } = product;
 
+  const toggleFavorite = useToggleFavorite();
   const payoff = PAYOFF_COLORS[payoffType] ?? PAYOFF_COLORS.AUTOCALL_PHOENIX;
   const sriStyle = SRI_COLORS[sri] ?? SRI_COLORS[4];
   const clampedFill = Math.min(100, Math.max(0, fillPct ?? 0));
   const isClosed = status === 'CLOSED' || status === 'MATURED';
+
+  const handleFavorite = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleFavorite.mutate(id);
+  };
 
   return (
     <Link
@@ -123,6 +133,30 @@ export function ProductCard({ product, className }: ProductCardProps) {
         className="h-[3px] w-full"
         style={{ background: payoff.text }}
       />
+
+      {/* Favorite button */}
+      <button
+        onClick={handleFavorite}
+        className={cn(
+          'absolute top-4 right-3 z-10 p-1.5 rounded-full transition-all duration-200',
+          isFavorited
+            ? 'text-red bg-red-light hover:bg-red/20'
+            : 'text-ink-3/40 hover:text-red hover:bg-red-light opacity-0 group-hover:opacity-100',
+        )}
+        title={isFavorited ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+      >
+        <Heart size={14} fill={isFavorited ? 'currentColor' : 'none'} />
+      </button>
+
+      {/* AI Recommendation badge */}
+      {recommendationScore != null && recommendationScore >= 70 && (
+        <div className="absolute top-4 left-3 z-10">
+          <span className="inline-flex items-center gap-1 rounded-full bg-violet/10 text-violet px-2 py-0.5 text-[9px] font-bold">
+            <span className="w-1.5 h-1.5 rounded-full bg-violet animate-pulse" />
+            IA {recommendationScore}%
+          </span>
+        </div>
+      )}
 
       <div className="flex flex-col gap-3.5 px-5 py-4 flex-1">
         {/* Header: Badges row */}

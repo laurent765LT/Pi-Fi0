@@ -290,6 +290,85 @@ class ApiClient {
   async getRfqIssuers() {
     return this.request<any[]>('/rfq/issuers/all');
   }
+
+  // ── Favorites & Views ────────────────────────────────────────────────────
+
+  async toggleFavorite(userId: string, productId: string) {
+    return this.request<{ isFavorite: boolean }>(`/favorites/toggle/${userId}/${productId}`, { method: 'POST' });
+  }
+
+  async getUserFavorites(userId: string) {
+    return this.request<any[]>(`/favorites/user/${userId}`);
+  }
+
+  async checkFavorite(userId: string, productId: string) {
+    return this.request<boolean>(`/favorites/check/${userId}/${productId}`);
+  }
+
+  async trackProductView(userId: string, productId: string) {
+    return this.request<any>(`/favorites/view/${userId}/${productId}`, { method: 'POST' });
+  }
+
+  async getRecentViews(userId: string, limit?: number) {
+    const qs = limit ? `?limit=${limit}` : '';
+    return this.request<any[]>(`/favorites/recent/${userId}${qs}`);
+  }
+
+  async getMostViewedProducts(limit?: number) {
+    const qs = limit ? `?limit=${limit}` : '';
+    return this.request<any[]>(`/favorites/most-viewed${qs}`);
+  }
+
+  // ── AI Recommendations ───────────────────────────────────────────────────
+
+  async generateRecommendations(userId: string) {
+    return this.request<any[]>(`/recommendations/generate/${userId}`, { method: 'POST' });
+  }
+
+  async getRecommendations(userId: string) {
+    return this.request<any[]>(`/recommendations/${userId}`);
+  }
+
+  async dismissRecommendation(userId: string, productId: string) {
+    return this.request<any>(`/recommendations/dismiss/${userId}/${productId}`, { method: 'POST' });
+  }
+
+  // ── Commissions ──────────────────────────────────────────────────────────
+
+  async getCommissionSummary(orgId?: string) {
+    const qs = orgId ? `?orgId=${orgId}` : '';
+    return this.request<any>(`/commissions/summary${qs}`);
+  }
+
+  async getCommissionRules(orgId?: string) {
+    const qs = orgId ? `?orgId=${orgId}` : '';
+    return this.request<any[]>(`/commissions/rules${qs}`);
+  }
+
+  async getOrgCommissions(orgId: string) {
+    return this.request<any[]>(`/commissions/org/${orgId}`);
+  }
+
+  // ── Insurer Rules ────────────────────────────────────────────────────────
+
+  async getInsurerRules(orgId: string) {
+    return this.request<any[]>(`/insurer-rules/${orgId}`);
+  }
+
+  async checkProductEligibility(orgId: string, productId: string) {
+    return this.request<any>(`/insurer-rules/check/${orgId}/${productId}`);
+  }
+
+  // ── Activity ─────────────────────────────────────────────────────────────
+
+  async getUserActivity(userId: string, limit?: number) {
+    const qs = limit ? `?limit=${limit}` : '';
+    return this.request<any[]>(`/activity/user/${userId}${qs}`);
+  }
+
+  async getActivityStats() {
+    return this.request<any>('/activity/stats');
+  }
 }
 
 export const api = new ApiClient();

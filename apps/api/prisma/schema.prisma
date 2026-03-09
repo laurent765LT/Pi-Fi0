@@ -72,11 +72,13 @@ model Organization {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users       User[]
-  products    Product[]
-  shelves     Shelf[]
-  commitments Commitment[]
-  webhooks    Webhook[]
+  users            User[]
+  products         Product[]
+  shelves          Shelf[]
+  commitments      Commitment[]
+  webhooks         Webhook[]
+  commissionRules  CommissionRule[]
+  insurerRules     InsurerRule[]
 
   @@map("organizations")
 }
@@ -98,8 +100,12 @@ model User {
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
 
-  organization Organization @relation(fields: [orgId], references: [id])
-  commitments  Commitment[]
+  organization      Organization       @relation(fields: [orgId], references: [id])
+  commitments       Commitment[]
+  favorites         ProductFavorite[]
+  productViews      ProductView[]
+  aiRecommendations AiRecommendation[]
+  activityLogs      ActivityLog[]
 
   @@map("users")
 }
@@ -131,9 +137,13 @@ model Product {
   createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt
 
-  organization Organization? @relation(fields: [orgId], references: [id])
-  shelves      Shelf[]
-  riskMetrics  RiskMetrics?
+  organization      Organization?      @relation(fields: [orgId], references: [id])
+  shelves           Shelf[]
+  riskMetrics       RiskMetrics?
+  commissionRules   CommissionRule[]
+  favorites         ProductFavorite[]
+  productViews      ProductView[]
+  aiRecommendations AiRecommendation[]
 
   @@map("products")
 }
@@ -185,6 +195,7 @@ model Commitment {
   shelf        Shelf         @relation(fields: [shelfId], references: [id])
   user         User          @relation(fields: [userId], references: [id])
   organization Organization? @relation(fields: [orgId], references: [id])
+  commissions  Commission[]
 
   @@map("commitments")
 }
@@ -464,4 +475,167 @@ model ProductTemplate {
   updatedAt     DateTime @updatedAt
 
   @@map("product_templates")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// COMMISSION ENGINE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+enum CommissionType {
+  ENTRY_FEE
+  MANAGEMENT_FEE
+  DISTRIBUTION_FEE
+  STRUCTURING_FEE
+  TRAILER_FEE
+  PERFORMANCE_FEE
+}
+
+enum CommissionStatus {
+  ACCRUED
+  PAYABLE
+  PAID
+  CANCELLED
+}
+
+model CommissionRule {
+  id                  String         @id @default(cuid())
+  orgId               String?
+  productId           String?
+  commissionType      CommissionType
+  ratePct             Float
+  splitPlatformPct    Float          @default(20)
+  splitDistributorPct Float          @default(80)
+  minAmount           Float?
+  maxAmount           Float?
+  isActive            Boolean        @default(true)
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  organization Organization? @relation(fields: [orgId], references: [id])
+  product      Product?      @relation(fields: [productId], references: [id])
+  commissions  Commission[]
+
+  @@map("commission_rules")
+}
+
+model Commission {
+  id               String           @id @default(cuid())
+  commitmentId     String
+  ruleId           String
+  commissionType   CommissionType
+  grossAmount      Float
+  platformShare    Float
+  distributorShare Float
+  status           CommissionStatus @default(ACCRUED)
+  paidAt           DateTime?
+  invoiceRef       String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  commitment Commitment     @relation(fields: [commitmentId], references: [id])
+  rule       CommissionRule @relation(fields: [ruleId], references: [id])
+
+  @@map("commissions")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PRODUCT INTEREST & FAVORITES
+// ═══════════════════════════════════════════════════════════════════════════════
+
+model ProductFavorite {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@map("product_favorites")
+}
+
+model ProductView {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  viewedAt  DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([userId, viewedAt])
+  @@map("product_views")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// INSURER RULES ENGINE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+model InsurerRule {
+  id                  String   @id @default(cuid())
+  orgId               String
+  ruleName            String
+  allowedPayoffTypes  String[]
+  allowedIssuers      String[]
+  maxSri              Int?     @default(7)
+  minBarrierPct       Float?
+  maxMaturityMonths   Int?
+  maxEntryFeePct      Float?
+  maxManagementFeePct Float?
+  minNominal          Float?   @default(1000)
+  allowedCurrencies   String[] @default(["EUR"])
+  customRules         Json?
+  isActive            Boolean  @default(true)
+  priority            Int      @default(0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  organization Organization @relation(fields: [orgId], references: [id])
+
+  @@map("insurer_rules")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// AI RECOMMENDATIONS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+model AiRecommendation {
+  id          String   @id @default(cuid())
+  userId      String
+  productId   String
+  score       Float
+  reason      String
+  factors     Json
+  isViewed    Boolean  @default(false)
+  isDismissed Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([userId, score])
+  @@map("ai_recommendations")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ACTIVITY LOG
+// ═══════════════════════════════════════════════════════════════════════════════
+
+model ActivityLog {
+  id         String   @id @default(cuid())
+  userId     String
+  action     String
+  entityType String
+  entityId   String?
+  metadata   Json?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([entityType, entityId])
+  @@map("activity_logs")
 }

@@ -12,6 +12,11 @@ import { AdminModule } from './admin/admin.module';
 import { ChatModule } from './chat/chat.module';
 import { AiModule } from './ai/ai.module';
 import { PricingModule } from './pricing/pricing.module';
+import { CommissionsModule } from './commissions/commissions.module';
+import { InsurerRulesModule } from './insurer-rules/insurer-rules.module';
+import { FavoritesModule } from './favorites/favorites.module';
+import { RecommendationsModule } from './recommendations/recommendations.module';
+import { ActivityModule } from './activity/activity.module';
 
 @Module({
   imports: [
@@ -28,6 +33,11 @@ import { PricingModule } from './pricing/pricing.module';
     ChatModule,
     AiModule,
     PricingModule,
+    CommissionsModule,
+    InsurerRulesModule,
+    FavoritesModule,
+    RecommendationsModule,
+    ActivityModule,
   ],
 })
 export class AppModule {}

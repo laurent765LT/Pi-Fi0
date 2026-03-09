@@ -37,7 +37,8 @@ export const DEMO_PRODUCTS = [
     issuerName: 'BNP Paribas Issuance B.V.', underlyingYahoo: '^STOXX50E', underlyingName: 'Euro Stoxx 50',
     barrierCapPct: 50, autocallBarrierPct: 85, couponPct: 7, maxGainPct: 170, sri: 7,
     maturityDate: '2035-12-17', entryFeePct: 5.06, status: 'ACTIVE', description: 'Autocall Phoenix sur Euro Stoxx 50 avec coupon conditionnel de 7% p.a.',
-    fillPct: 62, targetAmount: 10_000_000,
+    fillPct: 62, targetAmount: 10_000_000, shelfClosingDate: '2026-04-15',
+    observationDates: ['2026-12-17', '2027-06-17', '2027-12-17', '2028-06-17', '2028-12-17'],
   },
   {
     id: 'prod-002', isin: 'FR0014012O42', name: 'M Rendement OR', payoffType: 'CAPITAL_PROTECTED',
@@ -174,6 +175,11 @@ export const DEMO_COMMISSION_SUMMARY = {
   totalPlatform: 15_600,
   totalDistributor: 33_150,
   count: 5,
+  accrued: {
+    distributor: 33_150,
+    platform: 15_600,
+    total: 48_750,
+  },
   byType: {
     ENTRY_FEE: { gross: 35_000, count: 3 },
     MANAGEMENT_FEE: { gross: 8_750, count: 1 },

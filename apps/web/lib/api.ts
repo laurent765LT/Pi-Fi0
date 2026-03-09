@@ -126,16 +126,22 @@ class ApiClient {
   async getProductPayoff(id: string) {
     return this.withDemoFallback(
       () => this.request<any>(`/products/${id}/payoff`),
-      () => ({
-        productId: id,
-        scenarios: [
-          { underlyingReturn: -50, investorReturn: -50, label: 'Barrière touchée' },
-          { underlyingReturn: -30, investorReturn: 7, label: 'Sous barrière, coupon' },
-          { underlyingReturn: 0, investorReturn: 7, label: 'Stable' },
-          { underlyingReturn: 20, investorReturn: 7, label: 'Hausse modérée' },
-          { underlyingReturn: 50, investorReturn: 7, label: 'Forte hausse' },
-        ],
-      }),
+      () => {
+        // Build demo PayoffScenario[] with { name, color, data: [{date,value}] } format
+        const now = new Date();
+        const dates: string[] = [];
+        for (let i = 0; i < 24; i++) {
+          const d = new Date(now);
+          d.setMonth(d.getMonth() + i);
+          dates.push(d.toISOString().slice(0, 10));
+        }
+        const base = 100_000;
+        return {
+          best: dates.map((date, i) => ({ date, value: Math.round(base * (1 + 0.07 * (i / 12))) })),
+          base: dates.map((date, i) => ({ date, value: Math.round(base * (1 + 0.03 * (i / 12))) })),
+          worst: dates.map((date, i) => ({ date, value: Math.round(base * (1 - 0.02 * (i / 12) - (i > 18 ? 0.3 : 0))) })),
+        };
+      },
     );
   }
 

@@ -450,16 +450,60 @@ class ApiClient {
           method: 'POST',
           body: JSON.stringify({ config, saveRun }),
         }),
-      () => ({
-        result: {
-          fairValue: 97.5,
-          issuerSpread: 1.2,
-          clientPrice: 100,
-          greeks: { delta: 0.45, gamma: 0.02, vega: 0.15, theta: -0.03 },
-        },
-        validation: [],
-        runId: 'demo-run',
-      }),
+      () => {
+        const underlying = config?.underlying?.name ?? 'Euro Stoxx 50';
+        const spot = config?.underlying?.spot ?? 5000;
+        const couponRate = config?.payoff?.couponRate ?? 0.08;
+        const protBarrier = config?.payoff?.protectionBarrier ?? 0.6;
+        const shocks = [-0.40, -0.30, -0.20, -0.10, 0, 0.10, 0.20, 0.30, 0.40];
+        return {
+          result: {
+            fairValue: 97.52,
+            issuePrice: 100.00,
+            expectedReturn: (couponRate * 100).toFixed(2),
+            computeTimeMs: Math.floor(300 + Math.random() * 700),
+            riskSummary: {
+              probAutocall: 0.623,
+              probCapitalLoss: 0.087,
+              probMaxLoss: 0.032,
+              expectedLife: 3.2,
+              valueAtRisk95: -18.5,
+              conditionalVaR: -32.1,
+            },
+            costBreakdown: {
+              structuringMargin: config?.market?.structuringMargin ? (config.market.structuringMargin * 100).toFixed(2) : '1.50',
+              distributionFee: config?.market?.distributionFee ? (config.market.distributionFee * 100).toFixed(2) : '2.00',
+              executionCost: '0.50',
+              hedgingCost: '0.48',
+              totalCost: '4.48',
+            },
+            scenarioTable: shocks.map((shock) => {
+              const spotLevel = Math.round(spot * (1 + shock));
+              const redemption = (1 + shock) < protBarrier ? Math.round((1 + shock) * 100) : 100;
+              const totalCoupons = shock >= -0.10 ? +(couponRate * 100 * 3.2).toFixed(1) : 0;
+              const totalReturn = +(redemption - 100 + totalCoupons).toFixed(1);
+              return { spotShock: shock, spotLevel, redemption, totalCoupons, totalReturn };
+            }),
+            greeks: { delta: 0.45, gamma: 0.02, vega: 0.15, theta: -0.03, rho: 0.08 },
+            modelUsed: 'Monte Carlo (Local Vol)',
+            assumptions: [
+              'Volatilité locale calibrée sur nappe de marché',
+              'Dividendes discrets estimés',
+              'Corrélation historique 6 mois',
+              'Taux sans risque courbe ESTER',
+            ],
+            modelLimitations: [
+              'Modèle simplifié — ne capture pas les sauts de volatilité',
+              'Estimation — non contractuel',
+              'Sensibilité aux hypothèses de dividendes',
+            ],
+          },
+          validation: [
+            { severity: 'WARNING', message: `Pricing simulé en mode démo — résultats indicatifs uniquement` },
+          ],
+          runId: 'demo-run-' + Date.now(),
+        };
+      },
     );
   }
 
@@ -514,8 +558,33 @@ class ApiClient {
     return this.withDemoFallback(
       () => this.request<any[]>('/pricing/templates'),
       () => [
-        { id: 'tpl-1', name: 'Autocall Phoenix Standard', structureType: 'AUTOCALL_PHOENIX', config: {} },
-        { id: 'tpl-2', name: 'Capital Protégé Vanille', structureType: 'CAPITAL_PROTECTED', config: {} },
+        {
+          id: 'tpl-1', name: 'Autocall Phoenix — Euro Stoxx 50', structureType: 'PHOENIX_AUTOCALL',
+          config: {
+            structureType: 'PHOENIX_AUTOCALL', currency: 'EUR', nominalAmount: 1_000_000,
+            payoff: { couponType: 'CONDITIONAL', couponRate: 0.08, couponBarrier: 0.60, couponMemory: true, autocallEnabled: true, autocallBarrier: 1.0, protectionBarrier: 0.60, barrierMonitoring: 'EUROPEAN', cap: 0, participationUp: 1.0 },
+            market: { riskFreeRate: 0.03, fundingSpread: 0.005, structuringMargin: 0.015, distributionFee: 0.02 },
+            mcPaths: 10000,
+          },
+        },
+        {
+          id: 'tpl-2', name: 'Capital Protégé — Or', structureType: 'CAPITAL_PROTECTED_NOTE',
+          config: {
+            structureType: 'CAPITAL_PROTECTED_NOTE', currency: 'EUR', nominalAmount: 500_000,
+            payoff: { couponType: 'NONE', couponRate: 0, couponBarrier: 0, couponMemory: false, autocallEnabled: false, autocallBarrier: 1.0, protectionBarrier: 0.90, barrierMonitoring: 'EUROPEAN', cap: 0.50, participationUp: 1.0 },
+            market: { riskFreeRate: 0.03, fundingSpread: 0.005, structuringMargin: 0.01, distributionFee: 0.015 },
+            mcPaths: 10000,
+          },
+        },
+        {
+          id: 'tpl-3', name: 'Reverse Convertible — BNP Paribas', structureType: 'REVERSE_CONVERTIBLE',
+          config: {
+            structureType: 'REVERSE_CONVERTIBLE', currency: 'EUR', nominalAmount: 500_000,
+            payoff: { couponType: 'FIXED', couponRate: 0.10, couponBarrier: 0, couponMemory: false, autocallEnabled: false, autocallBarrier: 1.0, protectionBarrier: 0.70, barrierMonitoring: 'CONTINUOUS', cap: 0, participationUp: 1.0 },
+            market: { riskFreeRate: 0.03, fundingSpread: 0.005, structuringMargin: 0.02, distributionFee: 0.02 },
+            mcPaths: 10000,
+          },
+        },
       ],
     );
   }

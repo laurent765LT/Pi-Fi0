@@ -214,25 +214,26 @@ export default function PricingPage() {
   // ── Load template ─────────────────────────────────────────────────────────
   const loadTemplate = (tpl: any) => {
     const c = tpl.config;
-    setStructureType(c.structureType);
-    setProductName(tpl.name);
-    setCurrency(c.currency);
-    setNominal(c.nominalAmount);
-    setCouponType(c.payoff.couponType);
-    setCouponRate(c.payoff.couponRate * 100);
-    setCouponBarrier(c.payoff.couponBarrier * 100);
-    setCouponMemory(c.payoff.couponMemory);
-    setAutocallEnabled(c.payoff.autocallEnabled);
-    setAutocallBarrier(c.payoff.autocallBarrier * 100);
-    setProtectionBarrier(c.payoff.protectionBarrier * 100);
-    setBarrierMonitoring(c.payoff.barrierMonitoring);
-    setCap(c.payoff.cap * 100);
-    setParticipationUp(c.payoff.participationUp * 100);
-    setRiskFreeRate(c.market.riskFreeRate * 100);
-    setFundingSpread(c.market.fundingSpread * 100);
-    setStructuringMargin(c.market.structuringMargin * 100);
-    setDistributionFee(c.market.distributionFee * 100);
-    setMcPaths(c.mcPaths);
+    if (!c || !c.payoff || !c.market) return; // guard
+    setStructureType(c.structureType ?? 'PHOENIX_AUTOCALL');
+    setProductName(tpl.name ?? 'Mon Produit');
+    setCurrency(c.currency ?? 'EUR');
+    setNominal(c.nominalAmount ?? 1_000_000);
+    setCouponType(c.payoff.couponType ?? 'CONDITIONAL');
+    setCouponRate((c.payoff.couponRate ?? 0.08) * 100);
+    setCouponBarrier((c.payoff.couponBarrier ?? 0.6) * 100);
+    setCouponMemory(c.payoff.couponMemory ?? true);
+    setAutocallEnabled(c.payoff.autocallEnabled ?? true);
+    setAutocallBarrier((c.payoff.autocallBarrier ?? 1.0) * 100);
+    setProtectionBarrier((c.payoff.protectionBarrier ?? 0.6) * 100);
+    setBarrierMonitoring(c.payoff.barrierMonitoring ?? 'EUROPEAN');
+    setCap((c.payoff.cap ?? 0) * 100);
+    setParticipationUp((c.payoff.participationUp ?? 1.0) * 100);
+    setRiskFreeRate((c.market.riskFreeRate ?? 0.03) * 100);
+    setFundingSpread((c.market.fundingSpread ?? 0.005) * 100);
+    setStructuringMargin((c.market.structuringMargin ?? 0.015) * 100);
+    setDistributionFee((c.market.distributionFee ?? 0.02) * 100);
+    setMcPaths(c.mcPaths ?? 10000);
   };
 
   const inputCls = cn(

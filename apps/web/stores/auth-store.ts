@@ -3,6 +3,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { api } from '@/lib/api';
+import { DEMO_USERS } from '@/lib/demo-data';
 
 interface User {
   id: string;
@@ -14,6 +15,7 @@ interface AuthState {
   user: User | null;
   token: string | null;
   refreshToken: string | null;
+  isDemo: boolean;
 
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
@@ -30,27 +32,47 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       token: null,
       refreshToken: null,
+      isDemo: false,
 
       login: async (email: string, password: string) => {
-        const { accessToken, refreshToken, user } = await api.login(email, password);
+        // Try real API first
+        try {
+          const { accessToken, refreshToken, user } = await api.login(email, password);
+          api.setToken(accessToken);
+          set({ user, token: accessToken, refreshToken, isDemo: false });
+          return;
+        } catch {
+          // API unreachable — fall through to demo mode
+        }
 
-        api.setToken(accessToken);
+        // Demo mode fallback
+        const demoUser = DEMO_USERS[email.toLowerCase()];
+        if (demoUser && demoUser.password === password) {
+          const fakeToken = 'demo-token-' + Date.now();
+          api.setToken(fakeToken);
+          set({
+            user: {
+              id: demoUser.id,
+              email: demoUser.email,
+              firstName: demoUser.firstName,
+              lastName: demoUser.lastName,
+              role: demoUser.role,
+              orgId: demoUser.orgId,
+            },
+            token: fakeToken,
+            refreshToken: 'demo-refresh',
+            isDemo: true,
+          });
+          return;
+        }
 
-        set({
-          user,
-          token: accessToken,
-          refreshToken,
-        });
+        // Neither API nor demo worked
+        throw new Error('Identifiants incorrects. Veuillez réessayer.');
       },
 
       logout: () => {
         api.setToken(null);
-
-        set({
-          user: null,
-          token: null,
-          refreshToken: null,
-        });
+        set({ user: null, token: null, refreshToken: null, isDemo: false });
       },
 
       hydrate: () => {
@@ -66,6 +88,7 @@ export const useAuthStore = create<AuthState>()(
         user: state.user,
         token: state.token,
         refreshToken: state.refreshToken,
+        isDemo: state.isDemo,
       }),
     },
   ),

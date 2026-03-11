@@ -1,39 +1,45 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import {
+  ArrowLeft, Heart, Share2, FileText, AlertTriangle, Calendar,
+  Shield, TrendingUp, Info, ExternalLink, Clock,
+} from 'lucide-react';
+import { cn } from '@/lib/cn';
 import { useProduct, useProductPayoff } from '@/hooks/use-products';
-import { BarrierGauge } from '@/components/products/barrier-gauge';
+import { useFavorites, useToggleFavorite, useTrackView } from '@/hooks/use-favorites';
 import { PayoffCanvas, buildDefaultScenarios } from '@/components/products/payoff-canvas';
+import { BarrierGauge } from '@/components/products/barrier-gauge';
 import { CommitmentModal } from '@/components/commitments/commitment-modal';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Tabs, TabPanel } from '@/components/ui/tabs';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatAmount(amount: number): string {
-  return new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: 'EUR',
-    maximumFractionDigits: 0,
-  }).format(amount);
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(amount);
 }
 
 function formatDate(isoDate: string): string {
-  return new Date(isoDate).toLocaleDateString('fr-FR', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-  });
+  return new Date(isoDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
 }
 
-function formatPct(value: number): string {
+function formatDateShort(isoDate: string): string {
+  return new Date(isoDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function formatPct(value: number | null | undefined): string {
+  if (value == null) return '—';
   return value.toFixed(1) + ' %';
 }
 
-// ─── Payoff type labels ───────────────────────────────────────────────────────
+function daysUntil(isoDate: string): number {
+  return Math.max(0, Math.ceil((new Date(isoDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+}
+
+// ─── Constants ────────────────────────────────────────────────────────────────
 
 const PAYOFF_LABELS: Record<string, string> = {
   AUTOCALL_PHOENIX: 'Autocall Phoenix',
@@ -43,36 +49,118 @@ const PAYOFF_LABELS: Record<string, string> = {
   BARRIER_NOTE: 'Barrier Note',
 };
 
-// ─── Detail Row ───────────────────────────────────────────────────────────────
+const PAYOFF_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  AUTOCALL_PHOENIX: { bg: '#EDE8FF', text: '#3B1FA8', border: '#D5CCFA' },
+  AUTOCALL_COUPON: { bg: '#EDE8FF', text: '#5535C4', border: '#D5CCFA' },
+  CAPITAL_PROTECTED: { bg: '#E6FAF5', text: '#008B6E', border: '#B3F0DE' },
+  CONDITIONAL_RATE: { bg: '#E4EAFF', text: '#0A2799', border: '#C5D2FA' },
+  BARRIER_NOTE: { bg: '#FFF8E7', text: '#A07800', border: '#F0E0A8' },
+};
 
-interface DetailRowProps {
-  label: string;
-  value: React.ReactNode;
-}
+const SRI_COLORS: Record<number, { bg: string; text: string }> = {
+  1: { bg: '#E6FAF5', text: '#008B6E' },
+  2: { bg: '#E6FAF5', text: '#008B6E' },
+  3: { bg: '#F0FAE6', text: '#4A8C1F' },
+  4: { bg: '#FFF8E7', text: '#A07800' },
+  5: { bg: '#FFF0E6', text: '#C25700' },
+  6: { bg: '#FFF0F2', text: '#C41F36' },
+  7: { bg: '#FFF0F2', text: '#C41F36' },
+};
 
-function DetailRow({ label, value }: DetailRowProps) {
+const REGULATORY_DISCLAIMERS = [
+  { icon: AlertTriangle, text: "Ce produit est un instrument financier complexe au sens de la directive MIF2. Il est destiné aux investisseurs avertis." },
+  { icon: Shield, text: "Le capital n'est pas garanti. L'investisseur peut subir une perte en capital partielle ou totale à l'échéance." },
+  { icon: FileText, text: "Avant toute souscription, le client doit prendre connaissance du Document d'Informations Clés (KID/PRIIPS)." },
+  { icon: Info, text: "Les performances passées ne préjugent pas des performances futures. Les scénarios présentés sont des estimations." },
+  { icon: AlertTriangle, text: "L'investisseur est exposé au risque de crédit de l'émetteur et du garant éventuel." },
+  { icon: Clock, text: "La liquidité du produit n'est pas garantie avant l'échéance. Le prix de rachat peut être inférieur au prix d'achat." },
+];
+
+// ─── Sub-components ──────────────────────────────────────────────────────────
+
+function DetailRow({ label, value, className }: { label: string; value: React.ReactNode; className?: string }) {
   return (
-    <div className="flex items-start justify-between gap-4 py-2.5 border-b border-border last:border-0">
-      <span className="text-xs text-ink-3 font-body uppercase tracking-widest shrink-0">
-        {label}
-      </span>
-      <span className="text-sm font-semibold text-ink font-body text-right">
-        {value}
-      </span>
+    <div className={cn("flex items-start justify-between gap-4 py-2.5 border-b border-border/50 last:border-0", className)}>
+      <span className="text-[11px] text-ink-3 font-body uppercase tracking-widest shrink-0">{label}</span>
+      <span className="text-sm font-semibold text-ink font-body text-right">{value}</span>
     </div>
   );
 }
 
-// ─── Progress Bar ─────────────────────────────────────────────────────────────
-
-function ShelfProgressBar({ pct }: { pct: number }) {
-  const clamped = Math.min(100, Math.max(0, pct));
+function StatBox({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
-    <div className="h-2 w-full overflow-hidden rounded-full bg-surface-2">
-      <div
-        className="h-full rounded-full bg-violet transition-all duration-500"
-        style={{ width: `${clamped}%` }}
-      />
+    <div className="flex flex-col items-center gap-1 py-3 px-2 rounded-lg bg-surface-2">
+      <span className="text-[9px] uppercase tracking-wider text-ink-3 font-semibold font-body">{label}</span>
+      <span className={cn("font-display text-xl font-bold leading-none", color ?? 'text-ink')}>{value}</span>
+    </div>
+  );
+}
+
+function SriGauge({ sri }: { sri: number }) {
+  const sriStyle = SRI_COLORS[sri] ?? SRI_COLORS[4];
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <div className="flex gap-0.5">
+        {[1, 2, 3, 4, 5, 6, 7].map((n) => (
+          <div
+            key={n}
+            className={cn(
+              "h-5 w-5 rounded-sm flex items-center justify-center text-[9px] font-bold font-mono transition-all",
+              n === sri ? 'ring-2 ring-offset-1 scale-110' : n <= sri ? 'opacity-80' : 'opacity-30',
+            )}
+            style={{
+              backgroundColor: n <= sri ? SRI_COLORS[n]?.bg ?? '#F4F3EF' : '#F4F3EF',
+              color: n <= sri ? SRI_COLORS[n]?.text ?? '#7B6FA0' : '#7B6FA0',
+            }}
+          >
+            {n}
+          </div>
+        ))}
+      </div>
+      <p className="text-[10px] text-ink-3 font-body">
+        Risque : <span className="font-semibold" style={{ color: sriStyle.text }}>{sri}/7</span>
+        {sri <= 2 && ' (faible)'}
+        {sri >= 3 && sri <= 4 && ' (modéré)'}
+        {sri >= 5 && sri <= 6 && ' (élevé)'}
+        {sri === 7 && ' (très élevé)'}
+      </p>
+    </div>
+  );
+}
+
+function ScenarioTable({ product }: { product: any }) {
+  const scenarios = [
+    { name: 'Stress', pct: -(product.barrierCapPct ?? 50), color: '#C41F36' },
+    { name: 'Défavorable', pct: -((product.barrierCapPct ?? 50) * 0.5), color: '#C25700' },
+    { name: 'Modéré', pct: product.couponPct ?? (product.maxGainPct ?? 0) * 0.4, color: '#A07800' },
+    { name: 'Favorable', pct: product.maxGainPct ?? 0, color: '#008B6E' },
+  ];
+  const investBase = 10_000;
+
+  return (
+    <div className="overflow-hidden rounded-lg border border-border">
+      <table className="w-full text-sm font-body">
+        <thead>
+          <tr className="bg-surface-2 border-b border-border">
+            <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-wider text-ink-3 font-semibold">Scénario</th>
+            <th className="px-4 py-2.5 text-right text-[10px] uppercase tracking-wider text-ink-3 font-semibold">Perf. %</th>
+            <th className="px-4 py-2.5 text-right text-[10px] uppercase tracking-wider text-ink-3 font-semibold">Pour 10 000 €</th>
+          </tr>
+        </thead>
+        <tbody>
+          {scenarios.map((s) => (
+            <tr key={s.name} className="border-b border-border/40 last:border-0">
+              <td className="px-4 py-2.5 font-semibold" style={{ color: s.color }}>{s.name}</td>
+              <td className="px-4 py-2.5 text-right font-mono tabular-nums font-semibold" style={{ color: s.color }}>
+                {s.pct >= 0 ? '+' : ''}{s.pct.toFixed(1)}%
+              </td>
+              <td className="px-4 py-2.5 text-right font-mono tabular-nums text-ink-2">
+                {formatAmount(investBase * (1 + s.pct / 100))}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -81,18 +169,18 @@ function ShelfProgressBar({ pct }: { pct: number }) {
 
 function PageSkeleton() {
   return (
-    <main className="mx-auto max-w-container px-6 py-8">
-      <div className="h-4 w-32 bg-surface-2 rounded animate-pulse mb-6" />
-      <div className="h-8 w-64 bg-surface-2 rounded animate-pulse mb-2" />
-      <div className="h-1 w-full bg-surface-2 rounded animate-pulse mb-6" />
+    <main className="mx-auto max-w-5xl px-6 py-8 animate-pulse">
+      <div className="h-4 w-32 bg-surface-2 rounded mb-6" />
+      <div className="h-8 w-2/3 bg-surface-2 rounded mb-3" />
+      <div className="h-4 w-1/3 bg-surface-2 rounded mb-6" />
       <div className="flex gap-2 mb-8">
-        <div className="h-5 w-28 bg-surface-2 rounded animate-pulse" />
-        <div className="h-5 w-16 bg-surface-2 rounded animate-pulse" />
-        <div className="h-5 w-32 bg-surface-2 rounded animate-pulse" />
+        <div className="h-6 w-28 bg-surface-2 rounded-md" />
+        <div className="h-6 w-16 bg-surface-2 rounded-md" />
+        <div className="h-6 w-20 bg-surface-2 rounded-md" />
       </div>
       <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 h-80 bg-surface-2 rounded-lg animate-pulse" />
-        <div className="h-80 bg-surface-2 rounded-lg animate-pulse" />
+        <div className="lg:col-span-2 h-96 bg-surface-2 rounded-xl" />
+        <div className="h-96 bg-surface-2 rounded-xl" />
       </div>
     </main>
   );
@@ -104,300 +192,351 @@ export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { data: product, isLoading, isError } = useProduct(id);
   const { data: payoffData } = useProductPayoff(id);
+  const { data: favoritesData } = useFavorites();
+  const toggleFavorite = useToggleFavorite();
+  const trackView = useTrackView();
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
+
+  useEffect(() => {
+    if (id) trackView.mutate(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   if (isLoading) return <PageSkeleton />;
 
   if (isError || !product) {
     return (
-      <main className="mx-auto max-w-container px-6 py-8">
-        <Link
-          href="/products"
-          className="inline-flex items-center gap-1.5 text-sm text-ink-3 font-body hover:text-violet transition-colors duration-150 mb-6"
-        >
-          ← Retour à l&apos;étagère
+      <main className="mx-auto max-w-5xl px-6 py-8">
+        <Link href="/products" className="inline-flex items-center gap-1.5 text-sm text-ink-3 font-body hover:text-violet transition-colors mb-6">
+          <ArrowLeft size={14} /> Retour aux produits
         </Link>
-        <div className="flex flex-col items-center justify-center py-24 gap-3 text-red">
-          <p className="font-body text-sm">
-            {isError
-              ? 'Une erreur est survenue lors du chargement du produit.'
-              : 'Produit introuvable.'}
+        <div className="flex flex-col items-center justify-center py-24 gap-3">
+          <p className="font-body text-sm text-red">
+            {isError ? 'Erreur lors du chargement du produit.' : 'Produit introuvable.'}
           </p>
           <Button variant="outline" asChild size="md">
-            <Link href="/products">Retour à l&apos;étagère</Link>
+            <Link href="/products">Retour aux produits</Link>
           </Button>
         </div>
       </main>
     );
   }
 
-  // Build payoff scenarios from API data if available
+  const payoff = PAYOFF_COLORS[product.payoffType] ?? PAYOFF_COLORS.AUTOCALL_PHOENIX;
+  const sriStyle = SRI_COLORS[product.sri] ?? SRI_COLORS[4];
+  const isClosed = product.status === 'CLOSED' || product.status === 'MATURED';
+  const favoriteIds = new Set(
+    (favoritesData as any[])?.map((f: any) => f.productId ?? f.product?.id) ?? []
+  );
+  const isFav = favoriteIds.has(product.id);
+
   const scenarios =
     payoffData?.scenarios ??
     (payoffData
-      ? buildDefaultScenarios(
-          payoffData.best ?? [],
-          payoffData.base ?? [],
-          payoffData.worst ?? [],
-        )
+      ? buildDefaultScenarios(payoffData.best ?? [], payoffData.base ?? [], payoffData.worst ?? [])
       : []);
 
-  const isProductClosed =
-    product.status === 'CLOSED' || product.status === 'MATURED';
+  const closingDays = product.shelfClosingDate ? daysUntil(product.shelfClosingDate) : null;
 
   return (
     <>
-      <main className="mx-auto max-w-container px-6 py-8">
-        {/* ── Back button ──────────────────────────────────────────────── */}
-        <Link
-          href="/products"
-          className="inline-flex items-center gap-1.5 text-sm text-ink-3 font-body hover:text-violet transition-colors duration-150 mb-6"
-        >
-          ← Retour à l&apos;étagère
-        </Link>
+      <main className="mx-auto max-w-5xl px-6 py-8 animate-fade-in">
+        {/* ── Breadcrumb ──────────────────────────────────────────── */}
+        <div className="flex items-center justify-between mb-6">
+          <Link href="/products" className="inline-flex items-center gap-1.5 text-sm text-ink-3 font-body hover:text-violet transition-colors">
+            <ArrowLeft size={14} /> Retour aux produits
+          </Link>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => toggleFavorite.mutate(product.id)}
+              className={cn(
+                'p-2 rounded-lg border transition-all duration-200',
+                isFav
+                  ? 'text-red border-red/30 bg-red-light hover:bg-red/20'
+                  : 'text-ink-3 border-border hover:text-red hover:border-red/30 hover:bg-red-light',
+              )}
+              title={isFav ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+            >
+              <Heart size={16} fill={isFav ? 'currentColor' : 'none'} />
+            </button>
+            <button className="p-2 rounded-lg border border-border text-ink-3 hover:text-violet hover:border-violet/30 hover:bg-violet-pale transition-all duration-200" title="Partager">
+              <Share2 size={16} />
+            </button>
+          </div>
+        </div>
 
-        {/* ── Product header ───────────────────────────────────────────── */}
-        <div className="mb-2">
-          <h1 className="font-display text-3xl font-bold text-ink leading-tight mb-2">
+        {/* ── Product Header ──────────────────────────────────────── */}
+        <div className="mb-8">
+          <div className="h-1 w-24 rounded-full mb-4" style={{ background: payoff.text }} />
+          <div className="flex flex-wrap items-start gap-3 mb-3">
+            <span
+              className="inline-flex items-center rounded-md px-2.5 py-1 text-[11px] font-semibold font-body"
+              style={{ backgroundColor: payoff.bg, color: payoff.text, border: `1px solid ${payoff.border}` }}
+            >
+              {PAYOFF_LABELS[product.payoffType] ?? product.payoffType}
+            </span>
+            <span
+              className="inline-flex items-center rounded-md px-2.5 py-1 text-[11px] font-bold font-mono tabular-nums"
+              style={{ backgroundColor: sriStyle.bg, color: sriStyle.text }}
+            >
+              SRI {product.sri}/7
+            </span>
+            {!isClosed && (
+              <span className="inline-flex items-center rounded-md px-2.5 py-1 text-[11px] font-semibold font-body bg-[#E6FAF5] text-[#008B6E] border border-[#B3F0DE]">
+                En cours
+              </span>
+            )}
+            {isClosed && (
+              <span className="inline-flex items-center rounded-md px-2.5 py-1 text-[11px] font-semibold font-body bg-[#F4F3EF] text-[#7B6FA0] border border-[#E2DFD8]">
+                Fermé
+              </span>
+            )}
+          </div>
+
+          <h1 className="font-display text-2xl md:text-3xl font-bold text-ink leading-tight mb-1.5">
             {product.name}
           </h1>
-          <div className="gradient-bar h-1 rounded-full mb-4" />
-        </div>
-
-        {/* Badges row */}
-        <div className="flex flex-wrap items-center gap-2 mb-8">
-          <Badge variant="violet">
-            {PAYOFF_LABELS[product.payoffType] ?? product.payoffType}
-          </Badge>
-          <Badge variant={product.sri >= 5 ? 'red' : product.sri >= 3 ? 'gold' : 'teal'}>
-            SRI {product.sri}/7
-          </Badge>
-          {product.isin && (
-            <span className="font-mono text-xs text-ink-3 border border-border rounded-sm px-2 py-0.5 bg-surface-2">
+          <div className="flex items-center gap-3 text-sm text-ink-3 font-body">
+            <span className="font-mono text-xs bg-surface-2 border border-border rounded px-2 py-0.5 tabular-nums">
               {product.isin}
             </span>
-          )}
-          {product.status && (
-            <Badge
-              variant={
-                product.status === 'OPEN'
-                  ? 'teal'
-                  : product.status === 'UPCOMING'
-                  ? 'cobalt'
-                  : 'muted'
-              }
-            >
-              {product.status === 'OPEN'
-                ? 'Ouvert'
-                : product.status === 'UPCOMING'
-                ? 'À venir'
-                : product.status === 'CLOSED'
-                ? 'Fermé'
-                : 'Échu'}
-            </Badge>
+            <span>{product.issuerName}</span>
+          </div>
+          {product.description && (
+            <p className="mt-4 text-sm text-ink-2 font-body leading-relaxed max-w-3xl">
+              {product.description}
+            </p>
           )}
         </div>
 
-        {/* ── Two-column layout ────────────────────────────────────────── */}
-        <div className="grid lg:grid-cols-3 gap-6 mb-8">
-          {/* Left: Product info card (2/3) */}
-          <Card static className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle>Caractéristiques du produit</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="divide-y divide-border">
-                {product.issuerName && (
-                  <DetailRow label="Émetteur" value={product.issuerName} />
-                )}
-                {product.guarantorName && (
-                  <DetailRow label="Garant" value={product.guarantorName} />
-                )}
-                {product.underlyingYahoo && (
-                  <DetailRow
-                    label="Sous-jacent"
-                    value={
-                      <span className="font-mono">
-                        {product.underlyingYahoo}
-                      </span>
-                    }
-                  />
-                )}
-                {product.barrierCapPct != null && (
-                  <DetailRow
-                    label="Barrière capital"
-                    value={
-                      <span className="text-red">
-                        {formatPct(product.barrierCapPct)}
-                      </span>
-                    }
-                  />
-                )}
-                {product.autocallBarrierPct != null && (
-                  <DetailRow
-                    label="Barrière autocall"
-                    value={formatPct(product.autocallBarrierPct)}
-                  />
-                )}
-                {product.couponPct != null && (
-                  <DetailRow
-                    label="Coupon"
-                    value={
-                      <span className="text-teal">
-                        {formatPct(product.couponPct)}
-                      </span>
-                    }
-                  />
-                )}
-                {product.maxGainPct != null && (
-                  <DetailRow
-                    label="Gain maximum"
-                    value={
-                      <span className="text-gold font-bold">
-                        {formatPct(product.maxGainPct)}
-                      </span>
-                    }
-                  />
-                )}
-                {product.maturityDate && (
-                  <DetailRow
-                    label="Échéance"
-                    value={formatDate(product.maturityDate)}
-                  />
-                )}
-                {product.entryFeePct != null && (
-                  <DetailRow
-                    label="Frais d'entrée"
-                    value={formatPct(product.entryFeePct)}
-                  />
-                )}
-              </div>
+        {/* ── Key Metrics ─────────────────────────────────────────── */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+          <StatBox label="Gain max" value={formatPct(product.maxGainPct)} color="text-gold" />
+          <StatBox label="Barrière" value={formatPct(product.barrierCapPct)} color="text-red" />
+          <StatBox
+            label={product.couponPct != null ? 'Coupon' : 'Autocall'}
+            value={product.couponPct != null ? formatPct(product.couponPct) : formatPct(product.autocallBarrierPct)}
+            color="text-teal"
+          />
+          <StatBox label="Échéance" value={product.maturityDate ? formatDateShort(product.maturityDate) : '—'} />
+        </div>
 
-              {/* Observation dates */}
-              {Array.isArray(product.observationDates) &&
-                product.observationDates.length > 0 && (
-                  <div className="mt-4">
-                    <p className="text-xs text-ink-3 font-body uppercase tracking-widest mb-2">
-                      Dates d&apos;observation
-                    </p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {product.observationDates.map((date: string) => (
-                        <span
-                          key={date}
-                          className="font-mono text-[11px] text-ink-2 border border-border rounded-sm px-2 py-0.5 bg-surface-2"
-                        >
-                          {formatDate(date)}
-                        </span>
-                      ))}
-                    </div>
+        {/* ── Two-column layout ───────────────────────────────────── */}
+        <div className="grid lg:grid-cols-3 gap-6 mb-8">
+          {/* Left: Main content (2/3) */}
+          <div className="lg:col-span-2 flex flex-col gap-6">
+            {/* SRI Gauge */}
+            <div className="bg-white rounded-xl border border-border/80 p-5">
+              <h3 className="font-body text-xs uppercase tracking-widest text-ink-3 font-semibold mb-4">
+                Indicateur de risque (SRI)
+              </h3>
+              <SriGauge sri={product.sri} />
+            </div>
+
+            {/* Tabs */}
+            <div className="bg-white rounded-xl border border-border/80 overflow-hidden">
+              <Tabs
+                tabs={[
+                  { label: 'Caractéristiques', value: 'overview' },
+                  { label: 'Scénarios', value: 'scenarios' },
+                  { label: "Dates d'observation", value: 'dates' },
+                ]}
+                activeTab={activeTab}
+                onChange={setActiveTab}
+                className="px-5"
+              />
+
+              <TabPanel value="overview" activeTab={activeTab} className="p-5">
+                <div className="divide-y divide-border/50">
+                  <DetailRow label="Émetteur" value={product.issuerName} />
+                  {product.underlyingName && <DetailRow label="Sous-jacent" value={product.underlyingName} />}
+                  {product.underlyingYahoo && !product.underlyingName && (
+                    <DetailRow label="Sous-jacent" value={<span className="font-mono">{product.underlyingYahoo}</span>} />
+                  )}
+                  {product.barrierCapPct != null && (
+                    <DetailRow label="Barrière capital" value={<span className="text-red font-bold">{formatPct(product.barrierCapPct)}</span>} />
+                  )}
+                  {product.autocallBarrierPct != null && (
+                    <DetailRow label="Barrière autocall" value={formatPct(product.autocallBarrierPct)} />
+                  )}
+                  {product.couponPct != null && (
+                    <DetailRow label="Coupon" value={<span className="text-teal">{formatPct(product.couponPct)}</span>} />
+                  )}
+                  {product.maxGainPct != null && (
+                    <DetailRow label="Gain maximum" value={<span className="text-gold font-bold">{formatPct(product.maxGainPct)}</span>} />
+                  )}
+                  {product.maturityDate && <DetailRow label="Échéance" value={formatDate(product.maturityDate)} />}
+                  {product.entryFeePct != null && <DetailRow label="Frais d'entrée" value={formatPct(product.entryFeePct)} />}
+                </div>
+
+                {/* Regulatory disclaimers */}
+                <div className="mt-6 pt-5 border-t border-border/50">
+                  <h4 className="text-[11px] uppercase tracking-widest text-ink-3 font-semibold font-body mb-3 flex items-center gap-1.5">
+                    <AlertTriangle size={12} />
+                    Mentions réglementaires
+                  </h4>
+                  <div className="flex flex-col gap-2">
+                    {REGULATORY_DISCLAIMERS.map((d, i) => (
+                      <div key={i} className="flex items-start gap-2 text-[11px] text-ink-3 font-body leading-relaxed">
+                        <d.icon size={11} className="shrink-0 mt-0.5 text-ink-3/60" />
+                        <span>{d.text}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </TabPanel>
+
+              <TabPanel value="scenarios" activeTab={activeTab} className="p-5">
+                <p className="text-xs text-ink-3 font-body mb-4">
+                  Estimation des performances selon différents scénarios de marché, pour un investissement initial de 10 000 €.
+                </p>
+                <ScenarioTable product={product} />
+                {scenarios.length > 0 && (
+                  <div className="mt-6">
+                    <h4 className="text-[11px] uppercase tracking-widest text-ink-3 font-semibold font-body mb-3">
+                      Simulation graphique
+                    </h4>
+                    <PayoffCanvas scenarios={scenarios} height={280} />
                   </div>
                 )}
-            </CardContent>
-          </Card>
+              </TabPanel>
 
-          {/* Right: Shelf card (1/3) */}
-          <Card static className="flex flex-col">
-            <CardHeader>
-              <CardTitle>Étagère</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4 flex-1">
-              {/* Fill progress */}
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between text-xs font-body">
-                  <span className="text-ink-3">Remplissage</span>
-                  <span className="font-bold text-ink">
-                    {(product.fillPct ?? 0).toFixed(0)}%
-                  </span>
+              <TabPanel value="dates" activeTab={activeTab} className="p-5">
+                {Array.isArray(product.observationDates) && product.observationDates.length > 0 ? (
+                  <>
+                    <p className="text-xs text-ink-3 font-body mb-4">
+                      Dates de constatation pour le mécanisme de remboursement anticipé automatique.
+                    </p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                      {product.observationDates.map((date: string, i: number) => {
+                        const isPast = new Date(date) < new Date();
+                        return (
+                          <div
+                            key={date}
+                            className={cn(
+                              "flex items-center gap-2 rounded-lg border px-3 py-2.5",
+                              isPast
+                                ? 'border-border/40 bg-surface-2 text-ink-3'
+                                : 'border-violet/20 bg-violet-pale text-violet',
+                            )}
+                          >
+                            <Calendar size={12} className={isPast ? 'text-ink-3/50' : 'text-violet'} />
+                            <div>
+                              <span className={cn("font-mono text-xs tabular-nums font-semibold", isPast && 'line-through opacity-60')}>
+                                {formatDateShort(date)}
+                              </span>
+                              <span className="block text-[9px] font-body opacity-60">
+                                Année {i + 1}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center py-12 text-ink-3 font-body text-sm">
+                    <Calendar size={24} className="mx-auto mb-2 opacity-40" />
+                    <p>Aucune date d&apos;observation disponible pour ce produit.</p>
+                  </div>
+                )}
+              </TabPanel>
+            </div>
+
+            {/* Barrier Gauge */}
+            {product.barrierCapPct != null && (
+              <div className="bg-white rounded-xl border border-border/80 p-5">
+                <h3 className="font-body text-xs uppercase tracking-widest text-ink-3 font-semibold mb-4">
+                  Jauge barrière
+                </h3>
+                <div className="flex justify-center py-2">
+                  <BarrierGauge barrierPct={product.barrierCapPct} currentPct={product.currentPct ?? 100} size={220} />
                 </div>
-                <ShelfProgressBar pct={product.fillPct ?? 0} />
+              </div>
+            )}
+          </div>
+
+          {/* Right: CTA Card (1/3) */}
+          <div className="flex flex-col gap-5">
+            <div className="bg-white rounded-xl border border-border/80 p-5 flex flex-col gap-4 sticky top-6">
+              <h3 className="font-body text-xs uppercase tracking-widest text-ink-3 font-semibold">Étagère</h3>
+
+              <div>
+                <div className="flex items-center justify-between text-xs font-body mb-1.5">
+                  <span className="text-ink-3">Remplissage</span>
+                  <span className="font-bold text-ink tabular-nums font-mono">{(product.fillPct ?? 0).toFixed(0)}%</span>
+                </div>
+                <div className="h-2 w-full overflow-hidden rounded-full bg-surface-2">
+                  <div
+                    className="h-full rounded-full transition-all duration-700 ease-out"
+                    style={{
+                      width: `${Math.min(100, product.fillPct ?? 0)}%`,
+                      background: (product.fillPct ?? 0) > 80
+                        ? 'linear-gradient(90deg, #00B894, #00D4AA)'
+                        : `linear-gradient(90deg, ${payoff.text}, ${payoff.text}dd)`,
+                    }}
+                  />
+                </div>
               </div>
 
-              {/* Target amount */}
-              {product.targetAmount != null && (
-                <DetailRow
-                  label="Objectif"
-                  value={formatAmount(product.targetAmount)}
-                />
-              )}
+              {product.targetAmount != null && <DetailRow label="Objectif" value={formatAmount(product.targetAmount)} />}
 
-              {/* Closing date */}
               {product.shelfClosingDate && (
-                <DetailRow
-                  label="Date de closing"
-                  value={formatDate(product.shelfClosingDate)}
-                />
+                <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-surface-2 border border-border/50">
+                  <Clock size={12} className="text-ink-3" />
+                  <div className="flex-1">
+                    <p className="text-[10px] text-ink-3 font-body uppercase tracking-wider">Clôture</p>
+                    <p className="text-xs font-semibold text-ink font-body">{formatDate(product.shelfClosingDate)}</p>
+                  </div>
+                  {closingDays != null && closingDays <= 30 && (
+                    <span className="text-[10px] font-bold text-red bg-red-light px-1.5 py-0.5 rounded">J-{closingDays}</span>
+                  )}
+                </div>
               )}
 
-              {/* CTA */}
-              <div className="mt-auto pt-4">
-                <Button
-                  variant="primary"
-                  size="lg"
-                  className="w-full"
-                  disabled={isProductClosed}
-                  onClick={() => setModalOpen(true)}
-                >
-                  {isProductClosed
-                    ? 'Produit fermé'
-                    : "Exprimer une marque d\u2019intérêt"}
+              <div className="mt-2">
+                <Button variant="primary" size="lg" className="w-full" disabled={isClosed} onClick={() => setModalOpen(true)}>
+                  <TrendingUp size={16} />
+                  {isClosed ? 'Produit fermé' : "Marquer mon intérêt"}
                 </Button>
-                {!isProductClosed && (
-                  <p className="mt-2 text-center text-[11px] text-ink-3 font-body">
-                    Sans engagement ferme de souscription
+                {!isClosed && (
+                  <p className="mt-2 text-center text-[10px] text-ink-3 font-body leading-relaxed">
+                    Sans engagement ferme de souscription. Votre marque d&apos;intérêt sera transmise aux équipes de distribution.
                   </p>
                 )}
               </div>
-            </CardContent>
-          </Card>
-        </div>
 
-        {/* ── Barrier Gauge ─────────────────────────────────────────────── */}
-        {product.barrierCapPct != null && (
-          <Card static className="mb-6">
-            <CardHeader>
-              <CardTitle>Jauge barrière</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-center py-4">
-                <BarrierGauge
-                  barrierPct={product.barrierCapPct}
-                  currentPct={product.currentPct ?? 100}
-                  size={240}
-                />
+              <button className="flex items-center gap-2 px-3 py-2.5 rounded-md border border-border/80 bg-surface-2 hover:border-violet/40 hover:bg-violet-pale text-ink-3 hover:text-violet transition-all duration-150 w-full text-left">
+                <FileText size={14} />
+                <div className="flex-1">
+                  <p className="text-xs font-semibold font-body">Document KID (PRIIPS)</p>
+                  <p className="text-[10px] font-body opacity-60">Document d&apos;informations clés</p>
+                </div>
+                <ExternalLink size={12} />
+              </button>
+            </div>
+
+            {product.entryFeePct != null && (
+              <div className="bg-white rounded-xl border border-border/80 p-4">
+                <h4 className="text-[10px] uppercase tracking-widest text-ink-3 font-semibold font-body mb-2">Commission</h4>
+                <p className="text-lg font-display font-bold text-ink">
+                  {product.entryFeePct.toFixed(2)}%
+                  <span className="text-xs text-ink-3 font-body font-normal ml-1">frais d&apos;entrée</span>
+                </p>
               </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* ── Payoff Canvas ─────────────────────────────────────────────── */}
-        <Card static>
-          <CardHeader>
-            <CardTitle>Simulation de scénarios</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <PayoffCanvas scenarios={scenarios} height={320} />
-          </CardContent>
-        </Card>
+            )}
+          </div>
+        </div>
       </main>
 
-      {/* ── Commitment Modal ──────────────────────────────────────────────── */}
-      {product.shelfId && (
-        <CommitmentModal
-          isOpen={modalOpen}
-          onClose={() => setModalOpen(false)}
-          shelfId={product.shelfId}
-          productName={product.name}
-        />
-      )}
-      {!product.shelfId && modalOpen && (
-        <CommitmentModal
-          isOpen={modalOpen}
-          onClose={() => setModalOpen(false)}
-          shelfId={product.id}
-          productName={product.name}
-        />
-      )}
+      <CommitmentModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        shelfId={product.shelfId ?? product.id}
+        productName={product.name}
+      />
     </>
   );
 }

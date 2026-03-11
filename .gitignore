@@ -44,3 +44,4 @@ __pycache__/
 .venv/
 .ipynb_checkpoints/
 top5playersclean.csv
+.vercel

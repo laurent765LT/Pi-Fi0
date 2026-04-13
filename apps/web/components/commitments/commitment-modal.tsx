@@ -5,7 +5,7 @@ import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { useCreateCommitment } from '@/hooks/use-commitments';
 import { cn } from '@/lib/cn';
-import { FileText, Shield, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { FileText, Shield, CheckCircle2, AlertTriangle, Minus, Plus, Users } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -17,6 +17,7 @@ interface CommitmentModalProps {
   shelfId: string;
   productName: string;
   productIsin?: string;
+  alreadyCommitted?: boolean;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -36,7 +37,16 @@ const AMOUNTS = [
 const CONTRACT_TYPES: { value: ContractType; label: string; description: string }[] = [
   { value: 'ASSURANCE_VIE', label: 'Assurance-Vie', description: 'Contrat multisupport' },
   { value: 'CTO', label: 'CTO', description: 'Compte-Titres Ordinaire' },
-  { value: 'PEA', label: 'PEA', description: 'Plan d\u2019\u00c9pargne en Actions' },
+  { value: 'PEA', label: 'PEA', description: 'Plan d’Épargne en Actions' },
+];
+
+const INSURER_OPTIONS = [
+  'Generali Vie',
+  'Cardiff Vie',
+  'Spirica',
+  'Apicil',
+  'Suravenir',
+  'Autre',
 ];
 
 function formatAmount(amount: number): string {
@@ -62,11 +72,14 @@ export function CommitmentModal({
   shelfId,
   productName,
   productIsin,
+  alreadyCommitted = false,
 }: CommitmentModalProps) {
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState('');
   const [useCustom, setUseCustom] = useState(false);
   const [contractType, setContractType] = useState<ContractType>('ASSURANCE_VIE');
+  const [insurerEnvelope, setInsurerEnvelope] = useState('Generali Vie');
+  const [clientCount, setClientCount] = useState(1);
   const [kidAcknowledged, setKidAcknowledged] = useState(false);
   const [success, setSuccess] = useState(false);
   const { mutate: createCommitment, isPending, error } = useCreateCommitment();
@@ -91,6 +104,8 @@ export function CommitmentModal({
     setCustomAmount('');
     setUseCustom(false);
     setContractType('ASSURANCE_VIE');
+    setInsurerEnvelope('Generali Vie');
+    setClientCount(1);
     setKidAcknowledged(false);
     setSuccess(false);
     onClose();
@@ -111,7 +126,7 @@ export function CommitmentModal({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title="Marque d'int\u00e9r\u00eat"
+      title="Marque d'intérêt"
       maxWidth="max-w-lg"
     >
       {success ? (
@@ -122,10 +137,10 @@ export function CommitmentModal({
           </div>
           <div className="text-center">
             <p className="font-display font-bold text-ink text-base mb-1">
-              Marque d&apos;int\u00e9r\u00eat enregistr\u00e9e
+              Marque d&apos;intérêt enregistrée
             </p>
             <p className="text-sm text-ink-3 font-body">
-              Votre marque d&apos;int\u00e9r\u00eat de{' '}
+              Votre marque d&apos;intérêt de{' '}
               <span className="font-semibold text-ink">
                 {formatAmount(effectiveAmount!)}
               </span>{' '}
@@ -133,9 +148,13 @@ export function CommitmentModal({
               <span className="font-semibold text-ink">
                 {CONTRACT_TYPES.find((c) => c.value === contractType)?.label}
               </span>{' '}
+              via{' '}
+              <span className="font-semibold text-ink">{insurerEnvelope}</span>{' '}
+              pour{' '}
+              <span className="font-semibold text-ink">{clientCount} client{clientCount > 1 ? 's' : ''}</span>{' '}
               sur{' '}
               <span className="font-semibold text-ink">{productName}</span> a
-              bien \u00e9t\u00e9 transmise.
+              bien été transmise.
             </p>
           </div>
           <Button variant="outline" size="md" onClick={handleClose} className="mt-2">
@@ -145,6 +164,19 @@ export function CommitmentModal({
       ) : (
         /* ── Selection state ────────────────────────────────────────── */
         <div className="flex flex-col gap-4">
+          {/* Already committed warning */}
+          {alreadyCommitted && (
+            <div className="rounded-md bg-gold-light border border-gold/30 px-3 py-2.5 flex items-start gap-2">
+              <AlertTriangle size={14} className="text-gold shrink-0 mt-0.5" />
+              <div>
+                <p className="text-xs font-semibold text-ink font-body">Intérêt déjà enregistré</p>
+                <p className="text-[11px] text-ink-3 font-body mt-0.5">
+                  Vous avez déjà une marque d&apos;intérêt sur ce produit. Vous pouvez en ajouter une nouvelle si nécessaire.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Product name */}
           <div className="rounded-md bg-surface-2 px-3 py-2">
             <p className="text-xs text-ink-3 font-body uppercase tracking-widest mb-0.5">
@@ -189,6 +221,54 @@ export function CommitmentModal({
             </div>
           </div>
 
+          {/* Insurer envelope */}
+          <div>
+            <p className="text-xs text-ink-3 font-body uppercase tracking-widest mb-2">
+              Assureur enveloppe
+            </p>
+            <select
+              value={insurerEnvelope}
+              onChange={(e) => setInsurerEnvelope(e.target.value)}
+              className={cn(
+                'w-full h-9 rounded-md border border-border bg-white px-3 text-sm font-body text-ink',
+                'transition-all duration-150 cursor-pointer',
+                'focus:outline-none focus:ring-2 focus:ring-violet/30 focus:border-violet',
+                "appearance-none bg-[url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"6\" fill=\"none\"><path d=\"M1 1l4 4 4-4\" stroke=\"%237B6FA0\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>')] bg-no-repeat bg-[right_10px_center]",
+              )}
+            >
+              {INSURER_OPTIONS.map((name) => (
+                <option key={name} value={name}>{name}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Client count */}
+          <div>
+            <p className="text-xs text-ink-3 font-body uppercase tracking-widest mb-2">
+              Nombre de clients concernés
+            </p>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setClientCount(Math.max(1, clientCount - 1))}
+                className="w-9 h-9 rounded-md border border-border bg-white flex items-center justify-center text-ink-3 hover:border-violet hover:text-violet transition-all"
+              >
+                <Minus size={14} />
+              </button>
+              <div className="flex items-center gap-1.5 px-4 py-1.5 rounded-md bg-surface-2 border border-border min-w-[80px] justify-center">
+                <Users size={13} className="text-ink-3" />
+                <span className="font-display text-lg font-bold text-ink tabular-nums">{clientCount}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setClientCount(clientCount + 1)}
+                className="w-9 h-9 rounded-md border border-border bg-white flex items-center justify-center text-ink-3 hover:border-violet hover:text-violet transition-all"
+              >
+                <Plus size={14} />
+              </button>
+            </div>
+          </div>
+
           {/* Amount selection */}
           <div>
             <p className="text-xs text-ink-3 font-body uppercase tracking-widest mb-2">
@@ -211,7 +291,7 @@ export function CommitmentModal({
                         : 'border-border bg-white text-ink-2 hover:border-violet/50 hover:text-violet hover:bg-violet-pale',
                     )}
                     aria-pressed={isSelected}
-                    aria-label={`S\u00e9lectionner ${formatAmount(value)}`}
+                    aria-label={`Sélectionner ${formatAmount(value)}`}
                   >
                     {label}
                   </button>
@@ -250,13 +330,13 @@ export function CommitmentModal({
                     useCustom ? 'border-violet bg-violet-pale/30' : 'border-border bg-white',
                   )}
                 />
-                <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-ink-3 font-body">\u20ac</span>
+                <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-ink-3 font-body">€</span>
               </div>
             </div>
 
             {effectiveAmount !== null && effectiveAmount > 0 && (
               <p className="mt-2 text-center text-xs text-ink-3 font-body">
-                Montant s\u00e9lectionn\u00e9 :{' '}
+                Montant sélectionné :{' '}
                 <span className="font-semibold text-violet">
                   {formatAmount(effectiveAmount)}
                 </span>
@@ -266,7 +346,7 @@ export function CommitmentModal({
             {useCustom && customAmount && parseCustomAmount(customAmount) !== null && parseCustomAmount(customAmount)! < 1000 && (
               <p className="mt-1 text-center text-[11px] text-red font-body flex items-center justify-center gap-1">
                 <AlertTriangle size={11} />
-                Montant minimum : 1 000 \u20ac
+                Montant minimum : 1 000 €
               </p>
             )}
           </div>
@@ -289,11 +369,11 @@ export function CommitmentModal({
             <div className="flex-1">
               <p className="text-xs font-semibold text-ink font-body flex items-center gap-1.5">
                 <FileText size={12} className="text-violet shrink-0" />
-                Document d&apos;Informations Cl\u00e9s (KID)
+                Document d&apos;Informations Clés (KID)
               </p>
               <p className="text-[11px] text-ink-3 font-body mt-0.5 leading-relaxed">
-                Je confirme avoir lu et compris le KID de ce produit structur\u00e9, ainsi que
-                les risques associ\u00e9s \u00e0 cet investissement.
+                Je confirme avoir lu et compris le KID de ce produit structuré, ainsi que
+                les risques associés à cet investissement.
               </p>
             </div>
           </label>
@@ -301,7 +381,7 @@ export function CommitmentModal({
           {/* Error */}
           {error && (
             <p className="rounded-md bg-red/10 px-3 py-2 text-sm text-red font-body">
-              {(error as Error).message ?? 'Une erreur est survenue. Veuillez r\u00e9essayer.'}
+              {(error as Error).message ?? 'Une erreur est survenue. Veuillez réessayer.'}
             </p>
           )}
 
@@ -310,10 +390,10 @@ export function CommitmentModal({
             <div className="flex items-start gap-2">
               <Shield size={12} className="text-ink-3 shrink-0 mt-0.5" />
               <p>
-                Cette marque d&apos;int\u00e9r\u00eat ne constitue pas un engagement ferme de
-                souscription. Elle sera transmise \u00e0 nos \u00e9quipes pour traitement. La
-                souscription d\u00e9finitive sera formalis\u00e9e ult\u00e9rieurement selon les
-                proc\u00e9dures r\u00e9glementaires en vigueur (MIF2 / DDA).
+                Cette marque d&apos;intérêt ne constitue pas un engagement ferme de
+                souscription. Elle sera transmise à nos équipes pour traitement. La
+                souscription définitive sera formalisée ultérieurement selon les
+                procédures réglementaires en vigueur (MIF2 / DDA).
               </p>
             </div>
           </div>
@@ -329,7 +409,7 @@ export function CommitmentModal({
               onClick={handleConfirm}
               disabled={!canConfirm || isPending}
             >
-              {isPending ? 'Envoi en cours\u2026' : "Confirmer la marque d\u2019int\u00e9r\u00eat"}
+              {isPending ? 'Envoi en cours…' : "Confirmer la marque d’intérêt"}
             </Button>
           </div>
         </div>

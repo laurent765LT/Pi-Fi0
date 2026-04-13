@@ -13,7 +13,10 @@ out/
 # Environment
 .env
 .env.local
+.env.production
 .env.*.local
+*.pem
+*.key
 
 # IDE
 .vscode/

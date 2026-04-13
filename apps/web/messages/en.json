@@ -1,0 +1,80 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "close": "Close",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "auth": {
+    "login": "Log in",
+    "logout": "Log out",
+    "email": "Email address",
+    "password": "Password",
+    "loginTitle": "Login",
+    "demoAccounts": "Demo accounts",
+    "invalidCredentials": "Invalid credentials",
+    "connecting": "Connecting..."
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "products": "Products",
+    "events": "Events",
+    "portfolio": "Portfolio",
+    "commissions": "Commissions",
+    "pricing": "Pricing",
+    "rfq": "RFQ Screener",
+    "research": "Research",
+    "notifications": "Notifications",
+    "admin": "Administration",
+    "navigation": "Navigation",
+    "tools": "Tools"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "totalProducts": "Active products",
+    "totalVolume": "Total volume",
+    "pendingCommitments": "Pending commitments",
+    "conversionRate": "Conversion rate"
+  },
+  "products": {
+    "title": "Product Catalog",
+    "searchPlaceholder": "Search product, ISIN, underlying...",
+    "noResults": "No products found",
+    "compare": "Compare",
+    "details": "View details",
+    "coupon": "Coupon",
+    "barrier": "Barrier",
+    "maturity": "Maturity",
+    "issuer": "Issuer",
+    "sri": "SRI"
+  },
+  "commitments": {
+    "title": "Commitments",
+    "amount": "Amount",
+    "status": "Status",
+    "pending": "Pending",
+    "review": "Under review",
+    "confirmed": "Confirmed",
+    "cancelled": "Cancelled",
+    "approve": "Approve",
+    "reject": "Reject"
+  },
+  "pricing": {
+    "title": "Pricing Engine",
+    "fairValue": "Fair Value",
+    "issuePrice": "Issue Price",
+    "consultIssuers": "Consult issuers",
+    "aiGuide": "AI Assistant"
+  }
+}

@@ -306,22 +306,22 @@ export default function ResearchPage() {
     <div className="animate-fade-in">
       {/* ── Header ──────────────────────────────────────────────────── */}
       <div className="mb-6">
-        <h1 className="font-display text-[28px] font-bold text-ink leading-tight">
+        <h1 className="font-display text-[28px] font-bold leading-tight bg-gradient-to-r from-violet via-violet-dark to-indigo-600 bg-clip-text text-transparent">
           Research & Trade Ideas
         </h1>
-        <p className="text-sm text-ink-3 font-body mt-1">
+        <p className="text-sm text-ink-3 font-body mt-1.5 max-w-xl">
           Analyses de marché et idées de structuration basées sur des données financières en temps réel.
         </p>
-        <div className="gradient-bar h-[2px] rounded-full mt-5 opacity-60" />
+        <div className="gradient-bar h-[3px] rounded-full mt-5 opacity-70" />
       </div>
 
       {/* ── Featured Carousel ───────────────────────────────────────── */}
-      <div className="bg-white rounded-xl border border-border/80 p-6 mb-6">
+      <div className="bg-gradient-to-br from-white via-white to-violet-ghost/30 rounded-xl border border-border/80 p-6 mb-6 shadow-sm hover:shadow-card transition-shadow duration-300">
         <div className="flex items-center gap-6">
           <button
             onClick={() => setFeaturedIndex((i) => Math.max(0, i - 1))}
             disabled={featuredIndex === 0}
-            className="shrink-0 w-8 h-8 rounded-full border border-border/80 flex items-center justify-center text-ink-3 hover:text-violet hover:border-violet transition-all disabled:opacity-30"
+            className="shrink-0 w-8 h-8 rounded-full border border-border/80 flex items-center justify-center text-ink-3 hover:text-violet hover:border-violet hover:shadow-md hover:scale-110 transition-all duration-200 disabled:opacity-30"
           >
             <ChevronLeft size={16} />
           </button>
@@ -334,7 +334,7 @@ export default function ResearchPage() {
               {currentFeatured.title}
             </h2>
             <p className="text-sm text-ink-3 font-body">{currentFeatured.subtitle}</p>
-            <p className="font-display text-2xl font-bold text-violet mt-2">
+            <p className="font-display text-2xl font-bold bg-gradient-to-r from-violet to-teal bg-clip-text text-transparent mt-2 drop-shadow-sm">
               {currentFeatured.returnPct}%
             </p>
           </div>
@@ -342,17 +342,17 @@ export default function ResearchPage() {
           <button
             onClick={() => setFeaturedIndex((i) => Math.min(TRADE_IDEAS.length - 1, i + 1))}
             disabled={featuredIndex === TRADE_IDEAS.length - 1}
-            className="shrink-0 w-8 h-8 rounded-full border border-border/80 flex items-center justify-center text-ink-3 hover:text-violet hover:border-violet transition-all disabled:opacity-30"
+            className="shrink-0 w-8 h-8 rounded-full border border-border/80 flex items-center justify-center text-ink-3 hover:text-violet hover:border-violet hover:shadow-md hover:scale-110 transition-all duration-200 disabled:opacity-30"
           >
             <ChevronRight size={16} />
           </button>
 
           <div className="shrink-0 flex flex-col gap-2 border-l border-border/60 pl-6">
-            <button className="flex items-center gap-2 text-[12px] text-ink-3 hover:text-violet transition-colors font-body">
+            <button className="flex items-center gap-2 text-[12px] text-ink-3 hover:text-violet hover:translate-x-0.5 transition-all duration-200 font-body">
               <Download size={14} />
               Télécharger
             </button>
-            <button className="flex items-center gap-2 text-[12px] text-ink-3 hover:text-violet transition-colors font-body">
+            <button className="flex items-center gap-2 text-[12px] text-ink-3 hover:text-violet hover:translate-x-0.5 transition-all duration-200 font-body">
               <Share2 size={14} />
               Partager
             </button>
@@ -370,9 +370,9 @@ export default function ResearchPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Rechercher une idée de trade..."
             className={cn(
-              'w-full h-9 rounded-lg border border-border/80 bg-white pl-9 pr-3 text-[13px] font-body text-ink',
-              'placeholder:text-ink-3/60 transition-all duration-150',
-              'focus:outline-none focus:ring-2 focus:ring-violet/30 focus:border-violet',
+              'w-full h-9 rounded-lg border border-border/80 bg-white/80 backdrop-blur-sm pl-9 pr-3 text-[13px] font-body text-ink shadow-sm',
+              'placeholder:text-ink-3/60 transition-all duration-200',
+              'focus:outline-none focus:ring-2 focus:ring-violet/30 focus:border-violet focus:shadow-md',
             )}
           />
         </div>
@@ -381,10 +381,10 @@ export default function ResearchPage() {
           <button
             onClick={() => setSelectedCategory('')}
             className={cn(
-              'px-3 py-1.5 rounded-full text-[11px] font-semibold font-body transition-all duration-150',
+              'px-3 py-1.5 rounded-full text-[11px] font-semibold font-body transition-all duration-200 hover:scale-105 active:scale-95',
               !selectedCategory
-                ? 'bg-violet text-white'
-                : 'bg-white border border-border/80 text-ink-3 hover:text-ink',
+                ? 'bg-gradient-to-r from-violet to-violet-dark text-white shadow-sm'
+                : 'bg-white border border-border/80 text-ink-3 hover:text-ink hover:shadow-sm',
             )}
           >
             Tous
@@ -394,10 +394,10 @@ export default function ResearchPage() {
               key={key}
               onClick={() => setSelectedCategory(selectedCategory === key ? '' : key)}
               className={cn(
-                'px-3 py-1.5 rounded-full text-[11px] font-semibold font-body transition-all duration-150 border',
+                'px-3 py-1.5 rounded-full text-[11px] font-semibold font-body transition-all duration-200 border hover:scale-105 active:scale-95',
                 selectedCategory === key
-                  ? 'text-white border-transparent'
-                  : 'bg-white border-border/80 text-ink-3 hover:text-ink',
+                  ? 'text-white border-transparent shadow-sm'
+                  : 'bg-white border-border/80 text-ink-3 hover:text-ink hover:shadow-sm',
               )}
               style={
                 selectedCategory === key
@@ -424,20 +424,20 @@ export default function ResearchPage() {
                   key={idea.id}
                   onClick={() => setSelectedIdea(idea)}
                   className={cn(
-                    'text-left bg-white rounded-xl border overflow-hidden transition-all duration-200',
-                    'hover:shadow-card hover:-translate-y-0.5',
+                    'text-left bg-white rounded-xl border overflow-hidden transition-all duration-300 group',
+                    'hover:shadow-lg hover:-translate-y-1 hover:border-violet/40',
                     isSelected
-                      ? 'border-violet shadow-card ring-2 ring-violet/20'
-                      : 'border-border/80',
+                      ? 'border-violet shadow-lg ring-2 ring-violet/20 bg-gradient-to-r from-white to-violet-ghost/40'
+                      : 'border-border/80 shadow-sm',
                   )}
                 >
                   <div className="flex gap-3 p-3">
                     {/* Color accent */}
                     <div
-                      className="w-16 h-16 rounded-lg shrink-0 flex items-center justify-center"
+                      className="w-16 h-16 rounded-lg shrink-0 flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all duration-300"
                       style={{ background: `linear-gradient(135deg, ${idea.imageColor}, ${idea.imageColor}88)` }}
                     >
-                      <TrendingUp size={20} className="text-white/60" />
+                      <TrendingUp size={20} className="text-white/60 group-hover:text-white/90 transition-colors duration-300" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 mb-1">
@@ -467,12 +467,13 @@ export default function ResearchPage() {
         {/* ── Preview Panel (right) ────────────────────────────── */}
         <div className="flex-1 min-w-0">
           {selectedIdea ? (
-            <div className="bg-white rounded-xl border border-border/80 overflow-hidden">
+            <div className="bg-white rounded-xl border border-border/80 overflow-hidden shadow-sm">
               {/* Preview Header */}
               <div
                 className="px-6 py-6 text-white relative overflow-hidden"
-                style={{ background: `linear-gradient(135deg, ${selectedIdea.imageColor}, ${selectedIdea.imageColor}cc)` }}
+                style={{ background: `linear-gradient(135deg, ${selectedIdea.imageColor}, ${selectedIdea.imageColor}cc, ${selectedIdea.imageColor}99)` }}
               >
+                <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent" />
                 <div className="absolute inset-0 opacity-10">
                   <div className="absolute top-4 right-4">
                     <Globe size={80} className="text-white" />
@@ -493,7 +494,7 @@ export default function ResearchPage() {
                   <p className="text-white/70 font-body text-sm mb-3">{selectedIdea.subtitle}</p>
                   <div className="flex items-center gap-4">
                     <span className="text-[12px] text-white/80 font-body">{selectedIdea.underlying}</span>
-                    <span className="font-display text-3xl font-bold">{selectedIdea.returnPct}%</span>
+                    <span className="font-display text-3xl font-bold drop-shadow-lg">{selectedIdea.returnPct}%</span>
                   </div>
                 </div>
               </div>
@@ -514,7 +515,7 @@ export default function ResearchPage() {
                 {/* Key Metrics */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                   {selectedIdea.analysis.keyMetrics.map((m, i) => (
-                    <div key={i} className="bg-surface rounded-lg p-3">
+                    <div key={i} className="bg-surface rounded-lg p-3 hover:bg-violet-ghost/50 hover:shadow-sm transition-all duration-200 border border-transparent hover:border-violet/10">
                       <span className="text-[9px] uppercase tracking-[0.15em] text-ink-3 font-bold block mb-1">{m.label}</span>
                       <span className="text-[14px] font-bold text-violet font-display">{m.value}</span>
                     </div>
@@ -522,7 +523,7 @@ export default function ResearchPage() {
                 </div>
 
                 {/* Structure */}
-                <div className="bg-violet-ghost rounded-lg p-4">
+                <div className="bg-gradient-to-br from-violet-ghost to-violet-ghost/40 rounded-lg p-4 border border-violet/10 shadow-sm">
                   <div className="flex items-center gap-2 mb-2">
                     <Target size={14} className="text-violet" />
                     <span className="text-[12px] font-bold text-violet font-body">Structure proposée</span>
@@ -572,7 +573,7 @@ export default function ResearchPage() {
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {selectedIdea.analysis.sources.map((s, i) => (
-                      <span key={i} className="inline-flex items-center px-2 py-1 rounded-md bg-surface text-[10px] text-ink-3 font-body">
+                      <span key={i} className="inline-flex items-center px-2 py-1 rounded-md bg-surface text-[10px] text-ink-3 font-body hover:bg-violet-ghost hover:text-violet/80 transition-colors duration-200 cursor-default">
                         {s}
                       </span>
                     ))}
@@ -581,11 +582,11 @@ export default function ResearchPage() {
 
                 {/* Actions */}
                 <div className="flex items-center gap-3 pt-2">
-                  <button className="h-9 px-4 rounded-lg bg-violet text-white text-[12px] font-semibold flex items-center gap-2 hover:bg-violet-dark transition-colors">
+                  <button className="h-9 px-4 rounded-lg bg-gradient-to-r from-violet to-violet-dark text-white text-[12px] font-semibold flex items-center gap-2 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
                     <Download size={13} />
                     Télécharger le PDF
                   </button>
-                  <button className="h-9 px-4 rounded-lg border border-border/80 text-ink-3 text-[12px] font-semibold flex items-center gap-2 hover:text-violet hover:border-violet transition-colors">
+                  <button className="h-9 px-4 rounded-lg border border-border/80 text-ink-3 text-[12px] font-semibold flex items-center gap-2 hover:text-violet hover:border-violet hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
                     <Share2 size={13} />
                     Partager
                   </button>
@@ -593,8 +594,8 @@ export default function ResearchPage() {
               </div>
             </div>
           ) : (
-            <div className="bg-white rounded-xl border border-border/80 p-12 flex flex-col items-center justify-center gap-4">
-              <FileText size={40} className="text-ink-3/30" />
+            <div className="bg-gradient-to-br from-white to-violet-ghost/20 rounded-xl border border-border/80 p-12 flex flex-col items-center justify-center gap-4 shadow-sm">
+              <FileText size={40} className="text-ink-3/30 animate-pulse" />
               <p className="text-sm text-ink-3 font-body">
                 Sélectionnez une idée de trade pour voir l&apos;aperçu.
               </p>

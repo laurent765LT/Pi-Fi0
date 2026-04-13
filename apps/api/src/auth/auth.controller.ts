@@ -7,6 +7,7 @@ import {
   Req,
   HttpCode,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { IsEmail, IsString, MinLength } from 'class-validator';
@@ -30,6 +31,7 @@ export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
   @Post('login')
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   @HttpCode(200)
   async login(@Body() dto: LoginDto) {
     return this.auth.login(dto.email, dto.password);

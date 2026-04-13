@@ -1,0 +1,20 @@
+# Strick'in — robots.txt
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /portfolio/
+Disallow: /commissions/
+Disallow: /pricing/
+Disallow: /rfq/
+Disallow: /notifications/
+Disallow: /settings/
+Disallow: /profile/
+
+# Allow public pages
+Allow: /
+Allow: /login
+Allow: /products
+
+Sitemap: https://app.strickin.com/sitemap.xml

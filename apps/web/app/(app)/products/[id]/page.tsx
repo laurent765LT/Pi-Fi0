@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
   ArrowLeft, Heart, Share2, FileText, AlertTriangle, Calendar,
-  Shield, TrendingUp, Info, ExternalLink, Clock,
+  Shield, TrendingUp, Info, ExternalLink, Clock, Users, Download,
+  Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useProduct, useProductPayoff } from '@/hooks/use-products';
@@ -13,7 +14,9 @@ import { useFavorites, useToggleFavorite, useTrackView } from '@/hooks/use-favor
 import { PayoffCanvas, buildDefaultScenarios } from '@/components/products/payoff-canvas';
 import { BarrierGauge } from '@/components/products/barrier-gauge';
 import { CommitmentModal } from '@/components/commitments/commitment-modal';
+import { useMyCommitments } from '@/hooks/use-commitments';
 import { Button } from '@/components/ui/button';
+import { ProductPdfExport } from '@/components/products/product-pdf-export';
 import { Tabs, TabPanel } from '@/components/ui/tabs';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -196,6 +199,9 @@ export default function ProductDetailPage() {
   const toggleFavorite = useToggleFavorite();
   const trackView = useTrackView();
 
+  const { data: myCommitments } = useMyCommitments();
+  const alreadyCommitted = (myCommitments ?? []).some((c: any) => c.shelfId === (product?.shelfId ?? product?.id));
+
   const [modalOpen, setModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -264,6 +270,7 @@ export default function ProductDetailPage() {
             <button className="p-2 rounded-lg border border-border text-ink-3 hover:text-violet hover:border-violet/30 hover:bg-violet-pale transition-all duration-200" title="Partager">
               <Share2 size={16} />
             </button>
+            <ProductPdfExport product={product} />
           </div>
         </div>
 
@@ -293,6 +300,18 @@ export default function ProductDetailPage() {
                 Fermé
               </span>
             )}
+            {product.createdAt && (Date.now() - new Date(product.createdAt).getTime()) < 7 * 24 * 60 * 60 * 1000 && (
+              <span className="inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-[11px] font-bold font-body bg-[#E4EAFF] text-[#0A2799] border border-[#C5D2FA]">
+                <Sparkles size={10} />
+                Nouveau
+              </span>
+            )}
+            {closingDays != null && closingDays > 0 && closingDays <= 30 && (
+              <span className="inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-[11px] font-bold font-body bg-[#FFF0F2] text-[#C41F36] border border-[#F8D0D5]">
+                <Clock size={10} />
+                Clôture J-{closingDays}
+              </span>
+            )}
           </div>
 
           <h1 className="font-display text-2xl md:text-3xl font-bold text-ink leading-tight mb-1.5">
@@ -304,6 +323,19 @@ export default function ProductDetailPage() {
             </span>
             <span>{product.issuerName}</span>
           </div>
+
+          {/* Compatible insurers */}
+          {Array.isArray(product.compatibleInsurers) && product.compatibleInsurers.length > 0 && (
+            <div className="flex items-center gap-2 mt-3 flex-wrap">
+              <span className="text-[10px] uppercase tracking-widest text-ink-3 font-semibold font-body">Assureurs :</span>
+              {product.compatibleInsurers.map((ins: string) => (
+                <span key={ins} className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium font-body bg-surface-2 text-ink-2 border border-border/60">
+                  {ins}
+                </span>
+              ))}
+            </div>
+          )}
+
           {product.description && (
             <p className="mt-4 text-sm text-ink-2 font-body leading-relaxed max-w-3xl">
               {product.description}
@@ -483,6 +515,26 @@ export default function ProductDetailPage() {
 
               {product.targetAmount != null && <DetailRow label="Objectif" value={formatAmount(product.targetAmount)} />}
 
+              {/* Interests & engagement */}
+              {(product.interestedCount != null || product.totalEngaged != null) && (
+                <div className="grid grid-cols-2 gap-2">
+                  {product.interestedCount != null && (
+                    <div className="flex flex-col items-center py-2 rounded-md bg-surface-2">
+                      <Users size={13} className="text-violet mb-1" />
+                      <span className="font-display text-lg font-bold text-ink">{product.interestedCount}</span>
+                      <span className="text-[9px] uppercase tracking-wider text-ink-3 font-body">CGP intéressés</span>
+                    </div>
+                  )}
+                  {product.totalEngaged != null && (
+                    <div className="flex flex-col items-center py-2 rounded-md bg-surface-2">
+                      <TrendingUp size={13} className="text-teal mb-1" />
+                      <span className="font-display text-lg font-bold text-ink">{formatAmount(product.totalEngaged)}</span>
+                      <span className="text-[9px] uppercase tracking-wider text-ink-3 font-body">Engagé</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {product.shelfClosingDate && (
                 <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-surface-2 border border-border/50">
                   <Clock size={12} className="text-ink-3" />
@@ -497,9 +549,18 @@ export default function ProductDetailPage() {
               )}
 
               <div className="mt-2">
-                <Button variant="primary" size="lg" className="w-full" disabled={isClosed} onClick={() => setModalOpen(true)}>
-                  <TrendingUp size={16} />
-                  {isClosed ? 'Produit fermé' : "Marquer mon intérêt"}
+                <Button
+                  variant={alreadyCommitted ? 'outline' : 'primary'}
+                  size="lg"
+                  className="w-full"
+                  disabled={isClosed}
+                  onClick={() => setModalOpen(true)}
+                >
+                  {alreadyCommitted ? (
+                    <><Shield size={16} /> Intérêt déjà enregistré</>
+                  ) : (
+                    <><TrendingUp size={16} /> {isClosed ? 'Produit fermé' : "Marquer mon intérêt"}</>
+                  )}
                 </Button>
                 {!isClosed && (
                   <p className="mt-2 text-center text-[10px] text-ink-3 font-body leading-relaxed">
@@ -508,14 +569,34 @@ export default function ProductDetailPage() {
                 )}
               </div>
 
-              <button className="flex items-center gap-2 px-3 py-2.5 rounded-md border border-border/80 bg-surface-2 hover:border-violet/40 hover:bg-violet-pale text-ink-3 hover:text-violet transition-all duration-150 w-full text-left">
-                <FileText size={14} />
-                <div className="flex-1">
-                  <p className="text-xs font-semibold font-body">Document KID (PRIIPS)</p>
-                  <p className="text-[10px] font-body opacity-60">Document d&apos;informations clés</p>
-                </div>
-                <ExternalLink size={12} />
-              </button>
+              {/* Documents section */}
+              <div className="flex flex-col gap-2">
+                <h4 className="text-[10px] uppercase tracking-widest text-ink-3 font-semibold font-body">Documents</h4>
+                {[
+                  { label: 'Document KID (PRIIPS)', sub: "Document d'informations clés", icon: FileText },
+                  { label: 'Fiche produit', sub: 'Présentation détaillée', icon: FileText },
+                  { label: 'Présentation client', sub: 'Support commercial', icon: Download },
+                ].map(({ label, sub, icon: Icon }) => {
+                  const isRecent = product.createdAt && (Date.now() - new Date(product.createdAt).getTime()) < 7 * 24 * 60 * 60 * 1000;
+                  return (
+                    <button key={label} className="flex items-center gap-2 px-3 py-2.5 rounded-md border border-border/80 bg-surface-2 hover:border-violet/40 hover:bg-violet-pale text-ink-3 hover:text-violet transition-all duration-150 w-full text-left">
+                      <Icon size={14} />
+                      <div className="flex-1">
+                        <p className="text-xs font-semibold font-body flex items-center gap-1.5">
+                          {label}
+                          {isRecent && (
+                            <span className="inline-flex items-center rounded-full bg-[#E4EAFF] text-[#0A2799] px-1.5 py-0 text-[8px] font-bold">
+                              Nouveau
+                            </span>
+                          )}
+                        </p>
+                        <p className="text-[10px] font-body opacity-60">{sub}</p>
+                      </div>
+                      <ExternalLink size={12} />
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {product.entryFeePct != null && (
@@ -536,6 +617,7 @@ export default function ProductDetailPage() {
         onClose={() => setModalOpen(false)}
         shelfId={product.shelfId ?? product.id}
         productName={product.name}
+        alreadyCommitted={alreadyCommitted}
       />
     </>
   );

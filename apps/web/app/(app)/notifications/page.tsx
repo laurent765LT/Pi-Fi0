@@ -189,21 +189,17 @@ export default function NotificationsPage() {
     markAllRead,
   } = useNotificationsStore();
 
+  const initDemo = useNotificationsStore((s) => s.initDemoNotifications);
+
   // Seed demo notifications on first load if store is empty
   useEffect(() => {
     if (notifications.length === 0) {
-      // Stagger the timestamps slightly so they look realistic
-      DEMO_NOTIFICATIONS.forEach((n, i) => {
-        // We temporarily override createdAt by calling addNotification and relying on the store's timestamp.
-        // To backdate them, we add them and it's fine — they'll all show "À l'instant" for the demo.
-        setTimeout(() => addNotification(n), i * 100);
-      });
+      initDemo();
     }
-    // Only run once on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const hasUnread = unreadCount > 0;
+  const hasUnread = unreadCount() > 0;
 
   return (
     <main className="max-w-container mx-auto px-6 py-8">
@@ -215,7 +211,7 @@ export default function NotificationsPage() {
           </h1>
           {hasUnread && (
             <span className="inline-flex items-center justify-center h-6 min-w-6 px-1.5 rounded-full bg-violet text-white text-[11px] font-bold leading-none">
-              {unreadCount > 99 ? '99+' : unreadCount}
+              {unreadCount() > 99 ? '99+' : unreadCount()}
             </span>
           )}
         </div>

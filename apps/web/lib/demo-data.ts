@@ -42,7 +42,10 @@ export const DEMO_PRODUCTS = [
     maturityDate: '2035-12-17', entryFeePct: 5.06, status: 'ACTIVE',
     description: 'Autocall Phoenix indexé sur Euronext Eurozone Sector Selection D50P. Remboursement anticipé si cours ≥ 85% du niveau initial. Taux de sortie croissant de 7% à 63%. Barrière à 50%.',
     fillPct: 62, targetAmount: 10_000_000, shelfClosingDate: '2026-04-15',
+    createdAt: '2026-02-15T10:00:00Z',
     observationDates: ['2026-12-02', '2027-12-02', '2028-12-04', '2029-12-03', '2030-12-02', '2031-12-02', '2032-12-02', '2033-12-02', '2034-12-04'],
+    interestedCount: 18, totalEngaged: 6_200_000,
+    compatibleInsurers: ['Generali Vie', 'Cardiff Vie', 'Spirica'],
   },
   // ─── 1 · MT4 · M Rendement OR ─────────────────────────────────────────────
   {
@@ -52,7 +55,10 @@ export const DEMO_PRODUCTS = [
     barrierCapPct: 90, autocallBarrierPct: null, couponPct: null, maxGainPct: 121, sri: 2,
     maturityDate: '2028-12-29', entryFeePct: 2.50, status: 'ACTIVE',
     description: 'Capital protégé à 90% indexé sur l\'or (iEdge Gold Shares EUR PR Index). Performance plafonnée à 121% du Montant Nominal. Durée 3 ans.',
-    fillPct: 44, targetAmount: 5_000_000,
+    fillPct: 44, targetAmount: 5_000_000, shelfClosingDate: '2026-05-30',
+    createdAt: '2026-03-01T09:00:00Z',
+    interestedCount: 12, totalEngaged: 2_200_000,
+    compatibleInsurers: ['Generali Vie', 'Cardiff Vie', 'Apicil', 'Suravenir'],
   },
   // ─── 2 · MT5 · M Rendement Mixte ──────────────────────────────────────────
   {
@@ -62,7 +68,10 @@ export const DEMO_PRODUCTS = [
     barrierCapPct: 50, autocallBarrierPct: 100, couponPct: 3, maxGainPct: 150, sri: 4,
     maturityDate: '2035-12-17', entryFeePct: 5.93, status: 'ACTIVE',
     description: 'Autocall avec coupon fixe de 3% de la Valeur Nominale Courante. Taux de sortie croissant de 5% à 45%. Barrière de protection à 50%.',
-    fillPct: 35, targetAmount: 8_000_000,
+    fillPct: 35, targetAmount: 8_000_000, shelfClosingDate: '2026-06-15',
+    createdAt: '2026-03-16T14:00:00Z',
+    interestedCount: 8, totalEngaged: 2_800_000,
+    compatibleInsurers: ['Generali Vie', 'Cardiff Vie', 'Spirica'],
     observationDates: ['2026-12-16', '2027-12-16', '2028-12-18', '2029-12-17', '2030-12-16', '2031-12-16', '2032-12-16', '2033-12-16', '2034-12-18'],
   },
   // ─── 3 · MT6 · M Equilibre CT ─────────────────────────────────────────────
@@ -73,7 +82,10 @@ export const DEMO_PRODUCTS = [
     barrierCapPct: 100, autocallBarrierPct: null, couponPct: 6.15, maxGainPct: 6.15, sri: 2,
     maturityDate: '2037-10-05', entryFeePct: 8.18, status: 'ACTIVE',
     description: 'Coupon conditionnel de 6.15% p.a. indexé sur EUR CMS 10 ans. Capital intégralement protégé à maturité. Barrière de coupon à 2.4%.',
-    fillPct: 85, targetAmount: 15_000_000,
+    fillPct: 85, targetAmount: 15_000_000, shelfClosingDate: '2026-04-05',
+    createdAt: '2026-01-20T08:00:00Z',
+    interestedCount: 32, totalEngaged: 12_750_000,
+    compatibleInsurers: ['Generali Vie', 'Cardiff Vie', 'Spirica', 'Apicil', 'Suravenir'],
     observationDates: ['2026-09-28', '2027-09-27', '2028-09-25', '2029-09-24', '2030-09-27', '2031-09-26', '2032-09-27', '2033-09-26', '2034-09-25', '2035-09-24', '2036-09-26'],
   },
   // ─── 4 · MT7 · M Ambition 10 ──────────────────────────────────────────────
@@ -84,7 +96,10 @@ export const DEMO_PRODUCTS = [
     barrierCapPct: 50, autocallBarrierPct: 90, couponPct: null, maxGainPct: 100, sri: 6,
     maturityDate: '2035-09-18', entryFeePct: 3.50, status: 'ACTIVE',
     description: 'Autocallable si performance ≥ -10%. Montant d\'intérêt par période croissant de 10% à 100%. Barrière à 50%. Sous-jacent iEdge Europe Leaders 20.',
-    fillPct: 28, targetAmount: 6_000_000,
+    fillPct: 28, targetAmount: 6_000_000, shelfClosingDate: '2026-07-01',
+    createdAt: '2026-02-05T11:00:00Z',
+    interestedCount: 6, totalEngaged: 1_680_000,
+    compatibleInsurers: ['Generali Vie', 'Spirica'],
   },
   // ─── 5 · MT8 · M Ambition 9 ───────────────────────────────────────────────
   {
@@ -94,7 +109,10 @@ export const DEMO_PRODUCTS = [
     barrierCapPct: 50, autocallBarrierPct: 100, couponPct: null, maxGainPct: 100, sri: 6,
     maturityDate: '2035-07-11', entryFeePct: 6.50, status: 'ACTIVE',
     description: 'Autocallable sur Morningstar Eurozone 50 Decrement. Gain max 2000€ pour 1000€ investis si cours ≥ 60% à maturité. Barrière à 50%.',
-    fillPct: 55, targetAmount: 4_000_000,
+    fillPct: 55, targetAmount: 4_000_000, shelfClosingDate: '2026-06-01',
+    createdAt: '2026-02-20T10:00:00Z',
+    interestedCount: 14, totalEngaged: 2_200_000,
+    compatibleInsurers: ['Generali Vie', 'Cardiff Vie', 'Apicil'],
   },
   // ─── 6 · MT9 · M Equilibre 7 ──────────────────────────────────────────────
   {
@@ -104,7 +122,10 @@ export const DEMO_PRODUCTS = [
     barrierCapPct: 100, autocallBarrierPct: null, couponPct: 6.00, maxGainPct: 6.00, sri: 2,
     maturityDate: '2037-07-05', entryFeePct: 7.50, status: 'ACTIVE',
     description: 'Coupon conditionnel de 6% p.a. indexé sur EUR CMS 10 ans. Capital intégralement protégé à maturité. Durée 12 ans 2 mois.',
-    fillPct: 72, targetAmount: 8_000_000,
+    fillPct: 72, targetAmount: 8_000_000, shelfClosingDate: '2026-05-15',
+    createdAt: '2026-01-10T09:00:00Z',
+    interestedCount: 22, totalEngaged: 5_760_000,
+    compatibleInsurers: ['Generali Vie', 'Cardiff Vie', 'Spirica', 'Apicil', 'Suravenir'],
     observationDates: ['2026-06-29', '2027-06-28', '2028-06-27', '2029-06-27', '2030-06-27', '2031-06-27', '2032-06-28', '2033-06-27', '2034-06-27', '2035-06-27', '2036-06-27'],
   },
   // ─── 7 · MT10 · Sélection Souveraineté Europe ─────────────────────────────
@@ -115,7 +136,10 @@ export const DEMO_PRODUCTS = [
     barrierCapPct: 50, autocallBarrierPct: 100, couponPct: null, maxGainPct: 105, sri: 6,
     maturityDate: '2035-06-04', entryFeePct: 3.50, status: 'ACTIVE',
     description: 'Autocallable thématique Défense européenne. Montant d\'intérêt croissant de 10.5% à 105%. Barrière à 50%. Sous-jacent Aerospace & Defense.',
-    fillPct: 92, targetAmount: 12_000_000,
+    fillPct: 92, targetAmount: 12_000_000, shelfClosingDate: '2026-03-30',
+    createdAt: '2026-03-18T15:00:00Z',
+    interestedCount: 45, totalEngaged: 11_040_000,
+    compatibleInsurers: ['Generali Vie', 'Cardiff Vie', 'Spirica', 'Suravenir'],
   },
   // ─── 8 · MT11 · M Equilibre 6 ─────────────────────────────────────────────
   {
@@ -125,7 +149,10 @@ export const DEMO_PRODUCTS = [
     barrierCapPct: 100, autocallBarrierPct: null, couponPct: 6.00, maxGainPct: 6.00, sri: 2,
     maturityDate: '2037-05-05', entryFeePct: 7.50, status: 'ACTIVE',
     description: 'Coupon conditionnel de 6% p.a. indexé sur EUR CMS 10 ans. Capital intégralement protégé à maturité. Durée 12 ans 2 mois.',
-    fillPct: 41, targetAmount: 8_000_000,
+    fillPct: 41, targetAmount: 8_000_000, shelfClosingDate: '2026-05-01',
+    createdAt: '2026-01-15T10:00:00Z',
+    interestedCount: 10, totalEngaged: 3_280_000,
+    compatibleInsurers: ['Generali Vie', 'Cardiff Vie', 'Spirica', 'Apicil', 'Suravenir'],
     observationDates: ['2026-04-27', '2027-04-28', '2028-04-27', '2029-04-26', '2030-04-25', '2031-04-28', '2032-04-28', '2033-04-28', '2034-04-27', '2035-04-27', '2036-04-25'],
   },
   // ─── 9 · MT12 · M Ambition 8 ──────────────────────────────────────────────
@@ -136,7 +163,10 @@ export const DEMO_PRODUCTS = [
     barrierCapPct: 50, autocallBarrierPct: 92, couponPct: null, maxGainPct: 90, sri: 5,
     maturityDate: '2035-04-30', entryFeePct: 3.50, status: 'ACTIVE',
     description: 'Autocallable ESG Transatlantique si performance ≥ -7.5%. Montant d\'intérêt croissant de 9% à 90%. Barrière à 50%.',
-    fillPct: 33, targetAmount: 5_000_000,
+    fillPct: 33, targetAmount: 5_000_000, shelfClosingDate: '2026-06-30',
+    createdAt: '2026-03-19T08:00:00Z',
+    interestedCount: 5, totalEngaged: 1_650_000,
+    compatibleInsurers: ['Generali Vie', 'Spirica'],
   },
   // ─── 10 · MT13 · G Equilibre ──────────────────────────────────────────────
   {
@@ -146,7 +176,10 @@ export const DEMO_PRODUCTS = [
     barrierCapPct: 100, autocallBarrierPct: null, couponPct: null, maxGainPct: null, sri: 2,
     maturityDate: '2037-01-19', entryFeePct: 3.00, status: 'ACTIVE',
     description: 'Placement dynamique risqué de type taux. Capital protégé à l\'échéance ou en cas de remboursement anticipé automatique. Durée 12 ans. Distribution Generali.',
-    fillPct: 67, targetAmount: 10_000_000,
+    fillPct: 67, targetAmount: 10_000_000, shelfClosingDate: '2026-04-20',
+    createdAt: '2025-12-01T09:00:00Z',
+    interestedCount: 19, totalEngaged: 6_700_000,
+    compatibleInsurers: ['Generali Vie'],
   },
   // ─── 11 · MT14 · M Equilibre 5 ────────────────────────────────────────────
   {
@@ -156,7 +189,10 @@ export const DEMO_PRODUCTS = [
     barrierCapPct: 100, autocallBarrierPct: null, couponPct: 5.00, maxGainPct: 5.00, sri: 2,
     maturityDate: '2037-03-02', entryFeePct: 6.50, status: 'ACTIVE',
     description: 'Phoenix lié au 10Y EUR ICE Swap Rate. Coupon 50€/titre si taux ≤ 3.10%. Remboursement anticipé si taux ≤ 2.30%. Capital protégé 100%.',
-    fillPct: 78, targetAmount: 7_000_000,
+    fillPct: 78, targetAmount: 7_000_000, shelfClosingDate: '2026-04-10',
+    createdAt: '2026-02-01T10:00:00Z',
+    interestedCount: 25, totalEngaged: 5_460_000,
+    compatibleInsurers: ['Generali Vie', 'Cardiff Vie', 'Apicil'],
     observationDates: ['2027-02-22', '2028-02-21', '2029-02-21', '2030-02-21', '2031-02-21', '2032-02-23', '2033-02-21', '2034-02-21', '2035-02-21', '2036-02-21', '2037-02-23'],
   },
   // ─── 12 · MT15 · M Equilibre 4 ────────────────────────────────────────────
@@ -167,7 +203,10 @@ export const DEMO_PRODUCTS = [
     barrierCapPct: 100, autocallBarrierPct: null, couponPct: 6.00, maxGainPct: 6.00, sri: 2,
     maturityDate: '2036-12-31', entryFeePct: 6.50, status: 'ACTIVE',
     description: 'Phoenix lié au 10Y EUR ICE Swap Rate. Coupon 60€/titre si taux ≤ 3.20%. Remboursement anticipé si taux ≤ 2.40%. Capital protégé 100%.',
-    fillPct: 50, targetAmount: 6_000_000,
+    fillPct: 50, targetAmount: 6_000_000, shelfClosingDate: '2026-05-15',
+    createdAt: '2026-01-25T09:00:00Z',
+    interestedCount: 11, totalEngaged: 3_000_000,
+    compatibleInsurers: ['Generali Vie', 'Cardiff Vie', 'Apicil'],
     observationDates: ['2026-12-22', '2027-12-24', '2028-12-21', '2029-12-20', '2030-12-20', '2031-12-22', '2032-12-24', '2033-12-23', '2034-12-21', '2035-12-20'],
   },
   // ─── 13 · MT17 · M Equilibre 3 ────────────────────────────────────────────
@@ -178,7 +217,10 @@ export const DEMO_PRODUCTS = [
     barrierCapPct: 100, autocallBarrierPct: null, couponPct: 6.00, maxGainPct: 6.00, sri: 2,
     maturityDate: '2036-10-31', entryFeePct: 6.10, status: 'ACTIVE',
     description: 'Phoenix lié au 10Y EUR ICE Swap Rate. Coupon 60€/titre si taux ≤ 3.20%. Remboursement anticipé si taux ≤ 2.40%. Capital protégé 100%.',
-    fillPct: 45, targetAmount: 6_000_000,
+    fillPct: 45, targetAmount: 6_000_000, shelfClosingDate: '2026-05-20',
+    createdAt: '2026-01-28T10:00:00Z',
+    interestedCount: 9, totalEngaged: 2_700_000,
+    compatibleInsurers: ['Generali Vie', 'Cardiff Vie', 'Apicil'],
     observationDates: ['2026-10-26', '2027-10-25', '2028-10-24', '2029-10-24', '2030-10-24', '2031-10-24', '2032-10-25', '2033-10-24', '2034-10-24', '2035-10-24'],
   },
   // ─── 14 · MT18 · M Equilibre 2 ────────────────────────────────────────────
@@ -189,7 +231,10 @@ export const DEMO_PRODUCTS = [
     barrierCapPct: 100, autocallBarrierPct: null, couponPct: 6.00, maxGainPct: 6.00, sri: 2,
     maturityDate: '2036-09-01', entryFeePct: 4.00, status: 'ACTIVE',
     description: 'Phoenix lié au 10Y EUR ICE Swap Rate. Coupon 60€/titre si taux ≤ 3.20%. Remboursement anticipé si taux ≤ 2.40%. Capital protégé 100%.',
-    fillPct: 38, targetAmount: 5_000_000,
+    fillPct: 38, targetAmount: 5_000_000, shelfClosingDate: '2026-06-01',
+    createdAt: '2026-02-10T09:00:00Z',
+    interestedCount: 7, totalEngaged: 1_900_000,
+    compatibleInsurers: ['Generali Vie', 'Cardiff Vie', 'Apicil'],
     observationDates: ['2026-08-24', '2027-08-24', '2028-08-24', '2029-08-24', '2030-08-26', '2031-08-25', '2032-08-24', '2033-08-24', '2034-08-24', '2035-08-24'],
   },
   // ─── 15 · MT19/MT20 · M Ambition DVEUR ────────────────────────────────────
@@ -200,7 +245,10 @@ export const DEMO_PRODUCTS = [
     barrierCapPct: 50, autocallBarrierPct: 100, couponPct: null, maxGainPct: 100, sri: 6,
     maturityDate: '2034-07-05', entryFeePct: 5.00, status: 'ACTIVE',
     description: 'Autocallable avec barrière de 10 ans lié à FEDERAL OPTIMAL SELECT-DVEUR. Gain max 100% (2000€ pour 1000€ investis). Barrière à 50%.',
-    fillPct: 22, targetAmount: 4_000_000,
+    fillPct: 22, targetAmount: 4_000_000, shelfClosingDate: '2026-07-15',
+    createdAt: '2026-02-18T11:00:00Z',
+    interestedCount: 4, totalEngaged: 880_000,
+    compatibleInsurers: ['Generali Vie', 'Apicil'],
   },
   // ─── 16 · MT21 · M Rendement 12 ───────────────────────────────────────────
   {
@@ -210,7 +258,10 @@ export const DEMO_PRODUCTS = [
     barrierCapPct: 30, autocallBarrierPct: 100, couponPct: null, maxGainPct: 60, sri: 6,
     maturityDate: '2034-04-19', entryFeePct: 5.00, status: 'ACTIVE',
     description: 'Autocallable ESG sur S&P Eurozone 50 Net Zero 2050 Paris-Aligned. Gain max 60% (1600€ pour 1000€ investis). Barrière très basse à 30%.',
-    fillPct: 15, targetAmount: 3_000_000,
+    fillPct: 15, targetAmount: 3_000_000, shelfClosingDate: '2026-08-01',
+    createdAt: '2026-03-20T09:00:00Z',
+    interestedCount: 3, totalEngaged: 450_000,
+    compatibleInsurers: ['Generali Vie', 'Spirica'],
   },
 ];
 

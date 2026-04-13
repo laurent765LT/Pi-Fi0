@@ -12,7 +12,7 @@ import type { SortField, SortOrder } from '@/stores/filters-store';
 const PAYOFF_TYPE_OPTIONS: { value: PayoffType; label: string }[] = [
   { value: 'AUTOCALL_PHOENIX', label: 'Autocall Phoenix' },
   { value: 'AUTOCALL_COUPON', label: 'Autocall Coupon' },
-  { value: 'CAPITAL_PROTECTED', label: 'Capital Prot\u00e9g\u00e9' },
+  { value: 'CAPITAL_PROTECTED', label: 'Capital Protégé' },
   { value: 'CONDITIONAL_RATE', label: 'Taux Conditionnel' },
   { value: 'BARRIER_NOTE', label: 'Barrier Note' },
 ];
@@ -22,9 +22,9 @@ const SRI_OPTIONS = [1, 2, 3, 4, 5, 6, 7] as const;
 const STATUS_OPTIONS = [
   { value: 'OPEN', label: 'Ouvert' },
   { value: 'ACTIVE', label: 'Actif' },
-  { value: 'UPCOMING', label: '\u00c0 venir' },
-  { value: 'CLOSED', label: 'Ferm\u00e9' },
-  { value: 'MATURED', label: '\u00c9chu' },
+  { value: 'UPCOMING', label: 'À venir' },
+  { value: 'CLOSED', label: 'Fermé' },
+  { value: 'MATURED', label: 'Échu' },
 ];
 
 const UNDERLYING_OPTIONS = [
@@ -42,10 +42,10 @@ const ISSUER_OPTIONS = [
 
 const SORT_OPTIONS: { value: SortField; label: string }[] = [
   { value: 'name', label: 'Nom' },
-  { value: 'maturity', label: '\u00c9ch\u00e9ance' },
+  { value: 'maturity', label: 'Échéance' },
   { value: 'sri', label: 'SRI' },
   { value: 'maxGain', label: 'Gain max' },
-  { value: 'barrier', label: 'Barri\u00e8re' },
+  { value: 'barrier', label: 'Barrière' },
   { value: 'coupon', label: 'Coupon' },
   { value: 'fill', label: 'Remplissage' },
 ];
@@ -98,7 +98,7 @@ export function ProductFilters({ className }: ProductFiltersProps) {
             type="search"
             value={store.search}
             onChange={(e) => store.setFilter('search', e.target.value)}
-            placeholder="Nom, ISIN, sous-jacent\u2026"
+            placeholder="Nom, ISIN, sous-jacent…"
             className={cn(inputBase, 'pl-7 w-52')}
             aria-label="Rechercher un produit"
           />
@@ -128,17 +128,17 @@ export function ProductFilters({ className }: ProductFiltersProps) {
             className={cn(inputBase, 'w-14 cursor-pointer pr-1 text-center')}
             aria-label="SRI minimum"
           >
-            <option value="">\u2013</option>
+            <option value="">–</option>
             {SRI_OPTIONS.map((n) => (<option key={n} value={n}>{n}</option>))}
           </select>
-          <span className="text-xs text-ink-3">\u00e0</span>
+          <span className="text-xs text-ink-3">à</span>
           <select
             value={store.maxSri ?? ''}
             onChange={(e) => store.setFilter('maxSri', e.target.value ? Number(e.target.value) : null)}
             className={cn(inputBase, 'w-14 cursor-pointer pr-1 text-center')}
             aria-label="SRI maximum"
           >
-            <option value="">\u2013</option>
+            <option value="">–</option>
             {SRI_OPTIONS.map((n) => (<option key={n} value={n}>{n}</option>))}
           </select>
         </div>
@@ -173,8 +173,8 @@ export function ProductFilters({ className }: ProductFiltersProps) {
             type="button"
             onClick={() => store.setFilter('sortOrder', store.sortOrder === 'asc' ? 'desc' : 'asc')}
             className={cn(inputBase, 'w-8 flex items-center justify-center cursor-pointer text-xs')}
-            aria-label={store.sortOrder === 'asc' ? 'Tri croissant' : 'Tri d\u00e9croissant'}
-            title={store.sortOrder === 'asc' ? 'Croissant' : 'D\u00e9croissant'}
+            aria-label={store.sortOrder === 'asc' ? 'Tri croissant' : 'Tri décroissant'}
+            title={store.sortOrder === 'asc' ? 'Croissant' : 'Décroissant'}
           >
             {store.sortOrder === 'asc' ? '\u2191' : '\u2193'}
           </button>
@@ -208,10 +208,10 @@ export function ProductFilters({ className }: ProductFiltersProps) {
               'transition-colors duration-150',
               'hover:border-red hover:text-red hover:bg-red/5',
             )}
-            aria-label="R\u00e9initialiser les filtres"
+            aria-label="Réinitialiser les filtres"
           >
             <X size={10} />
-            R\u00e9initialiser
+            Réinitialiser
           </button>
         )}
 
@@ -246,7 +246,7 @@ export function ProductFilters({ className }: ProductFiltersProps) {
           {/* Issuer */}
           <div className="flex flex-col gap-1">
             <label className="text-[10px] uppercase tracking-widest text-ink-3 font-body font-semibold">
-              \u00c9metteur
+              Émetteur
             </label>
             <select
               value={store.issuer ?? ''}
@@ -263,7 +263,7 @@ export function ProductFilters({ className }: ProductFiltersProps) {
           {/* Barrier range */}
           <div className="flex flex-col gap-1">
             <label className="text-[10px] uppercase tracking-widest text-ink-3 font-body font-semibold">
-              Barri\u00e8re (%)
+              Barrière (%)
             </label>
             <div className="flex items-center gap-1">
               <input
@@ -275,7 +275,7 @@ export function ProductFilters({ className }: ProductFiltersProps) {
                 min={0}
                 max={100}
               />
-              <span className="text-xs text-ink-3">\u2013</span>
+              <span className="text-xs text-ink-3">–</span>
               <input
                 type="number"
                 placeholder="Max"
@@ -303,7 +303,7 @@ export function ProductFilters({ className }: ProductFiltersProps) {
                 min={0}
                 step={0.1}
               />
-              <span className="text-xs text-ink-3">\u2013</span>
+              <span className="text-xs text-ink-3">–</span>
               <input
                 type="number"
                 placeholder="Max"
@@ -319,7 +319,7 @@ export function ProductFilters({ className }: ProductFiltersProps) {
           {/* Maturity year range */}
           <div className="flex flex-col gap-1">
             <label className="text-[10px] uppercase tracking-widest text-ink-3 font-body font-semibold">
-              Maturit\u00e9 (ann\u00e9e)
+              Maturité (année)
             </label>
             <div className="flex items-center gap-1">
               <input
@@ -331,10 +331,10 @@ export function ProductFilters({ className }: ProductFiltersProps) {
                 min={2024}
                 max={2040}
               />
-              <span className="text-xs text-ink-3">\u2013</span>
+              <span className="text-xs text-ink-3">–</span>
               <input
                 type="number"
-                placeholder="\u00c0"
+                placeholder="À"
                 value={store.maxMaturityYear ?? ''}
                 onChange={(e) => store.setFilter('maxMaturityYear', e.target.value ? Number(e.target.value) : null)}
                 className={cn(inputBase, 'w-full text-center')}
@@ -347,7 +347,7 @@ export function ProductFilters({ className }: ProductFiltersProps) {
           {/* Quick toggles */}
           <div className="flex flex-col gap-1">
             <label className="text-[10px] uppercase tracking-widest text-ink-3 font-body font-semibold">
-              Caract\u00e9ristiques
+              Caractéristiques
             </label>
             <div className="flex flex-col gap-1.5">
               <label className="flex items-center gap-2 cursor-pointer">
@@ -366,7 +366,7 @@ export function ProductFilters({ className }: ProductFiltersProps) {
                   onChange={(e) => store.setFilter('capitalProtected', e.target.checked ? true : null)}
                   className="h-3.5 w-3.5 rounded border-border accent-violet"
                 />
-                <span className="text-xs font-body text-ink-2">Capital prot\u00e9g\u00e9</span>
+                <span className="text-xs font-body text-ink-2">Capital protégé</span>
               </label>
             </div>
           </div>

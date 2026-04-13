@@ -1,0 +1,80 @@
+{
+  "common": {
+    "loading": "Chargement...",
+    "error": "Une erreur est survenue",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "delete": "Supprimer",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "export": "Exporter",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "close": "Fermer",
+    "yes": "Oui",
+    "no": "Non"
+  },
+  "auth": {
+    "login": "Se connecter",
+    "logout": "Se déconnecter",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "loginTitle": "Connexion",
+    "demoAccounts": "Comptes démo",
+    "invalidCredentials": "Identifiants incorrects",
+    "connecting": "Connexion en cours..."
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "products": "Produits",
+    "events": "Événements",
+    "portfolio": "Portfolio",
+    "commissions": "Commissions",
+    "pricing": "Pricing",
+    "rfq": "RFQ Screener",
+    "research": "Research",
+    "notifications": "Notifications",
+    "admin": "Administration",
+    "navigation": "Navigation",
+    "tools": "Outils"
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "totalProducts": "Produits actifs",
+    "totalVolume": "Volume total",
+    "pendingCommitments": "Engagements en attente",
+    "conversionRate": "Taux de conversion"
+  },
+  "products": {
+    "title": "Catalogue de produits",
+    "searchPlaceholder": "Rechercher un produit, ISIN, sous-jacent...",
+    "noResults": "Aucun produit trouvé",
+    "compare": "Comparer",
+    "details": "Voir le détail",
+    "coupon": "Coupon",
+    "barrier": "Barrière",
+    "maturity": "Maturité",
+    "issuer": "Émetteur",
+    "sri": "SRI"
+  },
+  "commitments": {
+    "title": "Engagements",
+    "amount": "Montant",
+    "status": "Statut",
+    "pending": "En attente",
+    "review": "En examen",
+    "confirmed": "Confirmé",
+    "cancelled": "Annulé",
+    "approve": "Approuver",
+    "reject": "Rejeter"
+  },
+  "pricing": {
+    "title": "Moteur de Pricing",
+    "fairValue": "Fair Value",
+    "issuePrice": "Prix d'émission",
+    "consultIssuers": "Consulter les émetteurs",
+    "aiGuide": "Assistant IA"
+  }
+}

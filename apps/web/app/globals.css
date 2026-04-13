@@ -30,6 +30,24 @@
   --font-m: 'DM Mono', monospace;
 }
 
+/* ─── Dark Mode ──────────────────────────────────────────────────────────── */
+
+.dark {
+  --bg: #0F0A1E;
+  --bg-2: #1A1230;
+  --white: #1E1636;
+  --ink: #F0ECF8;
+  --ink-2: #C4BBD9;
+  --ink-3: #8E82A8;
+  --border: #2D2347;
+  --border-2: #3D3360;
+  color-scheme: dark;
+}
+.dark body { background-color: var(--bg); color: var(--ink); }
+.dark .glass { background: rgba(30,22,54,0.7); border-color: rgba(255,255,255,0.08); }
+.dark .data-table th { background: rgba(30,22,54,0.5); }
+.dark .data-table tbody tr:hover { background: rgba(59,31,168,0.1); }
+
 /* ─── Base ────────────────────────────────────────────────────────────────── */
 
 body {
@@ -122,6 +140,49 @@ main { animation: fadeIn 0.3s ease-out; }
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.8); opacity: 1; }
+  100% { transform: scale(2); opacity: 0; }
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ─── Utility Classes ────────────────────────────────────────────────────── */
+
+.animate-float { animation: float 3s ease-in-out infinite; }
+.animate-pulse-ring { animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite; }
+.animate-gradient { animation: gradient-shift 8s ease infinite; background-size: 200% 200%; }
+
+.glass {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.glass-dark {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: rgba(26, 10, 62, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #3B1FA8, #3D63F5);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 /* Staggered entrance for card grids */
 .stagger-children > * { animation: slideUp 0.4s ease-out both; }
 .stagger-children > *:nth-child(1) { animation-delay: 0ms; }
@@ -130,3 +191,59 @@ main { animation: fadeIn 0.3s ease-out; }
 .stagger-children > *:nth-child(4) { animation-delay: 120ms; }
 .stagger-children > *:nth-child(5) { animation-delay: 160ms; }
 .stagger-children > *:nth-child(6) { animation-delay: 200ms; }
+.stagger-children > *:nth-child(7) { animation-delay: 240ms; }
+.stagger-children > *:nth-child(8) { animation-delay: 280ms; }
+.stagger-children > *:nth-child(9) { animation-delay: 320ms; }
+.stagger-children > *:nth-child(10) { animation-delay: 360ms; }
+.stagger-children > *:nth-child(11) { animation-delay: 400ms; }
+.stagger-children > *:nth-child(12) { animation-delay: 440ms; }
+
+/* ─── Product Card Animations ────────────────────────────────────────────── */
+
+@keyframes heartBounce {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.4); }
+  60% { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+
+@keyframes pulseClosing {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(232, 51, 74, 0.3); }
+  50% { opacity: 0.85; box-shadow: 0 0 8px 2px rgba(232, 51, 74, 0.15); }
+}
+
+@keyframes couponShimmer {
+  0%, 100% { text-shadow: 0 0 8px rgba(212, 160, 23, 0.4), 0 0 16px rgba(212, 160, 23, 0.15); }
+  50% { text-shadow: 0 0 12px rgba(212, 160, 23, 0.6), 0 0 24px rgba(212, 160, 23, 0.25); }
+}
+
+@keyframes progressShimmer {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-heart-bounce { animation: heartBounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.animate-pulse-closing { animation: pulseClosing 2s ease-in-out infinite; }
+.coupon-glow {
+  color: #D4A017;
+  text-shadow: 0 0 8px rgba(212, 160, 23, 0.4), 0 0 16px rgba(212, 160, 23, 0.15);
+  animation: couponShimmer 2.5s ease-in-out infinite;
+}
+.progress-bar-animated {
+  animation: progressShimmer 3s ease-in-out infinite;
+  background-size: 200% 100% !important;
+}
+
+/* ─── Mobile Sidebar ────────────────────────────────────────────────────── */
+
+@media (max-width: 767px) {
+  .sidebar-mobile-enter { transform: translateX(-100%); }
+  .sidebar-mobile-open { transform: translateX(0) !important; }
+}
+
+/* ─── Print ──────────────────────────────────────────────────────────────── */
+
+@media print {
+  .no-print { display: none !important; }
+}

@@ -22,7 +22,7 @@ const STEP_META: { num: StepKey; label: string; icon: React.ElementType }[] = [
   { num: 3, label: 'ORIAS', icon: Shield },
   { num: 4, label: 'RCP', icon: FileText },
   { num: 5, label: 'KYC', icon: Eye },
-  { num: 6, label: 'Soci\u00e9t\u00e9', icon: Building2 },
+  { num: 6, label: 'Société', icon: Building2 },
   { num: 7, label: 'Documents', icon: Upload },
   { num: 8, label: 'Validation', icon: CheckCircle2 },
 ];
@@ -106,12 +106,12 @@ function Step1Profile({ onNext }: Step1Props) {
       <div className="text-center">
         <h2 className="font-display font-bold text-xl text-ink mb-1">Vos informations</h2>
         <p className="font-body text-sm text-ink-3">
-          Renseignez vos coordonn\u00e9es pour cr\u00e9er votre profil.
+          Renseignez vos coordonnées pour créer votre profil.
         </p>
       </div>
 
       <Input
-        label="Pr\u00e9nom *"
+        label="Prénom *"
         placeholder="Jean"
         value={firstName}
         onChange={(e) => { setFirstName(e.target.value); setError(null); }}
@@ -125,7 +125,7 @@ function Step1Profile({ onNext }: Step1Props) {
         required
       />
       <Input
-        label="T\u00e9l\u00e9phone"
+        label="Téléphone"
         placeholder="+33 6 12 34 56 78"
         value={phone}
         onChange={(e) => setPhone(e.target.value)}
@@ -150,7 +150,7 @@ type ProfStatus = 'CGP' | 'COURTIER' | 'BANQUIER_PRIVE' | 'FAMILY_OFFICE';
 const PROF_STATUSES: { value: ProfStatus; label: string; description: string }[] = [
   { value: 'CGP', label: 'CGP', description: 'Conseiller en Gestion de Patrimoine' },
   { value: 'COURTIER', label: 'Courtier', description: 'Courtier en assurances' },
-  { value: 'BANQUIER_PRIVE', label: 'Banquier priv\u00e9', description: 'Banque priv\u00e9e / Wealth Management' },
+  { value: 'BANQUIER_PRIVE', label: 'Banquier privé', description: 'Banque privée / Wealth Management' },
   { value: 'FAMILY_OFFICE', label: 'Family Office', description: 'Gestion de patrimoine familial' },
 ];
 
@@ -167,7 +167,7 @@ function Step2Status({ onNext, onBack }: Step2Props) {
       <div className="text-center">
         <h2 className="font-display font-bold text-xl text-ink mb-1">Statut professionnel</h2>
         <p className="font-body text-sm text-ink-3">
-          S\u00e9lectionnez votre activit\u00e9 principale.
+          Sélectionnez votre activité principale.
         </p>
       </div>
 
@@ -227,7 +227,7 @@ function Step3Orias({ onNext, onBack }: Step3Props) {
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     if (oriasNumber.length !== 8 || !/^\d{8}$/.test(oriasNumber)) {
-      setError('Le num\u00e9ro ORIAS doit contenir exactement 8 chiffres.');
+      setError('Le numéro ORIAS doit contenir exactement 8 chiffres.');
       return;
     }
     setError(null);
@@ -237,7 +237,7 @@ function Step3Orias({ onNext, onBack }: Step3Props) {
       setSuccess(true);
       setTimeout(() => onNext(oriasNumber), 600);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Impossible de v\u00e9rifier le num\u00e9ro ORIAS.');
+      setError(err instanceof Error ? err.message : 'Impossible de vérifier le numéro ORIAS.');
     } finally {
       setLoading(false);
     }
@@ -246,14 +246,14 @@ function Step3Orias({ onNext, onBack }: Step3Props) {
   return (
     <form onSubmit={handleVerify} className="flex flex-col gap-4">
       <div className="text-center">
-        <h2 className="font-display font-bold text-xl text-ink mb-1">V\u00e9rification ORIAS</h2>
+        <h2 className="font-display font-bold text-xl text-ink mb-1">Vérification ORIAS</h2>
         <p className="font-body text-sm text-ink-3">
-          Renseignez votre num\u00e9ro ORIAS \u00e0 8 chiffres pour valider votre inscription.
+          Renseignez votre numéro ORIAS à 8 chiffres pour valider votre inscription.
         </p>
       </div>
 
       <Input
-        label="Num\u00e9ro ORIAS"
+        label="Numéro ORIAS"
         placeholder="12345678"
         value={oriasNumber}
         onChange={(e) => { setOriasNumber(e.target.value.replace(/\D/g, '').slice(0, 8)); setError(null); }}
@@ -268,7 +268,7 @@ function Step3Orias({ onNext, onBack }: Step3Props) {
       {success && (
         <div className="flex items-center gap-2 px-3 py-2.5 rounded-md bg-[#D6F7EF] border border-[#A3EDD9]">
           <CheckCircle2 size={16} className="text-teal shrink-0" />
-          <span className="font-body text-sm font-medium text-[#007A63]">ORIAS valid\u00e9 !</span>
+          <span className="font-body text-sm font-medium text-[#007A63]">ORIAS validé !</span>
         </div>
       )}
 
@@ -277,7 +277,7 @@ function Step3Orias({ onNext, onBack }: Step3Props) {
           <ChevronLeft size={14} /> Retour
         </Button>
         <Button type="submit" variant="primary" size="lg" className="flex-1" disabled={loading || success || oriasNumber.length !== 8}>
-          {loading ? 'V\u00e9rification\u2026' : success ? 'Valid\u00e9 !' : 'V\u00e9rifier'}
+          {loading ? 'Vérification…' : success ? 'Validé !' : 'Vérifier'}
         </Button>
       </div>
     </form>
@@ -322,13 +322,13 @@ function Step4Rcp({ onNext, onBack }: Step4Props) {
       <div className="text-center">
         <h2 className="font-display font-bold text-xl text-ink mb-1">Assurance RCP</h2>
         <p className="font-body text-sm text-ink-3">
-          Renseignez votre Responsabilit\u00e9 Civile Professionnelle.
+          Renseignez votre Responsabilité Civile Professionnelle.
         </p>
       </div>
 
       <Input
         label="Nom de l'assureur *"
-        placeholder="Ex. AXA, Allianz, Generali\u2026"
+        placeholder="Ex. AXA, Allianz, Generali…"
         value={insurer}
         onChange={(e) => { setInsurer(e.target.value); setError(null); }}
         disabled={loading || success}
@@ -342,11 +342,11 @@ function Step4Rcp({ onNext, onBack }: Step4Props) {
         disabled={loading || success}
       />
       <Input
-        label="Montant de couverture (\u20ac) *"
+        label="Montant de couverture (€) *"
         placeholder="Ex. 1 500 000"
         value={amount}
         onChange={(e) => { setAmount(e.target.value.replace(/[^\d\s,. ]/g, '')); setError(null); }}
-        hint="Montant minimum r\u00e9glementaire : 500 000 \u20ac"
+        hint="Montant minimum réglementaire : 500 000 €"
         error={error ?? undefined}
         disabled={loading || success}
         inputMode="decimal"
@@ -355,7 +355,7 @@ function Step4Rcp({ onNext, onBack }: Step4Props) {
       {success && (
         <div className="flex items-center gap-2 px-3 py-2.5 rounded-md bg-[#D6F7EF] border border-[#A3EDD9]">
           <CheckCircle2 size={16} className="text-teal shrink-0" />
-          <span className="font-body text-sm font-medium text-[#007A63]">RCP enregistr\u00e9e !</span>
+          <span className="font-body text-sm font-medium text-[#007A63]">RCP enregistrée !</span>
         </div>
       )}
 
@@ -364,7 +364,7 @@ function Step4Rcp({ onNext, onBack }: Step4Props) {
           <ChevronLeft size={14} /> Retour
         </Button>
         <Button type="submit" variant="primary" size="lg" className="flex-1" disabled={loading || success || !insurer || !amount}>
-          {loading ? 'Enregistrement\u2026' : success ? 'Enregistr\u00e9 !' : 'Valider'}
+          {loading ? 'Enregistrement…' : success ? 'Enregistré !' : 'Valider'}
         </Button>
       </div>
     </form>
@@ -391,9 +391,9 @@ function Step5Kyc({ onNext, onBack }: Step5Props) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div className="text-center">
-        <h2 className="font-display font-bold text-xl text-ink mb-1">Identit\u00e9 (KYC)</h2>
+        <h2 className="font-display font-bold text-xl text-ink mb-1">Identité (KYC)</h2>
         <p className="font-body text-sm text-ink-3">
-          Informations requises pour la conformit\u00e9 r\u00e9glementaire.
+          Informations requises pour la conformité réglementaire.
         </p>
       </div>
 
@@ -406,7 +406,7 @@ function Step5Kyc({ onNext, onBack }: Step5Props) {
       />
 
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-body font-semibold text-ink-2">Nationalit\u00e9</label>
+        <label className="text-xs font-body font-semibold text-ink-2">Nationalité</label>
         <select
           value={nationality}
           onChange={(e) => setNationality(e.target.value)}
@@ -421,7 +421,7 @@ function Step5Kyc({ onNext, onBack }: Step5Props) {
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-body font-semibold text-ink-2">R\u00e9sidence fiscale</label>
+        <label className="text-xs font-body font-semibold text-ink-2">Résidence fiscale</label>
         <select
           value={taxResidence}
           onChange={(e) => setTaxResidence(e.target.value)}
@@ -467,7 +467,7 @@ function Step6Company({ onNext, onBack }: Step6Props) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div className="text-center">
-        <h2 className="font-display font-bold text-xl text-ink mb-1">Soci\u00e9t\u00e9</h2>
+        <h2 className="font-display font-bold text-xl text-ink mb-1">Société</h2>
         <p className="font-body text-sm text-ink-3">
           Informations sur votre structure professionnelle.
         </p>
@@ -490,7 +490,7 @@ function Step6Company({ onNext, onBack }: Step6Props) {
         hint="9 chiffres"
       />
       <Input
-        label="Adresse du si\u00e8ge"
+        label="Adresse du siège"
         placeholder="12 rue de la Paix, 75002 Paris"
         value={address}
         onChange={(e) => setAddress(e.target.value)}
@@ -523,10 +523,10 @@ interface DocSlot {
 }
 
 const DOC_SLOTS: DocSlot[] = [
-  { key: 'id', label: "Pi\u00e8ce d'identit\u00e9", hint: 'CNI ou passeport en cours de validit\u00e9', required: true },
-  { key: 'kbis', label: 'Kbis ou \u00e9quivalent', hint: 'Moins de 3 mois', required: true },
+  { key: 'id', label: "Pièce d'identité", hint: 'CNI ou passeport en cours de validité', required: true },
+  { key: 'kbis', label: 'Kbis ou équivalent', hint: 'Moins de 3 mois', required: true },
   { key: 'rcp_cert', label: 'Attestation RCP', hint: 'Certificat de votre assureur', required: true },
-  { key: 'rib', label: 'RIB professionnel', hint: 'IBAN au nom de la soci\u00e9t\u00e9', required: false },
+  { key: 'rib', label: 'RIB professionnel', hint: 'IBAN au nom de la société', required: false },
 ];
 
 function Step7Documents({ onNext, onBack }: Step7Props) {
@@ -544,7 +544,7 @@ function Step7Documents({ onNext, onBack }: Step7Props) {
       <div className="text-center">
         <h2 className="font-display font-bold text-xl text-ink mb-1">Documents</h2>
         <p className="font-body text-sm text-ink-3">
-          T\u00e9l\u00e9chargez les documents n\u00e9cessaires \u00e0 votre dossier.
+          Téléchargez les documents nécessaires à votre dossier.
         </p>
       </div>
 
@@ -623,12 +623,12 @@ function Step8Confirmation({ oriasNumber, profileData, profStatus, onComplete, o
   const [accepted, setAccepted] = useState(false);
 
   const docSummary = [
-    { label: 'Identit\u00e9', value: `${profileData.firstName} ${profileData.lastName}`, ok: true },
-    { label: 'Statut', value: PROF_STATUSES.find((s) => s.value === profStatus)?.label ?? '\u2014', ok: !!profStatus },
-    { label: 'Num\u00e9ro ORIAS', value: oriasNumber || '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022', ok: !!oriasNumber },
+    { label: 'Identité', value: `${profileData.firstName} ${profileData.lastName}`, ok: true },
+    { label: 'Statut', value: PROF_STATUSES.find((s) => s.value === profStatus)?.label ?? '—', ok: !!profStatus },
+    { label: 'Numéro ORIAS', value: oriasNumber || '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022', ok: !!oriasNumber },
     { label: 'Assurance RCP', value: 'Documents transmis', ok: true },
     { label: 'KYC', value: 'Complet', ok: true },
-    { label: 'Documents', value: 'T\u00e9l\u00e9charg\u00e9s', ok: true },
+    { label: 'Documents', value: 'Téléchargés', ok: true },
   ];
 
   const handleComplete = async () => {
@@ -648,7 +648,7 @@ function Step8Confirmation({ oriasNumber, profileData, profStatus, onComplete, o
       <div className="text-center">
         <h2 className="font-display font-bold text-xl text-ink mb-1">Finalisation</h2>
         <p className="font-body text-sm text-ink-3">
-          V\u00e9rifiez les informations avant d&apos;acc\u00e9der \u00e0 la plateforme.
+          Vérifiez les informations avant d&apos;accéder à la plateforme.
         </p>
       </div>
 
@@ -684,8 +684,8 @@ function Step8Confirmation({ oriasNumber, profileData, profStatus, onComplete, o
           className="mt-0.5 h-4 w-4 rounded border-border accent-violet"
         />
         <p className="font-body text-[11px] text-ink-3 leading-relaxed">
-          J&apos;accepte les <span className="text-violet font-semibold">Conditions G\u00e9n\u00e9rales d&apos;Utilisation</span> et
-          la <span className="text-violet font-semibold">Politique de Confidentialit\u00e9</span> de Strick&apos;in.
+          J&apos;accepte les <span className="text-violet font-semibold">Conditions Générales d&apos;Utilisation</span> et
+          la <span className="text-violet font-semibold">Politique de Confidentialité</span> de Strick&apos;in.
           Je certifie l&apos;exactitude des informations fournies.
         </p>
       </label>
@@ -694,9 +694,9 @@ function Step8Confirmation({ oriasNumber, profileData, profStatus, onComplete, o
       <div className="flex items-start gap-2.5 px-3 py-2.5 rounded-md bg-violet-pale border border-[#C9BCFF]">
         <span className="w-1.5 h-1.5 rounded-full bg-violet mt-1.5 shrink-0" />
         <p className="font-body text-xs text-violet leading-relaxed">
-          Votre dossier fera l&apos;objet d&apos;une v\u00e9rification par nos \u00e9quipes
-          de conformit\u00e9. Acc\u00e8s imm\u00e9diat avec fonctionnalit\u00e9s limit\u00e9es,
-          \u00e9tendu apr\u00e8s validation.
+          Votre dossier fera l&apos;objet d&apos;une vérification par nos équipes
+          de conformité. Accès immédiat avec fonctionnalités limitées,
+          étendu après validation.
         </p>
       </div>
 
@@ -712,7 +712,7 @@ function Step8Confirmation({ oriasNumber, profileData, profStatus, onComplete, o
         </Button>
         <Button variant="primary" size="lg" disabled={loading || !accepted} onClick={handleComplete} className="flex-1">
           <span className="flex items-center gap-2">
-            {loading ? 'Finalisation\u2026' : 'Acc\u00e9der \u00e0 la plateforme'}
+            {loading ? 'Finalisation…' : 'Accéder à la plateforme'}
             {!loading && <ChevronRight size={16} />}
           </span>
         </Button>
@@ -812,7 +812,7 @@ export default function OnboardingPage() {
 
         {/* Footer */}
         <p className="text-center text-white/40 text-xs font-body mt-6">
-          \u00c9tape {step} sur 8 \u2014 Processus d&apos;int\u00e9gration r\u00e9glementaire
+          Étape {step} sur 8 — Processus d&apos;intégration réglementaire
         </p>
       </div>
     </div>

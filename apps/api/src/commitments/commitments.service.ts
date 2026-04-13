@@ -7,6 +7,7 @@ import {
 import { PrismaService } from '../common/prisma.service';
 import { CreateCommitmentDto } from './dto/create-commitment.dto';
 import { UpdateCommitmentDto } from './dto/update-commitment.dto';
+import { ListCommitmentsDto } from './dto/list-commitments.dto';
 import { CommitmentStatus, ShelfStatus, Prisma } from '@prisma/client';
 
 interface AuthUser {
@@ -213,31 +214,65 @@ export class CommitmentsService {
     );
   }
 
-  async findMyCommitments(user: AuthUser) {
-    return this.prisma.commitment.findMany({
-      where: { userId: user.id },
-      include: {
-        shelf: {
-          select: {
-            id: true,
-            status: true,
-            targetAmount: true,
-            surbookingPct: true,
-            closingDate: true,
-            product: {
-              select: {
-                id: true,
-                isin: true,
-                name: true,
-                payoffType: true,
-                issuerName: true,
+  async findMyCommitments(user: AuthUser, query: ListCommitmentsDto = {}) {
+    const { status, shelfId, page = 1, limit = 20 } = query;
+
+    const where: Prisma.CommitmentWhereInput = { userId: user.id };
+
+    // Org isolation: non-super-admin users are restricted to their own org
+    if (user.orgId) {
+      where.orgId = user.orgId;
+    }
+
+    if (status) {
+      where.status = status;
+    }
+
+    if (shelfId) {
+      where.shelfId = shelfId;
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.commitment.findMany({
+        where,
+        skip,
+        take: limit,
+        include: {
+          shelf: {
+            select: {
+              id: true,
+              status: true,
+              targetAmount: true,
+              surbookingPct: true,
+              closingDate: true,
+              product: {
+                select: {
+                  id: true,
+                  isin: true,
+                  name: true,
+                  payoffType: true,
+                  issuerName: true,
+                },
               },
             },
           },
         },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.commitment.count({ where }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
       },
-      orderBy: { createdAt: 'desc' },
-    });
+    };
   }
 
   async updateAmount(id: string, dto: UpdateCommitmentDto, user: AuthUser) {
@@ -323,6 +358,141 @@ export class CommitmentsService {
     );
   }
 
+  // ── Approval Workflow ──────────────────────────────────────────────────────
+
+  async reviewCommitment(id: string, user: AuthUser) {
+    if (user.role !== 'ORG_ADMIN' && user.role !== 'SUPER_ADMIN') {
+      throw new ForbiddenException('Only ORG_ADMIN or SUPER_ADMIN can review commitments');
+    }
+
+    const existing = await this.prisma.commitment.findUnique({ where: { id } });
+
+    if (!existing) {
+      throw new NotFoundException(`Commitment ${id} not found`);
+    }
+    if (existing.status !== CommitmentStatus.PENDING) {
+      throw new BadRequestException(
+        `Cannot review a commitment with status ${existing.status}. Only PENDING commitments can be reviewed.`,
+      );
+    }
+
+    return this.prisma.commitment.update({
+      where: { id },
+      data: {
+        status: CommitmentStatus.REVIEW,
+        reviewedBy: user.id,
+      },
+    });
+  }
+
+  async approveCommitment(id: string, user: AuthUser) {
+    if (user.role !== 'ORG_ADMIN' && user.role !== 'SUPER_ADMIN') {
+      throw new ForbiddenException('Only ORG_ADMIN or SUPER_ADMIN can approve commitments');
+    }
+
+    return this.prisma.$transaction(
+      async (tx) => {
+        const existing = await (tx as any).commitment.findUnique({ where: { id } });
+
+        if (!existing) {
+          throw new NotFoundException(`Commitment ${id} not found`);
+        }
+        if (existing.status !== CommitmentStatus.REVIEW) {
+          throw new BadRequestException(
+            `Cannot approve a commitment with status ${existing.status}. Only REVIEW commitments can be approved.`,
+          );
+        }
+
+        const { shelf, confirmedAmount, nextWaitingRank } =
+          await this.lockedShelfAggregates(tx as any, existing.shelfId);
+
+        const cap = this.effectiveCap(shelf.targetAmount, shelf.surbookingPct);
+
+        let newStatus: CommitmentStatus;
+        let newRank: number | null = null;
+
+        if (confirmedAmount + existing.amount <= cap) {
+          newStatus = CommitmentStatus.CONFIRMED;
+        } else {
+          newStatus = CommitmentStatus.WAITING;
+          newRank = nextWaitingRank;
+        }
+
+        const updated = await (tx as any).commitment.update({
+          where: { id },
+          data: {
+            status: newStatus,
+            rank: newRank,
+            reviewedBy: user.id,
+          },
+        });
+
+        // Update shelf status if cap is now reached
+        if (newStatus === CommitmentStatus.CONFIRMED) {
+          const newConfirmed = confirmedAmount + existing.amount;
+          if (newConfirmed >= cap && shelf.status !== 'FULL') {
+            await (tx as any).shelf.update({
+              where: { id: existing.shelfId },
+              data: { status: 'FULL' },
+            });
+          }
+        }
+
+        return updated;
+      },
+      {
+        isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
+        timeout: 5000,
+      },
+    );
+  }
+
+  async rejectCommitment(id: string, user: AuthUser, reason: string) {
+    if (user.role !== 'ORG_ADMIN' && user.role !== 'SUPER_ADMIN') {
+      throw new ForbiddenException('Only ORG_ADMIN or SUPER_ADMIN can reject commitments');
+    }
+
+    if (!reason || reason.trim().length === 0) {
+      throw new BadRequestException('A rejection reason is required');
+    }
+
+    return this.prisma.$transaction(
+      async (tx) => {
+        const existing = await (tx as any).commitment.findUnique({ where: { id } });
+
+        if (!existing) {
+          throw new NotFoundException(`Commitment ${id} not found`);
+        }
+        if (existing.status === CommitmentStatus.CANCELLED) {
+          throw new BadRequestException('Commitment is already cancelled');
+        }
+
+        const wasConfirmed = existing.status === CommitmentStatus.CONFIRMED;
+
+        const cancelled = await (tx as any).commitment.update({
+          where: { id },
+          data: {
+            status: CommitmentStatus.CANCELLED,
+            rank: null,
+            rejectionReason: reason.trim(),
+            reviewedBy: user.id,
+          },
+        });
+
+        // Promote waiting commitments if freed space
+        if (wasConfirmed) {
+          await this.promoteWaiting(tx as any, existing.shelfId);
+        }
+
+        return cancelled;
+      },
+      {
+        isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
+        timeout: 5000,
+      },
+    );
+  }
+
   async cancel(id: string, user: AuthUser) {
     return this.prisma.$transaction(
       async (tx) => {
@@ -359,5 +529,78 @@ export class CommitmentsService {
         timeout: 5000,
       },
     );
+  }
+
+  /**
+   * Org-scoped listing: returns all commitments for a given orgId.
+   * Used by OrgIsolationGuard-protected endpoints for admin views.
+   * When orgId is null (SUPER_ADMIN without filter), returns all commitments.
+   */
+  async findAllForOrg(orgId: string | null, query: ListCommitmentsDto = {}) {
+    const { status, shelfId, page = 1, limit = 20 } = query;
+
+    const where: Prisma.CommitmentWhereInput = {};
+
+    if (orgId) {
+      where.orgId = orgId;
+    }
+
+    if (status) {
+      where.status = status;
+    }
+
+    if (shelfId) {
+      where.shelfId = shelfId;
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.commitment.findMany({
+        where,
+        skip,
+        take: limit,
+        include: {
+          shelf: {
+            select: {
+              id: true,
+              status: true,
+              targetAmount: true,
+              surbookingPct: true,
+              closingDate: true,
+              product: {
+                select: {
+                  id: true,
+                  isin: true,
+                  name: true,
+                  payoffType: true,
+                  issuerName: true,
+                },
+              },
+            },
+          },
+          user: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.commitment.count({ where }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 }

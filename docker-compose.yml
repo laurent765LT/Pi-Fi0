@@ -1,6 +1,33 @@
 version: '3.8'
 
 services:
+  # ── API (NestJS) ─────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: strickin-api
+    restart: unless-stopped
+    ports:
+      - '4000:4000'
+    environment:
+      - NODE_ENV=production
+      - PORT=4000
+      - DATABASE_URL=${DATABASE_URL}
+      - DIRECT_URL=${DIRECT_URL}
+      - JWT_SECRET=${JWT_SECRET:-strickin-jwt-secret-change-me}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:-strickin-refresh-secret-change-me}
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:4000/api/v1/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── PostgreSQL (local dev only) ──────────────────────────────
   postgres:
     image: postgres:16-alpine
     container_name: strickin-postgres
@@ -19,6 +46,7 @@ services:
       timeout: 5s
       retries: 5
 
+  # ── Redis ────────────────────────────────────────────────────
   redis:
     image: redis:7-alpine
     container_name: strickin-redis

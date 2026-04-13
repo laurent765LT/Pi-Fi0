@@ -25,6 +25,10 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { usePriceProduct, useValidatePricingConfig, useProductTemplates, usePricingHistory } from '@/hooks/use-pricing';
+import { PricingAiGuide } from '@/components/pricing/pricing-ai-guide';
+import { type PricingConfig } from '@/lib/pricing-simulator';
+import Link from 'next/link';
+import { Building2 } from 'lucide-react';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -235,6 +239,35 @@ export default function PricingPage() {
     setDistributionFee((c.market.distributionFee ?? 0.02) * 100);
     setMcPaths(c.mcPaths ?? 10000);
   };
+
+  // AI guide config (simplified for the rule engine)
+  const aiConfig: PricingConfig = useMemo(() => ({
+    structureType,
+    currency,
+    nominalAmount: nominal,
+    underlying: { name: underlying.name, spot: underlying.spot, ticker: underlying.ticker },
+    payoff: {
+      couponType,
+      couponRate: couponRate / 100,
+      couponBarrier: couponBarrier / 100,
+      couponMemory,
+      autocallEnabled,
+      autocallBarrier: autocallBarrier / 100,
+      protectionBarrier: protectionBarrier / 100,
+      barrierMonitoring,
+      cap: cap / 100,
+      participationUp: participationUp / 100,
+    },
+    market: {
+      riskFreeRate: riskFreeRate / 100,
+      fundingSpread: fundingSpread / 100,
+      structuringMargin: structuringMargin / 100,
+      distributionFee: distributionFee / 100,
+    },
+    mcPaths,
+    maturityDate,
+    strikeDate,
+  }), [structureType, currency, nominal, underlying, couponType, couponRate, couponBarrier, couponMemory, autocallEnabled, autocallBarrier, protectionBarrier, barrierMonitoring, cap, participationUp, riskFreeRate, fundingSpread, structuringMargin, distributionFee, mcPaths, maturityDate, strikeDate]);
 
   const inputCls = cn(
     'w-full h-9 rounded-lg border border-border/80 bg-white px-3 text-[12px] font-body text-ink',
@@ -580,12 +613,21 @@ export default function PricingPage() {
                   <button onClick={() => setStep(0)} className="flex-1 h-9 rounded-lg border border-border/80 text-ink-3 text-[12px] font-semibold font-body hover:bg-surface-2 transition-all">
                     Nouveau pricing
                   </button>
+                  <Link
+                    href={'/pricing/live?fv=' + encodeURIComponent(pricingResult.result.fairValue) + '&name=' + encodeURIComponent(productName)}
+                    className="flex-1 h-9 rounded-lg bg-gradient-to-r from-violet to-cobalt-light text-white text-[12px] font-semibold font-body flex items-center justify-center gap-1.5 hover:opacity-90 transition-all"
+                  >
+                    <Building2 size={13} />
+                    Émetteurs
+                  </Link>
                 </div>
               </div>
             )}
+            {/* AI Guide */}
+            <PricingAiGuide config={aiConfig} step={step} className="bg-white rounded-xl border border-border/80 p-4" />
           </div>
 
-          {/* ── Right: Results Panel ──────────────────────────── */}
+          {/* ── Right: Results Panel ───────────���──────────────── */}
           <div className="flex-1 min-w-0">
             {step < 3 || !pricingResult?.result ? (
               <div className="bg-white rounded-xl border border-border/80 overflow-hidden">

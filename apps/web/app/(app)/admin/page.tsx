@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Package, Layers, BarChart3, Users, ChevronRight, type LucideIcon } from 'lucide-react';
+import { Package, Layers, BarChart3, Users, ChevronRight, Calculator, type LucideIcon } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Card } from '@/components/ui/card';
 
@@ -176,7 +176,7 @@ export default function AdminDashboardPage() {
           Accès rapide
         </h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <QuickLink
             href="/admin/products"
             label="Gérer les produits"
@@ -194,6 +194,12 @@ export default function AdminDashboardPage() {
             label="Gérer les utilisateurs"
             description="Administrer les comptes et les habilitations"
             icon={Users}
+          />
+          <QuickLink
+            href="/pricing"
+            label="Pricer un produit"
+            description="Configurer et pricer un nouveau produit structuré"
+            icon={Calculator}
           />
         </div>
       </section>

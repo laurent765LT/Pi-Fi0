@@ -66,13 +66,13 @@ const UNDERLYINGS = [
 ];
 
 const STATUS_STYLES: Record<string, { label: string; variant: string; icon: any }> = {
-  DRAFT: { label: 'Brouillon', variant: 'bg-surface-2 text-ink-3', icon: Clock },
-  INTERNALLY_PRICED: { label: 'Price interne', variant: 'bg-cobalt-pale text-cobalt', icon: BarChart3 },
-  RFQ_SENT: { label: 'Envoyee', variant: 'bg-[#FDF3D6] text-[#9B7210]', icon: Send },
+  DRAFT: { label: 'Brouillon', variant: 'bg-surface-2/80 backdrop-blur-sm text-ink-3 border border-border/40', icon: Clock },
+  INTERNALLY_PRICED: { label: 'Price interne', variant: 'bg-cobalt-pale/80 backdrop-blur-sm text-cobalt border border-cobalt/20', icon: BarChart3 },
+  RFQ_SENT: { label: 'Envoyee', variant: 'bg-[#FDF3D6]/80 backdrop-blur-sm text-[#9B7210] border border-[#F0D98A]/50', icon: Send },
   PARTIALLY_QUOTED: { label: 'Cotations partielles', variant: 'bg-[#FDF3D6] text-[#9B7210]', icon: Clock },
-  FULLY_QUOTED: { label: 'Cotations completes', variant: 'bg-[#D6F7EF] text-[#007A63]', icon: CheckCircle2 },
-  SELECTED: { label: 'Selectionne', variant: 'bg-violet-pale text-violet', icon: Trophy },
-  APPROVED: { label: 'Approuve', variant: 'bg-[#D6F7EF] text-[#007A63]', icon: ShieldCheck },
+  FULLY_QUOTED: { label: 'Cotations completes', variant: 'bg-[#D6F7EF]/80 backdrop-blur-sm text-[#007A63] border border-[#007A63]/20', icon: CheckCircle2 },
+  SELECTED: { label: 'Selectionne', variant: 'bg-violet-pale/80 backdrop-blur-sm text-violet border border-violet/20', icon: Trophy },
+  APPROVED: { label: 'Approuve', variant: 'bg-[#D6F7EF]/80 backdrop-blur-sm text-[#007A63] border border-[#007A63]/20', icon: ShieldCheck },
   REJECTED: { label: 'Rejete', variant: 'bg-[#FDE8EB] text-red', icon: XCircle },
   EXPIRED: { label: 'Expire', variant: 'bg-surface-2 text-ink-3', icon: Clock },
 };
@@ -106,8 +106,10 @@ export default function RfqPage() {
       {/* ── Header ─────────────────────────────────────────────── */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="font-display text-2xl font-extrabold tracking-tight text-ink flex items-center gap-2">
-            <FileSearch size={24} className="text-violet" />
+          <h1 className="font-display text-2xl font-extrabold tracking-tight text-ink flex items-center gap-3">
+            <span className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-violet to-cobalt shadow-md shadow-violet/20">
+              <FileSearch size={18} className="text-white" />
+            </span>
             RFQ Screener
           </h1>
           <p className="font-body text-sm text-ink-3 mt-1">
@@ -118,8 +120,8 @@ export default function RfqPage() {
         <button
           onClick={() => setTab('create')}
           className={cn(
-            'inline-flex items-center gap-2 px-4 py-2.5 rounded-lg font-body text-sm font-semibold transition-all duration-150',
-            'bg-violet text-white hover:bg-violet-mid shadow-sm',
+            'inline-flex items-center gap-2 px-4 py-2.5 rounded-lg font-body text-sm font-semibold transition-all duration-200',
+            'bg-gradient-to-r from-violet to-cobalt text-white hover:shadow-lg hover:shadow-violet/25 hover:-translate-y-0.5 active:translate-y-0',
           )}
         >
           <Plus size={16} />
@@ -141,8 +143,8 @@ export default function RfqPage() {
               'relative inline-flex items-center gap-1.5 px-4 py-2.5',
               'font-body text-sm font-semibold transition-colors duration-150 border-b-2',
               tab === t.key
-                ? 'text-violet border-violet'
-                : 'text-ink-3 border-transparent hover:text-ink-2 hover:border-border-2',
+                ? 'text-violet border-violet bg-violet-pale/20'
+                : 'text-ink-3 border-transparent hover:text-ink-2 hover:border-border-2 hover:bg-surface-2/50',
             )}
           >
             {t.label}
@@ -209,7 +211,7 @@ function RfqListTab({ onView }: { onView: (id: string) => void }) {
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          className="px-3 py-1.5 rounded-md border border-border text-sm font-body bg-white"
+          className="px-3 py-1.5 rounded-md border border-border text-sm font-body bg-white/80 backdrop-blur-sm hover:border-violet/30 focus:border-violet focus:ring-2 focus:ring-violet/10 transition-all duration-200 outline-none"
         >
           <option value="">Tous les statuts</option>
           {Object.entries(STATUS_STYLES).map(([k, v]) => (
@@ -218,7 +220,7 @@ function RfqListTab({ onView }: { onView: (id: string) => void }) {
         </select>
         <button
           onClick={() => refetch()}
-          className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border text-sm font-body text-ink-2 hover:bg-surface-2 transition"
+          className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border text-sm font-body text-ink-2 hover:bg-surface-2 hover:shadow-sm hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
         >
           <RefreshCw size={13} />
           Rafraichir
@@ -244,7 +246,7 @@ function RfqListTab({ onView }: { onView: (id: string) => void }) {
               <button
                 key={rfq.id}
                 onClick={() => onView(rfq.id)}
-                className="w-full text-left bg-white border border-border rounded-xl p-4 hover:border-violet/40 hover:shadow-sm transition-all duration-150 group"
+                className="w-full text-left bg-white border border-border rounded-xl p-4 hover:border-violet/40 hover:shadow-md hover:shadow-violet/10 hover:-translate-y-0.5 transition-all duration-200 group relative overflow-hidden before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-gradient-to-b before:from-violet before:to-cobalt before:opacity-0 group-hover:before:opacity-100 before:transition-opacity before:duration-200 before:rounded-l-xl"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 min-w-0">
@@ -479,10 +481,10 @@ function RfqCreateTab({ onCreated }: { onCreated: (id: string) => void }) {
               className={cn(
                 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-body font-semibold transition',
                 i === step
-                  ? 'bg-violet text-white'
+                  ? 'bg-gradient-to-r from-violet to-cobalt text-white shadow-md shadow-violet/20'
                   : i < step
-                    ? 'bg-violet-pale text-violet'
-                    : 'bg-surface-2 text-ink-3',
+                    ? 'bg-violet-pale text-violet ring-1 ring-violet/20'
+                    : 'bg-surface-2 text-ink-3 hover:bg-surface-2/80',
               )}
             >
               <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px] font-bold">
@@ -509,7 +511,7 @@ function RfqCreateTab({ onCreated }: { onCreated: (id: string) => void }) {
                   <button
                     key={tpl.id}
                     onClick={() => loadTemplate(tpl)}
-                    className="px-3 py-1.5 rounded-md border border-border text-xs font-body font-medium text-ink-2 hover:border-violet/40 hover:bg-violet-pale/30 transition"
+                    className="px-3 py-1.5 rounded-md border border-border text-xs font-body font-medium text-ink-2 hover:border-violet/40 hover:bg-violet-pale/30 hover:-translate-y-0.5 hover:shadow-sm transition-all duration-200"
                   >
                     <Copy size={10} className="inline mr-1 -mt-0.5" />
                     {tpl.name}
@@ -567,8 +569,8 @@ function RfqCreateTab({ onCreated }: { onCreated: (id: string) => void }) {
                   className={cn(
                     'text-left p-3 rounded-lg border transition text-xs font-body',
                     i === selectedUnderlying
-                      ? 'border-violet bg-violet-pale/40 text-violet'
-                      : 'border-border hover:border-violet/30',
+                      ? 'border-violet bg-violet-pale/40 text-violet ring-1 ring-violet/20 shadow-sm shadow-violet/10'
+                      : 'border-border hover:border-violet/30 hover:-translate-y-0.5 hover:shadow-sm',
                   )}
                 >
                   <div className="font-semibold">{u.name}</div>
@@ -672,8 +674,8 @@ function RfqCreateTab({ onCreated }: { onCreated: (id: string) => void }) {
                   className={cn(
                     'text-left p-3 rounded-lg border transition',
                     rfqMode === m.value
-                      ? 'border-violet bg-violet-pale/40'
-                      : 'border-border hover:border-violet/30',
+                      ? 'border-violet bg-gradient-to-r from-violet-pale/60 to-cobalt-pale/40 ring-1 ring-violet/20'
+                      : 'border-border hover:border-violet/30 hover:-translate-y-0.5 hover:shadow-sm',
                   )}
                 >
                   <div className="font-body text-sm font-semibold text-ink">{m.label}</div>
@@ -784,12 +786,12 @@ function RfqCreateTab({ onCreated }: { onCreated: (id: string) => void }) {
                   <div
                     key={issuer.id}
                     className={cn(
-                      'p-4 rounded-xl border transition-all duration-150',
+                      'p-4 rounded-xl border transition-all duration-200 relative overflow-hidden',
                       isSelected
-                        ? 'border-violet bg-violet-pale/30 ring-1 ring-violet/30'
+                        ? 'border-violet bg-violet-pale/30 ring-1 ring-violet/30 shadow-md shadow-violet/10 before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-gradient-to-b before:from-violet before:to-cobalt before:rounded-l-xl'
                         : isExcluded
                           ? 'border-red/30 bg-[#FDE8EB]/30 opacity-60'
-                          : 'border-border hover:border-violet/20',
+                          : 'border-border hover:border-violet/20 hover:-translate-y-0.5 hover:shadow-md hover:shadow-violet/5',
                     )}
                   >
                     <div className="flex items-start justify-between mb-2">
@@ -861,8 +863,11 @@ function RfqCreateTab({ onCreated }: { onCreated: (id: string) => void }) {
       {/* ── Step 3: Review & Submit ─────────────── */}
       {step === 3 && (
         <div className="space-y-6">
-          <div className="bg-white border border-border rounded-xl p-6">
-            <h3 className="font-display text-lg font-bold text-ink mb-4">Recapitulatif de la RFQ</h3>
+          <div className="bg-white/80 backdrop-blur-sm border border-border/60 rounded-xl p-6 shadow-sm">
+            <h3 className="font-display text-lg font-bold text-ink mb-4 flex items-center gap-2">
+              <span className="inline-block w-1 h-5 rounded-full bg-gradient-to-b from-violet to-cobalt"></span>
+              Recapitulatif de la RFQ
+            </h3>
 
             <div className="grid grid-cols-2 gap-4 text-sm font-body">
               <div>
@@ -1008,7 +1013,7 @@ function RfqDetailTab({ rfqId }: { rfqId: string }) {
   return (
     <div className="space-y-6">
       {/* ── RFQ Header ─────────────────────────────── */}
-      <div className="bg-white border border-border rounded-xl p-6">
+      <div className="bg-white/80 backdrop-blur-sm border border-border/60 rounded-xl p-6 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <span className={cn('inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider', st.variant)}>
@@ -1053,7 +1058,7 @@ function RfqDetailTab({ rfqId }: { rfqId: string }) {
         </div>
 
         {(rfq.status === 'RFQ_SENT' || rfq.status === 'PARTIALLY_QUOTED') && (
-          <div className="mt-4 p-3 bg-[#FDF3D6] border border-[#F0D98A] rounded-lg flex items-center gap-2 text-sm font-body text-[#9B7210]">
+          <div className="mt-4 p-3 bg-gradient-to-r from-[#FDF3D6] to-[#FEF9E7] border border-[#F0D98A]/60 rounded-lg flex items-center gap-2 text-sm font-body text-[#9B7210] shadow-sm animate-pulse">
             <Loader2 size={14} className="animate-spin" />
             Cotations en cours de generation... Rafraichissement automatique toutes les 3s.
           </div>
@@ -1080,14 +1085,14 @@ function RfqDetailTab({ rfqId }: { rfqId: string }) {
                 <div
                   key={q.id}
                   className={cn(
-                    'bg-white border rounded-xl p-5 transition-all duration-200',
+                    'bg-white border rounded-xl p-5 transition-all duration-200 hover:-translate-y-0.5',
                     isSelected
-                      ? 'border-[#007A63] ring-2 ring-[#007A63]/20 bg-[#D6F7EF]/10'
+                      ? 'border-[#007A63] ring-2 ring-[#007A63]/20 bg-[#D6F7EF]/10 shadow-md shadow-[#007A63]/10'
                       : isDeclined
-                        ? 'border-border opacity-50'
+                        ? 'border-border opacity-50 hover:translate-y-0'
                         : isWinner
-                          ? 'border-violet ring-1 ring-violet/20'
-                          : 'border-border hover:border-violet/30',
+                          ? 'border-violet ring-1 ring-violet/20 shadow-lg shadow-violet/10 bg-gradient-to-r from-violet-pale/10 to-transparent'
+                          : 'border-border hover:border-violet/30 hover:shadow-md hover:shadow-violet/5',
                   )}
                 >
                   <div className="flex items-start justify-between">
@@ -1120,9 +1125,15 @@ function RfqDetailTab({ rfqId }: { rfqId: string }) {
 
                     {/* Score */}
                     <div className="text-right">
-                      <div className="font-display text-2xl font-extrabold text-ink">
-                        {q.totalScore != null ? q.totalScore.toFixed(1) : '—'}
-                      </div>
+                      {isWinner && !isSelected && !isDeclined ? (
+                        <div className="font-display text-2xl font-extrabold bg-gradient-to-r from-violet to-cobalt bg-clip-text text-transparent">
+                          {q.totalScore != null ? q.totalScore.toFixed(1) : '—'}
+                        </div>
+                      ) : (
+                        <div className="font-display text-2xl font-extrabold text-ink">
+                          {q.totalScore != null ? q.totalScore.toFixed(1) : '—'}
+                        </div>
+                      )}
                       <div className="text-[10px] font-body text-ink-3 uppercase tracking-wider">Score</div>
                     </div>
                   </div>
@@ -1183,8 +1194,8 @@ function RfqDetailTab({ rfqId }: { rfqId: string }) {
                         className={cn(
                           'inline-flex items-center gap-2 px-4 py-2 rounded-lg font-body text-sm font-semibold transition-all',
                           isWinner
-                            ? 'bg-violet text-white hover:bg-violet-mid'
-                            : 'bg-surface-2 text-ink-2 hover:bg-violet-pale hover:text-violet',
+                            ? 'bg-gradient-to-r from-violet to-cobalt text-white hover:shadow-lg hover:shadow-violet/25 hover:-translate-y-0.5'
+                            : 'bg-surface-2 text-ink-2 hover:bg-violet-pale hover:text-violet hover:-translate-y-0.5 hover:shadow-sm',
                         )}
                       >
                         {selectQuote.isPending ? (
@@ -1198,7 +1209,7 @@ function RfqDetailTab({ rfqId }: { rfqId: string }) {
                   )}
 
                   {isSelected && (
-                    <div className="mt-4 p-2 bg-[#D6F7EF] border border-[#A3EDD9] rounded-lg text-center text-sm font-body font-semibold text-[#007A63]">
+                    <div className="mt-4 p-2 bg-gradient-to-r from-[#D6F7EF] to-[#E8FCF5] border border-[#A3EDD9]/60 rounded-lg text-center text-sm font-body font-semibold text-[#007A63] shadow-sm">
                       <CheckCircle2 size={14} className="inline -mt-0.5 mr-1" />
                       Offre selectionnee
                     </div>
@@ -1245,7 +1256,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 function SummaryCell({ label, value }: { label: string; value: string }) {
   return (
-    <div className="p-3 bg-surface-2 rounded-lg">
+    <div className="p-3 bg-surface-2/70 backdrop-blur-sm rounded-lg border border-border/30 hover:shadow-sm transition-all duration-200">
       <div className="text-[10px] font-body font-bold text-ink-3 uppercase tracking-wider">{label}</div>
       <div className="text-sm font-body font-semibold text-ink mt-1">{value}</div>
     </div>
@@ -1254,7 +1265,7 @@ function SummaryCell({ label, value }: { label: string; value: string }) {
 
 function MetricCell({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
-    <div className="text-center">
+    <div className="text-center p-2 rounded-lg hover:bg-surface-2/50 transition-colors duration-200">
       <div className={cn('font-display text-lg font-bold', accent ? 'text-violet' : 'text-ink')}>
         {value}
       </div>

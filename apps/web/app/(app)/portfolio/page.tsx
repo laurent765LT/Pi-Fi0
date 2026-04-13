@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useMyCommitments, useCancelCommitment } from '@/hooks/use-commitments';
+import { useReviewCommitment, useApproveCommitment, useRejectCommitment } from '@/hooks/use-commitment-actions';
 import { useProducts } from '@/hooks/use-products';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -57,6 +58,7 @@ const STATUS_VARIANT: Record<string, 'teal' | 'gold' | 'violet' | 'red' | 'muted
   CONFIRMED: 'teal',
   WAITING: 'gold',
   PENDING: 'violet',
+  REVIEW: 'gold',
   CANCELLED: 'red',
 };
 
@@ -64,6 +66,7 @@ const STATUS_LABEL: Record<string, string> = {
   CONFIRMED: 'Confirmé',
   WAITING: 'En attente',
   PENDING: 'En cours',
+  REVIEW: 'En examen',
   CANCELLED: 'Annulé',
 };
 
@@ -84,9 +87,9 @@ function SummaryCard({ icon, label, value, accent }: {
   accent: string;
 }) {
   return (
-    <div className="group relative bg-white rounded-xl border border-border/80 p-5 flex flex-col gap-3 transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
+    <div className="group relative bg-white/80 backdrop-blur-md rounded-xl border border-white/60 p-5 flex flex-col gap-3 transition-all duration-300 hover:shadow-lg hover:shadow-violet/8 hover:-translate-y-1 ring-1 ring-black/[0.03]">
       <div
-        className="absolute top-0 left-4 right-4 h-[2px] rounded-b-full opacity-60 group-hover:opacity-100 transition-opacity"
+        className="absolute top-0 left-0 right-0 h-[3px] rounded-b-full opacity-70 group-hover:opacity-100 transition-all duration-300"
         style={{ background: accent }}
       />
       <div className="flex items-center gap-2.5">
@@ -95,7 +98,7 @@ function SummaryCard({ icon, label, value, accent }: {
         </div>
         <span className="text-[10px] uppercase tracking-[0.2em] text-ink-3 font-semibold font-body">{label}</span>
       </div>
-      <span className="font-display text-2xl font-bold text-ink leading-none tracking-tight">{value}</span>
+      <span className="font-display text-2xl font-bold text-ink leading-none tracking-tight [font-variant-numeric:tabular-nums]">{value}</span>
     </div>
   );
 }
@@ -112,20 +115,20 @@ function CalendarView() {
   const monthName = date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
 
   return (
-    <div className="bg-white rounded-xl border border-border/80 overflow-hidden">
+    <div className="bg-white/90 backdrop-blur-sm rounded-xl border border-white/60 ring-1 ring-black/[0.04] overflow-hidden shadow-sm">
       <div className="px-5 py-4 border-b border-border/60 flex items-center justify-between">
         <h3 className="font-display text-sm font-bold text-ink">Calendrier</h3>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setDate(new Date(year, month - 1, 1))}
-            className="w-7 h-7 rounded-md border border-border/80 flex items-center justify-center text-ink-3 hover:text-violet hover:border-violet transition-all"
+            className="w-7 h-7 rounded-md border border-border/80 flex items-center justify-center text-ink-3 hover:text-violet hover:border-violet hover:shadow-sm hover:scale-105 active:scale-95 transition-all duration-200"
           >
             <ChevronLeft size={14} />
           </button>
           <span className="text-sm font-semibold text-ink capitalize min-w-[120px] text-center">{monthName}</span>
           <button
             onClick={() => setDate(new Date(year, month + 1, 1))}
-            className="w-7 h-7 rounded-md border border-border/80 flex items-center justify-center text-ink-3 hover:text-violet hover:border-violet transition-all"
+            className="w-7 h-7 rounded-md border border-border/80 flex items-center justify-center text-ink-3 hover:text-violet hover:border-violet hover:shadow-sm hover:scale-105 active:scale-95 transition-all duration-200"
           >
             <ChevronRight size={14} />
           </button>
@@ -152,7 +155,7 @@ function CalendarView() {
                 key={day}
                 className={cn(
                   'h-10 flex items-center justify-center text-[13px] font-body rounded-md transition-colors',
-                  isToday ? 'bg-violet text-white font-bold' : 'text-ink hover:bg-violet-ghost cursor-pointer',
+                  isToday ? 'bg-gradient-to-br from-[#3B1FA8] to-[#5B3FD4] text-white font-bold shadow-md shadow-violet/30 scale-105' : 'text-ink hover:bg-violet-ghost hover:scale-[1.08] active:scale-95 cursor-pointer',
                 )}
               >
                 {day}
@@ -160,7 +163,7 @@ function CalendarView() {
             );
           })}
         </div>
-        <div className="mt-6 p-4 bg-surface rounded-lg text-center">
+        <div className="mt-6 p-5 bg-gradient-to-br from-[#F8F6FF] to-[#F0ECFF] rounded-xl text-center border border-[#3B1FA8]/5">
           <p className="text-sm text-ink-3 font-body">Aucun événement pour la période sélectionnée.</p>
         </div>
       </div>
@@ -176,6 +179,9 @@ export default function PortfolioPage() {
   const { data: commitments, isLoading: loadingCommitments } = useMyCommitments();
   const { data: productsData, isLoading: loadingProducts } = useProducts({});
   const cancelMutation = useCancelCommitment();
+  const reviewMutation = useReviewCommitment();
+  const approveMutation = useApproveCommitment();
+  const rejectMutation = useRejectCommitment();
 
   const products = productsData?.data ?? [];
 
@@ -195,27 +201,42 @@ export default function PortfolioPage() {
     }
   };
 
+  const handleReview = (id: string) => {
+    reviewMutation.mutate(id);
+  };
+
+  const handleApprove = (id: string) => {
+    approveMutation.mutate(id);
+  };
+
+  const handleReject = (id: string) => {
+    const reason = window.prompt('Raison du rejet :');
+    if (reason && reason.trim()) {
+      rejectMutation.mutate({ id, reason: reason.trim() });
+    }
+  };
+
   return (
     <div className="animate-fade-in">
       {/* ── Header ──────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="font-display text-[28px] font-bold text-ink leading-tight">Mon Portfolio</h1>
+          <h1 className="font-display text-[28px] font-bold leading-tight bg-gradient-to-r from-[#3B1FA8] via-[#1A0A3E] to-[#3B1FA8] bg-clip-text text-transparent">Mon Portfolio</h1>
           <p className="text-sm text-ink-3 font-body mt-1">Suivez vos investissements et engagements en produits structurés.</p>
         </div>
         <div className="flex items-center gap-2">
           <button className={cn(
-            'h-9 px-3 rounded-lg border border-border/80 bg-white text-ink-3',
+            'h-9 px-3 rounded-lg border border-border/80 bg-white/80 backdrop-blur-sm text-ink-3',
             'text-[12px] font-medium font-body flex items-center gap-1.5',
-            'hover:border-violet hover:text-violet hover:bg-violet-ghost transition-all',
+            'hover:border-violet hover:text-violet hover:bg-violet-ghost hover:shadow-md hover:shadow-violet/10 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
           )}>
             <Download size={13} />
             Rapport global
           </button>
           <button className={cn(
-            'h-9 px-3 rounded-lg border border-border/80 bg-white text-ink-3',
+            'h-9 px-3 rounded-lg border border-border/80 bg-white/80 backdrop-blur-sm text-ink-3',
             'text-[12px] font-medium font-body flex items-center gap-1.5',
-            'hover:border-violet hover:text-violet hover:bg-violet-ghost transition-all',
+            'hover:border-violet hover:text-violet hover:bg-violet-ghost hover:shadow-md hover:shadow-violet/10 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
           )}>
             <Download size={13} />
             Export Excel
@@ -223,7 +244,7 @@ export default function PortfolioPage() {
         </div>
       </div>
 
-      <div className="gradient-bar h-[2px] rounded-full mb-6 opacity-60" />
+      <div className="gradient-bar h-[2px] rounded-full mb-6 opacity-80" />
 
       {/* ── Summary cards ───────────────────────────────────────────── */}
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 stagger-children">
@@ -262,8 +283,8 @@ export default function PortfolioPage() {
             className={cn(
               'px-4 py-2 rounded-lg text-[13px] font-semibold font-body transition-all duration-200 whitespace-nowrap',
               activeTab === tab.id
-                ? 'bg-violet text-white shadow-sm'
-                : 'text-ink-3 hover:text-ink hover:bg-surface-2',
+                ? 'bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] text-white shadow-md shadow-violet/20 scale-[1.02]'
+                : 'text-ink-3 hover:text-ink hover:bg-surface-2 hover:scale-[1.01] active:scale-[0.98]',
             )}
           >
             {tab.label}
@@ -273,7 +294,7 @@ export default function PortfolioPage() {
 
       {/* ── Tab Content ─────────────────────────────────────────────── */}
       {activeTab === 'products' && (
-        <div className="bg-white rounded-xl border border-border/80 overflow-hidden">
+        <div className="bg-white/90 backdrop-blur-sm rounded-xl border border-white/60 ring-1 ring-black/[0.04] overflow-hidden shadow-sm">
           <div className="px-5 py-4 border-b border-border/60 flex items-center justify-between">
             <h2 className="font-display text-sm font-bold text-ink flex items-center gap-2">
               <Package size={15} className="text-violet" />
@@ -295,12 +316,12 @@ export default function PortfolioPage() {
               ))}
             </div>
           ) : !commitments || commitments.length === 0 ? (
-            <div className="p-12 flex flex-col items-center justify-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-violet-ghost flex items-center justify-center">
-                <Package size={24} className="text-ink-3/40" />
+            <div className="p-16 flex flex-col items-center justify-center gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#3B1FA8]/10 to-[#3B1FA8]/5 flex items-center justify-center ring-1 ring-[#3B1FA8]/10 shadow-sm">
+                <Package size={28} className="text-[#3B1FA8]/30" />
               </div>
               <p className="font-body text-sm text-ink-3">Aucune marque d&apos;intérêt pour le moment.</p>
-              <Link href="/products" className="text-xs text-violet font-semibold hover:underline flex items-center gap-1">
+              <Link href="/products" className="text-xs text-violet font-semibold hover:underline flex items-center gap-1 px-4 py-2 rounded-lg bg-violet-ghost/60 hover:bg-violet-ghost transition-all hover:scale-[1.02] active:scale-[0.98]">
                 Explorer les produits <ArrowUpRight size={12} />
               </Link>
             </div>
@@ -308,47 +329,91 @@ export default function PortfolioPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-[13px] font-body">
                 <thead>
-                  <tr className="border-b border-border/60" style={{ background: 'rgba(237,232,255,0.3)' }}>
-                    <th className="px-4 py-3 text-left text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">Produit</th>
-                    <th className="px-4 py-3 text-right text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">Montant</th>
-                    <th className="px-4 py-3 text-center text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">Statut</th>
-                    <th className="px-4 py-3 text-center text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">Rang</th>
-                    <th className="px-4 py-3 text-right text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">Date</th>
-                    <th className="px-4 py-3 text-center text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">Action</th>
+                  <tr className="border-b border-border/60" style={{ background: 'linear-gradient(135deg, rgba(237,232,255,0.4), rgba(219,210,255,0.2))' }}>
+                    <th className="px-4 py-3.5 text-left text-[10px] uppercase tracking-[0.18em] text-[#1A0A3E]/60 font-bold">Produit</th>
+                    <th className="px-4 py-3.5 text-right text-[10px] uppercase tracking-[0.18em] text-[#1A0A3E]/60 font-bold">Montant</th>
+                    <th className="px-4 py-3.5 text-center text-[10px] uppercase tracking-[0.18em] text-[#1A0A3E]/60 font-bold">Statut</th>
+                    <th className="px-4 py-3.5 text-center text-[10px] uppercase tracking-[0.18em] text-[#1A0A3E]/60 font-bold">Rang</th>
+                    <th className="px-4 py-3.5 text-right text-[10px] uppercase tracking-[0.18em] text-[#1A0A3E]/60 font-bold">Date</th>
+                    <th className="px-4 py-3.5 text-center text-[10px] uppercase tracking-[0.18em] text-[#1A0A3E]/60 font-bold">Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {commitments.map((c: any) => {
                     const status = c.status ?? 'PENDING';
-                    const canCancel = status !== 'CANCELLED' && status !== 'CONFIRMED';
                     return (
-                      <tr key={c.id} className="border-b border-border/40 last:border-0 hover:bg-violet-ghost/40 transition-colors">
+                      <tr key={c.id} className="border-b border-border/40 last:border-0 even:bg-[#F8F6FF]/40 hover:bg-violet-ghost/60 transition-all duration-200 group/row">
                         <td className="px-4 py-3">
                           <div className="flex flex-col gap-0.5">
                             <span className="font-medium text-ink leading-snug truncate max-w-[220px]">{c.productName ?? c.shelfId ?? '—'}</span>
                             {c.isin && <span className="font-mono text-[10px] text-ink-3">{c.isin}</span>}
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-right font-mono font-semibold text-ink tabular-nums">{formatAmount(c.amount ?? 0)}</td>
+                        <td className="px-4 py-3 text-right font-mono font-semibold text-ink tabular-nums text-[14px] tracking-tight [font-variant-numeric:tabular-nums]">{formatAmount(c.amount ?? 0)}</td>
                         <td className="px-4 py-3 text-center">
                           <Badge variant={STATUS_VARIANT[status] ?? 'muted'}>{STATUS_LABEL[status] ?? status}</Badge>
                         </td>
                         <td className="px-4 py-3 text-center">
                           {status === 'WAITING' && c.rank != null ? (
-                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gold/10 border border-gold/30 text-gold text-xs font-bold">{c.rank}</span>
+                            <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gradient-to-br from-[#D4A017]/15 to-[#D4A017]/5 border border-[#D4A017]/30 text-[#D4A017] text-xs font-bold shadow-sm shadow-[#D4A017]/10">{c.rank}</span>
                           ) : (
                             <span className="text-ink-3 text-xs">—</span>
                           )}
                         </td>
                         <td className="px-4 py-3 text-right text-xs text-ink-3">{c.createdAt ? formatDate(c.createdAt) : '—'}</td>
                         <td className="px-4 py-3 text-center">
-                          {canCancel ? (
-                            <Button variant="danger" size="sm" onClick={() => handleCancel(c.id)} disabled={cancelMutation.isPending}>
-                              Annuler
-                            </Button>
-                          ) : (
-                            <span className="text-ink-3 text-xs">—</span>
-                          )}
+                          <div className="flex items-center justify-center gap-1.5">
+                            {status === 'PENDING' && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleReview(c.id)}
+                                  disabled={reviewMutation.isPending}
+                                  className="bg-amber-500 hover:bg-amber-600 text-white text-[11px] px-2.5 py-1 rounded-md font-semibold shadow-sm"
+                                >
+                                  Examiner
+                                </Button>
+                                <Button variant="danger" size="sm" onClick={() => handleCancel(c.id)} disabled={cancelMutation.isPending}>
+                                  Annuler
+                                </Button>
+                              </>
+                            )}
+                            {status === 'REVIEW' && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleApprove(c.id)}
+                                  disabled={approveMutation.isPending}
+                                  className="bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] px-2.5 py-1 rounded-md font-semibold shadow-sm"
+                                >
+                                  Approuver
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleReject(c.id)}
+                                  disabled={rejectMutation.isPending}
+                                  className="bg-red-500 hover:bg-red-600 text-white text-[11px] px-2.5 py-1 rounded-md font-semibold shadow-sm"
+                                >
+                                  Rejeter
+                                </Button>
+                              </>
+                            )}
+                            {status === 'CONFIRMED' && (
+                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-100 text-emerald-600">
+                                <CheckCircle2 size={14} />
+                              </span>
+                            )}
+                            {status === 'CANCELLED' && (
+                              <span className="text-red-500 text-xs font-semibold">
+                                {c.rejectionReason ? `Rejeté : ${c.rejectionReason}` : 'Rejeté'}
+                              </span>
+                            )}
+                            {status === 'WAITING' && (
+                              <Button variant="danger" size="sm" onClick={() => handleCancel(c.id)} disabled={cancelMutation.isPending}>
+                                Annuler
+                              </Button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );
@@ -369,10 +434,10 @@ export default function PortfolioPage() {
                 key={f.id}
                 onClick={() => setBarrierFilter(f.id as any)}
                 className={cn(
-                  'px-3 py-1.5 rounded-full text-[11px] font-semibold font-body border transition-all duration-150',
+                  'px-3.5 py-1.5 rounded-full text-[11px] font-semibold font-body border transition-all duration-200',
                   barrierFilter === f.id
-                    ? 'text-white border-transparent'
-                    : 'bg-white border-border/80 text-ink-3 hover:text-ink',
+                    ? 'text-white border-transparent shadow-md shadow-black/10 scale-[1.03]'
+                    : 'bg-white/80 backdrop-blur-sm border-border/80 text-ink-3 hover:text-ink hover:shadow-sm hover:scale-[1.01] active:scale-[0.98]',
                 )}
                 style={barrierFilter === f.id ? { backgroundColor: f.color, borderColor: f.color } : undefined}
               >
@@ -380,21 +445,21 @@ export default function PortfolioPage() {
               </button>
             ))}
             <button className={cn(
-              'ml-auto h-8 px-3 rounded-lg border border-border/80 bg-white text-ink-3',
+              'ml-auto h-8 px-3 rounded-lg border border-border/80 bg-white/80 backdrop-blur-sm text-ink-3',
               'text-[11px] font-medium font-body flex items-center gap-1.5',
-              'hover:text-violet hover:border-violet transition-all',
+              'hover:text-violet hover:border-violet hover:shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
             )}>
               <Download size={12} />
               Export Excel
             </button>
           </div>
 
-          <div className="bg-white rounded-xl border border-border/80 overflow-hidden">
+          <div className="bg-white/90 backdrop-blur-sm rounded-xl border border-white/60 ring-1 ring-black/[0.04] overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-[13px] font-body">
                 <thead>
-                  <tr className="border-b border-border/60" style={{ background: 'rgba(237,232,255,0.3)' }}>
-                    <th className="px-4 py-3 text-left text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">Sous-jacent</th>
+                  <tr className="border-b border-border/60" style={{ background: 'linear-gradient(135deg, rgba(237,232,255,0.4), rgba(219,210,255,0.2))' }}>
+                    <th className="px-4 py-3.5 text-left text-[10px] uppercase tracking-[0.18em] text-[#1A0A3E]/60 font-bold">Sous-jacent</th>
                     <th className="px-4 py-3 text-right text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">Strike</th>
                     <th className="px-4 py-3 text-right text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">Dernier prix</th>
                     <th className="px-4 py-3 text-right text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">Performance</th>
@@ -407,13 +472,13 @@ export default function PortfolioPage() {
                 <tbody>
                   {products.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="px-4 py-12 text-center text-sm text-ink-3">
+                      <td colSpan={8} className="px-4 py-16 text-center text-sm text-ink-3">
                         Aucun sous-jacent à afficher pour le moment.
                       </td>
                     </tr>
                   ) : (
                     products.slice(0, 10).map((p: any) => (
-                      <tr key={p.id} className="border-b border-border/40 last:border-0 hover:bg-violet-ghost/40 transition-colors">
+                      <tr key={p.id} className="border-b border-border/40 last:border-0 even:bg-[#F8F6FF]/40 hover:bg-violet-ghost/60 transition-all duration-200">
                         <td className="px-4 py-3 font-medium text-ink">{p.underlyingYahoo ?? p.underlyingName ?? '—'}</td>
                         <td className="px-4 py-3 text-right font-mono tabular-nums text-ink-2">100.00</td>
                         <td className="px-4 py-3 text-right font-mono tabular-nums text-ink">—</td>
@@ -435,34 +500,34 @@ export default function PortfolioPage() {
       {activeTab === 'timeline' && <CalendarView />}
 
       {activeTab === 'allocations' && (
-        <div className="bg-white rounded-xl border border-border/80 overflow-hidden">
+        <div className="bg-white/90 backdrop-blur-sm rounded-xl border border-white/60 ring-1 ring-black/[0.04] overflow-hidden shadow-sm">
           <div className="px-5 py-4 border-b border-border/60 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <button className={cn(
                 'px-4 py-1.5 rounded-lg text-[12px] font-semibold font-body',
-                'bg-violet text-white',
+                'bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] text-white shadow-md shadow-violet/20',
               )}>
                 Tous les comptes
               </button>
               <button className={cn(
                 'px-4 py-1.5 rounded-lg text-[12px] font-semibold font-body',
-                'bg-white border border-border/80 text-ink-3 hover:text-ink',
+                'bg-white/80 border border-border/80 text-ink-3 hover:text-ink hover:shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
               )}>
                 À allouer
               </button>
             </div>
             <button className={cn(
-              'h-8 px-3 rounded-lg border border-border/80 bg-white text-ink-3',
+              'h-8 px-3 rounded-lg border border-border/80 bg-white/80 backdrop-blur-sm text-ink-3',
               'text-[11px] font-medium font-body flex items-center gap-1.5',
-              'hover:text-violet hover:border-violet transition-all',
+              'hover:text-violet hover:border-violet hover:shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
             )}>
               <Download size={12} />
               Rapport global
             </button>
           </div>
-          <div className="p-12 flex flex-col items-center justify-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-violet-ghost flex items-center justify-center">
-              <Wallet size={24} className="text-ink-3/40" />
+          <div className="p-16 flex flex-col items-center justify-center gap-4">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#3B1FA8]/10 to-[#3B1FA8]/5 flex items-center justify-center ring-1 ring-[#3B1FA8]/10 shadow-sm">
+              <Wallet size={28} className="text-[#3B1FA8]/30" />
             </div>
             <p className="font-body text-sm text-ink-3">Aucune allocation pour le moment.</p>
             <p className="font-body text-[11px] text-ink-3/60">Les allocations seront visibles une fois vos engagements confirmés.</p>
@@ -471,7 +536,7 @@ export default function PortfolioPage() {
       )}
 
       {activeTab === 'expired' && (
-        <div className="bg-white rounded-xl border border-border/80 overflow-hidden">
+        <div className="bg-white/90 backdrop-blur-sm rounded-xl border border-white/60 ring-1 ring-black/[0.04] overflow-hidden shadow-sm">
           <div className="px-5 py-4 border-b border-border/60 flex items-center justify-between">
             <h2 className="font-display text-sm font-bold text-ink flex items-center gap-2">
               <Clock size={15} className="text-ink-3" />
@@ -489,19 +554,19 @@ export default function PortfolioPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-[13px] font-body">
               <thead>
-                <tr className="border-b border-border/60" style={{ background: 'rgba(237,232,255,0.3)' }}>
-                  <th className="px-4 py-3 text-left text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">Produit</th>
-                  <th className="px-4 py-3 text-left text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">ISIN</th>
-                  <th className="px-4 py-3 text-left text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">Émetteur</th>
-                  <th className="px-4 py-3 text-right text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">Maturité</th>
-                  <th className="px-4 py-3 text-right text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">Coupon</th>
-                  <th className="px-4 py-3 text-right text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">Protection</th>
-                  <th className="px-4 py-3 text-right text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">Prix expiration</th>
+                <tr className="border-b border-border/60" style={{ background: 'linear-gradient(135deg, rgba(237,232,255,0.4), rgba(219,210,255,0.2))' }}>
+                  <th className="px-4 py-3.5 text-left text-[10px] uppercase tracking-[0.18em] text-[#1A0A3E]/60 font-bold">Produit</th>
+                  <th className="px-4 py-3.5 text-left text-[10px] uppercase tracking-[0.18em] text-[#1A0A3E]/60 font-bold">ISIN</th>
+                  <th className="px-4 py-3.5 text-left text-[10px] uppercase tracking-[0.18em] text-[#1A0A3E]/60 font-bold">Émetteur</th>
+                  <th className="px-4 py-3.5 text-right text-[10px] uppercase tracking-[0.18em] text-[#1A0A3E]/60 font-bold">Maturité</th>
+                  <th className="px-4 py-3.5 text-right text-[10px] uppercase tracking-[0.18em] text-[#1A0A3E]/60 font-bold">Coupon</th>
+                  <th className="px-4 py-3.5 text-right text-[10px] uppercase tracking-[0.18em] text-[#1A0A3E]/60 font-bold">Protection</th>
+                  <th className="px-4 py-3.5 text-right text-[10px] uppercase tracking-[0.18em] text-[#1A0A3E]/60 font-bold">Prix expiration</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-sm text-ink-3">
+                  <td colSpan={7} className="px-4 py-16 text-center text-sm text-ink-3">
                     Aucun produit expiré pour le moment.
                   </td>
                 </tr>

@@ -32,7 +32,7 @@ import { useRecommendations, useGenerateRecommendations } from '@/hooks/use-reco
 const PAYOFF_OPTIONS: { value: PayoffType; label: string }[] = [
   { value: 'AUTOCALL_PHOENIX', label: 'Autocall Phoenix' },
   { value: 'AUTOCALL_COUPON', label: 'Autocall Coupon' },
-  { value: 'CAPITAL_PROTECTED', label: 'Capital Prot\u00e9g\u00e9' },
+  { value: 'CAPITAL_PROTECTED', label: 'Capital Protégé' },
   { value: 'CONDITIONAL_RATE', label: 'Taux Conditionnel' },
   { value: 'BARRIER_NOTE', label: 'Barrier Note' },
 ];
@@ -40,9 +40,9 @@ const PAYOFF_OPTIONS: { value: PayoffType; label: string }[] = [
 const STATUS_OPTIONS = [
   { value: 'ACTIVE', label: 'Actif' },
   { value: 'OPEN', label: 'Ouvert' },
-  { value: 'UPCOMING', label: '\u00c0 venir' },
-  { value: 'CLOSED', label: 'Ferm\u00e9' },
-  { value: 'MATURED', label: '\u00c9chu' },
+  { value: 'UPCOMING', label: 'À venir' },
+  { value: 'CLOSED', label: 'Fermé' },
+  { value: 'MATURED', label: 'Échu' },
 ];
 
 const ISSUER_OPTIONS = [
@@ -64,7 +64,7 @@ const PAYOFF_BADGE: Record<string, { bg: string; text: string }> = {
 const PAYOFF_SHORT: Record<string, string> = {
   AUTOCALL_PHOENIX: 'Phoenix',
   AUTOCALL_COUPON: 'Autocall',
-  CAPITAL_PROTECTED: 'Prot\u00e9g\u00e9',
+  CAPITAL_PROTECTED: 'Protégé',
   CONDITIONAL_RATE: 'Taux Cond.',
   BARRIER_NOTE: 'Barrier',
 };
@@ -73,9 +73,9 @@ const STATUS_BADGE: Record<string, { bg: string; text: string; label: string }> 
   ACTIVE: { bg: '#E6FAF5', text: '#008B6E', label: 'Actif' },
   OPEN: { bg: '#E6FAF5', text: '#008B6E', label: 'Ouvert' },
   DRAFT: { bg: '#F4F3EF', text: '#7B6FA0', label: 'Brouillon' },
-  UPCOMING: { bg: '#E4EAFF', text: '#0A2799', label: '\u00c0 venir' },
-  CLOSED: { bg: '#F4F3EF', text: '#7B6FA0', label: 'Ferm\u00e9' },
-  MATURED: { bg: '#FFF0F2', text: '#C41F36', label: '\u00c9chu' },
+  UPCOMING: { bg: '#E4EAFF', text: '#0A2799', label: 'À venir' },
+  CLOSED: { bg: '#F4F3EF', text: '#7B6FA0', label: 'Fermé' },
+  MATURED: { bg: '#FFF0F2', text: '#C41F36', label: 'Échu' },
 };
 
 type SortField = 'name' | 'issuerName' | 'maturityDate' | 'maxGainPct' | 'barrierCapPct' | 'sri' | 'couponPct';
@@ -89,7 +89,7 @@ function formatDate(iso: string) {
 }
 
 function formatPct(v: number | null | undefined) {
-  if (v == null) return '\u2014';
+  if (v == null) return '—';
   return v.toFixed(1) + '%';
 }
 
@@ -309,10 +309,10 @@ export default function ProductsPage() {
       <div className="flex items-center justify-between mb-5">
         <div>
           <h1 className="font-display text-[28px] font-bold text-ink leading-tight">
-            Produits structur\u00e9s
+            Produits structurés
           </h1>
           <p className="text-sm text-ink-3 font-body mt-1">
-            D\u00e9couvrez, comparez et marquez votre int\u00e9r\u00eat sur les meilleurs produits du march\u00e9.
+            Découvrez, comparez et marquez votre intérêt sur les meilleurs produits du marché.
           </p>
         </div>
 
@@ -395,7 +395,7 @@ export default function ProductsPage() {
           onClick={() => setViewFilter('favorites')}
         />
         <FilterPill
-          label="Sugg\u00e9r\u00e9s par l\u2019IA"
+          label="Suggérés par l’IA"
           icon={Sparkles}
           active={viewFilter === 'recommended'}
           count={recommendationMap.size}
@@ -420,7 +420,7 @@ export default function ProductsPage() {
               type="search"
               value={search}
               onChange={(e) => setFilter('search', e.target.value)}
-              placeholder="Rechercher par nom, ISIN, sous-jacent\u2026"
+              placeholder="Rechercher par nom, ISIN, sous-jacent…"
               className={cn(
                 'w-full h-9 rounded-lg border border-border/80 bg-surface pl-9 pr-3 text-[13px] font-body text-ink',
                 'placeholder:text-ink-3/60 transition-all duration-150',
@@ -465,7 +465,7 @@ export default function ProductsPage() {
             )}
           >
             <SlidersHorizontal size={12} />
-            Filtres avanc\u00e9s
+            Filtres avancés
           </button>
 
           {/* Reset */}
@@ -482,7 +482,7 @@ export default function ProductsPage() {
               )}
             >
               <X size={12} />
-              R\u00e9initialiser
+              Réinitialiser
               <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-red text-white text-[9px] font-bold">
                 {activeFilterCount}
               </span>
@@ -506,7 +506,7 @@ export default function ProductsPage() {
                   <option key={n} value={n}>{n}</option>
                 ))}
               </select>
-              <span>\u2014</span>
+              <span>—</span>
               <select
                 value={maxSri ?? ''}
                 onChange={(e) => setFilter('maxSri', e.target.value ? Number(e.target.value) : null)}
@@ -525,7 +525,7 @@ export default function ProductsPage() {
               onChange={(e) => setIssuerFilter(e.target.value)}
               className={selectCls}
             >
-              <option value="">\u00c9metteur</option>
+              <option value="">Émetteur</option>
               {ISSUER_OPTIONS.map((name) => (
                 <option key={name} value={name}>{name}</option>
               ))}
@@ -538,15 +538,15 @@ export default function ProductsPage() {
       {!isLoading && !isError && (
         <div className="flex items-center justify-between mb-4">
           <p className="text-[12px] text-ink-3 font-body">
-            <span className="font-semibold text-ink">{filtered.length}</span> produit{filtered.length > 1 ? 's' : ''} trouv\u00e9{filtered.length > 1 ? 's' : ''}
+            <span className="font-semibold text-ink">{filtered.length}</span> produit{filtered.length > 1 ? 's' : ''} trouvé{filtered.length > 1 ? 's' : ''}
             {viewFilter === 'favorites' && ' dans vos favoris'}
-            {viewFilter === 'recommended' && ' sugg\u00e9r\u00e9s par l\u2019IA'}
-            {viewFilter === 'popular' && ' les plus consult\u00e9s'}
+            {viewFilter === 'recommended' && ' suggérés par l’IA'}
+            {viewFilter === 'popular' && ' les plus consultés'}
           </p>
           {viewFilter === 'recommended' && (
             <p className="text-[11px] text-violet/70 font-body flex items-center gap-1">
               <Sparkles size={10} />
-              Tri\u00e9s par score de pertinence
+              Triés par score de pertinence
             </p>
           )}
         </div>
@@ -563,7 +563,7 @@ export default function ProductsPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border/60" style={{ background: 'rgba(237,232,255,0.3)' }}>
-                  {['', 'Produit', 'ISIN', '\u00c9metteur', 'Type', 'Barri\u00e8re', 'Gain max', 'SRI', '\u00c9ch\u00e9ance', 'Statut'].map((h) => (
+                  {['', 'Produit', 'ISIN', 'Émetteur', 'Type', 'Barrière', 'Gain max', 'SRI', 'Échéance', 'Statut'].map((h) => (
                     <th key={h} className="px-4 py-3 text-left text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">{h}</th>
                   ))}
                 </tr>
@@ -586,9 +586,9 @@ export default function ProductsPage() {
              <Search size={20} className="text-ink-3" />}
           </div>
           <p className="font-body text-sm text-ink-3">
-            {viewFilter === 'favorites' ? "Vous n\u2019avez pas encore de favoris. Cliquez sur le \u2764\ufe0f pour en ajouter." :
-             viewFilter === 'recommended' ? "Pas de suggestions IA. Cliquez sur \u00abSuggestions IA\u00bb pour g\u00e9n\u00e9rer des recommandations." :
-             'Aucun produit ne correspond \u00e0 vos crit\u00e8res.'}
+            {viewFilter === 'favorites' ? "Vous n’avez pas encore de favoris. Cliquez sur le ❤️ pour en ajouter." :
+             viewFilter === 'recommended' ? "Pas de suggestions IA. Cliquez sur «Suggestions IA» pour générer des recommandations." :
+             'Aucun produit ne correspond à vos critères.'}
           </p>
           {viewFilter === 'recommended' && (
             <button
@@ -596,12 +596,12 @@ export default function ProductsPage() {
               disabled={generateRecs.isPending}
               className="text-xs text-white bg-violet px-4 py-2 rounded-lg font-semibold hover:bg-violet-mid transition-colors disabled:opacity-50"
             >
-              {generateRecs.isPending ? 'Analyse en cours...' : 'G\u00e9n\u00e9rer des suggestions'}
+              {generateRecs.isPending ? 'Analyse en cours...' : 'Générer des suggestions'}
             </button>
           )}
           {(viewFilter === 'all' || viewFilter === 'popular') && hasActiveFilters && (
             <button onClick={() => { resetFilters(); setIssuerFilter(''); }} className="text-xs text-violet font-semibold hover:underline">
-              R\u00e9initialiser les filtres
+              Réinitialiser les filtres
             </button>
           )}
         </div>
@@ -627,13 +627,13 @@ export default function ProductsPage() {
                   <th className="px-3 py-3 w-10" />
                   <SortTh label="Produit" field="name" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
                   <th className="px-4 py-3 text-left text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">ISIN</th>
-                  <SortTh label="\u00c9metteur" field="issuerName" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
+                  <SortTh label="Émetteur" field="issuerName" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
                   <th className="px-4 py-3 text-left text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">Type</th>
-                  <SortTh label="Barri\u00e8re" field="barrierCapPct" sortField={sortField} sortDir={sortDir} onSort={handleSort} className="text-right" />
+                  <SortTh label="Barrière" field="barrierCapPct" sortField={sortField} sortDir={sortDir} onSort={handleSort} className="text-right" />
                   <SortTh label="Coupon" field="couponPct" sortField={sortField} sortDir={sortDir} onSort={handleSort} className="text-right" />
                   <SortTh label="Gain max" field="maxGainPct" sortField={sortField} sortDir={sortDir} onSort={handleSort} className="text-right" />
                   <SortTh label="SRI" field="sri" sortField={sortField} sortDir={sortDir} onSort={handleSort} className="text-center" />
-                  <SortTh label="\u00c9ch\u00e9ance" field="maturityDate" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
+                  <SortTh label="Échéance" field="maturityDate" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
                   <th className="px-4 py-3 text-center text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">Statut</th>
                   <th className="px-4 py-3 w-10" />
                 </tr>
@@ -728,7 +728,7 @@ export default function ProductsPage() {
                       <td className="px-4 py-3 text-[12px] text-ink-2 whitespace-nowrap">
                         <span className="inline-flex items-center gap-1">
                           <Calendar size={10} className="text-ink-3" />
-                          {p.maturityDate ? formatDate(p.maturityDate) : '\u2014'}
+                          {p.maturityDate ? formatDate(p.maturityDate) : '—'}
                         </span>
                       </td>
 

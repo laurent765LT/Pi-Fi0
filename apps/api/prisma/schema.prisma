@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // ── Enums ────────────────────────────────────────────────────────────────────
@@ -56,6 +57,7 @@ enum ShelfStatus {
 
 enum CommitmentStatus {
   PENDING
+  REVIEW
   CONFIRMED
   WAITING
   CANCELLED
@@ -145,6 +147,8 @@ model Product {
   productViews      ProductView[]
   aiRecommendations AiRecommendation[]
 
+  @@index([status])
+  @@index([orgId])
   @@map("products")
 }
 
@@ -187,16 +191,20 @@ model Commitment {
   userId    String
   orgId     String?
   amount    Float
-  status    CommitmentStatus @default(PENDING)
-  rank      Int?
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
+  status          CommitmentStatus @default(PENDING)
+  rank            Int?
+  rejectionReason String?
+  reviewedBy      String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 
   shelf        Shelf         @relation(fields: [shelfId], references: [id])
   user         User          @relation(fields: [userId], references: [id])
   organization Organization? @relation(fields: [orgId], references: [id])
   commissions  Commission[]
 
+  @@index([userId])
+  @@index([shelfId])
   @@map("commitments")
 }
 
@@ -535,6 +543,8 @@ model Commission {
   commitment Commitment     @relation(fields: [commitmentId], references: [id])
   rule       CommissionRule @relation(fields: [ruleId], references: [id])
 
+  @@index([commitmentId])
+  @@index([status])
   @@map("commissions")
 }
 
@@ -635,6 +645,7 @@ model ActivityLog {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
   @@index([userId, createdAt])
   @@index([entityType, entityId])
   @@map("activity_logs")

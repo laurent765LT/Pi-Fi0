@@ -4,7 +4,7 @@ import { RedisService } from '../common/redis.service';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-export interface PerplexityMessage {
+export interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
   content: string;
 }
@@ -28,24 +28,42 @@ export interface AnalysisResult {
   tokensUsed: number;
 }
 
+type AiProvider = 'claude' | 'perplexity';
+
 // ─── Service ─────────────────────────────────────────────────────────────────
 
 @Injectable()
 export class AiService {
   private readonly logger = new Logger(AiService.name);
-  private readonly apiKey: string;
-  private readonly BASE_URL = 'https://api.perplexity.ai';
+  private readonly perplexityKey: string;
+  private readonly anthropicKey: string;
+  private readonly provider: AiProvider;
+  private readonly PERPLEXITY_URL = 'https://api.perplexity.ai';
+  private readonly ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
 
   constructor(
     private readonly config: ConfigService,
     private readonly redis: RedisService,
   ) {
-    this.apiKey = this.config.get<string>('PERPLEXITY_API_KEY') ?? '';
-    if (this.apiKey) {
-      this.logger.log('Perplexity API key configured ✓');
+    this.anthropicKey = this.config.get<string>('ANTHROPIC_API_KEY') ?? '';
+    this.perplexityKey = this.config.get<string>('PERPLEXITY_API_KEY') ?? '';
+
+    // Prefer Claude, fallback to Perplexity
+    if (this.anthropicKey) {
+      this.provider = 'claude';
+      this.logger.log('Claude API configured ✓ (primary provider)');
+    } else if (this.perplexityKey) {
+      this.provider = 'perplexity';
+      this.logger.log('Perplexity API configured ✓ (fallback provider)');
     } else {
-      this.logger.warn('Perplexity API key not set — AI features will be limited');
+      this.provider = 'claude';
+      this.logger.warn('No AI API key configured — AI features will be limited');
     }
+  }
+
+  // Backward compat alias
+  private get apiKey(): string {
+    return this.provider === 'claude' ? this.anthropicKey : this.perplexityKey;
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -53,7 +71,7 @@ export class AiService {
   // ═══════════════════════════════════════════════════════════════════════════
 
   async chat(
-    messages: PerplexityMessage[],
+    messages: ChatMessage[],
     options: {
       model?: string;
       temperature?: number;
@@ -63,9 +81,80 @@ export class AiService {
     } = {},
   ): Promise<PerplexityResponse> {
     if (!this.apiKey) {
-      throw new Error('Perplexity API key not configured');
+      throw new Error('No AI API key configured');
     }
 
+    if (this.provider === 'claude') {
+      return this.chatWithClaude(messages, options);
+    }
+    return this.chatWithPerplexity(messages, options);
+  }
+
+  private async chatWithClaude(
+    messages: ChatMessage[],
+    options: { model?: string; temperature?: number; maxTokens?: number },
+  ): Promise<PerplexityResponse> {
+    const { temperature = 0.2, maxTokens = 2048 } = options;
+
+    // Separate system message from conversation
+    const systemMsg = messages.find(m => m.role === 'system');
+    const userMessages = messages.filter(m => m.role !== 'system');
+
+    const body: Record<string, unknown> = {
+      model: 'claude-sonnet-4-6',
+      max_tokens: maxTokens,
+      temperature,
+      messages: userMessages.map(m => ({ role: m.role, content: m.content })),
+    };
+    if (systemMsg) {
+      body.system = systemMsg.content;
+    }
+
+    const response = await fetch(this.ANTHROPIC_URL, {
+      method: 'POST',
+      headers: {
+        'x-api-key': this.anthropicKey,
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      this.logger.error(`Claude API error ${response.status}: ${errorText}`);
+      throw new Error(`Claude API error: ${response.status}`);
+    }
+
+    const data = await response.json() as any;
+    // Normalize Claude response to PerplexityResponse shape
+    return {
+      id: data.id,
+      model: data.model,
+      choices: [{
+        index: 0,
+        message: { role: 'assistant', content: data.content?.[0]?.text ?? '' },
+        finish_reason: data.stop_reason ?? 'end_turn',
+      }],
+      citations: [],
+      usage: {
+        prompt_tokens: data.usage?.input_tokens ?? 0,
+        completion_tokens: data.usage?.output_tokens ?? 0,
+        total_tokens: (data.usage?.input_tokens ?? 0) + (data.usage?.output_tokens ?? 0),
+      },
+    };
+  }
+
+  private async chatWithPerplexity(
+    messages: ChatMessage[],
+    options: {
+      model?: string;
+      temperature?: number;
+      maxTokens?: number;
+      searchDomainFilter?: string[];
+      returnCitations?: boolean;
+    },
+  ): Promise<PerplexityResponse> {
     const {
       model = 'sonar',
       temperature = 0.2,
@@ -86,10 +175,10 @@ export class AiService {
       body.search_domain_filter = searchDomainFilter;
     }
 
-    const response = await fetch(`${this.BASE_URL}/chat/completions`, {
+    const response = await fetch(`${this.PERPLEXITY_URL}/chat/completions`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
+        'Authorization': `Bearer ${this.perplexityKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(body),

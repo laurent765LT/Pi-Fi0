@@ -6,6 +6,7 @@ import {
   DEMO_RECENT_VIEWS,
   DEMO_COMMISSION_SUMMARY,
 } from './demo-data';
+import { simulatePricing } from './pricing-simulator';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || '/api/v1';
 
@@ -209,6 +210,31 @@ class ApiClient {
     return this.withDemoFallback(
       () => this.request<any>(`/commitments/${id}`, { method: 'DELETE' }),
       () => ({ id, status: 'CANCELLED' }),
+    );
+  }
+
+  async reviewCommitment(id: string) {
+    return this.withDemoFallback(
+      () => this.request<any>(`/commitments/${id}/review`, { method: 'PATCH' }),
+      () => ({ id, status: 'REVIEW' }),
+    );
+  }
+
+  async approveCommitment(id: string) {
+    return this.withDemoFallback(
+      () => this.request<any>(`/commitments/${id}/approve`, { method: 'PATCH' }),
+      () => ({ id, status: 'CONFIRMED' }),
+    );
+  }
+
+  async rejectCommitment(id: string, reason: string) {
+    return this.withDemoFallback(
+      () =>
+        this.request<any>(`/commitments/${id}/reject`, {
+          method: 'PATCH',
+          body: JSON.stringify({ reason }),
+        }),
+      () => ({ id, status: 'CANCELLED', rejectionReason: reason }),
     );
   }
 
@@ -451,55 +477,11 @@ class ApiClient {
           body: JSON.stringify({ config, saveRun }),
         }),
       () => {
-        const underlying = config?.underlying?.name ?? 'Euro Stoxx 50';
-        const spot = config?.underlying?.spot ?? 5000;
-        const couponRate = config?.payoff?.couponRate ?? 0.08;
-        const protBarrier = config?.payoff?.protectionBarrier ?? 0.6;
-        const shocks = [-0.40, -0.30, -0.20, -0.10, 0, 0.10, 0.20, 0.30, 0.40];
+        const result = simulatePricing(config ?? {});
         return {
-          result: {
-            fairValue: 97.52,
-            issuePrice: 100.00,
-            expectedReturn: (couponRate * 100).toFixed(2),
-            computeTimeMs: Math.floor(300 + Math.random() * 700),
-            riskSummary: {
-              probAutocall: 0.623,
-              probCapitalLoss: 0.087,
-              probMaxLoss: 0.032,
-              expectedLife: 3.2,
-              valueAtRisk95: -18.5,
-              conditionalVaR: -32.1,
-            },
-            costBreakdown: {
-              structuringMargin: config?.market?.structuringMargin ? (config.market.structuringMargin * 100).toFixed(2) : '1.50',
-              distributionFee: config?.market?.distributionFee ? (config.market.distributionFee * 100).toFixed(2) : '2.00',
-              executionCost: '0.50',
-              hedgingCost: '0.48',
-              totalCost: '4.48',
-            },
-            scenarioTable: shocks.map((shock) => {
-              const spotLevel = Math.round(spot * (1 + shock));
-              const redemption = (1 + shock) < protBarrier ? Math.round((1 + shock) * 100) : 100;
-              const totalCoupons = shock >= -0.10 ? +(couponRate * 100 * 3.2).toFixed(1) : 0;
-              const totalReturn = +(redemption - 100 + totalCoupons).toFixed(1);
-              return { spotShock: shock, spotLevel, redemption, totalCoupons, totalReturn };
-            }),
-            greeks: { delta: 0.45, gamma: 0.02, vega: 0.15, theta: -0.03, rho: 0.08 },
-            modelUsed: 'Monte Carlo (Local Vol)',
-            assumptions: [
-              'Volatilité locale calibrée sur nappe de marché',
-              'Dividendes discrets estimés',
-              'Corrélation historique 6 mois',
-              'Taux sans risque courbe ESTER',
-            ],
-            modelLimitations: [
-              'Modèle simplifié — ne capture pas les sauts de volatilité',
-              'Estimation — non contractuel',
-              'Sensibilité aux hypothèses de dividendes',
-            ],
-          },
+          result,
           validation: [
-            { severity: 'WARNING', message: `Pricing simulé en mode démo — résultats indicatifs uniquement` },
+            { severity: 'WARNING', message: 'Pricing simulé en mode démo — résultats indicatifs uniquement' },
           ],
           runId: 'demo-run-' + Date.now(),
         };
@@ -623,13 +605,19 @@ class ApiClient {
   async sendRfq(rfqId: string) {
     return this.withDemoFallback(
       () => this.request<{ rfq: any; quotes: any[] }>(`/rfq/${rfqId}/send`, { method: 'POST' }),
-      () => ({
-        rfq: { id: rfqId, status: 'SENT' },
-        quotes: [
-          { id: 'q1', issuerName: 'BNP Paribas', price: 99.2, indicative: true },
-          { id: 'q2', issuerName: 'SG Issuer', price: 98.8, indicative: true },
-        ],
-      }),
+      () => {
+        const base = 97.5 + Math.random() * 2;
+        return {
+          rfq: { id: rfqId, status: 'SENT', sentAt: new Date().toISOString() },
+          quotes: [
+            { id: 'q1', issuerName: 'BNP Paribas Issuance', price: +(base + 1.2 + Math.random() * 0.8).toFixed(2), spread: 0.8, indicative: true, receivedAt: new Date().toISOString() },
+            { id: 'q2', issuerName: 'SG Issuer', price: +(base + 0.8 + Math.random() * 0.6).toFixed(2), spread: 0.9, indicative: true, receivedAt: new Date().toISOString() },
+            { id: 'q3', issuerName: 'Natixis Structured Issuance', price: +(base + 1.5 + Math.random() * 0.5).toFixed(2), spread: 0.7, indicative: true, receivedAt: new Date().toISOString() },
+            { id: 'q4', issuerName: 'Goldman Sachs International', price: +(base + 0.5 + Math.random() * 1.0).toFixed(2), spread: 1.1, indicative: true, receivedAt: new Date().toISOString() },
+            { id: 'q5', issuerName: 'Barclays Capital', price: +(base + 0.9 + Math.random() * 0.7).toFixed(2), spread: 1.0, indicative: true, receivedAt: new Date().toISOString() },
+          ],
+        };
+      },
     );
   }
 

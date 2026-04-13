@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import {
   TrendingUp,
@@ -320,7 +320,21 @@ export default function DashboardPage() {
                 </div>
                 <span className="text-[11px] text-ink-3 font-mono">{products.length} produits</span>
               </div>
-              <PayoffDistribution products={products} />
+              <DonutChart products={products} />
+            </div>
+          )}
+
+          {/* Collection Curve */}
+          {!loadingCommitments && (commitments?.length ?? 0) >= 2 && (
+            <div className="bg-white rounded-xl border border-border/80 p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <TrendingUp size={16} className="text-violet" />
+                  <h3 className="font-display text-sm font-bold text-ink">Courbe de collecte</h3>
+                </div>
+                <span className="text-[11px] text-ink-3 font-mono">Cumul des engagements</span>
+              </div>
+              <CollectionCurve commitments={commitments ?? []} />
             </div>
           )}
 
@@ -385,10 +399,11 @@ export default function DashboardPage() {
             <div className="flex flex-col gap-2">
               {[
                 { href: '/products', icon: Layers, color: '#3B1FA8', label: 'Catalogue produits', sub: `${activeProductCount} produits` },
+                { href: '/evenements', icon: Clock, color: '#C41F36', label: 'Événements', sub: 'Clôtures, observations, coupons' },
                 { href: '/pricing', icon: Calculator, color: '#0A2799', label: 'Pricing Engine', sub: 'Pricer un produit' },
                 { href: '/rfq', icon: FileSearch, color: '#00B894', label: 'RFQ Screener', sub: 'Demande de cotation' },
                 { href: '/portfolio', icon: ShieldCheck, color: '#D4A017', label: 'Mon portfolio', sub: `${myCommitmentCount} engagements` },
-                { href: '/research', icon: BookOpen, color: '#3D63F5', label: 'Research IA', sub: 'Analyse de marche' },
+                { href: '/research', icon: BookOpen, color: '#3D63F5', label: 'Research IA', sub: 'Analyse de marché' },
               ].map(({ href, icon: Icon, color, label, sub }) => (
                 <Link key={href} href={href}
                   className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-2 border border-transparent hover:border-border transition-all duration-200 group"
@@ -483,9 +498,10 @@ export default function DashboardPage() {
   );
 }
 
-// ─── Payoff Distribution Component ────────────────────────────────────────────
+// ─── Donut Chart Component ────────────────────────────────────────────────────
 
-function PayoffDistribution({ products }: { products: any[] }) {
+function DonutChart({ products }: { products: any[] }) {
+  const [hovered, setHovered] = useState<string | null>(null);
   const distribution = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const p of products) counts[p.payoffType] = (counts[p.payoffType] || 0) + 1;
@@ -499,21 +515,128 @@ function PayoffDistribution({ products }: { products: any[] }) {
 
   if (!distribution.length) return null;
 
+  const radius = 60;
+  const strokeWidth = 18;
+  const circumference = 2 * Math.PI * radius;
+  let offset = 0;
+
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex h-2 rounded-full overflow-hidden bg-surface-2">
-        {distribution.map(d => (
-          <div key={d.type} className="h-full transition-all duration-700" style={{ width: `${d.pct}%`, backgroundColor: d.color }} />
-        ))}
+    <div className="flex items-center gap-6">
+      <div className="relative shrink-0">
+        <svg width="160" height="160" viewBox="0 0 160 160">
+          {distribution.map((d) => {
+            const dashLen = (d.pct / 100) * circumference;
+            const dashGap = circumference - dashLen;
+            const currentOffset = offset;
+            offset += dashLen;
+            const isHov = hovered === d.type;
+            return (
+              <circle
+                key={d.type}
+                cx="80" cy="80" r={radius}
+                fill="none"
+                stroke={d.color}
+                strokeWidth={isHov ? strokeWidth + 4 : strokeWidth}
+                strokeDasharray={dashLen + ' ' + dashGap}
+                strokeDashoffset={-currentOffset}
+                strokeLinecap="butt"
+                opacity={hovered && !isHov ? 0.4 : 1}
+                onMouseEnter={() => setHovered(d.type)}
+                onMouseLeave={() => setHovered(null)}
+                className="transition-all duration-300 cursor-pointer"
+                style={{ transformOrigin: 'center', transform: 'rotate(-90deg)' }}
+              />
+            );
+          })}
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          {hovered ? (
+            <>
+              <span className="font-display text-xl font-bold text-ink">{distribution.find(d => d.type === hovered)?.count}</span>
+              <span className="text-[9px] text-ink-3 font-body">{distribution.find(d => d.type === hovered)?.label}</span>
+            </>
+          ) : (
+            <>
+              <span className="font-display text-xl font-bold text-ink">{products.length}</span>
+              <span className="text-[9px] text-ink-3 font-body">Produits</span>
+            </>
+          )}
+        </div>
       </div>
-      <div className="flex flex-wrap gap-x-4 gap-y-1">
+      <div className="flex flex-col gap-2">
         {distribution.map(d => (
-          <div key={d.type} className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
-            <span className="text-[11px] text-ink-3 font-body">{d.label}<span className="font-semibold text-ink-2 ml-1">{d.count}</span></span>
+          <div
+            key={d.type}
+            className="flex items-center gap-2 cursor-pointer group"
+            onMouseEnter={() => setHovered(d.type)}
+            onMouseLeave={() => setHovered(null)}
+          >
+            <span className="w-2.5 h-2.5 rounded-full shrink-0 transition-transform group-hover:scale-125" style={{ backgroundColor: d.color }} />
+            <span className="text-[11px] text-ink-3 font-body group-hover:text-ink transition-colors">
+              {d.label}
+              <span className="font-semibold text-ink-2 ml-1.5">{d.count}</span>
+              <span className="text-ink-4 ml-1">({d.pct.toFixed(0)}%)</span>
+            </span>
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+// ─── Collection Curve Component ──────────────────────────────────────────────
+
+function CollectionCurve({ commitments }: { commitments: any[] }) {
+  const data = useMemo(() => {
+    if (!commitments?.length) return [];
+    const sorted = [...commitments].sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    let cumulative = 0;
+    const points = sorted.map((c: any) => {
+      cumulative += c.amount ?? 0;
+      return { date: new Date(c.createdAt), amount: cumulative };
+    });
+    return points;
+  }, [commitments]);
+
+  if (data.length < 2) return null;
+
+  const maxAmount = data[data.length - 1]!.amount;
+  const minDate = data[0]!.date.getTime();
+  const maxDate = data[data.length - 1]!.date.getTime();
+  const dateRange = maxDate - minDate || 1;
+
+  const w = 400;
+  const h = 120;
+  const padX = 40;
+  const padY = 10;
+
+  const points = data.map((d) => {
+    const x = padX + ((d.date.getTime() - minDate) / dateRange) * (w - padX * 2);
+    const y = h - padY - ((d.amount / (maxAmount || 1)) * (h - padY * 2));
+    return { x, y, amount: d.amount, date: d.date };
+  });
+
+  const pathD = points.map((p, i) => (i === 0 ? 'M' : 'L') + p.x + ',' + p.y).join(' ');
+  const areaD = pathD + ' L' + points[points.length - 1]!.x + ',' + (h - padY) + ' L' + points[0]!.x + ',' + (h - padY) + ' Z';
+
+  return (
+    <div className="w-full">
+      <svg viewBox={'0 0 ' + w + ' ' + h} className="w-full h-auto">
+        <defs>
+          <linearGradient id="curve-grad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#3B1FA8" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#3B1FA8" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path d={areaD} fill="url(#curve-grad)" />
+        <path d={pathD} fill="none" stroke="#3B1FA8" strokeWidth="2" strokeLinejoin="round" />
+        {points.map((p, i) => (
+          <circle key={i} cx={p.x} cy={p.y} r="3" fill="#3B1FA8" stroke="white" strokeWidth="1.5" />
+        ))}
+        {/* Y-axis labels */}
+        <text x={padX - 4} y={padY + 4} textAnchor="end" className="fill-ink-3" fontSize="8" fontFamily="DM Mono">{(maxAmount / 1e6).toFixed(1)}M</text>
+        <text x={padX - 4} y={h - padY + 4} textAnchor="end" className="fill-ink-3" fontSize="8" fontFamily="DM Mono">0</text>
+      </svg>
     </div>
   );
 }

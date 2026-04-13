@@ -1,7 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { PrismaModule } from './common/prisma.module';
 import { RedisModule } from './common/redis.module';
+import { EmailModule } from './common/email.module';
 import { AuthModule } from './auth/auth.module';
 import { ProductsModule } from './products/products.module';
 import { ShelvesModule } from './shelves/shelves.module';
@@ -17,12 +20,17 @@ import { InsurerRulesModule } from './insurer-rules/insurer-rules.module';
 import { FavoritesModule } from './favorites/favorites.module';
 import { RecommendationsModule } from './recommendations/recommendations.module';
 import { ActivityModule } from './activity/activity.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { WebhooksModule } from './webhooks/webhooks.module';
+import { HealthController } from './common/health.controller';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ThrottlerModule.forRoot({ throttlers: [{ ttl: 60000, limit: 100 }] }),
     PrismaModule,
     RedisModule,
+    EmailModule,
     AuthModule,
     ProductsModule,
     ShelvesModule,
@@ -38,6 +46,15 @@ import { ActivityModule } from './activity/activity.module';
     FavoritesModule,
     RecommendationsModule,
     ActivityModule,
+    NotificationsModule,
+    WebhooksModule,
+  ],
+  controllers: [HealthController],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule {}

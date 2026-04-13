@@ -34,13 +34,13 @@ const MIF2_KEYWORDS = [
   'dois-je', 'faut-il', 'est-ce que je devrais',
 ];
 
-const MIF2_DISCLAIMER = "Je suis un assistant d'information. Je ne fournis aucun conseil en investissement personnalis\u00e9 au sens de la directive MIF2. Pour tout conseil adapt\u00e9 \u00e0 votre situation, consultez votre conseiller financier.";
+const MIF2_DISCLAIMER = "Je suis un assistant d'information. Je ne fournis aucun conseil en investissement personnalisé au sens de la directive MIF2. Pour tout conseil adapté à votre situation, consultez votre conseiller financier.";
 
 function detectIntent(text: string): IntentType {
   const lower = text.toLowerCase();
   if (MIF2_KEYWORDS.some((kw) => lower.includes(kw))) return 'ADVICE_REQUEST';
   if (lower.includes('compar') || lower.includes('versus') || lower.includes(' vs ')) return 'COMPARISON';
-  if (lower.includes('risque') || lower.includes('sri') || lower.includes('barri\u00e8re') || lower.includes('perte')) return 'RISK_INFO';
+  if (lower.includes('risque') || lower.includes('sri') || lower.includes('barrière') || lower.includes('perte')) return 'RISK_INFO';
   if (lower.includes('produit') || lower.includes('isin') || lower.includes('autocall') || lower.includes('coupon') || lower.includes('capital prot')) return 'PRODUCT_SEARCH';
   return 'GENERAL';
 }
@@ -52,10 +52,11 @@ function isMif2Blocked(intent: IntentType): boolean {
 // ─── Example prompts ──────────────────────────────────────────────────────────
 
 const EXAMPLE_PROMPTS = [
-  { text: 'Produits SRI \u2264 3 sur indices europ\u00e9ens', icon: '📊' },
-  { text: 'Produits capital prot\u00e9g\u00e9 disponibles', icon: '🛡️' },
-  { text: 'Qu\u2019est-ce qui ferme bient\u00f4t\u00a0?', icon: '⏰' },
-  { text: 'Comparer M Equilibre 5 et M Equilibre 7', icon: '⚖️' },
+  { text: 'Je cherche un produit capital garanti', icon: '🛡️' },
+  { text: 'Quel autocall a la meilleure barrière ?', icon: '📊' },
+  { text: 'Produit pour profil prudent SRI ≤ 3', icon: '🎯' },
+  { text: 'Clôture avant fin juin', icon: '⏰' },
+  { text: 'Comparer M Rendement OR et M Ambition 10', icon: '⚖️' },
 ];
 
 // ─── Mini Product Card ────────────────────────────────────────────────────────
@@ -183,7 +184,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         <div className="flex items-start gap-1.5 max-w-[85%]">
           <AlertTriangle size={10} className="text-gold shrink-0 mt-0.5" />
           <p className="font-body text-[9px] text-ink-3 leading-relaxed italic">
-            Information g\u00e9n\u00e9rale, ne constitue pas un conseil en investissement (MIF2).
+            Information générale, ne constitue pas un conseil en investissement (MIF2).
           </p>
         </div>
       )}
@@ -270,11 +271,11 @@ export function ChatWidget() {
         const blockedMsg: ChatMessage = {
           id: crypto.randomUUID(),
           role: 'bot',
-          text: "Je ne peux pas fournir de conseil en investissement personnalis\u00e9. Cependant, je peux vous pr\u00e9senter des produits correspondant \u00e0 vos crit\u00e8res ou vous expliquer leurs caract\u00e9ristiques.",
+          text: "Je ne peux pas fournir de conseil en investissement personnalisé. Cependant, je peux vous présenter des produits correspondant à vos critères ou vous expliquer leurs caractéristiques.",
           disclaimer: true,
           actions: [
             { label: 'Voir tous les produits', href: '/products', variant: 'primary' },
-            { label: 'Produits capital prot\u00e9g\u00e9', href: '/products?payoffType=CAPITAL_PROTECTED', variant: 'outline' },
+            { label: 'Produits capital protégé', href: '/products?payoffType=CAPITAL_PROTECTED', variant: 'outline' },
           ],
           timestamp: new Date(),
         };
@@ -289,7 +290,7 @@ export function ChatWidget() {
 
         const actions: ChatAction[] = [];
         if (response.products && response.products.length > 0) {
-          actions.push({ label: 'Voir tous les r\u00e9sultats', href: '/products', variant: 'outline' });
+          actions.push({ label: 'Voir tous les résultats', href: '/products', variant: 'outline' });
         }
         if (intent === 'COMPARISON') {
           actions.push({ label: 'Ouvrir le comparateur', href: '/products', variant: 'outline' });
@@ -310,7 +311,7 @@ export function ChatWidget() {
         const errorMsg: ChatMessage = {
           id: crypto.randomUUID(),
           role: 'bot',
-          text: "D\u00e9sol\u00e9, je n'ai pas pu traiter votre demande. Veuillez r\u00e9essayer.",
+          text: "Désolé, je n'ai pas pu traiter votre demande. Veuillez réessayer.",
           timestamp: new Date(),
         };
         setMessages((prev) => [...prev, errorMsg]);
@@ -388,7 +389,7 @@ export function ChatWidget() {
                     Comment puis-je vous aider ?
                   </p>
                   <p className="font-body text-xs text-ink-3 mt-1">
-                    Recherchez des produits, comparez les risques ou explorez les opportunit\u00e9s.
+                    Recherchez des produits, comparez les risques ou explorez les opportunités.
                   </p>
                 </div>
 
@@ -425,7 +426,7 @@ export function ChatWidget() {
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Posez votre question\u2026"
+                placeholder="Posez votre question…"
                 disabled={isTyping}
                 className="flex-1 h-9 px-3 rounded-md bg-surface-2 border border-border-2 font-body text-sm text-ink placeholder:text-ink-3 focus:outline-none focus:ring-2 focus:ring-violet focus:border-violet transition-all duration-150 disabled:opacity-50"
               />

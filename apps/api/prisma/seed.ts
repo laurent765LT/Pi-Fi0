@@ -269,7 +269,7 @@ async function main() {
         barrierCapPct: p.barrierCapPct,
         autocallBarrierPct: p.autocallBarrierPct,
         couponPct: p.couponPct,
-        maxGainPct: p.maxGainPct,
+        maxGainPct: p.maxGainPct ?? 0,
         sri: p.sri,
         maturityDate: p.maturityDate,
         entryFeePct: p.entryFeePct,

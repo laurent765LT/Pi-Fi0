@@ -73,6 +73,15 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
+// ─── Step labels ─────────────────────────────────────────────────────────────
+
+const STEPS = [
+  { label: 'Structure', icon: Sliders },
+  { label: 'Payoff', icon: Target },
+  { label: 'Marché', icon: Activity },
+  { label: 'Résultats', icon: CheckCircle2 },
+];
+
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function PricingPage() {
@@ -270,47 +279,67 @@ export default function PricingPage() {
   }), [structureType, currency, nominal, underlying, couponType, couponRate, couponBarrier, couponMemory, autocallEnabled, autocallBarrier, protectionBarrier, barrierMonitoring, cap, participationUp, riskFreeRate, fundingSpread, structuringMargin, distributionFee, mcPaths, maturityDate, strikeDate]);
 
   const inputCls = cn(
-    'w-full h-9 rounded-lg border border-border/80 bg-white px-3 text-[12px] font-body text-ink',
-    'focus:outline-none focus:ring-2 focus:ring-violet/30 focus:border-violet transition-all duration-150',
+    'w-full h-10 rounded-xl border border-border/60 bg-white dark:bg-ink/5 px-3.5 text-[13px] font-body text-ink dark:text-white',
+    'placeholder:text-ink-3/50',
+    'focus:outline-none focus:ring-2 focus:ring-violet/30 focus:border-violet/50 transition-all duration-200',
+    'hover:border-violet/30',
+    'shadow-sm',
   );
 
-  const selectCls = cn(inputCls, 'cursor-pointer');
+  const selectCls = cn(inputCls, 'cursor-pointer appearance-none');
 
-  const labelCls = 'text-[10px] uppercase tracking-[0.2em] font-bold text-violet font-body';
+  const labelCls = 'text-[10px] uppercase tracking-[0.2em] font-bold text-violet/80 dark:text-violet-pale font-body';
+
+  // ── Card wrapper ──────────────────────────────────────────────────────────
+  const cardCls = cn(
+    'bg-white dark:bg-ink/10 rounded-xl border border-border/60 dark:border-white/10',
+    'shadow-sm hover:shadow-md transition-all duration-200',
+  );
 
   return (
     <div className="animate-fade-in">
       {/* ── Header ────────────────────────────────────────────────── */}
-      <div className="mb-6">
-        <h1 className="font-display text-[28px] font-bold text-ink leading-tight">
-          Pricing Engine
-        </h1>
-        <p className="text-sm text-ink-3 font-body mt-1">
-          Construisez, pricez et analysez des produits structurés. Lancez des RFQ simulées multi-émetteurs.
-        </p>
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet to-violet/70 flex items-center justify-center shadow-md">
+            <Calculator size={20} className="text-white" />
+          </div>
+          <div>
+            <h1 className="font-display text-[28px] font-bold text-ink dark:text-white leading-tight tracking-tight">
+              Pricing Engine
+            </h1>
+            <p className="text-sm text-ink-3 dark:text-white/50 font-body mt-0.5">
+              Construisez, pricez et analysez des produits structurés. Lancez des RFQ simulées multi-émetteurs.
+            </p>
+          </div>
+        </div>
         <div className="gradient-bar h-[2px] rounded-full mt-5 opacity-60" />
       </div>
 
       {/* ── Tab navigation ────────────────────────────────────────── */}
-      <div className="flex items-center gap-1 mb-6 bg-white rounded-lg border border-border/80 p-1 w-fit">
+      <div className="flex items-center gap-1 mb-8 bg-white dark:bg-ink/10 rounded-xl border border-border/60 dark:border-white/10 p-1.5 w-fit shadow-sm">
         <button
           onClick={() => setTab('builder')}
           className={cn(
-            'flex items-center gap-2 px-4 py-2 rounded-md text-[13px] font-semibold font-body transition-all duration-200',
-            tab === 'builder' ? 'bg-violet text-white shadow-sm' : 'text-ink-3 hover:text-ink hover:bg-surface-2',
+            'flex items-center gap-2 px-5 py-2.5 rounded-lg text-[13px] font-semibold font-body transition-all duration-200',
+            tab === 'builder'
+              ? 'bg-gradient-to-r from-violet to-violet/90 text-white shadow-md'
+              : 'text-ink-3 dark:text-white/50 hover:text-ink dark:hover:text-white hover:bg-surface-2 dark:hover:bg-white/5',
           )}
         >
-          <Calculator size={14} />
+          <Calculator size={15} />
           Product Builder
         </button>
         <button
           onClick={() => setTab('history')}
           className={cn(
-            'flex items-center gap-2 px-4 py-2 rounded-md text-[13px] font-semibold font-body transition-all duration-200',
-            tab === 'history' ? 'bg-violet text-white shadow-sm' : 'text-ink-3 hover:text-ink hover:bg-surface-2',
+            'flex items-center gap-2 px-5 py-2.5 rounded-lg text-[13px] font-semibold font-body transition-all duration-200',
+            tab === 'history'
+              ? 'bg-gradient-to-r from-violet to-violet/90 text-white shadow-md'
+              : 'text-ink-3 dark:text-white/50 hover:text-ink dark:hover:text-white hover:bg-surface-2 dark:hover:bg-white/5',
           )}
         >
-          <History size={14} />
+          <History size={15} />
           Historique
         </button>
       </div>
@@ -318,46 +347,66 @@ export default function PricingPage() {
       {tab === 'builder' ? (
         <div className="flex gap-6">
           {/* ── Left: Multi-step Form ─────────────────────────── */}
-          <div className="w-[420px] shrink-0 flex flex-col gap-4">
-            {/* Steps indicator */}
-            <div className="flex items-center gap-0 bg-white rounded-xl border border-border/80 p-2">
-              {['Structure', 'Payoff', 'Marché', 'Résultats'].map((label, i) => (
-                <button
-                  key={i}
-                  onClick={() => setStep(i)}
-                  className={cn(
-                    'flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] font-semibold font-body transition-all',
-                    step === i
-                      ? 'bg-violet text-white shadow-sm'
-                      : step > i
-                        ? 'text-teal hover:bg-teal-light'
-                        : 'text-ink-3 hover:bg-surface-2',
-                  )}
-                >
-                  <span className={cn(
-                    'w-5 h-5 rounded-full text-[10px] flex items-center justify-center font-bold',
-                    step === i ? 'bg-white/20' : step > i ? 'bg-teal/20' : 'bg-surface-2',
-                  )}>
-                    {step > i ? '✓' : i + 1}
-                  </span>
-                  {label}
-                </button>
-              ))}
+          <div className="w-[440px] shrink-0 flex flex-col gap-5">
+            {/* Steps indicator - premium pill design */}
+            <div className={cn(cardCls, 'p-2')}>
+              <div className="flex items-center gap-1">
+                {STEPS.map(({ label, icon: Icon }, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setStep(i)}
+                    className={cn(
+                      'flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-[11px] font-bold font-body transition-all duration-200 relative',
+                      step === i
+                        ? 'bg-gradient-to-r from-violet to-violet/85 text-white shadow-md'
+                        : step > i
+                          ? 'text-teal dark:text-teal hover:bg-teal/5'
+                          : 'text-ink-3 dark:text-white/40 hover:bg-surface-2 dark:hover:bg-white/5',
+                    )}
+                  >
+                    <span className={cn(
+                      'w-5 h-5 rounded-full text-[10px] flex items-center justify-center font-bold transition-all duration-200',
+                      step === i
+                        ? 'bg-white/25'
+                        : step > i
+                          ? 'bg-teal/15 text-teal'
+                          : 'bg-ink/5 dark:bg-white/10',
+                    )}>
+                      {step > i ? '✓' : i + 1}
+                    </span>
+                    <span className="hidden sm:inline">{label}</span>
+                  </button>
+                ))}
+              </div>
+              {/* Progress bar */}
+              <div className="mt-2 mx-2 h-1 rounded-full bg-ink/5 dark:bg-white/5 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-violet to-teal transition-all duration-500 ease-out"
+                  style={{ width: `${((step + 1) / 4) * 100}%` }}
+                />
+              </div>
             </div>
 
             {/* Templates */}
             {step === 0 && templates && templates.length > 0 && (
-              <div className="bg-white rounded-xl border border-border/80 p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <FileText size={14} className="text-violet" />
-                  <span className="text-[12px] font-bold text-ink font-body">Templates</span>
+              <div className={cn(cardCls, 'p-5')}>
+                <div className="flex items-center gap-2.5 mb-4">
+                  <div className="w-7 h-7 rounded-lg bg-violet-ghost dark:bg-violet/20 flex items-center justify-center">
+                    <FileText size={14} className="text-violet" />
+                  </div>
+                  <span className="text-[13px] font-bold text-ink dark:text-white font-body">Templates rapides</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {templates.map((tpl: any) => (
                     <button
                       key={tpl.id}
                       onClick={() => loadTemplate(tpl)}
-                      className="px-3 py-1.5 rounded-lg border border-border/80 bg-violet-ghost text-[11px] font-medium text-violet hover:bg-violet-pale transition-all"
+                      className={cn(
+                        'px-3.5 py-2 rounded-lg border border-violet/20 bg-violet-ghost/50 dark:bg-violet/10',
+                        'text-[11px] font-semibold text-violet',
+                        'hover:bg-violet-pale hover:border-violet/40 hover:shadow-sm',
+                        'active:scale-[0.97] transition-all duration-200',
+                      )}
                     >
                       {tpl.name.split('—')[0]?.trim()}
                     </button>
@@ -368,26 +417,31 @@ export default function PricingPage() {
 
             {/* Step 0: Structure */}
             {step === 0 && (
-              <div className="bg-white rounded-xl border border-border/80 p-5 flex flex-col gap-4">
-                <h3 className="font-display text-sm font-bold text-ink flex items-center gap-2">
-                  <Sliders size={14} className="text-violet" />
-                  Structure du Produit
-                </h3>
+              <div className={cn(cardCls, 'p-6 flex flex-col gap-5')}>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet to-violet/70 flex items-center justify-center shadow-sm">
+                    <Sliders size={16} className="text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-display text-[15px] font-bold text-ink dark:text-white">Structure du Produit</h3>
+                    <p className="text-[11px] text-ink-3 dark:text-white/40 font-body">Parametres principaux</p>
+                  </div>
+                </div>
 
-                <div className="flex flex-col gap-1.5">
+                <div className="flex flex-col gap-2">
                   <label className={labelCls}>Nom du produit</label>
                   <input value={productName} onChange={(e) => setProductName(e.target.value)} className={inputCls} />
                 </div>
 
-                <div className="flex flex-col gap-1.5">
+                <div className="flex flex-col gap-2">
                   <label className={labelCls}>Type de structure</label>
                   <select value={structureType} onChange={(e) => setStructureType(e.target.value)} className={selectCls}>
                     {STRUCTURE_TYPES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
                   </select>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="flex flex-col gap-1.5">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-2">
                     <label className={labelCls}>Devise</label>
                     <select value={currency} onChange={(e) => setCurrency(e.target.value)} className={selectCls}>
                       <option value="EUR">EUR</option>
@@ -396,52 +450,71 @@ export default function PricingPage() {
                       <option value="GBP">GBP</option>
                     </select>
                   </div>
-                  <div className="flex flex-col gap-1.5">
+                  <div className="flex flex-col gap-2">
                     <label className={labelCls}>Nominal</label>
                     <input type="number" value={nominal} onChange={(e) => setNominal(Number(e.target.value))} className={inputCls} />
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-1.5">
+                <div className="flex flex-col gap-2">
                   <label className={labelCls}>Sous-jacent</label>
                   <select value={selectedUnderlying} onChange={(e) => setSelectedUnderlying(Number(e.target.value))} className={selectCls}>
                     {UNDERLYINGS.map((u, i) => (
                       <option key={u.ticker} value={i}>{u.name} ({u.ticker})</option>
                     ))}
                   </select>
-                  <div className="flex gap-4 mt-1">
-                    <span className="text-[10px] text-ink-3 font-mono">Spot: {underlying.spot}</span>
-                    <span className="text-[10px] text-ink-3 font-mono">Vol: {(underlying.vol * 100).toFixed(0)}%</span>
-                    <span className="text-[10px] text-ink-3 font-mono">Div: {(underlying.div * 100).toFixed(1)}%</span>
+                  <div className="flex gap-3 mt-1.5">
+                    {[
+                      { label: 'Spot', value: underlying.spot },
+                      { label: 'Vol', value: `${(underlying.vol * 100).toFixed(0)}%` },
+                      { label: 'Div', value: `${(underlying.div * 100).toFixed(1)}%` },
+                    ].map((item) => (
+                      <span key={item.label} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-ink/[0.03] dark:bg-white/5 text-[10px] text-ink-3 dark:text-white/40 font-mono">
+                        <span className="text-ink-4 dark:text-white/25">{item.label}:</span> {item.value}
+                      </span>
+                    ))}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="flex flex-col gap-1.5">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-2">
                     <label className={labelCls}>Date de strike</label>
                     <input type="date" value={strikeDate} onChange={(e) => setStrikeDate(e.target.value)} className={inputCls} />
                   </div>
-                  <div className="flex flex-col gap-1.5">
+                  <div className="flex flex-col gap-2">
                     <label className={labelCls}>Maturité</label>
                     <input type="date" value={maturityDate} onChange={(e) => setMaturityDate(e.target.value)} className={inputCls} />
                   </div>
                 </div>
 
-                <button onClick={() => setStep(1)} className="w-full h-10 rounded-lg bg-violet text-white text-[13px] font-semibold font-body flex items-center justify-center gap-2 transition-all hover:bg-violet-dark active:scale-[0.98] mt-2">
-                  Suivant <ChevronRight size={14} />
+                <button
+                  onClick={() => setStep(1)}
+                  className={cn(
+                    'w-full h-11 rounded-xl bg-gradient-to-r from-violet to-violet/85 text-white text-[13px] font-bold font-body',
+                    'flex items-center justify-center gap-2',
+                    'shadow-md hover:shadow-lg hover:from-violet-dark hover:to-violet',
+                    'active:scale-[0.98] transition-all duration-200 mt-1',
+                  )}
+                >
+                  Suivant <ChevronRight size={15} />
                 </button>
               </div>
             )}
 
             {/* Step 1: Payoff */}
             {step === 1 && (
-              <div className="bg-white rounded-xl border border-border/80 p-5 flex flex-col gap-4">
-                <h3 className="font-display text-sm font-bold text-ink flex items-center gap-2">
-                  <Target size={14} className="text-violet" />
-                  Payoff & Barrières
-                </h3>
+              <div className={cn(cardCls, 'p-6 flex flex-col gap-5')}>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet to-violet/70 flex items-center justify-center shadow-sm">
+                    <Target size={16} className="text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-display text-[15px] font-bold text-ink dark:text-white">Payoff & Barrières</h3>
+                    <p className="text-[11px] text-ink-3 dark:text-white/40 font-body">Coupons, autocall et protection</p>
+                  </div>
+                </div>
 
-                <div className="flex flex-col gap-1.5">
+                <div className="flex flex-col gap-2">
                   <label className={labelCls}>Type de coupon</label>
                   <select value={couponType} onChange={(e) => setCouponType(e.target.value)} className={selectCls}>
                     {COUPON_TYPES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
@@ -450,48 +523,48 @@ export default function PricingPage() {
 
                 {couponType !== 'NONE' && (
                   <>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="flex flex-col gap-1.5">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="flex flex-col gap-2">
                         <label className={labelCls}>Coupon (%/an)</label>
                         <input type="number" step="0.5" value={couponRate} onChange={(e) => setCouponRate(Number(e.target.value))} className={inputCls} />
                       </div>
                       {(couponType === 'CONDITIONAL' || couponType === 'MEMORY') && (
-                        <div className="flex flex-col gap-1.5">
+                        <div className="flex flex-col gap-2">
                           <label className={labelCls}>Barrière coupon (%)</label>
                           <input type="number" step="5" value={couponBarrier} onChange={(e) => setCouponBarrier(Number(e.target.value))} className={inputCls} />
                         </div>
                       )}
                     </div>
                     {couponType === 'MEMORY' && (
-                      <label className="flex items-center gap-2 text-[12px] font-body text-ink-2 cursor-pointer">
-                        <input type="checkbox" checked={couponMemory} onChange={(e) => setCouponMemory(e.target.checked)} className="accent-violet" />
-                        Effet mémoire sur les coupons
+                      <label className="flex items-center gap-2.5 text-[12px] font-body text-ink-2 dark:text-white/60 cursor-pointer group">
+                        <input type="checkbox" checked={couponMemory} onChange={(e) => setCouponMemory(e.target.checked)} className="accent-violet w-4 h-4 rounded" />
+                        <span className="group-hover:text-ink dark:group-hover:text-white transition-colors duration-200">Effet mémoire sur les coupons</span>
                       </label>
                     )}
                   </>
                 )}
 
-                <div className="h-px bg-border/60" />
+                <div className="h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
 
-                <label className="flex items-center gap-2 text-[12px] font-body text-ink-2 cursor-pointer">
-                  <input type="checkbox" checked={autocallEnabled} onChange={(e) => setAutocallEnabled(e.target.checked)} className="accent-violet" />
-                  Autocall activé
+                <label className="flex items-center gap-2.5 text-[12px] font-body text-ink-2 dark:text-white/60 cursor-pointer group">
+                  <input type="checkbox" checked={autocallEnabled} onChange={(e) => setAutocallEnabled(e.target.checked)} className="accent-violet w-4 h-4 rounded" />
+                  <span className="group-hover:text-ink dark:group-hover:text-white transition-colors duration-200">Autocall activé</span>
                 </label>
                 {autocallEnabled && (
-                  <div className="flex flex-col gap-1.5">
+                  <div className="flex flex-col gap-2">
                     <label className={labelCls}>Barrière autocall (%)</label>
                     <input type="number" step="5" value={autocallBarrier} onChange={(e) => setAutocallBarrier(Number(e.target.value))} className={inputCls} />
                   </div>
                 )}
 
-                <div className="h-px bg-border/60" />
+                <div className="h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="flex flex-col gap-1.5">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-2">
                     <label className={labelCls}>Barrière protection (%)</label>
                     <input type="number" step="5" value={protectionBarrier} onChange={(e) => setProtectionBarrier(Number(e.target.value))} className={inputCls} />
                   </div>
-                  <div className="flex flex-col gap-1.5">
+                  <div className="flex flex-col gap-2">
                     <label className={labelCls}>Monitoring</label>
                     <select value={barrierMonitoring} onChange={(e) => setBarrierMonitoring(e.target.value)} className={selectCls}>
                       {BARRIER_TYPES.map((b) => <option key={b.value} value={b.value}>{b.label}</option>)}
@@ -499,23 +572,39 @@ export default function PricingPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="flex flex-col gap-1.5">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-2">
                     <label className={labelCls}>Participation hausse (%)</label>
                     <input type="number" step="10" value={participationUp} onChange={(e) => setParticipationUp(Number(e.target.value))} className={inputCls} />
                   </div>
-                  <div className="flex flex-col gap-1.5">
+                  <div className="flex flex-col gap-2">
                     <label className={labelCls}>Cap (%)</label>
                     <input type="number" step="5" value={cap} onChange={(e) => setCap(Number(e.target.value))} className={inputCls} placeholder="0 = pas de cap" />
                   </div>
                 </div>
 
-                <div className="flex gap-2 mt-2">
-                  <button onClick={() => setStep(0)} className="flex-1 h-10 rounded-lg border border-border/80 text-ink-3 text-[13px] font-semibold font-body hover:bg-surface-2 transition-all">
+                <div className="flex gap-3 mt-1">
+                  <button
+                    onClick={() => setStep(0)}
+                    className={cn(
+                      'flex-1 h-11 rounded-xl border border-border/60 dark:border-white/10',
+                      'text-ink-3 dark:text-white/50 text-[13px] font-semibold font-body',
+                      'hover:bg-surface-2 dark:hover:bg-white/5 hover:border-violet/20',
+                      'transition-all duration-200',
+                    )}
+                  >
                     Retour
                   </button>
-                  <button onClick={() => setStep(2)} className="flex-1 h-10 rounded-lg bg-violet text-white text-[13px] font-semibold font-body flex items-center justify-center gap-2 transition-all hover:bg-violet-dark active:scale-[0.98]">
-                    Suivant <ChevronRight size={14} />
+                  <button
+                    onClick={() => setStep(2)}
+                    className={cn(
+                      'flex-1 h-11 rounded-xl bg-gradient-to-r from-violet to-violet/85 text-white text-[13px] font-bold font-body',
+                      'flex items-center justify-center gap-2',
+                      'shadow-md hover:shadow-lg hover:from-violet-dark hover:to-violet',
+                      'active:scale-[0.98] transition-all duration-200',
+                    )}
+                  >
+                    Suivant <ChevronRight size={15} />
                   </button>
                 </div>
               </div>
@@ -523,37 +612,42 @@ export default function PricingPage() {
 
             {/* Step 2: Market */}
             {step === 2 && (
-              <div className="bg-white rounded-xl border border-border/80 p-5 flex flex-col gap-4">
-                <h3 className="font-display text-sm font-bold text-ink flex items-center gap-2">
-                  <Activity size={14} className="text-violet" />
-                  Paramètres de Marché
-                </h3>
+              <div className={cn(cardCls, 'p-6 flex flex-col gap-5')}>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet to-violet/70 flex items-center justify-center shadow-sm">
+                    <Activity size={16} className="text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-display text-[15px] font-bold text-ink dark:text-white">Paramètres de Marché</h3>
+                    <p className="text-[11px] text-ink-3 dark:text-white/40 font-body">Taux, spreads et simulation</p>
+                  </div>
+                </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="flex flex-col gap-1.5">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-2">
                     <label className={labelCls}>Taux sans risque (%)</label>
                     <input type="number" step="0.25" value={riskFreeRate} onChange={(e) => setRiskFreeRate(Number(e.target.value))} className={inputCls} />
                   </div>
-                  <div className="flex flex-col gap-1.5">
+                  <div className="flex flex-col gap-2">
                     <label className={labelCls}>Spread funding (%)</label>
                     <input type="number" step="0.1" value={fundingSpread} onChange={(e) => setFundingSpread(Number(e.target.value))} className={inputCls} />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="flex flex-col gap-1.5">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-2">
                     <label className={labelCls}>Marge structuration (%)</label>
                     <input type="number" step="0.25" value={structuringMargin} onChange={(e) => setStructuringMargin(Number(e.target.value))} className={inputCls} />
                   </div>
-                  <div className="flex flex-col gap-1.5">
+                  <div className="flex flex-col gap-2">
                     <label className={labelCls}>Frais distribution (%)</label>
                     <input type="number" step="0.25" value={distributionFee} onChange={(e) => setDistributionFee(Number(e.target.value))} className={inputCls} />
                   </div>
                 </div>
 
-                <div className="h-px bg-border/60" />
+                <div className="h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
 
-                <div className="flex flex-col gap-1.5">
+                <div className="flex flex-col gap-2">
                   <label className={labelCls}>Simulations Monte Carlo</label>
                   <select value={mcPaths} onChange={(e) => setMcPaths(Number(e.target.value))} className={selectCls}>
                     <option value={1000}>1 000 (rapide)</option>
@@ -563,22 +657,34 @@ export default function PricingPage() {
                   </select>
                 </div>
 
-                <div className="flex gap-2 mt-2">
-                  <button onClick={() => setStep(1)} className="flex-1 h-10 rounded-lg border border-border/80 text-ink-3 text-[13px] font-semibold font-body hover:bg-surface-2 transition-all">
+                <div className="flex gap-3 mt-1">
+                  <button
+                    onClick={() => setStep(1)}
+                    className={cn(
+                      'flex-1 h-11 rounded-xl border border-border/60 dark:border-white/10',
+                      'text-ink-3 dark:text-white/50 text-[13px] font-semibold font-body',
+                      'hover:bg-surface-2 dark:hover:bg-white/5 hover:border-violet/20',
+                      'transition-all duration-200',
+                    )}
+                  >
                     Retour
                   </button>
                   <button
                     onClick={handlePrice}
                     disabled={priceProduct.isPending}
                     className={cn(
-                      'flex-1 h-10 rounded-lg bg-violet text-white text-[13px] font-semibold font-body flex items-center justify-center gap-2 transition-all hover:bg-violet-dark active:scale-[0.98]',
-                      priceProduct.isPending && 'opacity-60 cursor-not-allowed',
+                      'flex-1 h-11 rounded-xl text-white text-[13px] font-bold font-body',
+                      'flex items-center justify-center gap-2',
+                      'shadow-md hover:shadow-lg active:scale-[0.98] transition-all duration-200',
+                      priceProduct.isPending
+                        ? 'bg-violet/60 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-violet to-teal hover:from-violet-dark hover:to-teal/90',
                     )}
                   >
                     {priceProduct.isPending ? (
-                      <><Loader2 size={14} className="animate-spin" /> Pricing en cours...</>
+                      <><Loader2 size={15} className="animate-spin" /> Pricing en cours...</>
                     ) : (
-                      <><Play size={14} /> Lancer le Pricing</>
+                      <><Play size={15} /> Lancer le Pricing</>
                     )}
                   </button>
                 </div>
@@ -587,121 +693,186 @@ export default function PricingPage() {
 
             {/* Step 3: Results summary (left side) */}
             {step === 3 && pricingResult?.result && (
-              <div className="bg-white rounded-xl border border-border/80 p-5 flex flex-col gap-3">
-                <h3 className="font-display text-sm font-bold text-ink flex items-center gap-2">
-                  <CheckCircle2 size={14} className="text-teal" />
-                  Résumé
-                </h3>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-violet-ghost rounded-lg p-3 text-center">
-                    <span className="text-[10px] uppercase tracking-wider text-ink-3 font-body">Fair Value</span>
-                    <p className="font-display text-xl font-bold text-violet">{pricingResult.result.fairValue}%</p>
+              <div className={cn(cardCls, 'p-6 flex flex-col gap-4 animate-fade-in')}>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-teal to-teal/70 flex items-center justify-center shadow-sm">
+                    <CheckCircle2 size={16} className="text-white" />
                   </div>
-                  <div className="bg-teal-light rounded-lg p-3 text-center">
-                    <span className="text-[10px] uppercase tracking-wider text-ink-3 font-body">Prix d&apos;émission</span>
-                    <p className="font-display text-xl font-bold text-teal">{pricingResult.result.issuePrice}%</p>
+                  <div>
+                    <h3 className="font-display text-[15px] font-bold text-ink dark:text-white">Résumé</h3>
+                    <p className="text-[11px] text-ink-3 dark:text-white/40 font-body">Pricing terminé avec succès</p>
                   </div>
                 </div>
 
-                <div className="text-[11px] text-ink-3 font-mono flex items-center gap-2">
-                  <Clock size={11} />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="rounded-xl bg-gradient-to-br from-violet/5 to-violet/10 dark:from-violet/15 dark:to-violet/10 border border-violet/15 p-4 text-center">
+                    <span className="text-[10px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-body block mb-1">Fair Value</span>
+                    <p className="font-display text-2xl font-bold text-violet">{pricingResult.result.fairValue}%</p>
+                  </div>
+                  <div className="rounded-xl bg-gradient-to-br from-teal/5 to-teal/10 dark:from-teal/15 dark:to-teal/10 border border-teal/15 p-4 text-center">
+                    <span className="text-[10px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-body block mb-1">Prix d&apos;émission</span>
+                    <p className="font-display text-2xl font-bold text-teal">{pricingResult.result.issuePrice}%</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-ink/[0.02] dark:bg-white/5 text-[11px] text-ink-3 dark:text-white/40 font-mono">
+                  <Clock size={12} className="text-violet/60" />
                   Calculé en {pricingResult.result.computeTimeMs}ms ({mcPaths.toLocaleString()} paths)
                 </div>
 
-                <div className="flex gap-2 mt-2">
-                  <button onClick={() => setStep(0)} className="flex-1 h-9 rounded-lg border border-border/80 text-ink-3 text-[12px] font-semibold font-body hover:bg-surface-2 transition-all">
+                <div className="flex gap-3 mt-1">
+                  <button
+                    onClick={() => setStep(0)}
+                    className={cn(
+                      'flex-1 h-10 rounded-xl border border-border/60 dark:border-white/10',
+                      'text-ink-3 dark:text-white/50 text-[12px] font-semibold font-body',
+                      'hover:bg-surface-2 dark:hover:bg-white/5 hover:border-violet/20',
+                      'transition-all duration-200',
+                    )}
+                  >
                     Nouveau pricing
                   </button>
                   <Link
                     href={'/pricing/live?fv=' + encodeURIComponent(pricingResult.result.fairValue) + '&name=' + encodeURIComponent(productName)}
-                    className="flex-1 h-9 rounded-lg bg-gradient-to-r from-violet to-cobalt-light text-white text-[12px] font-semibold font-body flex items-center justify-center gap-1.5 hover:opacity-90 transition-all"
+                    className={cn(
+                      'flex-1 h-10 rounded-xl text-white text-[12px] font-bold font-body',
+                      'bg-gradient-to-r from-violet to-cobalt-light',
+                      'flex items-center justify-center gap-2',
+                      'shadow-md hover:shadow-lg hover:opacity-95',
+                      'transition-all duration-200',
+                    )}
                   >
-                    <Building2 size={13} />
+                    <Building2 size={14} />
                     Émetteurs
                   </Link>
                 </div>
               </div>
             )}
             {/* AI Guide */}
-            <PricingAiGuide config={aiConfig} step={step} className="bg-white rounded-xl border border-border/80 p-4" />
+            <PricingAiGuide config={aiConfig} step={step} className={cn(cardCls, 'p-5')} />
           </div>
 
-          {/* ── Right: Results Panel ───────────���──────────────── */}
+          {/* ── Right: Results Panel ────────────────────────────── */}
           <div className="flex-1 min-w-0">
             {step < 3 || !pricingResult?.result ? (
-              <div className="bg-white rounded-xl border border-border/80 overflow-hidden">
-                <div className="px-5 py-4 border-b border-border/60">
-                  <h2 className="font-display text-sm font-bold text-ink">Résultats de pricing</h2>
+              <div className={cn(cardCls, 'overflow-hidden')}>
+                <div className="px-6 py-4 border-b border-border/60 dark:border-white/10 bg-gradient-to-r from-violet/[0.03] to-transparent">
+                  <h2 className="font-display text-[15px] font-bold text-ink dark:text-white flex items-center gap-2">
+                    <BarChart3 size={15} className="text-violet" />
+                    Résultats de pricing
+                  </h2>
                 </div>
-                <div className="p-12 flex flex-col items-center justify-center gap-4">
-                  <div className="w-16 h-16 rounded-full bg-violet-ghost flex items-center justify-center">
-                    <Calculator size={28} className="text-violet/40" />
+                <div className="p-16 flex flex-col items-center justify-center gap-5">
+                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-violet/10 to-violet/5 dark:from-violet/20 dark:to-violet/10 flex items-center justify-center border border-violet/10">
+                    <Calculator size={32} className="text-violet/30" />
                   </div>
-                  <p className="text-sm text-ink-3 font-body text-center max-w-xs">
-                    Configurez votre produit puis lancez le pricing pour voir les résultats ici.
-                  </p>
+                  <div className="text-center">
+                    <p className="text-sm text-ink-2 dark:text-white/50 font-body font-medium mb-1">
+                      En attente de configuration
+                    </p>
+                    <p className="text-[12px] text-ink-3 dark:text-white/30 font-body max-w-xs">
+                      Configurez votre produit puis lancez le pricing pour voir les résultats ici.
+                    </p>
+                  </div>
+                  {/* Progress hint */}
+                  <div className="flex items-center gap-2 text-[11px] text-ink-4 dark:text-white/25 font-body">
+                    <div className="flex gap-1">
+                      {[0, 1, 2, 3].map((i) => (
+                        <div key={i} className={cn(
+                          'w-2 h-2 rounded-full transition-all duration-300',
+                          step >= i ? 'bg-violet' : 'bg-ink/10 dark:bg-white/10',
+                        )} />
+                      ))}
+                    </div>
+                    Étape {step + 1} sur 4
+                  </div>
                   {validationErrors.filter((e: any) => e.severity === 'ERROR').length > 0 && (
-                    <div className="w-full max-w-md bg-red-50 border border-red-200 rounded-lg p-4 mt-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <AlertTriangle size={14} className="text-red-500" />
-                        <span className="text-[12px] font-bold text-red-700">Erreurs de validation</span>
+                    <div className="w-full max-w-md bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl p-5 mt-4 animate-fade-in">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-6 h-6 rounded-lg bg-red-100 dark:bg-red-500/20 flex items-center justify-center">
+                          <AlertTriangle size={14} className="text-red-500" />
+                        </div>
+                        <span className="text-[13px] font-bold text-red-700 dark:text-red-400">Erreurs de validation</span>
                       </div>
                       {validationErrors.filter((e: any) => e.severity === 'ERROR').map((e: any, i: number) => (
-                        <p key={i} className="text-[11px] text-red-600 font-body ml-5">• {e.message}</p>
+                        <p key={i} className="text-[12px] text-red-600 dark:text-red-400/80 font-body ml-8 mb-1 last:mb-0">• {e.message}</p>
                       ))}
                     </div>
                   )}
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-5 animate-fade-in">
                 {/* Validation warnings */}
                 {validationErrors.filter((e: any) => e.severity === 'WARNING').length > 0 && (
-                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <AlertTriangle size={14} className="text-amber-600" />
-                      <span className="text-[12px] font-bold text-amber-800">Avertissements</span>
+                  <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl p-5">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-6 h-6 rounded-lg bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center">
+                        <AlertTriangle size={14} className="text-amber-600 dark:text-amber-400" />
+                      </div>
+                      <span className="text-[13px] font-bold text-amber-800 dark:text-amber-300">Avertissements</span>
                     </div>
                     {validationErrors.filter((e: any) => e.severity === 'WARNING').map((e: any, i: number) => (
-                      <p key={i} className="text-[11px] text-amber-700 font-body ml-5">• {e.message}</p>
+                      <p key={i} className="text-[12px] text-amber-700 dark:text-amber-400/80 font-body ml-8 mb-1 last:mb-0">• {e.message}</p>
                     ))}
                   </div>
                 )}
 
                 {/* Key metrics */}
-                <div className="grid grid-cols-4 gap-3">
+                <div className="grid grid-cols-4 gap-4">
                   {[
-                    { label: 'Rendement attendu', value: `${pricingResult.result.expectedReturn}%`, icon: <TrendingUp size={14} className="text-teal" />, bg: 'bg-teal-light' },
-                    { label: 'Prob. Autocall', value: `${(pricingResult.result.riskSummary.probAutocall * 100).toFixed(1)}%`, icon: <Zap size={14} className="text-violet" />, bg: 'bg-violet-ghost' },
-                    { label: 'Prob. Perte', value: `${(pricingResult.result.riskSummary.probCapitalLoss * 100).toFixed(1)}%`, icon: <ShieldCheck size={14} className="text-gold" />, bg: 'bg-gold-light' },
-                    { label: 'VaR 95%', value: `${pricingResult.result.riskSummary.valueAtRisk95.toFixed(1)}%`, icon: <AlertTriangle size={14} className="text-red-500" />, bg: 'bg-red-50' },
+                    { label: 'Rendement attendu', value: `${pricingResult.result.expectedReturn}%`, icon: <TrendingUp size={16} className="text-teal" />, gradient: 'from-teal/10 to-teal/5', borderColor: 'border-teal/15' },
+                    { label: 'Prob. Autocall', value: `${(pricingResult.result.riskSummary.probAutocall * 100).toFixed(1)}%`, icon: <Zap size={16} className="text-violet" />, gradient: 'from-violet/10 to-violet/5', borderColor: 'border-violet/15' },
+                    { label: 'Prob. Perte', value: `${(pricingResult.result.riskSummary.probCapitalLoss * 100).toFixed(1)}%`, icon: <ShieldCheck size={16} className="text-gold" />, gradient: 'from-gold/10 to-gold/5', borderColor: 'border-gold/15' },
+                    { label: 'VaR 95%', value: `${pricingResult.result.riskSummary.valueAtRisk95.toFixed(1)}%`, icon: <AlertTriangle size={16} className="text-red-500" />, gradient: 'from-red-500/10 to-red-500/5', borderColor: 'border-red-500/15' },
                   ].map((m, i) => (
-                    <div key={i} className={cn('rounded-xl border border-border/80 p-4 flex flex-col gap-2', m.bg)}>
-                      {m.icon}
-                      <span className="text-[10px] uppercase tracking-wider text-ink-3 font-body">{m.label}</span>
-                      <span className="font-display text-lg font-bold text-ink">{m.value}</span>
+                    <div
+                      key={i}
+                      className={cn(
+                        'rounded-xl border p-5 flex flex-col gap-3',
+                        `bg-gradient-to-br ${m.gradient} dark:from-white/5 dark:to-transparent`,
+                        m.borderColor, 'dark:border-white/10',
+                        'shadow-sm hover:shadow-md transition-all duration-200',
+                      )}
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-white/80 dark:bg-white/10 flex items-center justify-center shadow-sm">
+                        {m.icon}
+                      </div>
+                      <span className="text-[10px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-body">{m.label}</span>
+                      <span className="font-display text-xl font-bold text-ink dark:text-white">{m.value}</span>
                     </div>
                   ))}
                 </div>
 
                 {/* Cost breakdown */}
-                <div className="bg-white rounded-xl border border-border/80 p-5">
-                  <h3 className="font-display text-sm font-bold text-ink mb-3 flex items-center gap-2">
-                    <BarChart3 size={14} className="text-violet" />
-                    Décomposition des coûts
-                  </h3>
+                <div className={cn(cardCls, 'p-6')}>
+                  <div className="flex items-center gap-2.5 mb-5">
+                    <div className="w-7 h-7 rounded-lg bg-violet-ghost dark:bg-violet/20 flex items-center justify-center">
+                      <BarChart3 size={14} className="text-violet" />
+                    </div>
+                    <h3 className="font-display text-[15px] font-bold text-ink dark:text-white">Décomposition des coûts</h3>
+                  </div>
                   <div className="grid grid-cols-5 gap-4">
                     {Object.entries(pricingResult.result.costBreakdown).map(([key, val]: [string, any]) => (
-                      <div key={key} className="text-center">
-                        <span className="text-[10px] uppercase tracking-wider text-ink-3 font-body block">
+                      <div key={key} className="text-center group">
+                        <div className={cn(
+                          'rounded-xl py-4 px-2 mb-2 transition-all duration-200',
+                          key === 'totalCost'
+                            ? 'bg-gradient-to-br from-violet/10 to-violet/5 border border-violet/15'
+                            : 'bg-ink/[0.02] dark:bg-white/5 group-hover:bg-violet/5',
+                        )}>
+                          <span className={cn(
+                            'font-mono text-lg font-bold block',
+                            key === 'totalCost' ? 'text-violet' : 'text-ink-2 dark:text-white/70',
+                          )}>
+                            {typeof val === 'number' ? val.toFixed(2) : val}%
+                          </span>
+                        </div>
+                        <span className="text-[10px] uppercase tracking-[0.12em] text-ink-3 dark:text-white/40 font-body">
                           {key === 'structuringMargin' ? 'Structuration' :
                             key === 'distributionFee' ? 'Distribution' :
                             key === 'executionCost' ? 'Exécution' :
                             key === 'hedgingCost' ? 'Hedging' : 'Total'}
-                        </span>
-                        <span className={cn('font-mono text-sm font-bold', key === 'totalCost' ? 'text-violet' : 'text-ink-2')}>
-                          {typeof val === 'number' ? val.toFixed(2) : val}%
                         </span>
                       </div>
                     ))}
@@ -709,37 +880,43 @@ export default function PricingPage() {
                 </div>
 
                 {/* Scenario table */}
-                <div className="bg-white rounded-xl border border-border/80 overflow-hidden">
-                  <div className="px-5 py-4 border-b border-border/60">
-                    <h3 className="font-display text-sm font-bold text-ink">Scénarios (Spot Shocks)</h3>
+                <div className={cn(cardCls, 'overflow-hidden')}>
+                  <div className="px-6 py-4 border-b border-border/60 dark:border-white/10 bg-gradient-to-r from-violet/[0.03] to-transparent">
+                    <h3 className="font-display text-[15px] font-bold text-ink dark:text-white flex items-center gap-2">
+                      <TrendingUp size={15} className="text-violet" />
+                      Scénarios (Spot Shocks)
+                    </h3>
                   </div>
                   <div className="overflow-x-auto">
-                    <table className="w-full text-[12px] font-body">
+                    <table className="w-full text-[13px] font-body">
                       <thead>
-                        <tr className="border-b border-border/60" style={{ background: 'rgba(237,232,255,0.3)' }}>
-                          <th className="px-3 py-2 text-left text-[10px] uppercase tracking-wider text-ink-3">Choc</th>
-                          <th className="px-3 py-2 text-right text-[10px] uppercase tracking-wider text-ink-3">Spot</th>
-                          <th className="px-3 py-2 text-right text-[10px] uppercase tracking-wider text-ink-3">Redemption</th>
-                          <th className="px-3 py-2 text-right text-[10px] uppercase tracking-wider text-ink-3">Coupons</th>
-                          <th className="px-3 py-2 text-right text-[10px] uppercase tracking-wider text-ink-3">Total Return</th>
+                        <tr className="border-b border-border/60 dark:border-white/10 bg-violet/[0.03] dark:bg-violet/5">
+                          <th className="px-4 py-3 text-left text-[10px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-bold">Choc</th>
+                          <th className="px-4 py-3 text-right text-[10px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-bold">Spot</th>
+                          <th className="px-4 py-3 text-right text-[10px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-bold">Redemption</th>
+                          <th className="px-4 py-3 text-right text-[10px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-bold">Coupons</th>
+                          <th className="px-4 py-3 text-right text-[10px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-bold">Total Return</th>
                         </tr>
                       </thead>
                       <tbody>
                         {pricingResult.result.scenarioTable.map((s: any, i: number) => (
-                          <tr key={i} className="border-b border-border/40 last:border-0 hover:bg-violet-ghost/40 transition-colors">
-                            <td className="px-3 py-2 font-mono">
+                          <tr key={i} className="border-b border-border/40 dark:border-white/5 last:border-0 hover:bg-violet/[0.03] dark:hover:bg-violet/5 transition-colors duration-150">
+                            <td className="px-4 py-3 font-mono">
                               <span className={cn(
-                                'font-semibold',
-                                s.spotShock > 0 ? 'text-teal' : s.spotShock < 0 ? 'text-red-500' : 'text-ink',
+                                'font-bold px-2 py-0.5 rounded-md text-[12px]',
+                                s.spotShock > 0 ? 'text-teal bg-teal/10' : s.spotShock < 0 ? 'text-red-500 bg-red-500/10' : 'text-ink dark:text-white bg-ink/5 dark:bg-white/10',
                               )}>
                                 {s.spotShock > 0 ? '+' : ''}{(s.spotShock * 100).toFixed(0)}%
                               </span>
                             </td>
-                            <td className="px-3 py-2 text-right font-mono text-ink-2">{s.spotLevel}</td>
-                            <td className="px-3 py-2 text-right font-mono">{s.redemption}%</td>
-                            <td className="px-3 py-2 text-right font-mono text-teal">{s.totalCoupons}%</td>
-                            <td className="px-3 py-2 text-right font-mono font-bold">
-                              <span className={s.totalReturn >= 0 ? 'text-teal' : 'text-red-500'}>
+                            <td className="px-4 py-3 text-right font-mono text-ink-2 dark:text-white/60">{s.spotLevel}</td>
+                            <td className="px-4 py-3 text-right font-mono text-ink dark:text-white/80">{s.redemption}%</td>
+                            <td className="px-4 py-3 text-right font-mono text-teal font-semibold">{s.totalCoupons}%</td>
+                            <td className="px-4 py-3 text-right font-mono font-bold">
+                              <span className={cn(
+                                'px-2 py-0.5 rounded-md',
+                                s.totalReturn >= 0 ? 'text-teal bg-teal/10' : 'text-red-500 bg-red-500/10',
+                              )}>
                                 {s.totalReturn >= 0 ? '+' : ''}{s.totalReturn}%
                               </span>
                             </td>
@@ -751,13 +928,22 @@ export default function PricingPage() {
                 </div>
 
                 {/* Model info */}
-                <div className="bg-white rounded-xl border border-border/80 p-5 text-[11px] text-ink-3 font-body">
-                  <p className="font-bold text-ink-2 mb-1">Modèle: {pricingResult.result.modelUsed}</p>
-                  <p className="mb-1">Hypothèses: {pricingResult.result.assumptions.join(' · ')}</p>
-                  <p>Limitations: {pricingResult.result.modelLimitations.join(' · ')}</p>
-                  <p className="mt-2 text-[10px] text-ink-4 italic">
-                    SIMULATED PRICING — For educational/analytical purposes only. Not a binding offer.
-                  </p>
+                <div className={cn(cardCls, 'p-6')}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-5 h-5 rounded bg-ink/5 dark:bg-white/10 flex items-center justify-center">
+                      <FileText size={11} className="text-ink-3 dark:text-white/40" />
+                    </div>
+                    <span className="text-[12px] font-bold text-ink-2 dark:text-white/60 font-body">Modèle: {pricingResult.result.modelUsed}</span>
+                  </div>
+                  <div className="space-y-1.5 text-[11px] text-ink-3 dark:text-white/40 font-body leading-relaxed">
+                    <p>Hypothèses: {pricingResult.result.assumptions.join(' · ')}</p>
+                    <p>Limitations: {pricingResult.result.modelLimitations.join(' · ')}</p>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-border/40 dark:border-white/5">
+                    <p className="text-[10px] text-ink-4 dark:text-white/20 italic font-body">
+                      SIMULATED PRICING — For educational/analytical purposes only. Not a binding offer.
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
@@ -765,47 +951,65 @@ export default function PricingPage() {
         </div>
       ) : (
         /* ── History Tab ────────────────────────────────────────── */
-        <div className="bg-white rounded-xl border border-border/80 overflow-hidden">
-          <div className="px-5 py-4 border-b border-border/60 flex items-center justify-between">
-            <h2 className="font-display text-sm font-bold text-ink flex items-center gap-2">
-              <History size={15} className="text-violet" />
-              Historique des pricings
-            </h2>
+        <div className={cn(cardCls, 'overflow-hidden')}>
+          <div className="px-6 py-5 border-b border-border/60 dark:border-white/10 flex items-center justify-between bg-gradient-to-r from-violet/[0.03] to-transparent">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet to-violet/70 flex items-center justify-center shadow-sm">
+                <History size={16} className="text-white" />
+              </div>
+              <h2 className="font-display text-[15px] font-bold text-ink dark:text-white">
+                Historique des pricings
+              </h2>
+            </div>
           </div>
           {historyData?.runs?.length ? (
             <div className="overflow-x-auto">
               <table className="w-full text-[13px] font-body">
                 <thead>
-                  <tr className="border-b border-border/60" style={{ background: 'rgba(237,232,255,0.3)' }}>
-                    <th className="px-4 py-3 text-left text-[10px] uppercase tracking-wider text-ink-3">Date</th>
-                    <th className="px-4 py-3 text-right text-[10px] uppercase tracking-wider text-ink-3">Fair Value</th>
-                    <th className="px-4 py-3 text-right text-[10px] uppercase tracking-wider text-ink-3">Prix émission</th>
-                    <th className="px-4 py-3 text-right text-[10px] uppercase tracking-wider text-ink-3">Coupon</th>
-                    <th className="px-4 py-3 text-center text-[10px] uppercase tracking-wider text-ink-3">Modèle</th>
-                    <th className="px-4 py-3 text-right text-[10px] uppercase tracking-wider text-ink-3">Temps</th>
+                  <tr className="border-b border-border/60 dark:border-white/10 bg-violet/[0.03] dark:bg-violet/5">
+                    <th className="px-5 py-3.5 text-left text-[10px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-bold">Date</th>
+                    <th className="px-5 py-3.5 text-right text-[10px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-bold">Fair Value</th>
+                    <th className="px-5 py-3.5 text-right text-[10px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-bold">Prix émission</th>
+                    <th className="px-5 py-3.5 text-right text-[10px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-bold">Coupon</th>
+                    <th className="px-5 py-3.5 text-center text-[10px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-bold">Modèle</th>
+                    <th className="px-5 py-3.5 text-right text-[10px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-bold">Temps</th>
                   </tr>
                 </thead>
                 <tbody>
                   {historyData.runs.map((r: any) => (
-                    <tr key={r.id} className="border-b border-border/40 last:border-0 hover:bg-violet-ghost/40 transition-colors">
-                      <td className="px-4 py-3 text-ink-2">{formatDate(r.createdAt)}</td>
-                      <td className="px-4 py-3 text-right font-mono font-semibold text-violet">{r.fairValue}%</td>
-                      <td className="px-4 py-3 text-right font-mono font-semibold text-teal">{r.issuePrice}%</td>
-                      <td className="px-4 py-3 text-right font-mono">{r.indicativeCoupon ? `${r.indicativeCoupon}%` : '—'}</td>
-                      <td className="px-4 py-3 text-center">
-                        <span className="inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-semibold bg-violet-pale text-violet">
+                    <tr key={r.id} className="border-b border-border/40 dark:border-white/5 last:border-0 hover:bg-violet/[0.03] dark:hover:bg-violet/5 transition-colors duration-150">
+                      <td className="px-5 py-3.5 text-ink-2 dark:text-white/60">{formatDate(r.createdAt)}</td>
+                      <td className="px-5 py-3.5 text-right">
+                        <span className="font-mono font-bold text-violet">{r.fairValue}%</span>
+                      </td>
+                      <td className="px-5 py-3.5 text-right">
+                        <span className="font-mono font-bold text-teal">{r.issuePrice}%</span>
+                      </td>
+                      <td className="px-5 py-3.5 text-right font-mono text-ink-2 dark:text-white/60">{r.indicativeCoupon ? `${r.indicativeCoupon}%` : '—'}</td>
+                      <td className="px-5 py-3.5 text-center">
+                        <span className="inline-flex items-center rounded-lg px-2.5 py-1 text-[10px] font-bold bg-violet/10 dark:bg-violet/20 text-violet border border-violet/15">
                           {r.modelUsed}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-right font-mono text-ink-3">{r.computeTimeMs}ms</td>
+                      <td className="px-5 py-3.5 text-right font-mono text-ink-3 dark:text-white/40 text-[12px]">{r.computeTimeMs}ms</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           ) : (
-            <div className="p-12 text-center text-sm text-ink-3 font-body">
-              Aucun pricing dans l&apos;historique. Lancez votre premier pricing !
+            <div className="p-16 flex flex-col items-center justify-center gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet/10 to-violet/5 dark:from-violet/20 dark:to-violet/10 flex items-center justify-center border border-violet/10">
+                <History size={28} className="text-violet/30" />
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-ink-2 dark:text-white/50 font-body font-medium mb-1">
+                  Aucun historique
+                </p>
+                <p className="text-[12px] text-ink-3 dark:text-white/30 font-body">
+                  Lancez votre premier pricing pour le voir apparaître ici.
+                </p>
+              </div>
             </div>
           )}
         </div>

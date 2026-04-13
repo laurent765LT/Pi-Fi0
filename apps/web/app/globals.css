@@ -132,6 +132,20 @@ main { animation: fadeIn 0.3s ease-out; }
     @apply hover:bg-surface-2 transition-all duration-150;
     @apply disabled:opacity-50 disabled:cursor-not-allowed;
   }
+
+  /* Premium input field */
+  .premium-input {
+    @apply w-full h-10 px-4 rounded-lg border border-border/60 bg-white/80 backdrop-blur-sm;
+    @apply font-body text-[13px] text-ink;
+    @apply hover:border-violet/40;
+    @apply focus:outline-none focus:border-violet focus:ring-2 focus:ring-violet/15 focus:shadow-md focus:shadow-violet/5;
+    @apply transition-all duration-200;
+    @apply placeholder:text-ink-3/40;
+  }
+
+  .dark .premium-input {
+    @apply bg-white/10;
+  }
 }
 
 /* ─── Animations ──────────────────────────────────────────────────────────── */

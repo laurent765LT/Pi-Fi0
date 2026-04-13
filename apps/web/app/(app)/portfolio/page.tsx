@@ -16,6 +16,9 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  BarChart3,
+  Shield,
+  Layers,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useMyCommitments, useCancelCommitment } from '@/hooks/use-commitments';
@@ -40,18 +43,18 @@ function formatDate(iso: string) {
 }
 
 function formatPct(v: number | null | undefined) {
-  if (v == null) return '—';
+  if (v == null) return '--';
   return v.toFixed(1) + '%';
 }
 
 // ─── Tab Config ──────────────────────────────────────────────────────────────
 
-const TABS: { id: PortfolioTab; label: string }[] = [
-  { id: 'products', label: 'Mes produits' },
-  { id: 'underlyings', label: 'Sous-jacents' },
-  { id: 'timeline', label: 'Timeline' },
-  { id: 'allocations', label: 'Allocations' },
-  { id: 'expired', label: 'Produits expirés' },
+const TABS: { id: PortfolioTab; label: string; icon: React.ElementType }[] = [
+  { id: 'products', label: 'Mes produits', icon: Package },
+  { id: 'underlyings', label: 'Sous-jacents', icon: BarChart3 },
+  { id: 'timeline', label: 'Timeline', icon: Calendar },
+  { id: 'allocations', label: 'Allocations', icon: Layers },
+  { id: 'expired', label: 'Produits expires', icon: Clock },
 ];
 
 const STATUS_VARIANT: Record<string, 'teal' | 'gold' | 'violet' | 'red' | 'muted'> = {
@@ -63,43 +66,75 @@ const STATUS_VARIANT: Record<string, 'teal' | 'gold' | 'violet' | 'red' | 'muted
 };
 
 const STATUS_LABEL: Record<string, string> = {
-  CONFIRMED: 'Confirmé',
+  CONFIRMED: 'Confirme',
   WAITING: 'En attente',
   PENDING: 'En cours',
   REVIEW: 'En examen',
-  CANCELLED: 'Annulé',
+  CANCELLED: 'Annule',
 };
 
 const BARRIER_FILTERS: { id: BarrierStatus | ''; label: string; color: string }[] = [
   { id: '', label: 'Tous', color: '#7B6FA0' },
   { id: 'above', label: 'Au-dessus du strike', color: '#00B894' },
   { id: 'below', label: 'Sous le strike', color: '#3D63F5' },
-  { id: 'watch', label: 'À surveiller', color: '#D4A017' },
-  { id: 'barrier', label: 'Sous la barrière', color: '#E8334A' },
+  { id: 'watch', label: 'A surveiller', color: '#D4A017' },
+  { id: 'barrier', label: 'Sous la barriere', color: '#E8334A' },
 ];
 
-// ─── Summary Card ────────────────────────────────────────────────────────────
+// ─── KPI Card ───────────────────────────────────────────────────────────────
 
-function SummaryCard({ icon, label, value, accent }: {
+function KpiCard({ icon, label, value, accent, trend }: {
   icon: React.ReactNode;
   label: string;
   value: React.ReactNode;
   accent: string;
+  trend?: string;
 }) {
   return (
-    <div className="group relative bg-white/80 backdrop-blur-md rounded-xl border border-white/60 p-5 flex flex-col gap-3 transition-all duration-300 hover:shadow-lg hover:shadow-violet/8 hover:-translate-y-1 ring-1 ring-black/[0.03]">
+    <div className={cn(
+      'group relative rounded-xl border border-border/60 p-5 flex flex-col gap-3',
+      'bg-white/80 dark:bg-white/5 backdrop-blur-md',
+      'shadow-sm hover:shadow-md transition-all duration-200',
+      'ring-1 ring-black/[0.03] dark:ring-white/[0.06]',
+    )}>
       <div
-        className="absolute top-0 left-0 right-0 h-[3px] rounded-b-full opacity-70 group-hover:opacity-100 transition-all duration-300"
-        style={{ background: accent }}
+        className="absolute top-0 left-0 right-0 h-[3px] rounded-t-xl opacity-60 group-hover:opacity-100 transition-opacity duration-200"
+        style={{ background: `linear-gradient(90deg, ${accent}, ${accent}80)` }}
       />
-      <div className="flex items-center gap-2.5">
-        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `${accent}15` }}>
-          {icon}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div
+            className="w-9 h-9 rounded-full flex items-center justify-center ring-1 ring-black/[0.04] dark:ring-white/[0.08]"
+            style={{ background: `${accent}12` }}
+          >
+            {icon}
+          </div>
+          <span className="text-[10px] uppercase tracking-[0.2em] text-ink-3 dark:text-ink-3/80 font-semibold font-body">{label}</span>
         </div>
-        <span className="text-[10px] uppercase tracking-[0.2em] text-ink-3 font-semibold font-body">{label}</span>
+        {trend && (
+          <span className="text-[10px] font-mono font-semibold text-[#00B894] bg-[#00B894]/8 px-1.5 py-0.5 rounded-md">
+            {trend}
+          </span>
+        )}
       </div>
-      <span className="font-display text-2xl font-bold text-ink leading-none tracking-tight [font-variant-numeric:tabular-nums]">{value}</span>
+      <span className="font-display text-2xl font-bold text-ink dark:text-white leading-none tracking-tight [font-variant-numeric:tabular-nums]">
+        {value}
+      </span>
     </div>
+  );
+}
+
+// ─── Premium Table Head ─────────────────────────────────────────────────────
+
+function PremiumTh({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <th className={cn(
+      'px-4 py-3.5 text-[10px] uppercase tracking-[0.18em] font-bold',
+      'text-[#1A0A3E]/55 dark:text-white/50 font-body',
+      className,
+    )}>
+      {children}
+    </th>
   );
 }
 
@@ -115,34 +150,45 @@ function CalendarView() {
   const monthName = date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
 
   return (
-    <div className="bg-white/90 backdrop-blur-sm rounded-xl border border-white/60 ring-1 ring-black/[0.04] overflow-hidden shadow-sm">
-      <div className="px-5 py-4 border-b border-border/60 flex items-center justify-between">
-        <h3 className="font-display text-sm font-bold text-ink">Calendrier</h3>
+    <div className="bg-white/90 dark:bg-white/5 backdrop-blur-sm rounded-xl border border-border/60 dark:border-white/10 ring-1 ring-black/[0.04] dark:ring-white/[0.06] overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
+      <div className="px-5 py-4 border-b border-border/60 dark:border-white/10 flex items-center justify-between bg-gradient-to-r from-[#F8F6FF] to-transparent dark:from-white/[0.03] dark:to-transparent">
+        <h3 className="font-display text-sm font-bold text-ink dark:text-white flex items-center gap-2">
+          <Calendar size={15} className="text-[#3B1FA8]" />
+          Calendrier
+        </h3>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setDate(new Date(year, month - 1, 1))}
-            className="w-7 h-7 rounded-md border border-border/80 flex items-center justify-center text-ink-3 hover:text-violet hover:border-violet hover:shadow-sm hover:scale-105 active:scale-95 transition-all duration-200"
+            className={cn(
+              'w-7 h-7 rounded-lg border border-border/80 dark:border-white/15 flex items-center justify-center',
+              'text-ink-3 dark:text-white/60 hover:text-[#3B1FA8] hover:border-[#3B1FA8]/40',
+              'hover:shadow-sm transition-all duration-200',
+            )}
           >
             <ChevronLeft size={14} />
           </button>
-          <span className="text-sm font-semibold text-ink capitalize min-w-[120px] text-center">{monthName}</span>
+          <span className="text-sm font-semibold text-ink dark:text-white capitalize min-w-[120px] text-center font-display">{monthName}</span>
           <button
             onClick={() => setDate(new Date(year, month + 1, 1))}
-            className="w-7 h-7 rounded-md border border-border/80 flex items-center justify-center text-ink-3 hover:text-violet hover:border-violet hover:shadow-sm hover:scale-105 active:scale-95 transition-all duration-200"
+            className={cn(
+              'w-7 h-7 rounded-lg border border-border/80 dark:border-white/15 flex items-center justify-center',
+              'text-ink-3 dark:text-white/60 hover:text-[#3B1FA8] hover:border-[#3B1FA8]/40',
+              'hover:shadow-sm transition-all duration-200',
+            )}
           >
             <ChevronRight size={14} />
           </button>
         </div>
         <div className="flex items-center gap-3 text-[10px] font-body">
-          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-gold" />Observation</span>
-          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-cobalt-light" />Autocall</span>
-          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-ink-3" />Maturité</span>
+          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[#D4A017]" />Observation</span>
+          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[#3D63F5]" />Autocall</span>
+          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-ink-3" />Maturite</span>
         </div>
       </div>
       <div className="p-4">
         <div className="grid grid-cols-7 gap-0">
           {dayNames.map((d) => (
-            <div key={d} className="text-center text-[10px] text-ink-3 font-semibold uppercase py-2">{d}</div>
+            <div key={d} className="text-center text-[10px] text-ink-3 dark:text-white/40 font-semibold uppercase py-2">{d}</div>
           ))}
           {Array.from({ length: firstDay }).map((_, i) => (
             <div key={`empty-${i}`} className="h-10" />
@@ -154,8 +200,10 @@ function CalendarView() {
               <div
                 key={day}
                 className={cn(
-                  'h-10 flex items-center justify-center text-[13px] font-body rounded-md transition-colors',
-                  isToday ? 'bg-gradient-to-br from-[#3B1FA8] to-[#5B3FD4] text-white font-bold shadow-md shadow-violet/30 scale-105' : 'text-ink hover:bg-violet-ghost hover:scale-[1.08] active:scale-95 cursor-pointer',
+                  'h-10 flex items-center justify-center text-[13px] font-body rounded-lg transition-all duration-200',
+                  isToday
+                    ? 'bg-gradient-to-br from-[#3B1FA8] to-[#5B3FD4] text-white font-bold shadow-md shadow-[#3B1FA8]/25'
+                    : 'text-ink dark:text-white/80 hover:bg-[#3B1FA8]/5 dark:hover:bg-white/5 cursor-pointer',
                 )}
               >
                 {day}
@@ -163,8 +211,8 @@ function CalendarView() {
             );
           })}
         </div>
-        <div className="mt-6 p-5 bg-gradient-to-br from-[#F8F6FF] to-[#F0ECFF] rounded-xl text-center border border-[#3B1FA8]/5">
-          <p className="text-sm text-ink-3 font-body">Aucun événement pour la période sélectionnée.</p>
+        <div className="mt-6 p-5 bg-gradient-to-br from-[#F8F6FF] to-[#F0ECFF] dark:from-white/[0.03] dark:to-white/[0.01] rounded-xl text-center border border-[#3B1FA8]/5 dark:border-white/5">
+          <p className="text-sm text-ink-3 dark:text-white/50 font-body">Aucun evenement pour la periode selectionnee.</p>
         </div>
       </div>
     </div>
@@ -196,7 +244,7 @@ export default function PortfolioPage() {
   }, [commitments]);
 
   const handleCancel = (id: string) => {
-    if (window.confirm("Êtes-vous sûr de vouloir annuler cette marque d'intérêt ?")) {
+    if (window.confirm("Etes-vous sur de vouloir annuler cette marque d'interet ?")) {
       cancelMutation.mutate(id);
     }
   };
@@ -217,101 +265,112 @@ export default function PortfolioPage() {
   };
 
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in space-y-6">
       {/* ── Header ──────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-[28px] font-bold leading-tight bg-gradient-to-r from-[#3B1FA8] via-[#1A0A3E] to-[#3B1FA8] bg-clip-text text-transparent">Mon Portfolio</h1>
-          <p className="text-sm text-ink-3 font-body mt-1">Suivez vos investissements et engagements en produits structurés.</p>
+          <h1 className="font-display text-[28px] font-bold leading-tight bg-gradient-to-r from-[#3B1FA8] via-[#1A0A3E] to-[#3B1FA8] bg-clip-text text-transparent dark:from-white dark:via-[#C9BCFF] dark:to-white">
+            Mon Portfolio
+          </h1>
+          <p className="text-sm text-ink-3 dark:text-white/50 font-body mt-1">
+            Suivez vos investissements et engagements en produits structures.
+          </p>
         </div>
         <div className="flex items-center gap-2">
-          <button className={cn(
-            'h-9 px-3 rounded-lg border border-border/80 bg-white/80 backdrop-blur-sm text-ink-3',
-            'text-[12px] font-medium font-body flex items-center gap-1.5',
-            'hover:border-violet hover:text-violet hover:bg-violet-ghost hover:shadow-md hover:shadow-violet/10 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
-          )}>
-            <Download size={13} />
-            Rapport global
-          </button>
-          <button className={cn(
-            'h-9 px-3 rounded-lg border border-border/80 bg-white/80 backdrop-blur-sm text-ink-3',
-            'text-[12px] font-medium font-body flex items-center gap-1.5',
-            'hover:border-violet hover:text-violet hover:bg-violet-ghost hover:shadow-md hover:shadow-violet/10 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
-          )}>
-            <Download size={13} />
-            Export Excel
-          </button>
+          {['Rapport global', 'Export Excel'].map((label) => (
+            <button
+              key={label}
+              className={cn(
+                'h-9 px-3.5 rounded-xl border border-border/60 dark:border-white/15',
+                'bg-white/80 dark:bg-white/5 backdrop-blur-sm text-ink-3 dark:text-white/60',
+                'text-[12px] font-medium font-body flex items-center gap-1.5',
+                'hover:border-[#3B1FA8]/40 hover:text-[#3B1FA8] dark:hover:text-[#C9BCFF]',
+                'hover:shadow-sm transition-all duration-200',
+              )}
+            >
+              <Download size={13} />
+              {label}
+            </button>
+          ))}
         </div>
       </div>
 
-      <div className="gradient-bar h-[2px] rounded-full mb-6 opacity-80" />
+      <div className="h-px bg-gradient-to-r from-[#3B1FA8]/20 via-[#3B1FA8]/10 to-transparent dark:from-[#3B1FA8]/30 dark:via-[#3B1FA8]/10" />
 
-      {/* ── Summary cards ───────────────────────────────────────────── */}
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 stagger-children">
-        <SummaryCard
-          icon={<Wallet size={16} className="text-violet" />}
-          label="Total engagé"
-          value={loadingCommitments ? '…' : formatAmount(stats.total)}
+      {/* ── KPI Cards ──────────────────────────────────────────────── */}
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <KpiCard
+          icon={<Wallet size={16} className="text-[#3B1FA8]" />}
+          label="Total engage"
+          value={loadingCommitments ? '...' : formatAmount(stats.total)}
           accent="#3B1FA8"
         />
-        <SummaryCard
-          icon={<CheckCircle2 size={16} className="text-teal" />}
-          label="Confirmés"
-          value={loadingCommitments ? '…' : stats.confirmed}
+        <KpiCard
+          icon={<CheckCircle2 size={16} className="text-[#00B894]" />}
+          label="Confirmes"
+          value={loadingCommitments ? '...' : stats.confirmed}
           accent="#00B894"
         />
-        <SummaryCard
-          icon={<Clock size={16} className="text-gold" />}
+        <KpiCard
+          icon={<Clock size={16} className="text-[#D4A017]" />}
           label="En attente"
-          value={loadingCommitments ? '…' : stats.waiting}
+          value={loadingCommitments ? '...' : stats.waiting}
           accent="#D4A017"
         />
-        <SummaryCard
-          icon={<X size={16} className="text-red" />}
-          label="Annulés"
-          value={loadingCommitments ? '…' : stats.cancelled}
+        <KpiCard
+          icon={<X size={16} className="text-[#E8334A]" />}
+          label="Annules"
+          value={loadingCommitments ? '...' : stats.cancelled}
           accent="#E8334A"
         />
       </section>
 
       {/* ── Tab Navigation ──────────────────────────────────────────── */}
-      <div className="flex items-center gap-1 mb-6 overflow-x-auto">
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={cn(
-              'px-4 py-2 rounded-lg text-[13px] font-semibold font-body transition-all duration-200 whitespace-nowrap',
-              activeTab === tab.id
-                ? 'bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] text-white shadow-md shadow-violet/20 scale-[1.02]'
-                : 'text-ink-3 hover:text-ink hover:bg-surface-2 hover:scale-[1.01] active:scale-[0.98]',
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
+      <div className="flex items-center gap-1 overflow-x-auto rounded-xl bg-[#F8F6FF]/60 dark:bg-white/[0.03] p-1 border border-border/40 dark:border-white/8">
+        {TABS.map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={cn(
+                'px-4 py-2 rounded-lg text-[13px] font-semibold font-body transition-all duration-200 whitespace-nowrap flex items-center gap-2',
+                activeTab === tab.id
+                  ? 'bg-white dark:bg-white/10 text-[#3B1FA8] dark:text-[#C9BCFF] shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.08]'
+                  : 'text-ink-3 dark:text-white/50 hover:text-ink dark:hover:text-white/80 hover:bg-white/60 dark:hover:bg-white/5',
+              )}
+            >
+              <Icon size={14} className={activeTab === tab.id ? 'text-[#3B1FA8] dark:text-[#C9BCFF]' : 'text-ink-3/60 dark:text-white/30'} />
+              {tab.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* ── Tab Content ─────────────────────────────────────────────── */}
       {activeTab === 'products' && (
-        <div className="bg-white/90 backdrop-blur-sm rounded-xl border border-white/60 ring-1 ring-black/[0.04] overflow-hidden shadow-sm">
-          <div className="px-5 py-4 border-b border-border/60 flex items-center justify-between">
-            <h2 className="font-display text-sm font-bold text-ink flex items-center gap-2">
-              <Package size={15} className="text-violet" />
+        <div className="bg-white/90 dark:bg-white/5 backdrop-blur-sm rounded-xl border border-border/60 dark:border-white/10 ring-1 ring-black/[0.04] dark:ring-white/[0.06] overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
+          <div className="px-5 py-4 border-b border-border/60 dark:border-white/10 flex items-center justify-between bg-gradient-to-r from-[#F8F6FF] to-transparent dark:from-white/[0.03] dark:to-transparent">
+            <h2 className="font-display text-sm font-bold text-ink dark:text-white flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-[#3B1FA8]/8 dark:bg-[#3B1FA8]/20 flex items-center justify-center">
+                <Package size={14} className="text-[#3B1FA8] dark:text-[#C9BCFF]" />
+              </div>
               Mes produits
             </h2>
-            <span className="text-[11px] text-ink-3 font-body">{(commitments ?? []).length} engagement{(commitments ?? []).length > 1 ? 's' : ''}</span>
+            <span className="text-[11px] text-ink-3 dark:text-white/40 font-body font-mono tabular-nums">
+              {(commitments ?? []).length} engagement{(commitments ?? []).length > 1 ? 's' : ''}
+            </span>
           </div>
 
           {loadingCommitments ? (
-            <div className="p-5 animate-pulse space-y-3">
+            <div className="p-5 space-y-3">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="flex items-center gap-4 py-3">
-                  <div className="h-4 w-48 bg-surface-2 rounded" />
-                  <div className="h-4 w-24 bg-surface-2 rounded ml-auto" />
-                  <div className="h-5 w-16 bg-surface-2 rounded" />
-                  <div className="h-4 w-16 bg-surface-2 rounded" />
-                  <div className="h-7 w-14 bg-surface-2 rounded" />
+                <div key={i} className="flex items-center gap-4 py-3 animate-pulse">
+                  <div className="h-4 w-48 bg-[#3B1FA8]/5 dark:bg-white/5 rounded-lg" />
+                  <div className="h-4 w-24 bg-[#3B1FA8]/5 dark:bg-white/5 rounded-lg ml-auto" />
+                  <div className="h-5 w-16 bg-[#3B1FA8]/5 dark:bg-white/5 rounded-lg" />
+                  <div className="h-4 w-16 bg-[#3B1FA8]/5 dark:bg-white/5 rounded-lg" />
+                  <div className="h-7 w-14 bg-[#3B1FA8]/5 dark:bg-white/5 rounded-lg" />
                 </div>
               ))}
             </div>
@@ -320,8 +379,16 @@ export default function PortfolioPage() {
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#3B1FA8]/10 to-[#3B1FA8]/5 flex items-center justify-center ring-1 ring-[#3B1FA8]/10 shadow-sm">
                 <Package size={28} className="text-[#3B1FA8]/30" />
               </div>
-              <p className="font-body text-sm text-ink-3">Aucune marque d&apos;intérêt pour le moment.</p>
-              <Link href="/products" className="text-xs text-violet font-semibold hover:underline flex items-center gap-1 px-4 py-2 rounded-lg bg-violet-ghost/60 hover:bg-violet-ghost transition-all hover:scale-[1.02] active:scale-[0.98]">
+              <p className="font-body text-sm text-ink-3 dark:text-white/50">Aucune marque d&apos;interet pour le moment.</p>
+              <Link
+                href="/products"
+                className={cn(
+                  'text-xs text-[#3B1FA8] dark:text-[#C9BCFF] font-semibold flex items-center gap-1',
+                  'px-4 py-2 rounded-xl bg-[#3B1FA8]/5 dark:bg-[#3B1FA8]/15',
+                  'hover:bg-[#3B1FA8]/10 dark:hover:bg-[#3B1FA8]/25 transition-all duration-200',
+                  'ring-1 ring-[#3B1FA8]/10 dark:ring-[#3B1FA8]/30',
+                )}
+              >
                 Explorer les produits <ArrowUpRight size={12} />
               </Link>
             </div>
@@ -329,39 +396,55 @@ export default function PortfolioPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-[13px] font-body">
                 <thead>
-                  <tr className="border-b border-border/60" style={{ background: 'linear-gradient(135deg, rgba(237,232,255,0.4), rgba(219,210,255,0.2))' }}>
-                    <th className="px-4 py-3.5 text-left text-[10px] uppercase tracking-[0.18em] text-[#1A0A3E]/60 font-bold">Produit</th>
-                    <th className="px-4 py-3.5 text-right text-[10px] uppercase tracking-[0.18em] text-[#1A0A3E]/60 font-bold">Montant</th>
-                    <th className="px-4 py-3.5 text-center text-[10px] uppercase tracking-[0.18em] text-[#1A0A3E]/60 font-bold">Statut</th>
-                    <th className="px-4 py-3.5 text-center text-[10px] uppercase tracking-[0.18em] text-[#1A0A3E]/60 font-bold">Rang</th>
-                    <th className="px-4 py-3.5 text-right text-[10px] uppercase tracking-[0.18em] text-[#1A0A3E]/60 font-bold">Date</th>
-                    <th className="px-4 py-3.5 text-center text-[10px] uppercase tracking-[0.18em] text-[#1A0A3E]/60 font-bold">Action</th>
+                  <tr className="border-b border-border/60 dark:border-white/10 bg-gradient-to-r from-[#F8F6FF]/60 to-[#F0ECFF]/30 dark:from-white/[0.02] dark:to-transparent">
+                    <PremiumTh className="text-left">Produit</PremiumTh>
+                    <PremiumTh className="text-right">Montant</PremiumTh>
+                    <PremiumTh className="text-center">Statut</PremiumTh>
+                    <PremiumTh className="text-center">Rang</PremiumTh>
+                    <PremiumTh className="text-right">Date</PremiumTh>
+                    <PremiumTh className="text-center">Action</PremiumTh>
                   </tr>
                 </thead>
                 <tbody>
                   {commitments.map((c: any) => {
                     const status = c.status ?? 'PENDING';
                     return (
-                      <tr key={c.id} className="border-b border-border/40 last:border-0 even:bg-[#F8F6FF]/40 hover:bg-violet-ghost/60 transition-all duration-200 group/row">
-                        <td className="px-4 py-3">
+                      <tr
+                        key={c.id}
+                        className={cn(
+                          'border-b border-border/30 dark:border-white/5 last:border-0',
+                          'even:bg-[#F8F6FF]/30 dark:even:bg-white/[0.015]',
+                          'hover:bg-[#3B1FA8]/[0.04] dark:hover:bg-white/[0.04]',
+                          'transition-colors duration-200 group/row',
+                        )}
+                      >
+                        <td className="px-4 py-3.5">
                           <div className="flex flex-col gap-0.5">
-                            <span className="font-medium text-ink leading-snug truncate max-w-[220px]">{c.productName ?? c.shelfId ?? '—'}</span>
-                            {c.isin && <span className="font-mono text-[10px] text-ink-3">{c.isin}</span>}
+                            <span className="font-medium text-ink dark:text-white leading-snug truncate max-w-[220px]">
+                              {c.productName ?? c.shelfId ?? '--'}
+                            </span>
+                            {c.isin && <span className="font-mono text-[10px] text-ink-3 dark:text-white/40">{c.isin}</span>}
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-right font-mono font-semibold text-ink tabular-nums text-[14px] tracking-tight [font-variant-numeric:tabular-nums]">{formatAmount(c.amount ?? 0)}</td>
-                        <td className="px-4 py-3 text-center">
+                        <td className="px-4 py-3.5 text-right font-mono font-semibold text-ink dark:text-white tabular-nums text-[14px] tracking-tight [font-variant-numeric:tabular-nums]">
+                          {formatAmount(c.amount ?? 0)}
+                        </td>
+                        <td className="px-4 py-3.5 text-center">
                           <Badge variant={STATUS_VARIANT[status] ?? 'muted'}>{STATUS_LABEL[status] ?? status}</Badge>
                         </td>
-                        <td className="px-4 py-3 text-center">
+                        <td className="px-4 py-3.5 text-center">
                           {status === 'WAITING' && c.rank != null ? (
-                            <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gradient-to-br from-[#D4A017]/15 to-[#D4A017]/5 border border-[#D4A017]/30 text-[#D4A017] text-xs font-bold shadow-sm shadow-[#D4A017]/10">{c.rank}</span>
+                            <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gradient-to-br from-[#D4A017]/15 to-[#D4A017]/5 border border-[#D4A017]/30 text-[#D4A017] text-xs font-bold shadow-sm shadow-[#D4A017]/10">
+                              {c.rank}
+                            </span>
                           ) : (
-                            <span className="text-ink-3 text-xs">—</span>
+                            <span className="text-ink-3 dark:text-white/30 text-xs">--</span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-right text-xs text-ink-3">{c.createdAt ? formatDate(c.createdAt) : '—'}</td>
-                        <td className="px-4 py-3 text-center">
+                        <td className="px-4 py-3.5 text-right text-xs text-ink-3 dark:text-white/40 font-mono">
+                          {c.createdAt ? formatDate(c.createdAt) : '--'}
+                        </td>
+                        <td className="px-4 py-3.5 text-center">
                           <div className="flex items-center justify-center gap-1.5">
                             {status === 'PENDING' && (
                               <>
@@ -399,13 +482,13 @@ export default function PortfolioPage() {
                               </>
                             )}
                             {status === 'CONFIRMED' && (
-                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-100 text-emerald-600">
+                              <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[#00B894]/10 text-[#00B894] ring-1 ring-[#00B894]/20">
                                 <CheckCircle2 size={14} />
                               </span>
                             )}
                             {status === 'CANCELLED' && (
-                              <span className="text-red-500 text-xs font-semibold">
-                                {c.rejectionReason ? `Rejeté : ${c.rejectionReason}` : 'Rejeté'}
+                              <span className="text-[#E8334A] text-xs font-semibold">
+                                {c.rejectionReason ? `Rejete : ${c.rejectionReason}` : 'Rejete'}
                               </span>
                             )}
                             {status === 'WAITING' && (
@@ -426,18 +509,18 @@ export default function PortfolioPage() {
       )}
 
       {activeTab === 'underlyings' && (
-        <div>
+        <div className="space-y-4">
           {/* Barrier status filters */}
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-2 flex-wrap">
             {BARRIER_FILTERS.map((f) => (
               <button
                 key={f.id}
                 onClick={() => setBarrierFilter(f.id as any)}
                 className={cn(
-                  'px-3.5 py-1.5 rounded-full text-[11px] font-semibold font-body border transition-all duration-200',
+                  'px-3.5 py-1.5 rounded-xl text-[11px] font-semibold font-body border transition-all duration-200',
                   barrierFilter === f.id
-                    ? 'text-white border-transparent shadow-md shadow-black/10 scale-[1.03]'
-                    : 'bg-white/80 backdrop-blur-sm border-border/80 text-ink-3 hover:text-ink hover:shadow-sm hover:scale-[1.01] active:scale-[0.98]',
+                    ? 'text-white border-transparent shadow-sm'
+                    : 'bg-white/80 dark:bg-white/5 backdrop-blur-sm border-border/60 dark:border-white/15 text-ink-3 dark:text-white/50 hover:text-ink dark:hover:text-white/80 hover:shadow-sm',
                 )}
                 style={barrierFilter === f.id ? { backgroundColor: f.color, borderColor: f.color } : undefined}
               >
@@ -445,48 +528,56 @@ export default function PortfolioPage() {
               </button>
             ))}
             <button className={cn(
-              'ml-auto h-8 px-3 rounded-lg border border-border/80 bg-white/80 backdrop-blur-sm text-ink-3',
+              'ml-auto h-8 px-3 rounded-xl border border-border/60 dark:border-white/15 bg-white/80 dark:bg-white/5 backdrop-blur-sm text-ink-3 dark:text-white/50',
               'text-[11px] font-medium font-body flex items-center gap-1.5',
-              'hover:text-violet hover:border-violet hover:shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
+              'hover:text-[#3B1FA8] dark:hover:text-[#C9BCFF] hover:border-[#3B1FA8]/40 hover:shadow-sm transition-all duration-200',
             )}>
               <Download size={12} />
               Export Excel
             </button>
           </div>
 
-          <div className="bg-white/90 backdrop-blur-sm rounded-xl border border-white/60 ring-1 ring-black/[0.04] overflow-hidden shadow-sm">
+          <div className="bg-white/90 dark:bg-white/5 backdrop-blur-sm rounded-xl border border-border/60 dark:border-white/10 ring-1 ring-black/[0.04] dark:ring-white/[0.06] overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
             <div className="overflow-x-auto">
               <table className="w-full text-[13px] font-body">
                 <thead>
-                  <tr className="border-b border-border/60" style={{ background: 'linear-gradient(135deg, rgba(237,232,255,0.4), rgba(219,210,255,0.2))' }}>
-                    <th className="px-4 py-3.5 text-left text-[10px] uppercase tracking-[0.18em] text-[#1A0A3E]/60 font-bold">Sous-jacent</th>
-                    <th className="px-4 py-3 text-right text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">Strike</th>
-                    <th className="px-4 py-3 text-right text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">Dernier prix</th>
-                    <th className="px-4 py-3 text-right text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">Performance</th>
-                    <th className="px-4 py-3 text-right text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">Barrière capital</th>
-                    <th className="px-4 py-3 text-right text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">Distance barrière</th>
-                    <th className="px-4 py-3 text-left text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">ISIN</th>
-                    <th className="px-4 py-3 text-left text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">Produit</th>
+                  <tr className="border-b border-border/60 dark:border-white/10 bg-gradient-to-r from-[#F8F6FF]/60 to-[#F0ECFF]/30 dark:from-white/[0.02] dark:to-transparent">
+                    <PremiumTh className="text-left">Sous-jacent</PremiumTh>
+                    <PremiumTh className="text-right">Strike</PremiumTh>
+                    <PremiumTh className="text-right">Dernier prix</PremiumTh>
+                    <PremiumTh className="text-right">Performance</PremiumTh>
+                    <PremiumTh className="text-right">Barriere capital</PremiumTh>
+                    <PremiumTh className="text-right">Distance barriere</PremiumTh>
+                    <PremiumTh className="text-left">ISIN</PremiumTh>
+                    <PremiumTh className="text-left">Produit</PremiumTh>
                   </tr>
                 </thead>
                 <tbody>
                   {products.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="px-4 py-16 text-center text-sm text-ink-3">
-                        Aucun sous-jacent à afficher pour le moment.
+                      <td colSpan={8} className="px-4 py-16 text-center text-sm text-ink-3 dark:text-white/50">
+                        Aucun sous-jacent a afficher pour le moment.
                       </td>
                     </tr>
                   ) : (
                     products.slice(0, 10).map((p: any) => (
-                      <tr key={p.id} className="border-b border-border/40 last:border-0 even:bg-[#F8F6FF]/40 hover:bg-violet-ghost/60 transition-all duration-200">
-                        <td className="px-4 py-3 font-medium text-ink">{p.underlyingYahoo ?? p.underlyingName ?? '—'}</td>
-                        <td className="px-4 py-3 text-right font-mono tabular-nums text-ink-2">100.00</td>
-                        <td className="px-4 py-3 text-right font-mono tabular-nums text-ink">—</td>
-                        <td className="px-4 py-3 text-right font-mono tabular-nums text-teal font-semibold">—</td>
-                        <td className="px-4 py-3 text-right font-mono tabular-nums text-red">{formatPct(p.barrierCapPct)}</td>
-                        <td className="px-4 py-3 text-right font-mono tabular-nums font-semibold text-ink">—</td>
-                        <td className="px-4 py-3 font-mono text-[11px] text-ink-3">{p.isin}</td>
-                        <td className="px-4 py-3 text-ink-2 truncate max-w-[160px]">{p.name}</td>
+                      <tr
+                        key={p.id}
+                        className={cn(
+                          'border-b border-border/30 dark:border-white/5 last:border-0',
+                          'even:bg-[#F8F6FF]/30 dark:even:bg-white/[0.015]',
+                          'hover:bg-[#3B1FA8]/[0.04] dark:hover:bg-white/[0.04]',
+                          'transition-colors duration-200',
+                        )}
+                      >
+                        <td className="px-4 py-3.5 font-medium text-ink dark:text-white">{p.underlyingYahoo ?? p.underlyingName ?? '--'}</td>
+                        <td className="px-4 py-3.5 text-right font-mono tabular-nums text-ink-2 dark:text-white/60">100.00</td>
+                        <td className="px-4 py-3.5 text-right font-mono tabular-nums text-ink dark:text-white">--</td>
+                        <td className="px-4 py-3.5 text-right font-mono tabular-nums text-[#00B894] font-semibold">--</td>
+                        <td className="px-4 py-3.5 text-right font-mono tabular-nums text-[#E8334A]">{formatPct(p.barrierCapPct)}</td>
+                        <td className="px-4 py-3.5 text-right font-mono tabular-nums font-semibold text-ink dark:text-white">--</td>
+                        <td className="px-4 py-3.5 font-mono text-[11px] text-ink-3 dark:text-white/40">{p.isin}</td>
+                        <td className="px-4 py-3.5 text-ink-2 dark:text-white/60 truncate max-w-[160px]">{p.name}</td>
                       </tr>
                     ))
                   )}
@@ -500,26 +591,27 @@ export default function PortfolioPage() {
       {activeTab === 'timeline' && <CalendarView />}
 
       {activeTab === 'allocations' && (
-        <div className="bg-white/90 backdrop-blur-sm rounded-xl border border-white/60 ring-1 ring-black/[0.04] overflow-hidden shadow-sm">
-          <div className="px-5 py-4 border-b border-border/60 flex items-center justify-between">
+        <div className="bg-white/90 dark:bg-white/5 backdrop-blur-sm rounded-xl border border-border/60 dark:border-white/10 ring-1 ring-black/[0.04] dark:ring-white/[0.06] overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
+          <div className="px-5 py-4 border-b border-border/60 dark:border-white/10 flex items-center justify-between bg-gradient-to-r from-[#F8F6FF] to-transparent dark:from-white/[0.03] dark:to-transparent">
             <div className="flex items-center gap-2">
               <button className={cn(
-                'px-4 py-1.5 rounded-lg text-[12px] font-semibold font-body',
-                'bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] text-white shadow-md shadow-violet/20',
+                'px-4 py-1.5 rounded-xl text-[12px] font-semibold font-body',
+                'bg-white dark:bg-white/10 text-[#3B1FA8] dark:text-[#C9BCFF] shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.08]',
               )}>
                 Tous les comptes
               </button>
               <button className={cn(
-                'px-4 py-1.5 rounded-lg text-[12px] font-semibold font-body',
-                'bg-white/80 border border-border/80 text-ink-3 hover:text-ink hover:shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
+                'px-4 py-1.5 rounded-xl text-[12px] font-semibold font-body',
+                'bg-transparent border border-border/60 dark:border-white/15 text-ink-3 dark:text-white/50',
+                'hover:text-ink dark:hover:text-white/80 hover:shadow-sm transition-all duration-200',
               )}>
-                À allouer
+                A allouer
               </button>
             </div>
             <button className={cn(
-              'h-8 px-3 rounded-lg border border-border/80 bg-white/80 backdrop-blur-sm text-ink-3',
+              'h-8 px-3 rounded-xl border border-border/60 dark:border-white/15 bg-white/80 dark:bg-white/5 backdrop-blur-sm text-ink-3 dark:text-white/50',
               'text-[11px] font-medium font-body flex items-center gap-1.5',
-              'hover:text-violet hover:border-violet hover:shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
+              'hover:text-[#3B1FA8] dark:hover:text-[#C9BCFF] hover:border-[#3B1FA8]/40 hover:shadow-sm transition-all duration-200',
             )}>
               <Download size={12} />
               Rapport global
@@ -529,23 +621,27 @@ export default function PortfolioPage() {
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#3B1FA8]/10 to-[#3B1FA8]/5 flex items-center justify-center ring-1 ring-[#3B1FA8]/10 shadow-sm">
               <Wallet size={28} className="text-[#3B1FA8]/30" />
             </div>
-            <p className="font-body text-sm text-ink-3">Aucune allocation pour le moment.</p>
-            <p className="font-body text-[11px] text-ink-3/60">Les allocations seront visibles une fois vos engagements confirmés.</p>
+            <p className="font-body text-sm text-ink-3 dark:text-white/50">Aucune allocation pour le moment.</p>
+            <p className="font-body text-[11px] text-ink-3/60 dark:text-white/30">
+              Les allocations seront visibles une fois vos engagements confirmes.
+            </p>
           </div>
         </div>
       )}
 
       {activeTab === 'expired' && (
-        <div className="bg-white/90 backdrop-blur-sm rounded-xl border border-white/60 ring-1 ring-black/[0.04] overflow-hidden shadow-sm">
-          <div className="px-5 py-4 border-b border-border/60 flex items-center justify-between">
-            <h2 className="font-display text-sm font-bold text-ink flex items-center gap-2">
-              <Clock size={15} className="text-ink-3" />
-              Produits expirés
+        <div className="bg-white/90 dark:bg-white/5 backdrop-blur-sm rounded-xl border border-border/60 dark:border-white/10 ring-1 ring-black/[0.04] dark:ring-white/[0.06] overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
+          <div className="px-5 py-4 border-b border-border/60 dark:border-white/10 flex items-center justify-between bg-gradient-to-r from-[#F8F6FF] to-transparent dark:from-white/[0.03] dark:to-transparent">
+            <h2 className="font-display text-sm font-bold text-ink dark:text-white flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-ink-3/8 dark:bg-white/10 flex items-center justify-center">
+                <Clock size={14} className="text-ink-3 dark:text-white/50" />
+              </div>
+              Produits expires
             </h2>
             <button className={cn(
-              'h-8 px-3 rounded-lg border border-border/80 bg-white text-ink-3',
+              'h-8 px-3 rounded-xl border border-border/60 dark:border-white/15 bg-white/80 dark:bg-white/5 text-ink-3 dark:text-white/50',
               'text-[11px] font-medium font-body flex items-center gap-1.5',
-              'hover:text-violet hover:border-violet transition-all',
+              'hover:text-[#3B1FA8] dark:hover:text-[#C9BCFF] hover:border-[#3B1FA8]/40 hover:shadow-sm transition-all duration-200',
             )}>
               <Download size={12} />
               Export Excel
@@ -554,20 +650,20 @@ export default function PortfolioPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-[13px] font-body">
               <thead>
-                <tr className="border-b border-border/60" style={{ background: 'linear-gradient(135deg, rgba(237,232,255,0.4), rgba(219,210,255,0.2))' }}>
-                  <th className="px-4 py-3.5 text-left text-[10px] uppercase tracking-[0.18em] text-[#1A0A3E]/60 font-bold">Produit</th>
-                  <th className="px-4 py-3.5 text-left text-[10px] uppercase tracking-[0.18em] text-[#1A0A3E]/60 font-bold">ISIN</th>
-                  <th className="px-4 py-3.5 text-left text-[10px] uppercase tracking-[0.18em] text-[#1A0A3E]/60 font-bold">Émetteur</th>
-                  <th className="px-4 py-3.5 text-right text-[10px] uppercase tracking-[0.18em] text-[#1A0A3E]/60 font-bold">Maturité</th>
-                  <th className="px-4 py-3.5 text-right text-[10px] uppercase tracking-[0.18em] text-[#1A0A3E]/60 font-bold">Coupon</th>
-                  <th className="px-4 py-3.5 text-right text-[10px] uppercase tracking-[0.18em] text-[#1A0A3E]/60 font-bold">Protection</th>
-                  <th className="px-4 py-3.5 text-right text-[10px] uppercase tracking-[0.18em] text-[#1A0A3E]/60 font-bold">Prix expiration</th>
+                <tr className="border-b border-border/60 dark:border-white/10 bg-gradient-to-r from-[#F8F6FF]/60 to-[#F0ECFF]/30 dark:from-white/[0.02] dark:to-transparent">
+                  <PremiumTh className="text-left">Produit</PremiumTh>
+                  <PremiumTh className="text-left">ISIN</PremiumTh>
+                  <PremiumTh className="text-left">Emetteur</PremiumTh>
+                  <PremiumTh className="text-right">Maturite</PremiumTh>
+                  <PremiumTh className="text-right">Coupon</PremiumTh>
+                  <PremiumTh className="text-right">Protection</PremiumTh>
+                  <PremiumTh className="text-right">Prix expiration</PremiumTh>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td colSpan={7} className="px-4 py-16 text-center text-sm text-ink-3">
-                    Aucun produit expiré pour le moment.
+                  <td colSpan={7} className="px-4 py-16 text-center text-sm text-ink-3 dark:text-white/50">
+                    Aucun produit expire pour le moment.
                   </td>
                 </tr>
               </tbody>

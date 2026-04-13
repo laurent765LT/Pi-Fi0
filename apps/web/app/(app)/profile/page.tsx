@@ -75,7 +75,7 @@ function EditableField({
         <span className="text-ink-3/60">{icon}</span>
         {label}
         {readonly && (
-          <span className="text-[8px] bg-surface-2 text-ink-3 px-1.5 py-0.5 rounded-full font-bold tracking-wider normal-case">
+          <span className="text-[8px] bg-surface-2/80 text-ink-3 px-1.5 py-0.5 rounded-full font-bold tracking-wider normal-case border border-border/30">
             Lecture seule
           </span>
         )}
@@ -87,11 +87,11 @@ function EditableField({
         readOnly={readonly}
         placeholder={placeholder}
         className={cn(
-          'h-10 px-4 rounded-lg border text-[13px] font-body text-ink transition-all duration-200',
+          'h-10 px-4 rounded-xl border text-[13px] font-body text-ink transition-all duration-200',
           'focus:outline-none',
           readonly
-            ? 'bg-surface-2/60 border-border/40 text-ink-2 cursor-not-allowed'
-            : 'bg-white border-border/80 hover:border-violet/40 focus:border-violet focus:ring-2 focus:ring-violet/15 focus:shadow-md focus:shadow-violet/5',
+            ? 'bg-surface-2/40 border-border/30 text-ink-2 cursor-not-allowed'
+            : 'bg-white/80 dark:bg-white/10 border-border/60 hover:border-violet/40 focus:border-[#3B1FA8] focus:ring-2 focus:ring-[#3B1FA8]/15 focus:shadow-md focus:shadow-violet/5',
           'placeholder:text-ink-3/40',
         )}
       />
@@ -115,15 +115,15 @@ function ActivityStat({
   accentColor: string;
 }) {
   return (
-    <div className="group flex flex-col items-center gap-2 p-4 rounded-xl bg-white/80 backdrop-blur-sm border border-white/60 ring-1 ring-black/[0.03] transition-all duration-300 hover:shadow-md hover:shadow-violet/5 hover:-translate-y-0.5">
+    <div className="group flex flex-col items-center gap-2.5 p-4 rounded-xl bg-white/60 dark:bg-white/5 backdrop-blur-sm border border-border/30 ring-1 ring-black/[0.02] transition-all duration-200 hover:shadow-md hover:shadow-violet/5 hover:-translate-y-0.5">
       <div
-        className="w-10 h-10 rounded-lg flex items-center justify-center transition-transform duration-300 group-hover:scale-110"
-        style={{ background: `${accentColor}12` }}
+        className="w-10 h-10 rounded-xl flex items-center justify-center transition-transform duration-200 group-hover:scale-110"
+        style={{ background: `${accentColor}10` }}
       >
         {icon}
       </div>
       <span className="font-display text-xl font-bold text-ink leading-none tracking-tight">{value}</span>
-      <span className="text-[10px] uppercase tracking-[0.18em] text-ink-3 font-semibold font-body">{label}</span>
+      <span className="text-[9px] uppercase tracking-[0.2em] text-ink-3 font-bold font-body">{label}</span>
     </div>
   );
 }
@@ -185,7 +185,7 @@ export default function ProfilePage() {
         {/* ── Left column: Avatar + Info Card ─────────────────── */}
         <div className="lg:col-span-1 flex flex-col gap-6">
           {/* Avatar Card */}
-          <div className="relative bg-white/90 backdrop-blur-md rounded-xl border border-white/60 ring-1 ring-black/[0.03] overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-violet/5">
+          <div className="relative bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 ring-1 ring-black/[0.03] overflow-hidden transition-all duration-200 hover:shadow-lg hover:shadow-violet/5">
             <div
               className="absolute top-0 left-0 right-0 h-[3px] rounded-b-full opacity-80"
               style={{ background: 'linear-gradient(90deg, #3B1FA8 0%, #5B3FD4 50%, #3D63F5 100%)' }}
@@ -200,7 +200,7 @@ export default function ProfilePage() {
             >
               <div className="absolute -bottom-10 left-1/2 -translate-x-1/2">
                 <div
-                  className="w-20 h-20 rounded-full flex items-center justify-center shadow-xl ring-4 ring-white"
+                  className="w-20 h-20 rounded-2xl flex items-center justify-center shadow-xl ring-4 ring-white dark:ring-[#1A0A3E]"
                   style={{
                     background: 'linear-gradient(135deg, #3B1FA8 0%, #5B3FD4 50%, #3D63F5 100%)',
                   }}
@@ -219,7 +219,7 @@ export default function ProfilePage() {
               {/* Role Badge */}
               <div className="mt-3 flex justify-center">
                 <span
-                  className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.15em] font-bold px-3 py-1.5 rounded-full border shadow-sm"
+                  className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.15em] font-bold px-3 py-1.5 rounded-xl border shadow-sm"
                   style={{
                     background: roleColor.bg,
                     color: roleColor.text,
@@ -232,7 +232,7 @@ export default function ProfilePage() {
               </div>
 
               {/* Member since */}
-              <div className="mt-5 pt-4 border-t border-border/40">
+              <div className="mt-5 pt-4 border-t border-border/30">
                 <div className="flex items-center justify-center gap-2 text-ink-3">
                   <Calendar size={13} />
                   <span className="text-[11px] font-body">
@@ -244,14 +244,16 @@ export default function ProfilePage() {
           </div>
 
           {/* Activity Summary */}
-          <div className="relative bg-white/90 backdrop-blur-md rounded-xl border border-white/60 ring-1 ring-black/[0.03] overflow-hidden">
+          <div className="relative bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 ring-1 ring-black/[0.03] overflow-hidden">
             <div
               className="absolute top-0 left-0 right-0 h-[3px] rounded-b-full opacity-60"
               style={{ background: '#00B894' }}
             />
-            <div className="px-6 py-4 border-b border-border/40">
+            <div className="px-6 py-4 border-b border-border/30">
               <div className="flex items-center gap-2">
-                <Activity size={15} className="text-[#00B894]" />
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-[#00B894]/8">
+                  <Activity size={14} className="text-[#00B894]" />
+                </div>
                 <h3 className="font-display text-[14px] font-bold text-ink">Activite</h3>
               </div>
             </div>
@@ -280,17 +282,17 @@ export default function ProfilePage() {
 
         {/* ── Right column: Editable fields ───────────────────── */}
         <div className="lg:col-span-2">
-          <div className="relative bg-white/90 backdrop-blur-md rounded-xl border border-white/60 ring-1 ring-black/[0.03] overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-violet/5">
+          <div className="relative bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 ring-1 ring-black/[0.03] overflow-hidden transition-all duration-200 hover:shadow-lg hover:shadow-violet/5">
             <div
               className="absolute top-0 left-0 right-0 h-[3px] rounded-b-full opacity-60"
               style={{ background: '#3B1FA8' }}
             />
 
             {/* Card header */}
-            <div className="px-6 py-5 border-b border-border/40 flex items-center justify-between">
+            <div className="px-6 py-5 border-b border-border/30 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div
-                  className="w-9 h-9 rounded-lg flex items-center justify-center shadow-sm"
+                  className="w-9 h-9 rounded-xl flex items-center justify-center shadow-sm"
                   style={{ background: 'rgba(59,31,168,0.08)' }}
                 >
                   <Pencil size={15} className="text-[#3B1FA8]" />
@@ -309,9 +311,9 @@ export default function ProfilePage() {
                 <button
                   onClick={() => setIsEditing(true)}
                   className={cn(
-                    'h-9 px-4 rounded-lg border border-border/80 bg-white/80 backdrop-blur-sm',
+                    'h-9 px-4 rounded-xl border border-border/60 bg-white/80 dark:bg-white/10 backdrop-blur-sm',
                     'text-[12px] font-semibold font-body text-ink-2 flex items-center gap-2',
-                    'hover:border-violet hover:text-violet hover:bg-violet-ghost hover:shadow-md hover:shadow-violet/10',
+                    'hover:border-[#3B1FA8] hover:text-[#3B1FA8] hover:bg-[#3B1FA8]/3 hover:shadow-md hover:shadow-violet/10',
                     'hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
                   )}
                 >
@@ -322,14 +324,14 @@ export default function ProfilePage() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setIsEditing(false)}
-                    className="h-9 px-4 rounded-lg text-[12px] font-semibold font-body text-ink-3 hover:text-ink transition-colors"
+                    className="h-9 px-4 rounded-xl text-[12px] font-semibold font-body text-ink-3 hover:text-ink transition-colors"
                   >
                     Annuler
                   </button>
                   <button
                     onClick={handleSave}
                     className={cn(
-                      'h-9 px-5 rounded-lg text-[12px] font-semibold font-body text-white flex items-center gap-2',
+                      'h-9 px-5 rounded-xl text-[12px] font-semibold font-body text-white flex items-center gap-2',
                       'bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] shadow-md shadow-violet/20',
                       'hover:shadow-lg hover:shadow-violet/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
                     )}
@@ -343,7 +345,7 @@ export default function ProfilePage() {
 
             {/* Saved success banner */}
             {saved && (
-              <div className="mx-6 mt-4 flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#00B894]/10 border border-[#00B894]/20">
+              <div className="mx-6 mt-4 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#00B894]/8 border border-[#00B894]/15">
                 <Check size={14} className="text-[#00B894]" />
                 <span className="text-[12px] font-semibold font-body text-[#007A63]">
                   Vos informations ont ete enregistrees avec succes.
@@ -399,12 +401,12 @@ export default function ProfilePage() {
               </div>
 
               {/* Extra info section */}
-              <div className="mt-6 pt-5 border-t border-border/40">
+              <div className="mt-6 pt-5 border-t border-border/30">
                 <h3 className="text-[10px] uppercase tracking-[0.2em] text-ink-3 font-bold mb-4">
                   Informations du compte
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="flex flex-col gap-1 p-3 rounded-lg bg-surface-2/50">
+                  <div className="flex flex-col gap-1 p-3.5 rounded-xl bg-surface-2/30 border border-border/20">
                     <span className="text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold font-body">
                       Identifiant
                     </span>
@@ -412,7 +414,7 @@ export default function ProfilePage() {
                       {u?.id ?? 'demo-001'}
                     </span>
                   </div>
-                  <div className="flex flex-col gap-1 p-3 rounded-lg bg-surface-2/50">
+                  <div className="flex flex-col gap-1 p-3.5 rounded-xl bg-surface-2/30 border border-border/20">
                     <span className="text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold font-body">
                       Organisation
                     </span>
@@ -420,7 +422,7 @@ export default function ProfilePage() {
                       {u?.orgId ?? 'ORG-001'}
                     </span>
                   </div>
-                  <div className="flex flex-col gap-1 p-3 rounded-lg bg-surface-2/50">
+                  <div className="flex flex-col gap-1 p-3.5 rounded-xl bg-surface-2/30 border border-border/20">
                     <span className="text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold font-body">
                       Role
                     </span>

@@ -102,35 +102,44 @@ export default function RfqPage() {
   const [selectedRfqId, setSelectedRfqId] = useState<string | null>(null);
 
   return (
-    <div className="min-h-screen">
+    <div className="animate-fade-in min-h-screen">
       {/* ── Header ─────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="font-display text-2xl font-extrabold tracking-tight text-ink flex items-center gap-3">
-            <span className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-violet to-cobalt shadow-md shadow-violet/20">
+      <div className="mb-8">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center shadow-md"
+              style={{ background: 'linear-gradient(135deg, #3B1FA8 0%, #5B3FD4 100%)' }}
+            >
               <FileSearch size={18} className="text-white" />
-            </span>
-            RFQ Screener
-          </h1>
-          <p className="font-body text-sm text-ink-3 mt-1">
-            Envoyez vos demandes de cotation et comparez les offres des emetteurs
-          </p>
-        </div>
+            </div>
+            <div>
+              <h1 className="font-display text-[28px] font-bold leading-tight bg-gradient-to-r from-[#3B1FA8] via-[#1A0A3E] to-[#3B1FA8] bg-clip-text text-transparent">
+                RFQ Screener
+              </h1>
+              <p className="text-sm text-ink-3 font-body mt-0.5">
+                Envoyez vos demandes de cotation et comparez les offres des emetteurs
+              </p>
+            </div>
+          </div>
 
-        <button
-          onClick={() => setTab('create')}
-          className={cn(
-            'inline-flex items-center gap-2 px-4 py-2.5 rounded-lg font-body text-sm font-semibold transition-all duration-200',
-            'bg-gradient-to-r from-violet to-cobalt text-white hover:shadow-lg hover:shadow-violet/25 hover:-translate-y-0.5 active:translate-y-0',
-          )}
-        >
-          <Plus size={16} />
-          Nouvelle RFQ
-        </button>
+          <button
+            onClick={() => setTab('create')}
+            className={cn(
+              'h-10 px-5 rounded-xl font-body text-[13px] font-semibold inline-flex items-center gap-2',
+              'bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] text-white shadow-md shadow-violet/20',
+              'hover:shadow-lg hover:shadow-violet/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
+            )}
+          >
+            <Plus size={16} />
+            Nouvelle RFQ
+          </button>
+        </div>
+        <div className="gradient-bar h-[2px] rounded-full mt-5 opacity-60" />
       </div>
 
       {/* ── Tabs ───────────────────────────────────────────────── */}
-      <div className="flex border-b border-border mb-6">
+      <div className="flex gap-1 mb-6 bg-white/60 dark:bg-white/5 backdrop-blur-sm p-1 rounded-xl border border-border/60 w-fit">
         {[
           { key: 'list', label: 'Mes RFQs' },
           { key: 'create', label: 'Nouvelle RFQ' },
@@ -140,11 +149,11 @@ export default function RfqPage() {
             key={t.key}
             onClick={() => setTab(t.key as any)}
             className={cn(
-              'relative inline-flex items-center gap-1.5 px-4 py-2.5',
-              'font-body text-sm font-semibold transition-colors duration-150 border-b-2',
+              'relative inline-flex items-center gap-1.5 px-4 py-2 rounded-lg',
+              'font-body text-[13px] font-semibold transition-all duration-200',
               tab === t.key
-                ? 'text-violet border-violet bg-violet-pale/20'
-                : 'text-ink-3 border-transparent hover:text-ink-2 hover:border-border-2 hover:bg-surface-2/50',
+                ? 'bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] text-white shadow-md shadow-violet/20'
+                : 'text-ink-3 hover:text-ink hover:bg-white/80 dark:hover:bg-white/10',
             )}
           >
             {t.label}
@@ -203,15 +212,20 @@ function RfqListTab({ onView }: { onView: (id: string) => void }) {
   return (
     <div>
       {/* Filters */}
-      <div className="flex items-center gap-3 mb-4">
+      <div className="flex items-center gap-3 mb-5 bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 px-4 py-3 shadow-sm">
         <div className="flex items-center gap-2 text-sm text-ink-3">
-          <Filter size={14} />
-          <span className="font-medium">Filtre :</span>
+          <Filter size={14} className="text-[#3B1FA8]" />
+          <span className="font-semibold font-body text-[12px] uppercase tracking-wider">Filtre</span>
         </div>
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          className="px-3 py-1.5 rounded-md border border-border text-sm font-body bg-white/80 backdrop-blur-sm hover:border-violet/30 focus:border-violet focus:ring-2 focus:ring-violet/10 transition-all duration-200 outline-none"
+          className={cn(
+            'h-9 px-3 rounded-lg border border-border/60 bg-white/80 dark:bg-white/10 backdrop-blur-sm',
+            'text-[13px] font-body text-ink',
+            'hover:border-violet/40 focus:border-violet focus:ring-2 focus:ring-violet/15 focus:shadow-md',
+            'transition-all duration-200 outline-none',
+          )}
         >
           <option value="">Tous les statuts</option>
           {Object.entries(STATUS_STYLES).map(([k, v]) => (
@@ -220,7 +234,12 @@ function RfqListTab({ onView }: { onView: (id: string) => void }) {
         </select>
         <button
           onClick={() => refetch()}
-          className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border text-sm font-body text-ink-2 hover:bg-surface-2 hover:shadow-sm hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
+          className={cn(
+            'ml-auto h-9 px-4 rounded-lg border border-border/60 bg-white/80 dark:bg-white/10 backdrop-blur-sm',
+            'text-[12px] font-semibold font-body text-ink-2 inline-flex items-center gap-1.5',
+            'hover:border-violet hover:text-violet hover:bg-violet-ghost hover:shadow-md hover:shadow-violet/10',
+            'hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
+          )}
         >
           <RefreshCw size={13} />
           Rafraichir
@@ -228,13 +247,18 @@ function RfqListTab({ onView }: { onView: (id: string) => void }) {
       </div>
 
       {rfqs.length === 0 ? (
-        <div className="text-center py-16 border border-dashed border-border rounded-xl">
-          <FileSearch size={40} className="mx-auto text-ink-3/40 mb-3" />
-          <p className="text-ink-3 font-body text-sm">Aucune RFQ trouvee</p>
-          <p className="text-ink-3/60 font-body text-xs mt-1">Creez votre premiere demande de cotation</p>
+        <div className="relative bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-dashed border-border/60 overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-[3px] rounded-b-full opacity-40" style={{ background: 'linear-gradient(90deg, #3B1FA8, #5B3FD4, #3D63F5)' }} />
+          <div className="flex flex-col items-center justify-center py-16">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#3B1FA8]/10 to-[#5B3FD4]/5 flex items-center justify-center mb-4">
+              <FileSearch size={28} className="text-ink-3/40" />
+            </div>
+            <p className="text-ink-3 font-body text-sm font-medium">Aucune RFQ trouvee</p>
+            <p className="text-ink-3/60 font-body text-xs mt-1">Creez votre premiere demande de cotation</p>
+          </div>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="flex flex-col gap-3">
           {rfqs.map((rfq: any) => {
             const st = STATUS_STYLES[rfq.status] ?? STATUS_STYLES.DRAFT;
             const StIcon = st.icon;
@@ -246,49 +270,57 @@ function RfqListTab({ onView }: { onView: (id: string) => void }) {
               <button
                 key={rfq.id}
                 onClick={() => onView(rfq.id)}
-                className="w-full text-left bg-white border border-border rounded-xl p-4 hover:border-violet/40 hover:shadow-md hover:shadow-violet/10 hover:-translate-y-0.5 transition-all duration-200 group relative overflow-hidden before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-gradient-to-b before:from-violet before:to-cobalt before:opacity-0 group-hover:before:opacity-100 before:transition-opacity before:duration-200 before:rounded-l-xl"
+                className={cn(
+                  'group w-full text-left bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60',
+                  'ring-1 ring-black/[0.03] overflow-hidden',
+                  'p-4 transition-all duration-200',
+                  'hover:shadow-lg hover:shadow-violet/5 hover:-translate-y-0.5 hover:border-violet/40',
+                  'relative before:absolute before:inset-y-0 before:left-0 before:w-1',
+                  'before:bg-gradient-to-b before:from-[#3B1FA8] before:to-[#5B3FD4]',
+                  'before:opacity-0 group-hover:before:opacity-100 before:transition-opacity before:duration-200 before:rounded-l-xl',
+                )}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 min-w-0">
-                    <span className={cn('inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider', st.variant)}>
+                    <span className={cn('inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider', st.variant)}>
                       <StIcon size={11} />
                       {st.label}
                     </span>
-                    <span className="font-body text-sm font-semibold text-ink truncate">
+                    <span className="font-body text-[13px] font-semibold text-ink truncate">
                       {config?.name ?? 'RFQ sans nom'}
                     </span>
-                    <span className="font-body text-xs text-ink-3">
+                    <span className="hidden sm:inline-block font-body text-xs text-ink-3 bg-surface-2/60 px-2 py-0.5 rounded-md">
                       {structLabel}
                     </span>
                   </div>
 
                   <div className="flex items-center gap-4 shrink-0">
                     {quoteCount > 0 && (
-                      <span className="inline-flex items-center gap-1 text-xs font-body text-ink-2">
+                      <span className="inline-flex items-center gap-1 text-xs font-body text-ink-2 bg-surface-2/60 px-2 py-0.5 rounded-md">
                         <Building2 size={12} />
                         {quoteCount} cotation{quoteCount > 1 ? 's' : ''}
                       </span>
                     )}
-                    <span className="text-xs font-body text-ink-3">
+                    <span className="text-[11px] font-mono text-ink-3">
                       {fmtDate(rfq.createdAt)}
                     </span>
                     <ChevronRight
                       size={16}
-                      className="text-ink-3 group-hover:text-violet transition-colors"
+                      className="text-ink-3 group-hover:text-violet group-hover:translate-x-0.5 transition-all duration-200"
                     />
                   </div>
                 </div>
 
                 {/* Quick summary row */}
-                <div className="flex items-center gap-4 mt-2 text-xs text-ink-3 font-body">
+                <div className="flex items-center gap-3 mt-2.5 text-[11px] text-ink-3 font-body">
                   {config?.nominal && (
-                    <span>{fmtCcy(config.nominal, config.currency ?? 'EUR')}</span>
+                    <span className="bg-surface-2/50 px-2 py-0.5 rounded-md font-medium">{fmtCcy(config.nominal, config.currency ?? 'EUR')}</span>
                   )}
                   {config?.underlying?.ticker && (
-                    <span>{config.underlying.ticker}</span>
+                    <span className="bg-surface-2/50 px-2 py-0.5 rounded-md font-mono text-[10px]">{config.underlying.ticker}</span>
                   )}
                   {rfq.mode && (
-                    <span className="bg-surface-2 px-2 py-0.5 rounded text-[10px]">
+                    <span className="bg-[#3B1FA8]/5 text-[#3B1FA8] px-2 py-0.5 rounded-md text-[10px] font-medium">
                       {RFQ_MODES.find((m) => m.value === rfq.mode)?.label ?? rfq.mode}
                     </span>
                   )}
@@ -473,26 +505,36 @@ function RfqCreateTab({ onCreated }: { onCreated: (id: string) => void }) {
   return (
     <div>
       {/* ── Stepper ─────────────────────────────── */}
-      <div className="flex items-center gap-2 mb-6">
+      <div className="flex items-center gap-2 mb-8 bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 p-3 shadow-sm">
         {steps.map((s, i) => (
           <div key={s} className="flex items-center gap-2">
             <button
               onClick={() => setStep(i)}
               className={cn(
-                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-body font-semibold transition',
+                'inline-flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-body font-semibold transition-all duration-200',
                 i === step
-                  ? 'bg-gradient-to-r from-violet to-cobalt text-white shadow-md shadow-violet/20'
+                  ? 'bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] text-white shadow-md shadow-violet/20'
                   : i < step
-                    ? 'bg-violet-pale text-violet ring-1 ring-violet/20'
-                    : 'bg-surface-2 text-ink-3 hover:bg-surface-2/80',
+                    ? 'bg-[#3B1FA8]/8 text-[#3B1FA8] ring-1 ring-[#3B1FA8]/15'
+                    : 'bg-surface-2/60 text-ink-3 hover:bg-surface-2',
               )}
             >
-              <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px] font-bold">
+              <span
+                className={cn(
+                  'w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold',
+                  i === step ? 'bg-white/20' : i < step ? 'bg-[#3B1FA8]/10' : 'bg-white/60',
+                )}
+              >
                 {i < step ? <CheckCircle2 size={12} /> : i + 1}
               </span>
               {s}
             </button>
-            {i < steps.length - 1 && <ArrowRight size={14} className="text-ink-3/40" />}
+            {i < steps.length - 1 && (
+              <div className={cn(
+                'w-6 h-px transition-colors duration-200',
+                i < step ? 'bg-[#3B1FA8]/30' : 'bg-border/60',
+              )} />
+            )}
           </div>
         ))}
       </div>
@@ -502,8 +544,8 @@ function RfqCreateTab({ onCreated }: { onCreated: (id: string) => void }) {
         <div className="space-y-6">
           {/* Templates */}
           {Array.isArray((templates as any)?.data ?? templates) && (
-            <div>
-              <label className="block text-xs font-body font-bold text-ink-3 uppercase tracking-wider mb-2">
+            <div className="bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 ring-1 ring-black/[0.03] p-5 shadow-sm">
+              <label className="block text-[10px] font-body font-bold text-ink-3 uppercase tracking-[0.2em] mb-3">
                 Charger un template
               </label>
               <div className="flex flex-wrap gap-2">
@@ -511,9 +553,14 @@ function RfqCreateTab({ onCreated }: { onCreated: (id: string) => void }) {
                   <button
                     key={tpl.id}
                     onClick={() => loadTemplate(tpl)}
-                    className="px-3 py-1.5 rounded-md border border-border text-xs font-body font-medium text-ink-2 hover:border-violet/40 hover:bg-violet-pale/30 hover:-translate-y-0.5 hover:shadow-sm transition-all duration-200"
+                    className={cn(
+                      'px-3 py-2 rounded-lg border border-border/60 bg-white/80 dark:bg-white/10 backdrop-blur-sm',
+                      'text-[12px] font-body font-medium text-ink-2',
+                      'hover:border-violet/40 hover:bg-violet-ghost hover:text-violet hover:shadow-md hover:shadow-violet/10',
+                      'hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
+                    )}
                   >
-                    <Copy size={10} className="inline mr-1 -mt-0.5" />
+                    <Copy size={10} className="inline mr-1.5 -mt-0.5" />
                     {tpl.name}
                   </button>
                 ))}
@@ -521,141 +568,150 @@ function RfqCreateTab({ onCreated }: { onCreated: (id: string) => void }) {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="Nom du produit">
-              <input
-                value={productName}
-                onChange={(e) => setProductName(e.target.value)}
-                className="input-field"
-                placeholder="Phoenix Autocall Euro Stoxx 50"
-              />
-            </Field>
-            <Field label="Type de structure">
-              <select
-                value={structureType}
-                onChange={(e) => setStructureType(e.target.value)}
-                className="input-field"
-              >
-                {STRUCTURE_TYPES.map((s) => (
-                  <option key={s.value} value={s.value}>{s.label}</option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Devise">
-              <select value={currency} onChange={(e) => setCurrency(e.target.value)} className="input-field">
-                <option value="EUR">EUR</option>
-                <option value="USD">USD</option>
-                <option value="GBP">GBP</option>
-                <option value="CHF">CHF</option>
-              </select>
-            </Field>
-            <Field label="Nominal">
-              <input
-                type="number"
-                value={nominal}
-                onChange={(e) => setNominal(Number(e.target.value))}
-                className="input-field"
-              />
-            </Field>
-          </div>
+          <div className="bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 ring-1 ring-black/[0.03] overflow-hidden shadow-sm">
+            <div className="absolute top-0 left-0 right-0 h-[3px] rounded-b-full opacity-60" style={{ background: '#3B1FA8' }} />
+            <div className="p-6 space-y-5">
+              <div className="grid grid-cols-2 gap-4">
+                <PremiumField label="Nom du produit">
+                  <input
+                    value={productName}
+                    onChange={(e) => setProductName(e.target.value)}
+                    className="premium-input"
+                    placeholder="Phoenix Autocall Euro Stoxx 50"
+                  />
+                </PremiumField>
+                <PremiumField label="Type de structure">
+                  <select
+                    value={structureType}
+                    onChange={(e) => setStructureType(e.target.value)}
+                    className="premium-input"
+                  >
+                    {STRUCTURE_TYPES.map((s) => (
+                      <option key={s.value} value={s.value}>{s.label}</option>
+                    ))}
+                  </select>
+                </PremiumField>
+                <PremiumField label="Devise">
+                  <select value={currency} onChange={(e) => setCurrency(e.target.value)} className="premium-input">
+                    <option value="EUR">EUR</option>
+                    <option value="USD">USD</option>
+                    <option value="GBP">GBP</option>
+                    <option value="CHF">CHF</option>
+                  </select>
+                </PremiumField>
+                <PremiumField label="Nominal">
+                  <input
+                    type="number"
+                    value={nominal}
+                    onChange={(e) => setNominal(Number(e.target.value))}
+                    className="premium-input"
+                  />
+                </PremiumField>
+              </div>
 
-          {/* Underlying */}
-          <Field label="Sous-jacent">
-            <div className="grid grid-cols-3 gap-2">
-              {UNDERLYINGS.map((u, i) => (
-                <button
-                  key={u.ticker}
-                  onClick={() => setSelectedUnderlying(i)}
-                  className={cn(
-                    'text-left p-3 rounded-lg border transition text-xs font-body',
-                    i === selectedUnderlying
-                      ? 'border-violet bg-violet-pale/40 text-violet ring-1 ring-violet/20 shadow-sm shadow-violet/10'
-                      : 'border-border hover:border-violet/30 hover:-translate-y-0.5 hover:shadow-sm',
-                  )}
-                >
-                  <div className="font-semibold">{u.name}</div>
-                  <div className="text-ink-3 text-[10px] mt-0.5">{u.ticker} | Vol {fmtPct(u.vol, 0)}</div>
-                </button>
-              ))}
+              {/* Underlying */}
+              <PremiumField label="Sous-jacent">
+                <div className="grid grid-cols-3 gap-2">
+                  {UNDERLYINGS.map((u, i) => (
+                    <button
+                      key={u.ticker}
+                      onClick={() => setSelectedUnderlying(i)}
+                      className={cn(
+                        'text-left p-3 rounded-xl border transition-all duration-200 text-xs font-body',
+                        i === selectedUnderlying
+                          ? 'border-[#3B1FA8] bg-[#3B1FA8]/5 text-[#3B1FA8] ring-1 ring-[#3B1FA8]/20 shadow-md shadow-violet/10'
+                          : 'border-border/60 bg-white/60 dark:bg-white/5 hover:border-violet/30 hover:-translate-y-0.5 hover:shadow-md hover:shadow-violet/5',
+                      )}
+                    >
+                      <div className="font-semibold text-[12px]">{u.name}</div>
+                      <div className="text-ink-3 text-[10px] mt-1 font-mono">{u.ticker} | Vol {fmtPct(u.vol, 0)}</div>
+                    </button>
+                  ))}
+                </div>
+              </PremiumField>
+
+              {/* Dates */}
+              <div className="grid grid-cols-2 gap-4">
+                <PremiumField label="Date de strike">
+                  <input type="date" value={strikeDate} onChange={(e) => setStrikeDate(e.target.value)} className="premium-input" />
+                </PremiumField>
+                <PremiumField label="Date de maturite">
+                  <input type="date" value={maturityDate} onChange={(e) => setMaturityDate(e.target.value)} className="premium-input" />
+                </PremiumField>
+              </div>
+
+              {/* Payoff params */}
+              <div className="grid grid-cols-3 gap-4">
+                <PremiumField label="Type de coupon">
+                  <select value={couponType} onChange={(e) => setCouponType(e.target.value)} className="premium-input">
+                    <option value="NONE">Aucun</option>
+                    <option value="FIXED">Fixe</option>
+                    <option value="CONDITIONAL">Conditionnel</option>
+                    <option value="MEMORY">Memoire</option>
+                  </select>
+                </PremiumField>
+                <PremiumField label="Coupon (%)">
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={(couponRate * 100).toFixed(2)}
+                    onChange={(e) => setCouponRate(Number(e.target.value) / 100)}
+                    className="premium-input"
+                  />
+                </PremiumField>
+                <PremiumField label="Barriere coupon (%)">
+                  <input
+                    type="number"
+                    step="1"
+                    value={(couponBarrier * 100).toFixed(0)}
+                    onChange={(e) => setCouponBarrier(Number(e.target.value) / 100)}
+                    className="premium-input"
+                  />
+                </PremiumField>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <PremiumField label="Autocall">
+                  <label className="flex items-center gap-2.5 h-10 px-4 rounded-lg border border-border/60 bg-white/80 dark:bg-white/10">
+                    <input
+                      type="checkbox"
+                      checked={autocallEnabled}
+                      onChange={(e) => setAutocallEnabled(e.target.checked)}
+                      className="accent-[#3B1FA8] w-4 h-4"
+                    />
+                    <span className="text-[13px] font-body font-medium text-ink">Actif</span>
+                  </label>
+                </PremiumField>
+                {autocallEnabled && (
+                  <PremiumField label="Barriere autocall (%)">
+                    <input
+                      type="number"
+                      step="1"
+                      value={(autocallBarrier * 100).toFixed(0)}
+                      onChange={(e) => setAutocallBarrier(Number(e.target.value) / 100)}
+                      className="premium-input"
+                    />
+                  </PremiumField>
+                )}
+                <PremiumField label="Barriere protection (%)">
+                  <input
+                    type="number"
+                    step="1"
+                    value={(protectionBarrier * 100).toFixed(0)}
+                    onChange={(e) => setProtectionBarrier(Number(e.target.value) / 100)}
+                    className="premium-input"
+                  />
+                </PremiumField>
+              </div>
             </div>
-          </Field>
-
-          {/* Dates */}
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="Date de strike">
-              <input type="date" value={strikeDate} onChange={(e) => setStrikeDate(e.target.value)} className="input-field" />
-            </Field>
-            <Field label="Date de maturite">
-              <input type="date" value={maturityDate} onChange={(e) => setMaturityDate(e.target.value)} className="input-field" />
-            </Field>
-          </div>
-
-          {/* Payoff params */}
-          <div className="grid grid-cols-3 gap-4">
-            <Field label="Type de coupon">
-              <select value={couponType} onChange={(e) => setCouponType(e.target.value)} className="input-field">
-                <option value="NONE">Aucun</option>
-                <option value="FIXED">Fixe</option>
-                <option value="CONDITIONAL">Conditionnel</option>
-                <option value="MEMORY">Memoire</option>
-              </select>
-            </Field>
-            <Field label="Coupon (%)">
-              <input
-                type="number"
-                step="0.01"
-                value={(couponRate * 100).toFixed(2)}
-                onChange={(e) => setCouponRate(Number(e.target.value) / 100)}
-                className="input-field"
-              />
-            </Field>
-            <Field label="Barriere coupon (%)">
-              <input
-                type="number"
-                step="1"
-                value={(couponBarrier * 100).toFixed(0)}
-                onChange={(e) => setCouponBarrier(Number(e.target.value) / 100)}
-                className="input-field"
-              />
-            </Field>
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <Field label="Autocall">
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={autocallEnabled}
-                  onChange={(e) => setAutocallEnabled(e.target.checked)}
-                  className="accent-violet"
-                />
-                <span className="text-sm font-body">Actif</span>
-              </label>
-            </Field>
-            {autocallEnabled && (
-              <Field label="Barriere autocall (%)">
-                <input
-                  type="number"
-                  step="1"
-                  value={(autocallBarrier * 100).toFixed(0)}
-                  onChange={(e) => setAutocallBarrier(Number(e.target.value) / 100)}
-                  className="input-field"
-                />
-              </Field>
-            )}
-            <Field label="Barriere protection (%)">
-              <input
-                type="number"
-                step="1"
-                value={(protectionBarrier * 100).toFixed(0)}
-                onChange={(e) => setProtectionBarrier(Number(e.target.value) / 100)}
-                className="input-field"
-              />
-            </Field>
           </div>
 
           <div className="flex justify-end">
-            <button onClick={() => setStep(1)} className="btn-primary">
+            <button onClick={() => setStep(1)} className={cn(
+              'h-10 px-5 rounded-xl font-body text-[13px] font-semibold inline-flex items-center gap-2',
+              'bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] text-white shadow-md shadow-violet/20',
+              'hover:shadow-lg hover:shadow-violet/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
+            )}>
               Suivant <ArrowRight size={14} />
             </button>
           </div>
@@ -665,60 +721,74 @@ function RfqCreateTab({ onCreated }: { onCreated: (id: string) => void }) {
       {/* ── Step 1: Constraints ─────────────────── */}
       {step === 1 && (
         <div className="space-y-6">
-          <Field label="Mode de consultation">
-            <div className="grid grid-cols-1 gap-2">
-              {RFQ_MODES.map((m) => (
-                <button
-                  key={m.value}
-                  onClick={() => setRfqMode(m.value)}
-                  className={cn(
-                    'text-left p-3 rounded-lg border transition',
-                    rfqMode === m.value
-                      ? 'border-violet bg-gradient-to-r from-violet-pale/60 to-cobalt-pale/40 ring-1 ring-violet/20'
-                      : 'border-border hover:border-violet/30 hover:-translate-y-0.5 hover:shadow-sm',
-                  )}
-                >
-                  <div className="font-body text-sm font-semibold text-ink">{m.label}</div>
-                  <div className="font-body text-xs text-ink-3 mt-0.5">{m.desc}</div>
-                </button>
-              ))}
-            </div>
-          </Field>
+          <div className="bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 ring-1 ring-black/[0.03] p-6 shadow-sm">
+            <PremiumField label="Mode de consultation">
+              <div className="grid grid-cols-1 gap-2">
+                {RFQ_MODES.map((m) => (
+                  <button
+                    key={m.value}
+                    onClick={() => setRfqMode(m.value)}
+                    className={cn(
+                      'text-left p-4 rounded-xl border transition-all duration-200',
+                      rfqMode === m.value
+                        ? 'border-[#3B1FA8] bg-gradient-to-r from-[#3B1FA8]/5 to-[#5B3FD4]/3 ring-1 ring-[#3B1FA8]/20 shadow-md shadow-violet/10'
+                        : 'border-border/60 bg-white/60 dark:bg-white/5 hover:border-violet/30 hover:-translate-y-0.5 hover:shadow-md hover:shadow-violet/5',
+                    )}
+                  >
+                    <div className="font-body text-[13px] font-semibold text-ink">{m.label}</div>
+                    <div className="font-body text-[11px] text-ink-3 mt-0.5">{m.desc}</div>
+                  </button>
+                ))}
+              </div>
+            </PremiumField>
 
-          {rfqMode === 'BEST_PRICE_FOR_TARGET_COUPON' && (
-            <Field label="Coupon cible (%)">
-              <input
-                type="number"
-                step="0.1"
-                value={targetCoupon != null ? (targetCoupon * 100).toFixed(1) : ''}
-                onChange={(e) => setTargetCoupon(Number(e.target.value) / 100)}
-                className="input-field"
-                placeholder="ex: 8.0"
-              />
-            </Field>
-          )}
+            {rfqMode === 'BEST_PRICE_FOR_TARGET_COUPON' && (
+              <div className="mt-5">
+                <PremiumField label="Coupon cible (%)">
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={targetCoupon != null ? (targetCoupon * 100).toFixed(1) : ''}
+                    onChange={(e) => setTargetCoupon(Number(e.target.value) / 100)}
+                    className="premium-input"
+                    placeholder="ex: 8.0"
+                  />
+                </PremiumField>
+              </div>
+            )}
 
-          {rfqMode === 'STRONGEST_PROTECTION' && (
-            <Field label="Protection minimale (%)">
-              <input
-                type="number"
-                step="1"
-                value={minProtection != null ? (minProtection * 100).toFixed(0) : ''}
-                onChange={(e) => setMinProtection(Number(e.target.value) / 100)}
-                className="input-field"
-                placeholder="ex: 50"
-              />
-            </Field>
-          )}
+            {rfqMode === 'STRONGEST_PROTECTION' && (
+              <div className="mt-5">
+                <PremiumField label="Protection minimale (%)">
+                  <input
+                    type="number"
+                    step="1"
+                    value={minProtection != null ? (minProtection * 100).toFixed(0) : ''}
+                    onChange={(e) => setMinProtection(Number(e.target.value) / 100)}
+                    className="premium-input"
+                    placeholder="ex: 50"
+                  />
+                </PremiumField>
+              </div>
+            )}
+          </div>
 
           {/* Scoring weights */}
-          <div>
-            <label className="block text-xs font-body font-bold text-ink-3 uppercase tracking-wider mb-3">
-              Poids du scoring ({totalWeight}%)
-            </label>
+          <div className="bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 ring-1 ring-black/[0.03] p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <label className="text-[10px] font-body font-bold text-ink-3 uppercase tracking-[0.2em]">
+                Poids du scoring
+              </label>
+              <span className={cn(
+                'text-[11px] font-mono font-bold px-2.5 py-1 rounded-lg',
+                totalWeight === 100 ? 'bg-[#00B894]/10 text-[#00B894]' : 'bg-red/10 text-red',
+              )}>
+                {totalWeight}%
+              </span>
+            </div>
             {totalWeight !== 100 && (
-              <p className="text-xs text-red font-body mb-2">
-                <AlertTriangle size={12} className="inline -mt-0.5 mr-1" />
+              <p className="text-xs text-red font-body mb-3 flex items-center gap-1.5 bg-red/5 px-3 py-2 rounded-lg border border-red/10">
+                <AlertTriangle size={12} />
                 Le total doit etre 100%
               </p>
             )}
@@ -735,28 +805,41 @@ function RfqCreateTab({ onCreated }: { onCreated: (id: string) => void }) {
                     type="number"
                     value={w.val}
                     onChange={(e) => w.set(Number(e.target.value))}
-                    className="input-field text-center"
+                    className="premium-input text-center"
                     min={0}
                     max={100}
                   />
-                  <div className="text-[10px] font-body text-ink-3 mt-1">{w.label}</div>
+                  <div className="text-[10px] font-body text-ink-3 mt-1.5 font-medium">{w.label}</div>
                 </div>
               ))}
             </div>
           </div>
 
-          <Field label="Note client (optionnel)">
-            <textarea
-              value={clientNote}
-              onChange={(e) => setClientNote(e.target.value)}
-              className="input-field min-h-[80px]"
-              placeholder="Instructions specifiques pour les emetteurs..."
-            />
-          </Field>
+          <div className="bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 ring-1 ring-black/[0.03] p-6 shadow-sm">
+            <PremiumField label="Note client (optionnel)">
+              <textarea
+                value={clientNote}
+                onChange={(e) => setClientNote(e.target.value)}
+                className="premium-input min-h-[80px] resize-y"
+                placeholder="Instructions specifiques pour les emetteurs..."
+              />
+            </PremiumField>
+          </div>
 
           <div className="flex justify-between">
-            <button onClick={() => setStep(0)} className="btn-outline">Precedent</button>
-            <button onClick={() => setStep(2)} className="btn-primary">
+            <button onClick={() => setStep(0)} className={cn(
+              'h-10 px-5 rounded-xl border border-border/60 bg-white/80 dark:bg-white/10 backdrop-blur-sm',
+              'font-body text-[13px] font-semibold text-ink-2 inline-flex items-center gap-2',
+              'hover:border-violet hover:text-violet hover:bg-violet-ghost hover:shadow-md',
+              'hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
+            )}>
+              Precedent
+            </button>
+            <button onClick={() => setStep(2)} className={cn(
+              'h-10 px-5 rounded-xl font-body text-[13px] font-semibold inline-flex items-center gap-2',
+              'bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] text-white shadow-md shadow-violet/20',
+              'hover:shadow-lg hover:shadow-violet/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
+            )}>
               Suivant <ArrowRight size={14} />
             </button>
           </div>
@@ -766,15 +849,21 @@ function RfqCreateTab({ onCreated }: { onCreated: (id: string) => void }) {
       {/* ── Step 2: Issuers ─────────────────────── */}
       {step === 2 && (
         <div className="space-y-6">
-          <p className="font-body text-sm text-ink-3">
-            Selectionnez les emetteurs a solliciter. Laissez vide pour envoyer a tous.
-          </p>
+          <div className="bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 ring-1 ring-black/[0.03] p-5 shadow-sm">
+            <p className="font-body text-[13px] text-ink-3">
+              Selectionnez les emetteurs a solliciter. Laissez vide pour envoyer a tous.
+            </p>
+          </div>
 
           {issuers.length === 0 ? (
-            <div className="text-center py-10 border border-dashed border-border rounded-xl">
-              <Building2 size={32} className="mx-auto text-ink-3/40 mb-2" />
-              <p className="text-sm text-ink-3 font-body">Aucun emetteur configure</p>
-              <p className="text-xs text-ink-3/60 font-body">Executez le seed pour charger les profils emetteurs</p>
+            <div className="relative bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-dashed border-border/60 overflow-hidden">
+              <div className="flex flex-col items-center justify-center py-14">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#3B1FA8]/10 to-[#5B3FD4]/5 flex items-center justify-center mb-4">
+                  <Building2 size={24} className="text-ink-3/40" />
+                </div>
+                <p className="text-sm text-ink-3 font-body font-medium">Aucun emetteur configure</p>
+                <p className="text-xs text-ink-3/60 font-body mt-1">Executez le seed pour charger les profils emetteurs</p>
+              </div>
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3">
@@ -786,29 +875,34 @@ function RfqCreateTab({ onCreated }: { onCreated: (id: string) => void }) {
                   <div
                     key={issuer.id}
                     className={cn(
-                      'p-4 rounded-xl border transition-all duration-200 relative overflow-hidden',
+                      'group relative bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border ring-1 ring-black/[0.03]',
+                      'p-5 transition-all duration-200 overflow-hidden',
                       isSelected
-                        ? 'border-violet bg-violet-pale/30 ring-1 ring-violet/30 shadow-md shadow-violet/10 before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-gradient-to-b before:from-violet before:to-cobalt before:rounded-l-xl'
+                        ? 'border-[#3B1FA8] bg-[#3B1FA8]/3 ring-[#3B1FA8]/20 shadow-md shadow-violet/10'
                         : isExcluded
                           ? 'border-red/30 bg-[#FDE8EB]/30 opacity-60'
-                          : 'border-border hover:border-violet/20 hover:-translate-y-0.5 hover:shadow-md hover:shadow-violet/5',
+                          : 'border-border/60 hover:border-violet/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-violet/5',
                     )}
                   >
-                    <div className="flex items-start justify-between mb-2">
+                    {isSelected && (
+                      <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-[#3B1FA8] to-[#5B3FD4] rounded-l-xl" />
+                    )}
+
+                    <div className="flex items-start justify-between mb-3">
                       <div>
-                        <div className="font-body text-sm font-semibold text-ink">{issuer.name}</div>
-                        <div className="font-body text-[10px] text-ink-3">
+                        <div className="font-body text-[13px] font-semibold text-ink">{issuer.name}</div>
+                        <div className="font-body text-[10px] text-ink-3 mt-0.5">
                           {issuer.legalEntity ?? ''} | Min: {fmtCcy(issuer.minTicketSize ?? 0)}
                         </div>
                       </div>
-                      <div className="flex gap-1">
+                      <div className="flex gap-1.5">
                         <button
                           onClick={() => toggleIssuer(issuer.id)}
                           className={cn(
-                            'p-1.5 rounded-md text-xs transition',
+                            'p-2 rounded-lg text-xs transition-all duration-200',
                             isSelected
-                              ? 'bg-violet text-white'
-                              : 'bg-surface-2 text-ink-3 hover:bg-violet-pale hover:text-violet',
+                              ? 'bg-[#3B1FA8] text-white shadow-md shadow-violet/20'
+                              : 'bg-surface-2/60 text-ink-3 hover:bg-violet-ghost hover:text-violet hover:shadow-sm',
                           )}
                           title="Selectionner"
                         >
@@ -817,10 +911,10 @@ function RfqCreateTab({ onCreated }: { onCreated: (id: string) => void }) {
                         <button
                           onClick={() => toggleExcluded(issuer.id)}
                           className={cn(
-                            'p-1.5 rounded-md text-xs transition',
+                            'p-2 rounded-lg text-xs transition-all duration-200',
                             isExcluded
-                              ? 'bg-red text-white'
-                              : 'bg-surface-2 text-ink-3 hover:bg-[#FDE8EB] hover:text-red',
+                              ? 'bg-red text-white shadow-md shadow-red/20'
+                              : 'bg-surface-2/60 text-ink-3 hover:bg-[#FDE8EB] hover:text-red hover:shadow-sm',
                           )}
                           title="Exclure"
                         >
@@ -832,18 +926,18 @@ function RfqCreateTab({ onCreated }: { onCreated: (id: string) => void }) {
                     {/* Issuer details */}
                     <div className="flex flex-wrap gap-1.5 mt-2">
                       {(issuer.structureTypes as string[])?.slice(0, 3).map((st: string) => (
-                        <span key={st} className="px-1.5 py-0.5 rounded bg-surface-2 text-[9px] font-body font-medium text-ink-3">
+                        <span key={st} className="px-2 py-0.5 rounded-md bg-surface-2/60 text-[9px] font-body font-medium text-ink-3">
                           {STRUCTURE_TYPES.find((s) => s.value === st)?.label ?? st}
                         </span>
                       ))}
                       {(issuer.structureTypes as string[])?.length > 3 && (
-                        <span className="text-[9px] text-ink-3">+{issuer.structureTypes.length - 3}</span>
+                        <span className="text-[9px] text-ink-3 font-medium">+{issuer.structureTypes.length - 3}</span>
                       )}
                     </div>
 
-                    <div className="flex items-center gap-3 mt-2 text-[10px] text-ink-3 font-body">
-                      <span>Funding: {issuer.fundingSpread ? `+${(issuer.fundingSpread * 10000).toFixed(0)}bps` : '—'}</span>
-                      <span>Max: {issuer.maxMaturityMonths ? `${issuer.maxMaturityMonths}m` : '—'}</span>
+                    <div className="flex items-center gap-3 mt-2 text-[10px] text-ink-3 font-body font-medium">
+                      <span className="bg-surface-2/40 px-2 py-0.5 rounded-md">Funding: {issuer.fundingSpread ? `+${(issuer.fundingSpread * 10000).toFixed(0)}bps` : '—'}</span>
+                      <span className="bg-surface-2/40 px-2 py-0.5 rounded-md">Max: {issuer.maxMaturityMonths ? `${issuer.maxMaturityMonths}m` : '—'}</span>
                     </div>
                   </div>
                 );
@@ -852,8 +946,19 @@ function RfqCreateTab({ onCreated }: { onCreated: (id: string) => void }) {
           )}
 
           <div className="flex justify-between">
-            <button onClick={() => setStep(1)} className="btn-outline">Precedent</button>
-            <button onClick={() => setStep(3)} className="btn-primary">
+            <button onClick={() => setStep(1)} className={cn(
+              'h-10 px-5 rounded-xl border border-border/60 bg-white/80 dark:bg-white/10 backdrop-blur-sm',
+              'font-body text-[13px] font-semibold text-ink-2 inline-flex items-center gap-2',
+              'hover:border-violet hover:text-violet hover:bg-violet-ghost hover:shadow-md',
+              'hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
+            )}>
+              Precedent
+            </button>
+            <button onClick={() => setStep(3)} className={cn(
+              'h-10 px-5 rounded-xl font-body text-[13px] font-semibold inline-flex items-center gap-2',
+              'bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] text-white shadow-md shadow-violet/20',
+              'hover:shadow-lg hover:shadow-violet/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
+            )}>
               Suivant <ArrowRight size={14} />
             </button>
           </div>
@@ -863,92 +968,88 @@ function RfqCreateTab({ onCreated }: { onCreated: (id: string) => void }) {
       {/* ── Step 3: Review & Submit ─────────────── */}
       {step === 3 && (
         <div className="space-y-6">
-          <div className="bg-white/80 backdrop-blur-sm border border-border/60 rounded-xl p-6 shadow-sm">
-            <h3 className="font-display text-lg font-bold text-ink mb-4 flex items-center gap-2">
-              <span className="inline-block w-1 h-5 rounded-full bg-gradient-to-b from-violet to-cobalt"></span>
-              Recapitulatif de la RFQ
-            </h3>
+          <div className="relative bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 ring-1 ring-black/[0.03] overflow-hidden shadow-sm">
+            <div className="absolute top-0 left-0 right-0 h-[3px] rounded-b-full opacity-80" style={{ background: 'linear-gradient(90deg, #3B1FA8, #5B3FD4, #3D63F5)' }} />
+            <div className="p-6">
+              <h3 className="font-display text-lg font-bold text-ink mb-5 flex items-center gap-2">
+                <span className="inline-block w-1 h-5 rounded-full bg-gradient-to-b from-[#3B1FA8] to-[#5B3FD4]" />
+                Recapitulatif de la RFQ
+              </h3>
 
-            <div className="grid grid-cols-2 gap-4 text-sm font-body">
-              <div>
-                <span className="text-ink-3">Produit :</span>{' '}
-                <span className="font-semibold text-ink">{productName || 'Sans nom'}</span>
+              <div className="grid grid-cols-2 gap-4">
+                {[
+                  { label: 'Produit', value: productName || 'Sans nom' },
+                  { label: 'Structure', value: STRUCTURE_TYPES.find((s) => s.value === structureType)?.label ?? '—' },
+                  { label: 'Sous-jacent', value: UNDERLYINGS[selectedUnderlying]?.name ?? '—' },
+                  { label: 'Nominal', value: fmtCcy(nominal, currency) },
+                  { label: 'Coupon', value: `${couponType} ${fmtPct(couponRate)}` },
+                  { label: 'Protection', value: `${fmtPct(protectionBarrier)} (${barrierMonitoring})` },
+                  { label: 'Mode', value: RFQ_MODES.find((m) => m.value === rfqMode)?.label ?? '—' },
+                  { label: 'Maturite', value: `${fmtDate(strikeDate)} — ${fmtDate(maturityDate)}` },
+                ].map((item) => (
+                  <div key={item.label} className="p-3 bg-surface-2/40 rounded-lg border border-border/30">
+                    <span className="text-[10px] uppercase tracking-[0.15em] text-ink-3 font-bold block mb-1">{item.label}</span>
+                    <span className="text-[13px] font-semibold text-ink font-body">{item.value}</span>
+                  </div>
+                ))}
               </div>
-              <div>
-                <span className="text-ink-3">Structure :</span>{' '}
-                <span className="font-semibold text-ink">
-                  {STRUCTURE_TYPES.find((s) => s.value === structureType)?.label}
-                </span>
-              </div>
-              <div>
-                <span className="text-ink-3">Sous-jacent :</span>{' '}
-                <span className="font-semibold text-ink">{UNDERLYINGS[selectedUnderlying]?.name}</span>
-              </div>
-              <div>
-                <span className="text-ink-3">Nominal :</span>{' '}
-                <span className="font-semibold text-ink">{fmtCcy(nominal, currency)}</span>
-              </div>
-              <div>
-                <span className="text-ink-3">Coupon :</span>{' '}
-                <span className="font-semibold text-ink">{couponType} {fmtPct(couponRate)}</span>
-              </div>
-              <div>
-                <span className="text-ink-3">Protection :</span>{' '}
-                <span className="font-semibold text-ink">{fmtPct(protectionBarrier)} ({barrierMonitoring})</span>
-              </div>
-              <div>
-                <span className="text-ink-3">Mode :</span>{' '}
-                <span className="font-semibold text-ink">{RFQ_MODES.find((m) => m.value === rfqMode)?.label}</span>
-              </div>
-              <div>
-                <span className="text-ink-3">Maturite :</span>{' '}
-                <span className="font-semibold text-ink">{fmtDate(strikeDate)} — {fmtDate(maturityDate)}</span>
-              </div>
-            </div>
 
-            {selectedIssuers.length > 0 && (
-              <div className="mt-4 pt-4 border-t border-border">
-                <span className="text-xs font-body font-bold text-ink-3 uppercase tracking-wider">Emetteurs selectionnes</span>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {selectedIssuers.map((id) => {
+              {selectedIssuers.length > 0 && (
+                <div className="mt-5 pt-5 border-t border-border/40">
+                  <span className="text-[10px] font-body font-bold text-ink-3 uppercase tracking-[0.2em]">Emetteurs selectionnes</span>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {selectedIssuers.map((id) => {
+                      const issuer = issuers.find((i: any) => i.id === id);
+                      return (
+                        <span key={id} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#3B1FA8]/5 text-[#3B1FA8] text-[11px] font-body font-semibold border border-[#3B1FA8]/10">
+                          <Building2 size={10} />
+                          {issuer?.name ?? id}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {excludedIssuers.length > 0 && (
+                <div className="mt-3">
+                  <span className="text-[10px] font-body text-ink-3 font-bold uppercase tracking-wider">Exclus : </span>
+                  {excludedIssuers.map((id) => {
                     const issuer = issuers.find((i: any) => i.id === id);
                     return (
-                      <span key={id} className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-violet-pale text-violet text-xs font-body font-medium">
-                        <Building2 size={10} />
-                        {issuer?.name ?? id}
-                      </span>
+                      <span key={id} className="text-[11px] text-red font-body font-medium mr-2">{issuer?.name ?? id}</span>
                     );
                   })}
                 </div>
-              </div>
-            )}
+              )}
 
-            {excludedIssuers.length > 0 && (
-              <div className="mt-3">
-                <span className="text-xs font-body text-ink-3">Exclus : </span>
-                {excludedIssuers.map((id) => {
-                  const issuer = issuers.find((i: any) => i.id === id);
-                  return (
-                    <span key={id} className="text-xs text-red font-body mr-2">{issuer?.name ?? id}</span>
-                  );
-                })}
-              </div>
-            )}
-
-            {clientNote && (
-              <div className="mt-4 p-3 bg-surface-2 rounded-lg text-sm font-body text-ink-2">
-                <span className="font-semibold text-ink-3 text-xs uppercase">Note : </span>
-                {clientNote}
-              </div>
-            )}
+              {clientNote && (
+                <div className="mt-4 p-4 bg-surface-2/40 rounded-lg text-[13px] font-body text-ink-2 border border-border/30">
+                  <span className="font-semibold text-ink-3 text-[10px] uppercase tracking-wider block mb-1">Note</span>
+                  {clientNote}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="flex justify-between">
-            <button onClick={() => setStep(2)} className="btn-outline">Precedent</button>
+            <button onClick={() => setStep(2)} className={cn(
+              'h-10 px-5 rounded-xl border border-border/60 bg-white/80 dark:bg-white/10 backdrop-blur-sm',
+              'font-body text-[13px] font-semibold text-ink-2 inline-flex items-center gap-2',
+              'hover:border-violet hover:text-violet hover:bg-violet-ghost hover:shadow-md',
+              'hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
+            )}>
+              Precedent
+            </button>
             <button
               onClick={handleCreate}
               disabled={createRfq.isPending}
-              className="btn-primary"
+              className={cn(
+                'h-10 px-6 rounded-xl font-body text-[13px] font-semibold inline-flex items-center gap-2',
+                'bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] text-white shadow-md shadow-violet/20',
+                'hover:shadow-lg hover:shadow-violet/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
+                'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100',
+              )}
             >
               {createRfq.isPending ? (
                 <Loader2 size={14} className="animate-spin" />
@@ -1013,63 +1114,77 @@ function RfqDetailTab({ rfqId }: { rfqId: string }) {
   return (
     <div className="space-y-6">
       {/* ── RFQ Header ─────────────────────────────── */}
-      <div className="bg-white/80 backdrop-blur-sm border border-border/60 rounded-xl p-6 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <span className={cn('inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider', st.variant)}>
-              <StIcon size={13} />
-              {st.label}
-            </span>
-            <h2 className="font-display text-lg font-bold text-ink">
-              {config?.name ?? 'RFQ'}
-            </h2>
-          </div>
+      <div className="relative bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 ring-1 ring-black/[0.03] overflow-hidden shadow-sm">
+        <div className="absolute top-0 left-0 right-0 h-[3px] rounded-b-full opacity-80" style={{ background: 'linear-gradient(90deg, #3B1FA8, #5B3FD4, #3D63F5)' }} />
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-3">
+              <span className={cn('inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider', st.variant)}>
+                <StIcon size={13} />
+                {st.label}
+              </span>
+              <h2 className="font-display text-lg font-bold text-ink">
+                {config?.name ?? 'RFQ'}
+              </h2>
+            </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => refetch()}
-              className="p-2 rounded-md border border-border text-ink-3 hover:bg-surface-2 transition"
-            >
-              <RefreshCw size={14} />
-            </button>
-            {canSend && (
+            <div className="flex items-center gap-2">
               <button
-                onClick={handleSend}
-                disabled={sendRfq.isPending}
-                className="btn-primary"
-              >
-                {sendRfq.isPending ? (
-                  <Loader2 size={14} className="animate-spin" />
-                ) : (
-                  <Send size={14} />
+                onClick={() => refetch()}
+                className={cn(
+                  'p-2.5 rounded-lg border border-border/60 text-ink-3',
+                  'hover:border-violet hover:text-violet hover:bg-violet-ghost hover:shadow-sm',
+                  'transition-all duration-200',
                 )}
-                Envoyer aux emetteurs
+              >
+                <RefreshCw size={14} />
               </button>
-            )}
+              {canSend && (
+                <button
+                  onClick={handleSend}
+                  disabled={sendRfq.isPending}
+                  className={cn(
+                    'h-10 px-5 rounded-xl font-body text-[13px] font-semibold inline-flex items-center gap-2',
+                    'bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] text-white shadow-md shadow-violet/20',
+                    'hover:shadow-lg hover:shadow-violet/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
+                    'disabled:opacity-50 disabled:cursor-not-allowed',
+                  )}
+                >
+                  {sendRfq.isPending ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <Send size={14} />
+                  )}
+                  Envoyer aux emetteurs
+                </button>
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* RFQ summary grid */}
-        <div className="grid grid-cols-4 gap-4 text-sm font-body">
-          <SummaryCell label="Structure" value={STRUCTURE_TYPES.find((s) => s.value === config?.structureType)?.label ?? '—'} />
-          <SummaryCell label="Sous-jacent" value={config?.underlying?.name ?? '—'} />
-          <SummaryCell label="Nominal" value={config?.nominal ? fmtCcy(config.nominal, config.currency) : '—'} />
-          <SummaryCell label="Mode" value={RFQ_MODES.find((m) => m.value === rfq.mode)?.label ?? rfq.mode ?? '—'} />
-        </div>
-
-        {(rfq.status === 'RFQ_SENT' || rfq.status === 'PARTIALLY_QUOTED') && (
-          <div className="mt-4 p-3 bg-gradient-to-r from-[#FDF3D6] to-[#FEF9E7] border border-[#F0D98A]/60 rounded-lg flex items-center gap-2 text-sm font-body text-[#9B7210] shadow-sm animate-pulse">
-            <Loader2 size={14} className="animate-spin" />
-            Cotations en cours de generation... Rafraichissement automatique toutes les 3s.
+          {/* RFQ summary grid */}
+          <div className="grid grid-cols-4 gap-3">
+            <SummaryCell label="Structure" value={STRUCTURE_TYPES.find((s) => s.value === config?.structureType)?.label ?? '—'} />
+            <SummaryCell label="Sous-jacent" value={config?.underlying?.name ?? '—'} />
+            <SummaryCell label="Nominal" value={config?.nominal ? fmtCcy(config.nominal, config.currency) : '—'} />
+            <SummaryCell label="Mode" value={RFQ_MODES.find((m) => m.value === rfq.mode)?.label ?? rfq.mode ?? '—'} />
           </div>
-        )}
+
+          {(rfq.status === 'RFQ_SENT' || rfq.status === 'PARTIALLY_QUOTED') && (
+            <div className="mt-5 p-3.5 bg-gradient-to-r from-[#D4A017]/10 to-[#D4A017]/5 border border-[#D4A017]/20 rounded-xl flex items-center gap-2 text-[13px] font-body text-[#9B7210] shadow-sm">
+              <Loader2 size={14} className="animate-spin" />
+              Cotations en cours de generation... Rafraichissement automatique toutes les 3s.
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ── Quotes Comparison ─────────────────────── */}
       {sortedQuotes.length > 0 && (
         <div>
           <h3 className="font-display text-lg font-bold text-ink mb-4 flex items-center gap-2">
-            <BarChart3 size={18} className="text-violet" />
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-[#3B1FA8]/8">
+              <BarChart3 size={16} className="text-[#3B1FA8]" />
+            </div>
             Cotations ({sortedQuotes.length})
           </h3>
 
@@ -1085,36 +1200,41 @@ function RfqDetailTab({ rfqId }: { rfqId: string }) {
                 <div
                   key={q.id}
                   className={cn(
-                    'bg-white border rounded-xl p-5 transition-all duration-200 hover:-translate-y-0.5',
+                    'relative bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border ring-1 ring-black/[0.03]',
+                    'p-5 transition-all duration-200 overflow-hidden',
                     isSelected
-                      ? 'border-[#007A63] ring-2 ring-[#007A63]/20 bg-[#D6F7EF]/10 shadow-md shadow-[#007A63]/10'
+                      ? 'border-[#007A63] ring-[#007A63]/20 bg-[#D6F7EF]/10 shadow-md shadow-[#007A63]/10'
                       : isDeclined
-                        ? 'border-border opacity-50 hover:translate-y-0'
+                        ? 'border-border/60 opacity-50'
                         : isWinner
-                          ? 'border-violet ring-1 ring-violet/20 shadow-lg shadow-violet/10 bg-gradient-to-r from-violet-pale/10 to-transparent'
-                          : 'border-border hover:border-violet/30 hover:shadow-md hover:shadow-violet/5',
+                          ? 'border-[#3B1FA8] ring-[#3B1FA8]/20 shadow-lg shadow-violet/10 bg-gradient-to-r from-[#3B1FA8]/3 to-transparent'
+                          : 'border-border/60 hover:border-violet/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-violet/5',
                   )}
                 >
+                  {isWinner && !isSelected && !isDeclined && (
+                    <div className="absolute top-0 left-0 right-0 h-[3px] rounded-b-full" style={{ background: 'linear-gradient(90deg, #D4A017, #F0D98A, #D4A017)' }} />
+                  )}
+
                   <div className="flex items-start justify-between">
                     {/* Issuer info */}
                     <div className="flex items-center gap-3">
                       {isWinner && !isSelected && !isDeclined && (
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center shadow-sm">
-                          <Trophy size={14} className="text-white" />
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#D4A017] to-[#F0D98A] flex items-center justify-center shadow-md shadow-[#D4A017]/20">
+                          <Trophy size={16} className="text-white" />
                         </div>
                       )}
                       {isSelected && (
-                        <div className="w-8 h-8 rounded-full bg-[#007A63] flex items-center justify-center">
-                          <CheckCircle2 size={14} className="text-white" />
+                        <div className="w-10 h-10 rounded-xl bg-[#007A63] flex items-center justify-center shadow-md shadow-[#007A63]/20">
+                          <CheckCircle2 size={16} className="text-white" />
                         </div>
                       )}
                       {!isWinner && !isSelected && (
-                        <div className="w-8 h-8 rounded-full bg-surface-2 flex items-center justify-center text-xs font-bold text-ink-3">
+                        <div className="w-10 h-10 rounded-xl bg-surface-2/60 flex items-center justify-center text-[12px] font-bold text-ink-3 font-display">
                           #{idx + 1}
                         </div>
                       )}
                       <div>
-                        <div className="font-body text-sm font-bold text-ink">
+                        <div className="font-body text-[13px] font-bold text-ink">
                           {issuer?.name ?? 'Emetteur inconnu'}
                         </div>
                         <div className="font-body text-[10px] text-ink-3">
@@ -1126,7 +1246,7 @@ function RfqDetailTab({ rfqId }: { rfqId: string }) {
                     {/* Score */}
                     <div className="text-right">
                       {isWinner && !isSelected && !isDeclined ? (
-                        <div className="font-display text-2xl font-extrabold bg-gradient-to-r from-violet to-cobalt bg-clip-text text-transparent">
+                        <div className="font-display text-2xl font-extrabold bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] bg-clip-text text-transparent">
                           {q.totalScore != null ? q.totalScore.toFixed(1) : '—'}
                         </div>
                       ) : (
@@ -1134,12 +1254,12 @@ function RfqDetailTab({ rfqId }: { rfqId: string }) {
                           {q.totalScore != null ? q.totalScore.toFixed(1) : '—'}
                         </div>
                       )}
-                      <div className="text-[10px] font-body text-ink-3 uppercase tracking-wider">Score</div>
+                      <div className="text-[10px] font-body text-ink-3 uppercase tracking-[0.15em] font-bold">Score</div>
                     </div>
                   </div>
 
                   {/* Metrics grid */}
-                  <div className="grid grid-cols-5 gap-4 mt-4 pt-4 border-t border-border/60">
+                  <div className="grid grid-cols-5 gap-3 mt-5 pt-5 border-t border-border/40">
                     <MetricCell
                       label="Prix"
                       value={result?.fairValue != null ? fmtPct(result.fairValue / 100, 2) : '—'}
@@ -1166,10 +1286,10 @@ function RfqDetailTab({ rfqId }: { rfqId: string }) {
 
                   {/* Score breakdown */}
                   {q.scoreBreakdown && (
-                    <div className="mt-3 flex items-center gap-3">
+                    <div className="mt-3 flex items-center gap-3 flex-wrap">
                       {Object.entries(typeof q.scoreBreakdown === 'string' ? JSON.parse(q.scoreBreakdown) : q.scoreBreakdown).map(
                         ([key, val]) => (
-                          <div key={key} className="flex items-center gap-1 text-[10px] font-body text-ink-3">
+                          <div key={key} className="flex items-center gap-1 text-[10px] font-body text-ink-3 bg-surface-2/40 px-2 py-0.5 rounded-md">
                             <span className="capitalize">{key}:</span>
                             <span className="font-semibold text-ink-2">{(val as number).toFixed(1)}</span>
                           </div>
@@ -1180,22 +1300,22 @@ function RfqDetailTab({ rfqId }: { rfqId: string }) {
 
                   {/* Comment */}
                   {q.comment && (
-                    <div className="mt-3 p-2.5 bg-surface-2 rounded-lg text-xs font-body text-ink-2 italic">
+                    <div className="mt-3 p-3 bg-surface-2/40 rounded-xl text-[12px] font-body text-ink-2 italic border border-border/30">
                       &ldquo;{q.comment}&rdquo;
                     </div>
                   )}
 
                   {/* Actions */}
                   {canSelect && !isSelected && !isDeclined && (
-                    <div className="mt-4 flex justify-end">
+                    <div className="mt-5 flex justify-end">
                       <button
                         onClick={() => handleSelect(q.id)}
                         disabled={selectQuote.isPending}
                         className={cn(
-                          'inline-flex items-center gap-2 px-4 py-2 rounded-lg font-body text-sm font-semibold transition-all',
+                          'h-10 px-5 rounded-xl font-body text-[13px] font-semibold inline-flex items-center gap-2 transition-all duration-200',
                           isWinner
-                            ? 'bg-gradient-to-r from-violet to-cobalt text-white hover:shadow-lg hover:shadow-violet/25 hover:-translate-y-0.5'
-                            : 'bg-surface-2 text-ink-2 hover:bg-violet-pale hover:text-violet hover:-translate-y-0.5 hover:shadow-sm',
+                            ? 'bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] text-white shadow-md shadow-violet/20 hover:shadow-lg hover:shadow-violet/30 hover:scale-[1.02] active:scale-[0.98]'
+                            : 'bg-surface-2/60 text-ink-2 hover:bg-violet-ghost hover:text-violet hover:-translate-y-0.5 hover:shadow-md border border-border/60',
                         )}
                       >
                         {selectQuote.isPending ? (
@@ -1209,8 +1329,8 @@ function RfqDetailTab({ rfqId }: { rfqId: string }) {
                   )}
 
                   {isSelected && (
-                    <div className="mt-4 p-2 bg-gradient-to-r from-[#D6F7EF] to-[#E8FCF5] border border-[#A3EDD9]/60 rounded-lg text-center text-sm font-body font-semibold text-[#007A63] shadow-sm">
-                      <CheckCircle2 size={14} className="inline -mt-0.5 mr-1" />
+                    <div className="mt-5 p-3 bg-gradient-to-r from-[#D6F7EF] to-[#E8FCF5] border border-[#A3EDD9]/60 rounded-xl text-center text-[13px] font-body font-semibold text-[#007A63] shadow-sm">
+                      <CheckCircle2 size={14} className="inline -mt-0.5 mr-1.5" />
                       Offre selectionnee
                     </div>
                   )}
@@ -1223,16 +1343,24 @@ function RfqDetailTab({ rfqId }: { rfqId: string }) {
 
       {/* No quotes yet */}
       {sortedQuotes.length === 0 && rfq.status !== 'DRAFT' && rfq.status !== 'INTERNALLY_PRICED' && (
-        <div className="text-center py-16 border border-dashed border-border rounded-xl">
-          <Clock size={40} className="mx-auto text-ink-3/40 mb-3" />
-          <p className="text-ink-3 font-body text-sm">En attente des cotations...</p>
+        <div className="relative bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-dashed border-border/60 overflow-hidden">
+          <div className="flex flex-col items-center justify-center py-16">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#D4A017]/10 to-[#D4A017]/5 flex items-center justify-center mb-4">
+              <Clock size={28} className="text-ink-3/40" />
+            </div>
+            <p className="text-ink-3 font-body text-sm font-medium">En attente des cotations...</p>
+          </div>
         </div>
       )}
 
       {sortedQuotes.length === 0 && (rfq.status === 'DRAFT' || rfq.status === 'INTERNALLY_PRICED') && (
-        <div className="text-center py-16 border border-dashed border-border rounded-xl">
-          <Send size={40} className="mx-auto text-ink-3/40 mb-3" />
-          <p className="text-ink-3 font-body text-sm">Envoyez la RFQ pour recevoir des cotations</p>
+        <div className="relative bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-dashed border-border/60 overflow-hidden">
+          <div className="flex flex-col items-center justify-center py-16">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#3B1FA8]/10 to-[#5B3FD4]/5 flex items-center justify-center mb-4">
+              <Send size={28} className="text-ink-3/40" />
+            </div>
+            <p className="text-ink-3 font-body text-sm font-medium">Envoyez la RFQ pour recevoir des cotations</p>
+          </div>
         </div>
       )}
     </div>
@@ -1243,10 +1371,10 @@ function RfqDetailTab({ rfqId }: { rfqId: string }) {
 // Shared components
 // ═══════════════════════════════════════════════════════════════════════════
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function PremiumField({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div>
-      <label className="block text-xs font-body font-bold text-ink-3 uppercase tracking-wider mb-1.5">
+    <div className="flex flex-col gap-1.5">
+      <label className="text-[10px] uppercase tracking-[0.2em] text-ink-3 font-semibold font-body">
         {label}
       </label>
       {children}
@@ -1256,20 +1384,20 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 function SummaryCell({ label, value }: { label: string; value: string }) {
   return (
-    <div className="p-3 bg-surface-2/70 backdrop-blur-sm rounded-lg border border-border/30 hover:shadow-sm transition-all duration-200">
-      <div className="text-[10px] font-body font-bold text-ink-3 uppercase tracking-wider">{label}</div>
-      <div className="text-sm font-body font-semibold text-ink mt-1">{value}</div>
+    <div className="p-3.5 bg-surface-2/40 backdrop-blur-sm rounded-xl border border-border/30 hover:shadow-sm hover:bg-surface-2/60 transition-all duration-200">
+      <div className="text-[10px] font-body font-bold text-ink-3 uppercase tracking-[0.15em]">{label}</div>
+      <div className="text-[13px] font-body font-semibold text-ink mt-1">{value}</div>
     </div>
   );
 }
 
 function MetricCell({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
-    <div className="text-center p-2 rounded-lg hover:bg-surface-2/50 transition-colors duration-200">
-      <div className={cn('font-display text-lg font-bold', accent ? 'text-violet' : 'text-ink')}>
+    <div className="text-center p-3 rounded-xl bg-surface-2/30 hover:bg-surface-2/50 transition-all duration-200 border border-transparent hover:border-border/30">
+      <div className={cn('font-display text-lg font-bold', accent ? 'text-[#3B1FA8]' : 'text-ink')}>
         {value}
       </div>
-      <div className="text-[10px] font-body text-ink-3 uppercase tracking-wider">{label}</div>
+      <div className="text-[10px] font-body text-ink-3 uppercase tracking-[0.15em] font-bold mt-0.5">{label}</div>
     </div>
   );
 }

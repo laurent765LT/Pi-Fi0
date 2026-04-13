@@ -42,17 +42,17 @@ function Toggle({
       disabled={disabled}
       onClick={onToggle}
       className={cn(
-        'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-all duration-300 ease-in-out',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet/40 focus-visible:ring-offset-2',
+        'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-all duration-200 ease-in-out',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B1FA8]/30 focus-visible:ring-offset-2',
         enabled
           ? 'bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] shadow-md shadow-violet/20'
-          : 'bg-ink-3/20',
+          : 'bg-ink-3/15 dark:bg-ink-3/25',
         disabled && 'opacity-50 cursor-not-allowed',
       )}
     >
       <span
         className={cn(
-          'pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform duration-300 ease-in-out',
+          'pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform duration-200 ease-in-out',
           enabled ? 'translate-x-5' : 'translate-x-0',
         )}
       />
@@ -78,16 +78,16 @@ function SectionCard({
   accentColor?: string;
 }) {
   return (
-    <div className="group relative bg-white/90 backdrop-blur-md rounded-xl border border-white/60 ring-1 ring-black/[0.03] overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-violet/5">
+    <div className="group relative bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 ring-1 ring-black/[0.03] overflow-hidden transition-all duration-200 hover:shadow-lg hover:shadow-violet/5">
       <div
-        className="absolute top-0 left-0 right-0 h-[3px] rounded-b-full opacity-60 group-hover:opacity-100 transition-opacity duration-300"
+        className="absolute top-0 left-0 right-0 h-[3px] rounded-b-full opacity-60 group-hover:opacity-100 transition-opacity duration-200"
         style={{ background: accentColor }}
       />
-      <div className="px-6 py-5 border-b border-border/40">
+      <div className="px-6 py-5 border-b border-border/30">
         <div className="flex items-center gap-3">
           <div
-            className="w-9 h-9 rounded-lg flex items-center justify-center shadow-sm"
-            style={{ background: `${accentColor}12` }}
+            className="w-9 h-9 rounded-xl flex items-center justify-center shadow-sm"
+            style={{ background: `${accentColor}10` }}
           >
             {icon}
           </div>
@@ -118,10 +118,10 @@ function SettingRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between py-3.5 border-b border-border/30 last:border-0">
+    <div className="flex items-center justify-between py-3.5 border-b border-border/20 last:border-0">
       <div className="flex items-center gap-3 min-w-0">
         {icon && (
-          <span className="text-ink-3 shrink-0">{icon}</span>
+          <span className="text-ink-3/70 shrink-0">{icon}</span>
         )}
         <div className="min-w-0">
           <p className="font-body text-[13px] font-semibold text-ink leading-tight">{label}</p>
@@ -238,7 +238,7 @@ export default function SettingsPage() {
             label="Theme"
             description="Basculez entre le mode clair et sombre via le toggle dans la sidebar."
           >
-            <span className="text-[11px] text-ink-3 font-body font-medium bg-surface-2 px-3 py-1.5 rounded-lg">
+            <span className="text-[11px] text-ink-3 font-body font-medium bg-surface-2/40 border border-border/20 px-3 py-1.5 rounded-xl">
               Via sidebar
             </span>
           </SettingRow>
@@ -248,11 +248,11 @@ export default function SettingsPage() {
             label="Langue"
             description="Choisissez la langue de l'interface."
           >
-            <div className="flex items-center gap-1 bg-surface-2 rounded-lg p-0.5">
+            <div className="flex items-center gap-1 bg-surface-2/40 border border-border/20 rounded-xl p-0.5">
               <button
                 onClick={() => setLanguage('fr')}
                 className={cn(
-                  'px-3 py-1.5 rounded-md text-[12px] font-semibold font-body transition-all duration-200',
+                  'px-3.5 py-1.5 rounded-lg text-[12px] font-semibold font-body transition-all duration-200',
                   language === 'fr'
                     ? 'bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] text-white shadow-md shadow-violet/20'
                     : 'text-ink-3 hover:text-ink',
@@ -263,7 +263,7 @@ export default function SettingsPage() {
               <button
                 onClick={() => setLanguage('en')}
                 className={cn(
-                  'px-3 py-1.5 rounded-md text-[12px] font-semibold font-body transition-all duration-200',
+                  'px-3.5 py-1.5 rounded-lg text-[12px] font-semibold font-body transition-all duration-200',
                   language === 'en'
                     ? 'bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] text-white shadow-md shadow-violet/20'
                     : 'text-ink-3 hover:text-ink',
@@ -289,9 +289,9 @@ export default function SettingsPage() {
           >
             <button
               className={cn(
-                'h-8 px-4 rounded-lg border border-border/80 bg-white/80 backdrop-blur-sm',
+                'h-8 px-4 rounded-xl border border-border/60 bg-white/80 dark:bg-white/10 backdrop-blur-sm',
                 'text-[12px] font-semibold font-body text-ink-2 flex items-center gap-1.5',
-                'hover:border-violet hover:text-violet hover:bg-violet-ghost hover:shadow-md hover:shadow-violet/10',
+                'hover:border-[#3B1FA8] hover:text-[#3B1FA8] hover:bg-[#3B1FA8]/3 hover:shadow-md hover:shadow-violet/10',
                 'hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
               )}
             >
@@ -305,9 +305,9 @@ export default function SettingsPage() {
             label="Authentification a deux facteurs"
             description="Ajoutez une couche de securite supplementaire avec la 2FA."
           >
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               {twoFa && (
-                <span className="text-[10px] font-bold text-[#00B894] bg-[#00B894]/10 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                <span className="text-[10px] font-bold text-[#00B894] bg-[#00B894]/8 px-2.5 py-1 rounded-lg uppercase tracking-wider border border-[#00B894]/10">
                   Actif
                 </span>
               )}
@@ -331,12 +331,12 @@ export default function SettingsPage() {
             <button
               onClick={handleExportData}
               className={cn(
-                'h-8 px-4 rounded-lg border',
+                'h-8 px-4 rounded-xl border',
                 'text-[12px] font-semibold font-body flex items-center gap-1.5',
                 'transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]',
                 exportSuccess
-                  ? 'border-[#00B894] bg-[#00B894]/10 text-[#00B894]'
-                  : 'border-border/80 bg-white/80 backdrop-blur-sm text-ink-2 hover:border-violet hover:text-violet hover:bg-violet-ghost hover:shadow-md hover:shadow-violet/10',
+                  ? 'border-[#00B894]/20 bg-[#00B894]/8 text-[#00B894]'
+                  : 'border-border/60 bg-white/80 dark:bg-white/10 backdrop-blur-sm text-ink-2 hover:border-[#3B1FA8] hover:text-[#3B1FA8] hover:bg-[#3B1FA8]/3 hover:shadow-md hover:shadow-violet/10',
               )}
             >
               {exportSuccess ? (
@@ -355,7 +355,7 @@ export default function SettingsPage() {
 
           <div className="pt-3.5">
             <div className="flex items-start gap-3">
-              <span className="text-ink-3 shrink-0 mt-0.5">
+              <span className="text-ink-3/70 shrink-0 mt-0.5">
                 <Trash2 size={14} />
               </span>
               <div className="flex-1 min-w-0">
@@ -370,9 +370,9 @@ export default function SettingsPage() {
                   <button
                     onClick={() => setShowDeleteConfirm(true)}
                     className={cn(
-                      'mt-3 h-8 px-4 rounded-lg border border-[#E8334A]/30',
+                      'mt-3 h-8 px-4 rounded-xl border border-[#E8334A]/20',
                       'text-[12px] font-semibold font-body text-[#E8334A] flex items-center gap-1.5',
-                      'hover:bg-[#E8334A]/5 hover:border-[#E8334A]/50 hover:shadow-md hover:shadow-[#E8334A]/10',
+                      'hover:bg-[#E8334A]/5 hover:border-[#E8334A]/40 hover:shadow-md hover:shadow-[#E8334A]/10',
                       'hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
                     )}
                   >
@@ -380,9 +380,11 @@ export default function SettingsPage() {
                     Supprimer le compte
                   </button>
                 ) : (
-                  <div className="mt-3 p-4 rounded-lg bg-[#E8334A]/5 border border-[#E8334A]/20">
+                  <div className="mt-3 p-4 rounded-xl bg-[#E8334A]/3 border border-[#E8334A]/15">
                     <div className="flex items-center gap-2 mb-3">
-                      <AlertTriangle size={14} className="text-[#E8334A]" />
+                      <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-[#E8334A]/10">
+                        <AlertTriangle size={12} className="text-[#E8334A]" />
+                      </div>
                       <span className="text-[12px] font-bold text-[#E8334A] font-body">
                         Confirmation requise
                       </span>
@@ -397,19 +399,19 @@ export default function SettingsPage() {
                         onChange={(e) => setDeleteConfirmText(e.target.value)}
                         placeholder="SUPPRIMER"
                         className={cn(
-                          'h-8 px-3 rounded-lg border border-border/80 bg-white text-[12px] font-mono font-body text-ink',
-                          'focus:outline-none focus:ring-2 focus:ring-[#E8334A]/30 focus:border-[#E8334A]/50',
-                          'placeholder:text-ink-3/40 w-32',
+                          'h-8 px-3 rounded-xl border border-border/60 bg-white/80 dark:bg-white/10 text-[12px] font-mono font-body text-ink',
+                          'focus:outline-none focus:ring-2 focus:ring-[#E8334A]/20 focus:border-[#E8334A]/40',
+                          'placeholder:text-ink-3/40 w-32 transition-all duration-200',
                         )}
                       />
                       <button
                         onClick={handleDeleteAccount}
                         disabled={deleteConfirmText !== 'SUPPRIMER'}
                         className={cn(
-                          'h-8 px-4 rounded-lg text-[12px] font-semibold font-body transition-all duration-200',
+                          'h-8 px-4 rounded-xl text-[12px] font-semibold font-body transition-all duration-200',
                           deleteConfirmText === 'SUPPRIMER'
                             ? 'bg-[#E8334A] text-white shadow-md shadow-[#E8334A]/20 hover:scale-[1.02] active:scale-[0.98]'
-                            : 'bg-ink-3/10 text-ink-3/40 cursor-not-allowed',
+                            : 'bg-ink-3/8 text-ink-3/40 cursor-not-allowed',
                         )}
                       >
                         Confirmer
@@ -419,7 +421,7 @@ export default function SettingsPage() {
                           setShowDeleteConfirm(false);
                           setDeleteConfirmText('');
                         }}
-                        className="h-8 px-3 rounded-lg text-[12px] font-semibold font-body text-ink-3 hover:text-ink transition-colors"
+                        className="h-8 px-3 rounded-xl text-[12px] font-semibold font-body text-ink-3 hover:text-ink transition-colors"
                       >
                         Annuler
                       </button>

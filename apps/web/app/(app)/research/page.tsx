@@ -305,64 +305,107 @@ export default function ResearchPage() {
   return (
     <div className="animate-fade-in">
       {/* ── Header ──────────────────────────────────────────────────── */}
-      <div className="mb-6">
-        <h1 className="font-display text-[28px] font-bold leading-tight bg-gradient-to-r from-violet via-violet-dark to-indigo-600 bg-clip-text text-transparent">
-          Research & Trade Ideas
-        </h1>
-        <p className="text-sm text-ink-3 font-body mt-1.5 max-w-xl">
-          Analyses de marché et idées de structuration basées sur des données financières en temps réel.
-        </p>
-        <div className="gradient-bar h-[3px] rounded-full mt-5 opacity-70" />
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-1">
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center shadow-md"
+            style={{ background: 'linear-gradient(135deg, #3B1FA8 0%, #5B3FD4 100%)' }}
+          >
+            <FileText size={18} className="text-white" />
+          </div>
+          <div>
+            <h1 className="font-display text-[28px] font-bold leading-tight bg-gradient-to-r from-[#3B1FA8] via-[#1A0A3E] to-[#3B1FA8] bg-clip-text text-transparent">
+              Research & Trade Ideas
+            </h1>
+            <p className="text-sm text-ink-3 font-body mt-0.5 max-w-xl">
+              Analyses de marché et idées de structuration basées sur des données financières en temps réel.
+            </p>
+          </div>
+        </div>
+        <div className="gradient-bar h-[2px] rounded-full mt-5 opacity-60" />
       </div>
 
       {/* ── Featured Carousel ───────────────────────────────────────── */}
-      <div className="bg-gradient-to-br from-white via-white to-violet-ghost/30 rounded-xl border border-border/80 p-6 mb-6 shadow-sm hover:shadow-card transition-shadow duration-300">
-        <div className="flex items-center gap-6">
-          <button
-            onClick={() => setFeaturedIndex((i) => Math.max(0, i - 1))}
-            disabled={featuredIndex === 0}
-            className="shrink-0 w-8 h-8 rounded-full border border-border/80 flex items-center justify-center text-ink-3 hover:text-violet hover:border-violet hover:shadow-md hover:scale-110 transition-all duration-200 disabled:opacity-30"
-          >
-            <ChevronLeft size={16} />
-          </button>
+      <div className="relative bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 ring-1 ring-black/[0.03] overflow-hidden mb-6 shadow-sm hover:shadow-lg hover:shadow-violet/5 transition-all duration-300">
+        <div className="absolute top-0 left-0 right-0 h-[3px] rounded-b-full opacity-80" style={{ background: 'linear-gradient(90deg, #3B1FA8, #5B3FD4, #3D63F5)' }} />
+        <div className="p-6">
+          <div className="flex items-center gap-6">
+            <button
+              onClick={() => setFeaturedIndex((i) => Math.max(0, i - 1))}
+              disabled={featuredIndex === 0}
+              className={cn(
+                'shrink-0 w-9 h-9 rounded-xl border border-border/60 flex items-center justify-center',
+                'text-ink-3 hover:text-[#3B1FA8] hover:border-[#3B1FA8] hover:bg-[#3B1FA8]/5',
+                'hover:shadow-md hover:scale-110 transition-all duration-200 disabled:opacity-30 disabled:hover:scale-100',
+              )}
+            >
+              <ChevronLeft size={16} />
+            </button>
 
-          <div className="flex-1 text-center">
-            <p className="text-[11px] text-violet font-semibold font-body uppercase tracking-wider mb-2">
-              {formatDate(currentFeatured.date)}
-            </p>
-            <h2 className="font-display text-xl font-bold text-ink leading-snug mb-1">
-              {currentFeatured.title}
-            </h2>
-            <p className="text-sm text-ink-3 font-body">{currentFeatured.subtitle}</p>
-            <p className="font-display text-2xl font-bold bg-gradient-to-r from-violet to-teal bg-clip-text text-transparent mt-2 drop-shadow-sm">
-              {currentFeatured.returnPct}%
-            </p>
+            <div className="flex-1 text-center">
+              <p className="text-[10px] text-[#3B1FA8] font-bold font-body uppercase tracking-[0.2em] mb-2">
+                {formatDate(currentFeatured.date)}
+              </p>
+              <h2 className="font-display text-xl font-bold text-ink leading-snug mb-1">
+                {currentFeatured.title}
+              </h2>
+              <p className="text-[13px] text-ink-3 font-body">{currentFeatured.subtitle}</p>
+              <p className="font-display text-3xl font-bold bg-gradient-to-r from-[#3B1FA8] to-[#00B894] bg-clip-text text-transparent mt-2">
+                {currentFeatured.returnPct}%
+              </p>
+            </div>
+
+            <button
+              onClick={() => setFeaturedIndex((i) => Math.min(TRADE_IDEAS.length - 1, i + 1))}
+              disabled={featuredIndex === TRADE_IDEAS.length - 1}
+              className={cn(
+                'shrink-0 w-9 h-9 rounded-xl border border-border/60 flex items-center justify-center',
+                'text-ink-3 hover:text-[#3B1FA8] hover:border-[#3B1FA8] hover:bg-[#3B1FA8]/5',
+                'hover:shadow-md hover:scale-110 transition-all duration-200 disabled:opacity-30 disabled:hover:scale-100',
+              )}
+            >
+              <ChevronRight size={16} />
+            </button>
+
+            <div className="shrink-0 flex flex-col gap-2 border-l border-border/40 pl-6">
+              <button className={cn(
+                'flex items-center gap-2 text-[12px] text-ink-3 font-body font-medium',
+                'hover:text-[#3B1FA8] hover:translate-x-0.5 transition-all duration-200',
+              )}>
+                <Download size={14} />
+                Télécharger
+              </button>
+              <button className={cn(
+                'flex items-center gap-2 text-[12px] text-ink-3 font-body font-medium',
+                'hover:text-[#3B1FA8] hover:translate-x-0.5 transition-all duration-200',
+              )}>
+                <Share2 size={14} />
+                Partager
+              </button>
+            </div>
           </div>
 
-          <button
-            onClick={() => setFeaturedIndex((i) => Math.min(TRADE_IDEAS.length - 1, i + 1))}
-            disabled={featuredIndex === TRADE_IDEAS.length - 1}
-            className="shrink-0 w-8 h-8 rounded-full border border-border/80 flex items-center justify-center text-ink-3 hover:text-violet hover:border-violet hover:shadow-md hover:scale-110 transition-all duration-200 disabled:opacity-30"
-          >
-            <ChevronRight size={16} />
-          </button>
-
-          <div className="shrink-0 flex flex-col gap-2 border-l border-border/60 pl-6">
-            <button className="flex items-center gap-2 text-[12px] text-ink-3 hover:text-violet hover:translate-x-0.5 transition-all duration-200 font-body">
-              <Download size={14} />
-              Télécharger
-            </button>
-            <button className="flex items-center gap-2 text-[12px] text-ink-3 hover:text-violet hover:translate-x-0.5 transition-all duration-200 font-body">
-              <Share2 size={14} />
-              Partager
-            </button>
+          {/* Carousel dots */}
+          <div className="flex items-center justify-center gap-1.5 mt-4">
+            {TRADE_IDEAS.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setFeaturedIndex(i)}
+                className={cn(
+                  'rounded-full transition-all duration-200',
+                  i === featuredIndex
+                    ? 'w-6 h-1.5 bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4]'
+                    : 'w-1.5 h-1.5 bg-ink-3/20 hover:bg-ink-3/40',
+                )}
+              />
+            ))}
           </div>
         </div>
       </div>
 
       {/* ── Search & Filters ────────────────────────────────────────── */}
       <div className="flex items-center gap-3 mb-6 flex-wrap">
-        <div className="relative flex-1 min-w-[200px] max-w-[300px]">
+        <div className="relative flex-1 min-w-[200px] max-w-[320px]">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-3 pointer-events-none" />
           <input
             type="search"
@@ -370,21 +413,23 @@ export default function ResearchPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Rechercher une idée de trade..."
             className={cn(
-              'w-full h-9 rounded-lg border border-border/80 bg-white/80 backdrop-blur-sm pl-9 pr-3 text-[13px] font-body text-ink shadow-sm',
-              'placeholder:text-ink-3/60 transition-all duration-200',
-              'focus:outline-none focus:ring-2 focus:ring-violet/30 focus:border-violet focus:shadow-md',
+              'w-full h-10 rounded-xl border border-border/60 bg-white/80 dark:bg-white/10 backdrop-blur-sm pl-9 pr-4',
+              'text-[13px] font-body text-ink shadow-sm',
+              'placeholder:text-ink-3/50 transition-all duration-200',
+              'focus:outline-none focus:ring-2 focus:ring-[#3B1FA8]/15 focus:border-[#3B1FA8] focus:shadow-md focus:shadow-violet/5',
             )}
           />
         </div>
 
-        <div className="flex items-center gap-1 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-wrap">
           <button
             onClick={() => setSelectedCategory('')}
             className={cn(
-              'px-3 py-1.5 rounded-full text-[11px] font-semibold font-body transition-all duration-200 hover:scale-105 active:scale-95',
+              'px-3.5 py-2 rounded-xl text-[11px] font-semibold font-body transition-all duration-200',
+              'hover:scale-[1.03] active:scale-[0.97]',
               !selectedCategory
-                ? 'bg-gradient-to-r from-violet to-violet-dark text-white shadow-sm'
-                : 'bg-white border border-border/80 text-ink-3 hover:text-ink hover:shadow-sm',
+                ? 'bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] text-white shadow-md shadow-violet/20'
+                : 'bg-white/80 dark:bg-white/10 border border-border/60 text-ink-3 hover:text-ink hover:shadow-sm hover:border-violet/30',
             )}
           >
             Tous
@@ -394,14 +439,15 @@ export default function ResearchPage() {
               key={key}
               onClick={() => setSelectedCategory(selectedCategory === key ? '' : key)}
               className={cn(
-                'px-3 py-1.5 rounded-full text-[11px] font-semibold font-body transition-all duration-200 border hover:scale-105 active:scale-95',
+                'px-3.5 py-2 rounded-xl text-[11px] font-semibold font-body transition-all duration-200 border',
+                'hover:scale-[1.03] active:scale-[0.97]',
                 selectedCategory === key
-                  ? 'text-white border-transparent shadow-sm'
-                  : 'bg-white border-border/80 text-ink-3 hover:text-ink hover:shadow-sm',
+                  ? 'text-white border-transparent shadow-md'
+                  : 'bg-white/80 dark:bg-white/10 border-border/60 text-ink-3 hover:text-ink hover:shadow-sm',
               )}
               style={
                 selectedCategory === key
-                  ? { backgroundColor: color, borderColor: color }
+                  ? { backgroundColor: color, borderColor: color, boxShadow: `0 4px 12px ${color}33` }
                   : undefined
               }
             >
@@ -414,7 +460,7 @@ export default function ResearchPage() {
       {/* ── Content: Grid + Preview ─────────────────────────────────── */}
       <div className="flex gap-6">
         {/* ── Card Grid (left) ─────────────────────────────────── */}
-        <div className="w-[340px] shrink-0">
+        <div className="w-[360px] shrink-0">
           <div className="flex flex-col gap-3">
             {filteredIdeas.map((idea) => {
               const cat = CATEGORY_LABELS[idea.category];
@@ -424,25 +470,26 @@ export default function ResearchPage() {
                   key={idea.id}
                   onClick={() => setSelectedIdea(idea)}
                   className={cn(
-                    'text-left bg-white rounded-xl border overflow-hidden transition-all duration-300 group',
-                    'hover:shadow-lg hover:-translate-y-1 hover:border-violet/40',
+                    'group text-left bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border ring-1 ring-black/[0.03]',
+                    'overflow-hidden transition-all duration-200',
+                    'hover:shadow-lg hover:shadow-violet/5 hover:-translate-y-0.5 hover:border-violet/40',
                     isSelected
-                      ? 'border-violet shadow-lg ring-2 ring-violet/20 bg-gradient-to-r from-white to-violet-ghost/40'
-                      : 'border-border/80 shadow-sm',
+                      ? 'border-[#3B1FA8] shadow-lg ring-[#3B1FA8]/20 bg-gradient-to-r from-white to-[#3B1FA8]/3 dark:from-white/5 dark:to-[#3B1FA8]/5'
+                      : 'border-border/60 shadow-sm',
                   )}
                 >
-                  <div className="flex gap-3 p-3">
+                  <div className="flex gap-3 p-3.5">
                     {/* Color accent */}
                     <div
-                      className="w-16 h-16 rounded-lg shrink-0 flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all duration-300"
+                      className="w-16 h-16 rounded-xl shrink-0 flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all duration-200"
                       style={{ background: `linear-gradient(135deg, ${idea.imageColor}, ${idea.imageColor}88)` }}
                     >
-                      <TrendingUp size={20} className="text-white/60 group-hover:text-white/90 transition-colors duration-300" />
+                      <TrendingUp size={20} className="text-white/60 group-hover:text-white/90 transition-colors duration-200" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 mb-1">
                         <span
-                          className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold text-white"
+                          className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[8px] font-bold text-white shadow-sm"
                           style={{ backgroundColor: cat?.color }}
                         >
                           {cat?.label}
@@ -454,7 +501,7 @@ export default function ResearchPage() {
                       </h3>
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] text-ink-3 font-body truncate">{idea.underlying}</span>
-                        <span className="text-[13px] font-bold text-violet font-display ml-2 shrink-0">{idea.returnPct}%</span>
+                        <span className="text-[14px] font-bold text-[#3B1FA8] font-display ml-2 shrink-0">{idea.returnPct}%</span>
                       </div>
                     </div>
                   </div>
@@ -467,7 +514,7 @@ export default function ResearchPage() {
         {/* ── Preview Panel (right) ────────────────────────────── */}
         <div className="flex-1 min-w-0">
           {selectedIdea ? (
-            <div className="bg-white rounded-xl border border-border/80 overflow-hidden shadow-sm">
+            <div className="relative bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 ring-1 ring-black/[0.03] overflow-hidden shadow-sm">
               {/* Preview Header */}
               <div
                 className="px-6 py-6 text-white relative overflow-hidden"
@@ -481,7 +528,7 @@ export default function ResearchPage() {
                 </div>
                 <div className="relative z-10">
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/20 text-white">
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white/20 text-white backdrop-blur-sm">
                       {CATEGORY_LABELS[selectedIdea.category]?.label}
                     </span>
                     <span className="text-[11px] text-white/70 font-body">
@@ -504,7 +551,9 @@ export default function ResearchPage() {
                 {/* Thesis */}
                 <div>
                   <div className="flex items-center gap-2 mb-2">
-                    <FileText size={15} className="text-violet" />
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-[#3B1FA8]/8">
+                      <FileText size={14} className="text-[#3B1FA8]" />
+                    </div>
                     <h3 className="font-display text-sm font-bold text-ink">Thèse d&apos;investissement</h3>
                   </div>
                   <p className="text-[13px] text-ink-2 font-body leading-relaxed">
@@ -515,18 +564,20 @@ export default function ResearchPage() {
                 {/* Key Metrics */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                   {selectedIdea.analysis.keyMetrics.map((m, i) => (
-                    <div key={i} className="bg-surface rounded-lg p-3 hover:bg-violet-ghost/50 hover:shadow-sm transition-all duration-200 border border-transparent hover:border-violet/10">
+                    <div key={i} className="p-3 rounded-xl bg-surface-2/40 border border-border/30 hover:bg-[#3B1FA8]/3 hover:border-[#3B1FA8]/10 hover:shadow-sm transition-all duration-200">
                       <span className="text-[9px] uppercase tracking-[0.15em] text-ink-3 font-bold block mb-1">{m.label}</span>
-                      <span className="text-[14px] font-bold text-violet font-display">{m.value}</span>
+                      <span className="text-[14px] font-bold text-[#3B1FA8] font-display">{m.value}</span>
                     </div>
                   ))}
                 </div>
 
                 {/* Structure */}
-                <div className="bg-gradient-to-br from-violet-ghost to-violet-ghost/40 rounded-lg p-4 border border-violet/10 shadow-sm">
+                <div className="bg-gradient-to-br from-[#3B1FA8]/5 to-[#3B1FA8]/2 rounded-xl p-4 border border-[#3B1FA8]/10 shadow-sm">
                   <div className="flex items-center gap-2 mb-2">
-                    <Target size={14} className="text-violet" />
-                    <span className="text-[12px] font-bold text-violet font-body">Structure proposée</span>
+                    <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-[#3B1FA8]/10">
+                      <Target size={12} className="text-[#3B1FA8]" />
+                    </div>
+                    <span className="text-[12px] font-bold text-[#3B1FA8] font-body">Structure proposée</span>
                   </div>
                   <p className="text-[12px] text-ink-2 font-body leading-relaxed">
                     {selectedIdea.analysis.structureDetails}
@@ -535,29 +586,33 @@ export default function ResearchPage() {
 
                 {/* Catalysts + Risks */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Zap size={14} className="text-teal" />
+                  <div className="bg-white/60 dark:bg-white/5 rounded-xl p-4 border border-border/30">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-[#00B894]/10">
+                        <Zap size={12} className="text-[#00B894]" />
+                      </div>
                       <span className="text-[12px] font-bold text-ink font-body">Catalyseurs</span>
                     </div>
-                    <ul className="flex flex-col gap-1.5">
+                    <ul className="flex flex-col gap-2">
                       {selectedIdea.analysis.catalysts.map((c, i) => (
-                        <li key={i} className="text-[11px] text-ink-2 font-body flex items-start gap-1.5">
-                          <span className="text-teal mt-0.5 shrink-0">•</span>
+                        <li key={i} className="text-[11px] text-ink-2 font-body flex items-start gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#00B894] mt-1.5 shrink-0" />
                           {c}
                         </li>
                       ))}
                     </ul>
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <AlertTriangle size={14} className="text-gold" />
+                  <div className="bg-white/60 dark:bg-white/5 rounded-xl p-4 border border-border/30">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-[#D4A017]/10">
+                        <AlertTriangle size={12} className="text-[#D4A017]" />
+                      </div>
                       <span className="text-[12px] font-bold text-ink font-body">Risques</span>
                     </div>
-                    <ul className="flex flex-col gap-1.5">
+                    <ul className="flex flex-col gap-2">
                       {selectedIdea.analysis.risks.map((r, i) => (
-                        <li key={i} className="text-[11px] text-ink-2 font-body flex items-start gap-1.5">
-                          <span className="text-gold mt-0.5 shrink-0">•</span>
+                        <li key={i} className="text-[11px] text-ink-2 font-body flex items-start gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#D4A017] mt-1.5 shrink-0" />
                           {r}
                         </li>
                       ))}
@@ -566,14 +621,14 @@ export default function ResearchPage() {
                 </div>
 
                 {/* Sources */}
-                <div className="border-t border-border/60 pt-4">
-                  <div className="flex items-center gap-2 mb-2">
+                <div className="border-t border-border/40 pt-5">
+                  <div className="flex items-center gap-2 mb-3">
                     <ExternalLink size={13} className="text-ink-3" />
-                    <span className="text-[10px] uppercase tracking-wider text-ink-3 font-bold">Sources</span>
+                    <span className="text-[10px] uppercase tracking-[0.2em] text-ink-3 font-bold">Sources</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {selectedIdea.analysis.sources.map((s, i) => (
-                      <span key={i} className="inline-flex items-center px-2 py-1 rounded-md bg-surface text-[10px] text-ink-3 font-body hover:bg-violet-ghost hover:text-violet/80 transition-colors duration-200 cursor-default">
+                      <span key={i} className="inline-flex items-center px-2.5 py-1.5 rounded-lg bg-surface-2/40 border border-border/30 text-[10px] text-ink-3 font-body hover:bg-[#3B1FA8]/3 hover:text-[#3B1FA8]/80 hover:border-[#3B1FA8]/10 transition-all duration-200 cursor-default">
                         {s}
                       </span>
                     ))}
@@ -582,11 +637,20 @@ export default function ResearchPage() {
 
                 {/* Actions */}
                 <div className="flex items-center gap-3 pt-2">
-                  <button className="h-9 px-4 rounded-lg bg-gradient-to-r from-violet to-violet-dark text-white text-[12px] font-semibold flex items-center gap-2 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
+                  <button className={cn(
+                    'h-10 px-5 rounded-xl font-body text-[12px] font-semibold inline-flex items-center gap-2',
+                    'bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] text-white shadow-md shadow-violet/20',
+                    'hover:shadow-lg hover:shadow-violet/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
+                  )}>
                     <Download size={13} />
                     Télécharger le PDF
                   </button>
-                  <button className="h-9 px-4 rounded-lg border border-border/80 text-ink-3 text-[12px] font-semibold flex items-center gap-2 hover:text-violet hover:border-violet hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
+                  <button className={cn(
+                    'h-10 px-5 rounded-xl border border-border/60 bg-white/80 dark:bg-white/10 backdrop-blur-sm',
+                    'font-body text-[12px] font-semibold text-ink-2 inline-flex items-center gap-2',
+                    'hover:border-violet hover:text-violet hover:bg-violet-ghost hover:shadow-md hover:shadow-violet/10',
+                    'hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
+                  )}>
                     <Share2 size={13} />
                     Partager
                   </button>
@@ -594,8 +658,11 @@ export default function ResearchPage() {
               </div>
             </div>
           ) : (
-            <div className="bg-gradient-to-br from-white to-violet-ghost/20 rounded-xl border border-border/80 p-12 flex flex-col items-center justify-center gap-4 shadow-sm">
-              <FileText size={40} className="text-ink-3/30 animate-pulse" />
+            <div className="relative bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 ring-1 ring-black/[0.03] p-12 flex flex-col items-center justify-center gap-4 shadow-sm overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-[3px] rounded-b-full opacity-40" style={{ background: 'linear-gradient(90deg, #3B1FA8, #5B3FD4, #3D63F5)' }} />
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#3B1FA8]/10 to-[#5B3FD4]/5 flex items-center justify-center">
+                <FileText size={28} className="text-ink-3/30" />
+              </div>
               <p className="text-sm text-ink-3 font-body">
                 Sélectionnez une idée de trade pour voir l&apos;aperçu.
               </p>

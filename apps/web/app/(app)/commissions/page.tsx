@@ -1,7 +1,20 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Wallet, TrendingUp, Clock, CheckCircle2, Download, FileSpreadsheet, Filter } from 'lucide-react';
+import {
+  Wallet,
+  TrendingUp,
+  Clock,
+  CheckCircle2,
+  Download,
+  FileSpreadsheet,
+  Filter,
+  CircleDollarSign,
+  ArrowUpRight,
+  BarChart3,
+  PieChart,
+} from 'lucide-react';
+import { cn } from '@/lib/cn';
 import { useCommissionSummary } from '@/hooks/use-commissions';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -48,17 +61,82 @@ function formatEur(n: number) {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n);
 }
 
-// ─── Mini Bar Chart ──────────────────────────────────────────────────────────
+// ─── KPI Card ───────────────────────────────────────────────────────────────
+
+function KpiCard({ icon, label, value, accent, subtitle }: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  accent: string;
+  subtitle?: string;
+}) {
+  return (
+    <div className={cn(
+      'group relative rounded-xl border border-border/60 p-5 flex flex-col gap-3',
+      'bg-white/80 dark:bg-white/5 backdrop-blur-md',
+      'shadow-sm hover:shadow-md transition-all duration-200',
+      'ring-1 ring-black/[0.03] dark:ring-white/[0.06]',
+    )}>
+      <div
+        className="absolute top-0 left-0 right-0 h-[3px] rounded-t-xl opacity-60 group-hover:opacity-100 transition-opacity duration-200"
+        style={{ background: `linear-gradient(90deg, ${accent}, ${accent}80)` }}
+      />
+      <div className="flex items-center gap-2.5">
+        <div
+          className="w-9 h-9 rounded-full flex items-center justify-center ring-1 ring-black/[0.04] dark:ring-white/[0.08]"
+          style={{ background: `${accent}12` }}
+        >
+          {icon}
+        </div>
+        <span className="text-[10px] uppercase tracking-[0.2em] text-ink-3 dark:text-ink-3/80 font-semibold font-body">{label}</span>
+      </div>
+      <div>
+        <span className="font-display text-2xl font-bold text-ink dark:text-white leading-none tracking-tight [font-variant-numeric:tabular-nums]">
+          {value}
+        </span>
+        {subtitle && (
+          <p className="text-[10px] text-ink-3 dark:text-white/40 font-body mt-1">{subtitle}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Premium Table Head ─────────────────────────────────────────────────────
+
+function PremiumTh({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <th className={cn(
+      'px-4 py-3.5 text-[10px] uppercase tracking-[0.18em] font-bold',
+      'text-[#1A0A3E]/55 dark:text-white/50 font-body',
+      className,
+    )}>
+      {children}
+    </th>
+  );
+}
+
+// ─── Quarterly Bar Chart ────────────────────────────────────────────────────
 
 function QuarterlyChart({ data }: { data: { period: string; amount: number }[] }) {
   const max = Math.max(...data.map(d => d.amount), 1);
   return (
-    <div className="flex items-end gap-2 h-32">
+    <div className="flex items-end gap-3 h-36">
       {data.map((d) => (
-        <div key={d.period} className="flex-1 flex flex-col items-center gap-1">
-          <span className="text-[10px] font-mono text-ink-3">{formatEur(d.amount)}</span>
-          <div className="w-full rounded-t-md bg-violet transition-all duration-700" style={{ height: `${(d.amount / max) * 100}%`, minHeight: 4 }} />
-          <span className="text-[10px] text-ink-3">{d.period}</span>
+        <div key={d.period} className="flex-1 flex flex-col items-center gap-1.5 group/bar">
+          <span className="text-[10px] font-mono text-ink-3 dark:text-white/40 opacity-0 group-hover/bar:opacity-100 transition-opacity duration-200">
+            {formatEur(d.amount)}
+          </span>
+          <div
+            className={cn(
+              'w-full rounded-t-lg transition-all duration-500',
+              'bg-gradient-to-t from-[#3B1FA8] to-[#5B3FD4]',
+              'group-hover/bar:from-[#3B1FA8] group-hover/bar:to-[#7B5FE4]',
+              'group-hover/bar:shadow-md group-hover/bar:shadow-[#3B1FA8]/20',
+            )}
+            style={{ height: `${(d.amount / max) * 100}%`, minHeight: 6 }}
+          />
+          <span className="text-[10px] text-ink-3 dark:text-white/40 font-mono">{d.period}</span>
         </div>
       ))}
     </div>
@@ -72,36 +150,43 @@ function DonutChart({ segments }: { segments: { label: string; value: number; co
   if (total === 0) return null;
 
   let cumulative = 0;
-  const size = 120;
-  const strokeWidth = 20;
+  const size = 130;
+  const strokeWidth = 22;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
 
   return (
     <div className="flex items-center gap-6">
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="transform -rotate-90">
-        {segments.map((seg, i) => {
-          const pct = seg.value / total;
-          const offset = cumulative * circumference;
-          cumulative += pct;
-          return (
-            <circle
-              key={i}
-              cx={size / 2} cy={size / 2} r={radius}
-              fill="none" stroke={seg.color} strokeWidth={strokeWidth}
-              strokeDasharray={`${pct * circumference} ${circumference}`}
-              strokeDashoffset={-offset}
-              className="transition-all duration-700"
-            />
-          );
-        })}
-      </svg>
-      <div className="flex flex-col gap-1.5">
+      <div className="relative">
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="transform -rotate-90">
+          {segments.map((seg, i) => {
+            const pct = seg.value / total;
+            const offset = cumulative * circumference;
+            cumulative += pct;
+            return (
+              <circle
+                key={i}
+                cx={size / 2} cy={size / 2} r={radius}
+                fill="none" stroke={seg.color} strokeWidth={strokeWidth}
+                strokeDasharray={`${pct * circumference} ${circumference}`}
+                strokeDashoffset={-offset}
+                strokeLinecap="round"
+                className="transition-all duration-700"
+              />
+            );
+          })}
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-[10px] text-ink-3 dark:text-white/40 font-body">Total</span>
+          <span className="text-sm font-display font-bold text-ink dark:text-white">{formatEur(total)}</span>
+        </div>
+      </div>
+      <div className="flex flex-col gap-2">
         {segments.map((seg, i) => (
-          <div key={i} className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: seg.color }} />
-            <span className="text-xs text-ink-3">{seg.label}</span>
-            <span className="text-xs font-mono font-semibold text-ink ml-auto">{formatEur(seg.value)}</span>
+          <div key={i} className="flex items-center gap-2.5">
+            <span className="w-2.5 h-2.5 rounded-full ring-1 ring-black/[0.04] dark:ring-white/10" style={{ backgroundColor: seg.color }} />
+            <span className="text-xs text-ink-3 dark:text-white/50 font-body min-w-[80px]">{seg.label}</span>
+            <span className="text-xs font-mono font-semibold text-ink dark:text-white ml-auto tabular-nums">{formatEur(seg.value)}</span>
           </div>
         ))}
       </div>
@@ -161,49 +246,106 @@ export default function CommissionsPage() {
   };
 
   return (
-    <div className="animate-fade-in">
-      <div className="flex items-center justify-between mb-6">
+    <div className="animate-fade-in space-y-6">
+      {/* ── Header ──────────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-[28px] font-bold text-ink">Commissions</h1>
-          <p className="text-sm text-ink-3 mt-1">Suivi et rapprochement de vos commissions</p>
+          <h1 className="font-display text-[28px] font-bold leading-tight bg-gradient-to-r from-[#3B1FA8] via-[#1A0A3E] to-[#3B1FA8] bg-clip-text text-transparent dark:from-white dark:via-[#C9BCFF] dark:to-white">
+            Commissions
+          </h1>
+          <p className="text-sm text-ink-3 dark:text-white/50 font-body mt-1">
+            Suivi et rapprochement de vos commissions
+          </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="md" onClick={handleExportCSV} className="flex items-center gap-2">
-            <Download size={15} /> Export CSV
-          </Button>
-          <Button variant="outline" size="md" onClick={handleExportExcel} className="flex items-center gap-2">
-            <FileSpreadsheet size={15} /> Export Excel
-          </Button>
+          <button
+            onClick={handleExportCSV}
+            className={cn(
+              'h-9 px-3.5 rounded-xl border border-border/60 dark:border-white/15',
+              'bg-white/80 dark:bg-white/5 backdrop-blur-sm text-ink-3 dark:text-white/60',
+              'text-[12px] font-medium font-body flex items-center gap-1.5',
+              'hover:border-[#3B1FA8]/40 hover:text-[#3B1FA8] dark:hover:text-[#C9BCFF]',
+              'hover:shadow-sm transition-all duration-200',
+            )}
+          >
+            <Download size={13} />
+            Export CSV
+          </button>
+          <button
+            onClick={handleExportExcel}
+            className={cn(
+              'h-9 px-3.5 rounded-xl border border-border/60 dark:border-white/15',
+              'bg-white/80 dark:bg-white/5 backdrop-blur-sm text-ink-3 dark:text-white/60',
+              'text-[12px] font-medium font-body flex items-center gap-1.5',
+              'hover:border-[#3B1FA8]/40 hover:text-[#3B1FA8] dark:hover:text-[#C9BCFF]',
+              'hover:shadow-sm transition-all duration-200',
+            )}
+          >
+            <FileSpreadsheet size={13} />
+            Export Excel
+          </button>
         </div>
       </div>
-      <div className="gradient-bar h-[2px] rounded-full mb-8 opacity-60" />
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {[
-          { label: 'Total cumule', value: formatEur(grandTotal), icon: Wallet, color: '#3B1FA8' },
-          { label: 'Verse', value: formatEur(totalPaid), icon: CheckCircle2, color: '#00B894' },
-          { label: 'A verser', value: formatEur(totalPayable), icon: Clock, color: '#D4A017' },
-          { label: 'Comptabilise', value: formatEur(totalAccrued), icon: TrendingUp, color: '#3D63F5' },
-        ].map(({ label, value, icon: Icon, color }) => (
-          <div key={label} className="bg-white rounded-xl border border-border/80 p-5 group hover:shadow-md transition-all">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-3" style={{ background: `${color}10` }}>
-              <Icon size={16} style={{ color }} />
+      <div className="h-px bg-gradient-to-r from-[#3B1FA8]/20 via-[#3B1FA8]/10 to-transparent dark:from-[#3B1FA8]/30 dark:via-[#3B1FA8]/10" />
+
+      {/* ── KPI Cards ──────────────────────────────────────────────── */}
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <KpiCard
+          icon={<CircleDollarSign size={16} className="text-[#3B1FA8]" />}
+          label="Total cumule"
+          value={formatEur(grandTotal)}
+          accent="#3B1FA8"
+          subtitle="Toutes periodes confondues"
+        />
+        <KpiCard
+          icon={<CheckCircle2 size={16} className="text-[#00B894]" />}
+          label="Verse"
+          value={formatEur(totalPaid)}
+          accent="#00B894"
+        />
+        <KpiCard
+          icon={<Clock size={16} className="text-[#D4A017]" />}
+          label="A verser"
+          value={formatEur(totalPayable)}
+          accent="#D4A017"
+        />
+        <KpiCard
+          icon={<TrendingUp size={16} className="text-[#3D63F5]" />}
+          label="Comptabilise"
+          value={formatEur(totalAccrued)}
+          accent="#3D63F5"
+        />
+      </section>
+
+      {/* ── Charts ─────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className={cn(
+          'rounded-xl border border-border/60 dark:border-white/10 p-5',
+          'bg-white/90 dark:bg-white/5 backdrop-blur-sm',
+          'ring-1 ring-black/[0.04] dark:ring-white/[0.06]',
+          'shadow-sm hover:shadow-md transition-shadow duration-200',
+        )}>
+          <div className="flex items-center gap-2 mb-5">
+            <div className="w-7 h-7 rounded-lg bg-[#3B1FA8]/8 dark:bg-[#3B1FA8]/20 flex items-center justify-center">
+              <BarChart3 size={14} className="text-[#3B1FA8] dark:text-[#C9BCFF]" />
             </div>
-            <span className="text-[10px] uppercase tracking-widest text-ink-3 font-semibold">{label}</span>
-            <div className="font-display text-2xl font-bold text-ink mt-0.5">{value}</div>
+            <h3 className="font-display text-sm font-bold text-ink dark:text-white">Evolution trimestrielle</h3>
           </div>
-        ))}
-      </div>
-
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white rounded-xl border border-border/80 p-5">
-          <h3 className="font-display text-sm font-bold text-ink mb-4">Evolution trimestrielle</h3>
           <QuarterlyChart data={quarterlyData} />
         </div>
-        <div className="bg-white rounded-xl border border-border/80 p-5">
-          <h3 className="font-display text-sm font-bold text-ink mb-4">Repartition par statut</h3>
+        <div className={cn(
+          'rounded-xl border border-border/60 dark:border-white/10 p-5',
+          'bg-white/90 dark:bg-white/5 backdrop-blur-sm',
+          'ring-1 ring-black/[0.04] dark:ring-white/[0.06]',
+          'shadow-sm hover:shadow-md transition-shadow duration-200',
+        )}>
+          <div className="flex items-center gap-2 mb-5">
+            <div className="w-7 h-7 rounded-lg bg-[#3B1FA8]/8 dark:bg-[#3B1FA8]/20 flex items-center justify-center">
+              <PieChart size={14} className="text-[#3B1FA8] dark:text-[#C9BCFF]" />
+            </div>
+            <h3 className="font-display text-sm font-bold text-ink dark:text-white">Repartition par statut</h3>
+          </div>
           <DonutChart segments={[
             { label: 'Verse', value: totalPaid, color: '#00B894' },
             { label: 'A verser', value: totalPayable, color: '#D4A017' },
@@ -212,53 +354,121 @@ export default function CommissionsPage() {
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex items-center gap-2 mb-4">
-        <Filter size={14} className="text-ink-3" />
-        <button onClick={() => setStatusFilter(null)} className={`text-xs px-3 py-1 rounded-full border transition ${!statusFilter ? 'bg-violet text-white border-violet' : 'border-border text-ink-3 hover:border-violet'}`}>Tous</button>
+      {/* ── Filters ────────────────────────────────────────────────── */}
+      <div className="flex items-center gap-2 flex-wrap rounded-xl bg-[#F8F6FF]/60 dark:bg-white/[0.03] p-2.5 border border-border/40 dark:border-white/8">
+        <div className="w-7 h-7 rounded-lg bg-[#3B1FA8]/8 dark:bg-[#3B1FA8]/20 flex items-center justify-center mr-1">
+          <Filter size={13} className="text-[#3B1FA8] dark:text-[#C9BCFF]" />
+        </div>
+
+        <button
+          onClick={() => setStatusFilter(null)}
+          className={cn(
+            'text-[11px] px-3 py-1.5 rounded-xl font-semibold font-body border transition-all duration-200',
+            !statusFilter
+              ? 'bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] text-white border-transparent shadow-sm'
+              : 'border-border/60 dark:border-white/15 text-ink-3 dark:text-white/50 hover:text-ink dark:hover:text-white/80 hover:border-[#3B1FA8]/40',
+          )}
+        >
+          Tous
+        </button>
         {['PAID', 'PAYABLE', 'ACCRUED'].map(s => (
-          <button key={s} onClick={() => setStatusFilter(s)} className={`text-xs px-3 py-1 rounded-full border transition ${statusFilter === s ? 'bg-violet text-white border-violet' : 'border-border text-ink-3 hover:border-violet'}`}>
+          <button
+            key={s}
+            onClick={() => setStatusFilter(s)}
+            className={cn(
+              'text-[11px] px-3 py-1.5 rounded-xl font-semibold font-body border transition-all duration-200',
+              statusFilter === s
+                ? 'bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] text-white border-transparent shadow-sm'
+                : 'border-border/60 dark:border-white/15 text-ink-3 dark:text-white/50 hover:text-ink dark:hover:text-white/80 hover:border-[#3B1FA8]/40',
+            )}
+          >
             {STATUS_LABEL[s]}
           </button>
         ))}
-        <span className="mx-2 text-border">|</span>
-        <button onClick={() => setPeriodFilter(null)} className={`text-xs px-3 py-1 rounded-full border transition ${!periodFilter ? 'bg-ink text-white border-ink' : 'border-border text-ink-3 hover:border-ink'}`}>Toutes periodes</button>
+
+        <span className="mx-1 w-px h-5 bg-border/60 dark:bg-white/10" />
+
+        <button
+          onClick={() => setPeriodFilter(null)}
+          className={cn(
+            'text-[11px] px-3 py-1.5 rounded-xl font-semibold font-body border transition-all duration-200',
+            !periodFilter
+              ? 'bg-[#1A0A3E] dark:bg-white/15 text-white border-transparent shadow-sm'
+              : 'border-border/60 dark:border-white/15 text-ink-3 dark:text-white/50 hover:text-ink dark:hover:text-white/80 hover:border-[#1A0A3E]/40',
+          )}
+        >
+          Toutes periodes
+        </button>
         {periods.map(p => (
-          <button key={p} onClick={() => setPeriodFilter(p)} className={`text-xs px-3 py-1 rounded-full border transition ${periodFilter === p ? 'bg-ink text-white border-ink' : 'border-border text-ink-3 hover:border-ink'}`}>{p}</button>
+          <button
+            key={p}
+            onClick={() => setPeriodFilter(p)}
+            className={cn(
+              'text-[11px] px-3 py-1.5 rounded-xl font-semibold font-body border transition-all duration-200',
+              periodFilter === p
+                ? 'bg-[#1A0A3E] dark:bg-white/15 text-white border-transparent shadow-sm'
+                : 'border-border/60 dark:border-white/15 text-ink-3 dark:text-white/50 hover:text-ink dark:hover:text-white/80 hover:border-[#1A0A3E]/40',
+            )}
+          >
+            {p}
+          </button>
         ))}
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-xl border border-border/80 overflow-hidden">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Produit</th>
-              <th>Type</th>
-              <th className="text-right">Taux</th>
-              <th className="text-right">Montant</th>
-              <th className="text-center">Statut</th>
-              <th>Periode</th>
-              <th className="text-right">Date versement</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map(c => (
-              <tr key={c.id}>
-                <td className="font-medium text-ink">{c.productName}</td>
-                <td className="text-ink-3">{TYPE_LABELS[c.type] ?? c.type}</td>
-                <td className="text-right font-mono">{c.ratePct}%</td>
-                <td className="text-right font-mono font-semibold text-ink">{formatEur(c.amount)}</td>
-                <td className="text-center"><Badge variant={STATUS_VARIANT[c.status] ?? 'muted'}>{STATUS_LABEL[c.status]}</Badge></td>
-                <td className="text-ink-3 font-mono text-xs">{c.period}</td>
-                <td className="text-right text-ink-3 text-xs">{c.paidDate ?? '—'}</td>
+      {/* ── Table ──────────────────────────────────────────────────── */}
+      <div className={cn(
+        'rounded-xl border border-border/60 dark:border-white/10 overflow-hidden',
+        'bg-white/90 dark:bg-white/5 backdrop-blur-sm',
+        'ring-1 ring-black/[0.04] dark:ring-white/[0.06]',
+        'shadow-sm hover:shadow-md transition-shadow duration-200',
+      )}>
+        <div className="overflow-x-auto">
+          <table className="w-full text-[13px] font-body">
+            <thead>
+              <tr className="border-b border-border/60 dark:border-white/10 bg-gradient-to-r from-[#F8F6FF]/60 to-[#F0ECFF]/30 dark:from-white/[0.02] dark:to-transparent">
+                <PremiumTh className="text-left">Produit</PremiumTh>
+                <PremiumTh className="text-left">Type</PremiumTh>
+                <PremiumTh className="text-right">Taux</PremiumTh>
+                <PremiumTh className="text-right">Montant</PremiumTh>
+                <PremiumTh className="text-center">Statut</PremiumTh>
+                <PremiumTh className="text-left">Periode</PremiumTh>
+                <PremiumTh className="text-right">Date versement</PremiumTh>
               </tr>
-            ))}
-          </tbody>
-        </table>
-        <div className="px-5 py-3 border-t border-border/60 flex items-center justify-between text-xs text-ink-3">
-          <span>{filtered.length} commission(s)</span>
-          <span className="font-mono font-semibold text-ink">Total: {formatEur(filtered.reduce((s, c) => s + c.amount, 0))}</span>
+            </thead>
+            <tbody>
+              {filtered.map(c => (
+                <tr
+                  key={c.id}
+                  className={cn(
+                    'border-b border-border/30 dark:border-white/5 last:border-0',
+                    'even:bg-[#F8F6FF]/30 dark:even:bg-white/[0.015]',
+                    'hover:bg-[#3B1FA8]/[0.04] dark:hover:bg-white/[0.04]',
+                    'transition-colors duration-200',
+                  )}
+                >
+                  <td className="px-4 py-3.5 font-medium text-ink dark:text-white">{c.productName}</td>
+                  <td className="px-4 py-3.5 text-ink-3 dark:text-white/50">{TYPE_LABELS[c.type] ?? c.type}</td>
+                  <td className="px-4 py-3.5 text-right font-mono tabular-nums text-ink dark:text-white/80">{c.ratePct}%</td>
+                  <td className="px-4 py-3.5 text-right font-mono font-semibold text-ink dark:text-white tabular-nums text-[14px] tracking-tight [font-variant-numeric:tabular-nums]">
+                    {formatEur(c.amount)}
+                  </td>
+                  <td className="px-4 py-3.5 text-center">
+                    <Badge variant={STATUS_VARIANT[c.status] ?? 'muted'}>{STATUS_LABEL[c.status]}</Badge>
+                  </td>
+                  <td className="px-4 py-3.5 text-ink-3 dark:text-white/40 font-mono text-xs tabular-nums">{c.period}</td>
+                  <td className="px-4 py-3.5 text-right text-ink-3 dark:text-white/40 text-xs font-mono">{c.paidDate ?? '--'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="px-5 py-3.5 border-t border-border/60 dark:border-white/10 flex items-center justify-between bg-gradient-to-r from-[#F8F6FF]/40 to-transparent dark:from-white/[0.02] dark:to-transparent">
+          <span className="text-[11px] text-ink-3 dark:text-white/40 font-body">
+            {filtered.length} commission{filtered.length > 1 ? 's' : ''}
+          </span>
+          <span className="font-mono font-bold text-sm text-ink dark:text-white tabular-nums [font-variant-numeric:tabular-nums]">
+            Total: {formatEur(filtered.reduce((s, c) => s + c.amount, 0))}
+          </span>
         </div>
       </div>
     </div>

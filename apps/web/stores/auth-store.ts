@@ -40,7 +40,7 @@ export const useAuthStore = create<AuthState>()(
         if (demoUser && demoUser.password === password) {
           const fakeToken = 'demo-token-' + Date.now();
           api.setToken(fakeToken);
-          set({
+          const userData = {
             user: {
               id: demoUser.id,
               email: demoUser.email,
@@ -52,7 +52,10 @@ export const useAuthStore = create<AuthState>()(
             token: fakeToken,
             refreshToken: 'demo-refresh',
             isDemo: true,
-          });
+          };
+          set(userData);
+          // Set cookie so middleware can read auth state (localStorage is not available in middleware)
+          document.cookie = `strickin-auth=${encodeURIComponent(JSON.stringify({ state: userData }))};path=/;max-age=${60 * 60 * 24 * 7};SameSite=Lax`;
           return;
         }
 
@@ -60,7 +63,9 @@ export const useAuthStore = create<AuthState>()(
         try {
           const { accessToken, refreshToken, user } = await api.login(email, password);
           api.setToken(accessToken);
-          set({ user, token: accessToken, refreshToken, isDemo: false });
+          const realData = { user, token: accessToken, refreshToken, isDemo: false };
+          set(realData);
+          document.cookie = `strickin-auth=${encodeURIComponent(JSON.stringify({ state: realData }))};path=/;max-age=${60 * 60 * 24 * 7};SameSite=Lax`;
           return;
         } catch {
           // API unreachable
@@ -72,6 +77,8 @@ export const useAuthStore = create<AuthState>()(
       logout: () => {
         api.setToken(null);
         set({ user: null, token: null, refreshToken: null, isDemo: false });
+        // Clear auth cookie
+        document.cookie = 'strickin-auth=;path=/;max-age=0';
       },
 
       hydrate: () => {

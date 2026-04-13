@@ -8,9 +8,9 @@ import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/stores/auth-store';
 
 const DEMO_ACCOUNTS = [
-  { label: 'Admin', email: 'admin@strickin.com', password: 'admin123' },
-  { label: 'CGP', email: 'cgp@demo.com', password: 'cgp123' },
-  { label: 'Assureur', email: 'assureur@cardiff.fr', password: 'assureur123' },
+  { label: 'Admin', email: 'admin@strickin.com', password: 'Strickin2025!' },
+  { label: 'CGP', email: 'cgp@demo.com', password: 'Strickin2025!' },
+  { label: 'Assureur', email: 'assureur@cardiff.fr', password: 'Strickin2025!' },
 ];
 
 export default function LoginPage() {

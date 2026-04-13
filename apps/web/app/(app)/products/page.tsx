@@ -18,6 +18,9 @@ import {
   TrendingUp,
   Eye,
   SlidersHorizontal,
+  PackageSearch,
+  ChevronDown,
+  Filter,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useFiltersStore } from '@/stores/filters-store';
@@ -78,6 +81,16 @@ const STATUS_BADGE: Record<string, { bg: string; text: string; label: string }> 
   MATURED: { bg: '#FFF0F2', text: '#C41F36', label: 'Échu' },
 };
 
+const SORT_OPTIONS: { value: SortField; label: string }[] = [
+  { value: 'name', label: 'Nom' },
+  { value: 'issuerName', label: 'Émetteur' },
+  { value: 'maturityDate', label: 'Échéance' },
+  { value: 'maxGainPct', label: 'Gain max' },
+  { value: 'couponPct', label: 'Coupon' },
+  { value: 'barrierCapPct', label: 'Barrière' },
+  { value: 'sri', label: 'SRI' },
+];
+
 type SortField = 'name' | 'issuerName' | 'maturityDate' | 'maxGainPct' | 'barrierCapPct' | 'sri' | 'couponPct';
 type SortDir = 'asc' | 'desc';
 type ViewFilter = 'all' | 'favorites' | 'recommended' | 'popular';
@@ -96,9 +109,9 @@ function formatPct(v: number | null | undefined) {
 // ─── Select Component ────────────────────────────────────────────────────────
 
 const selectCls = cn(
-  'h-9 rounded-lg border border-border/80 bg-white px-3 pr-8 text-[13px] font-body text-ink',
+  'h-9 rounded-lg border border-border/60 bg-white px-3 pr-8 text-[13px] font-body text-ink',
   'transition-all duration-150 cursor-pointer',
-  'focus:outline-none focus:ring-2 focus:ring-violet/30 focus:border-violet',
+  'focus:outline-none focus:ring-2 focus:ring-violet/20 focus:border-violet/40',
   'hover:border-border-2',
   "appearance-none bg-[url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"6\" fill=\"none\"><path d=\"M1 1l4 4 4-4\" stroke=\"%237B6FA0\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>')] bg-no-repeat bg-[right_10px_center]",
 );
@@ -107,7 +120,7 @@ const selectCls = cn(
 
 function SkeletonCard() {
   return (
-    <div className="bg-white border border-border/80 rounded-xl p-5 animate-pulse flex flex-col gap-3">
+    <div className="bg-white border border-border/60 rounded-xl p-5 animate-pulse flex flex-col gap-3">
       <div className="flex justify-between">
         <div className="h-5 w-20 bg-surface-2 rounded-md" />
         <div className="h-5 w-12 bg-surface-2 rounded-md" />
@@ -123,7 +136,7 @@ function SkeletonCard() {
 
 function SkeletonRow() {
   return (
-    <tr className="border-b border-border/50 animate-pulse">
+    <tr className="border-b border-border/30 animate-pulse">
       {Array.from({ length: 9 }).map((_, i) => (
         <td key={i} className="px-4 py-3.5">
           <div className="h-3.5 bg-surface-2 rounded w-full" />
@@ -173,9 +186,9 @@ function SortTh({
   );
 }
 
-// ─── View Filter Pill ────────────────────────────────────────────────────────
+// ─── Tab Pill ────────────────────────────────────────────────────────────────
 
-function FilterPill({
+function TabPill({
   label,
   icon: Icon,
   active,
@@ -192,20 +205,24 @@ function FilterPill({
     <button
       onClick={onClick}
       className={cn(
-        'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold font-body',
+        'inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[13px] font-semibold font-body',
         'transition-all duration-200 whitespace-nowrap',
         active
-          ? 'bg-violet text-white shadow-sm'
-          : 'bg-white border border-border/80 text-ink-3 hover:border-violet/40 hover:text-violet',
+          ? 'bg-violet text-white shadow-[0_2px_8px_rgba(53,53,196,0.25)]'
+          : 'text-ink-3 hover:text-ink hover:bg-surface-2 rounded-full',
       )}
     >
-      <Icon size={12} />
+      <Icon size={13} className={active ? 'text-white' : ''} />
       {label}
       {count != null && count > 0 && (
-        <span className={cn(
-          'inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full text-[9px] font-bold',
-          active ? 'bg-white/25 text-white' : 'bg-violet-ghost text-violet',
-        )}>
+        <span
+          className={cn(
+            'inline-flex items-center justify-center h-[18px] min-w-[18px] px-1 rounded-full text-[10px] font-bold leading-none',
+            active
+              ? 'bg-white/20 text-white'
+              : 'bg-violet/8 text-violet/70',
+          )}
+        >
           {count}
         </span>
       )}
@@ -304,28 +321,28 @@ export default function ProductsPage() {
   };
 
   return (
-    <div className="animate-fade-in">
-      {/* ── Header ──────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between mb-5">
+    <div className="animate-fade-in space-y-0">
+      {/* ── Page Header ────────────────────────────────────────────────── */}
+      <div className="flex items-start justify-between mb-1">
         <div>
           <h1 className="font-display text-[28px] font-bold text-ink leading-tight">
             Produits structurés
           </h1>
-          <p className="text-sm text-ink-3 font-body mt-1">
+          <p className="text-ink-2 text-sm font-body mt-1.5 max-w-lg">
             Découvrez, comparez et marquez votre intérêt sur les meilleurs produits du marché.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 pt-1">
           {/* Generate Recommendations */}
           <button
             onClick={() => generateRecs.mutate()}
             disabled={generateRecs.isPending}
             className={cn(
-              'h-9 px-3 rounded-lg border border-violet/30 bg-violet-ghost text-violet',
+              'h-9 px-4 rounded-full border border-violet/25 bg-violet-ghost text-violet',
               'text-[12px] font-semibold font-body',
-              'flex items-center gap-1.5 transition-all duration-150',
-              'hover:bg-violet/10 hover:border-violet/50',
+              'flex items-center gap-1.5 transition-all duration-200',
+              'hover:bg-violet/10 hover:border-violet/40 hover:shadow-sm',
               'disabled:opacity-50',
             )}
           >
@@ -333,13 +350,13 @@ export default function ProductsPage() {
             {generateRecs.isPending ? 'Analyse...' : 'Suggestions IA'}
           </button>
 
-          {/* Export button */}
+          {/* Export */}
           <button
             className={cn(
-              'h-9 px-3 rounded-lg border border-border/80 bg-white text-ink-3',
+              'h-9 px-4 rounded-full border border-border/60 bg-white text-ink-3',
               'text-[12px] font-medium font-body',
-              'flex items-center gap-1.5 transition-all duration-150',
-              'hover:border-violet hover:text-violet hover:bg-violet-ghost',
+              'flex items-center gap-1.5 transition-all duration-200',
+              'hover:border-violet/40 hover:text-violet hover:bg-violet-ghost hover:shadow-sm',
             )}
           >
             <Download size={13} />
@@ -347,61 +364,65 @@ export default function ProductsPage() {
           </button>
 
           {/* View toggle */}
-          <div className="flex items-center h-9 rounded-lg border border-border/80 bg-white overflow-hidden">
+          <div className="flex items-center h-9 rounded-full border border-border/60 bg-white overflow-hidden">
             <button
               onClick={() => setView('grid')}
               className={cn(
-                'h-full px-2.5 flex items-center justify-center transition-all duration-150',
+                'h-full px-3 flex items-center justify-center transition-all duration-200',
                 view === 'grid'
                   ? 'bg-violet text-white'
-                  : 'text-ink-3 hover:bg-surface-2',
+                  : 'text-ink-3 hover:bg-surface-2 hover:text-ink',
               )}
               title="Vue grille"
             >
-              <LayoutGrid size={15} />
+              <LayoutGrid size={14} />
             </button>
             <button
               onClick={() => setView('table')}
               className={cn(
-                'h-full px-2.5 flex items-center justify-center transition-all duration-150',
+                'h-full px-3 flex items-center justify-center transition-all duration-200',
                 view === 'table'
                   ? 'bg-violet text-white'
-                  : 'text-ink-3 hover:bg-surface-2',
+                  : 'text-ink-3 hover:bg-surface-2 hover:text-ink',
               )}
               title="Vue tableau"
             >
-              <List size={15} />
+              <List size={14} />
             </button>
           </div>
         </div>
       </div>
 
-      <div className="gradient-bar h-[2px] rounded-full mb-5 opacity-60" />
+      {/* Gradient separator */}
+      <div
+        className="h-[2px] rounded-full mb-6 mt-4"
+        style={{ background: 'linear-gradient(90deg, #5535C4, #3D63F5)' }}
+      />
 
-      {/* ── View Filter Pills ─────────────────────────────────────────── */}
-      <div className="flex items-center gap-2 mb-4 flex-wrap">
-        <FilterPill
+      {/* ── Tab Navigation ─────────────────────────────────────────────── */}
+      <div className="flex items-center gap-1.5 mb-5">
+        <TabPill
           label="Tous"
           icon={LayoutGrid}
           active={viewFilter === 'all'}
           count={products.length}
           onClick={() => setViewFilter('all')}
         />
-        <FilterPill
+        <TabPill
           label="Favoris"
           icon={Heart}
           active={viewFilter === 'favorites'}
           count={favoriteIds.size}
           onClick={() => setViewFilter('favorites')}
         />
-        <FilterPill
-          label="Suggérés par l’IA"
+        <TabPill
+          label="Suggérés par l'IA"
           icon={Sparkles}
           active={viewFilter === 'recommended'}
           count={recommendationMap.size}
           onClick={() => setViewFilter('recommended')}
         />
-        <FilterPill
+        <TabPill
           label="Populaires"
           icon={TrendingUp}
           active={viewFilter === 'popular'}
@@ -410,137 +431,171 @@ export default function ProductsPage() {
         />
       </div>
 
-      {/* ── Filters Bar ─────────────────────────────────────────────────── */}
-      <div className="bg-white rounded-xl border border-border/80 p-4 mb-5">
-        <div className="flex items-center gap-3 flex-wrap">
-          {/* Search */}
-          <div className="relative flex-1 min-w-[200px] max-w-[320px]">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-3 pointer-events-none" />
-            <input
-              type="search"
-              value={search}
-              onChange={(e) => setFilter('search', e.target.value)}
-              placeholder="Rechercher par nom, ISIN, sous-jacent…"
-              className={cn(
-                'w-full h-9 rounded-lg border border-border/80 bg-surface pl-9 pr-3 text-[13px] font-body text-ink',
-                'placeholder:text-ink-3/60 transition-all duration-150',
-                'focus:outline-none focus:ring-2 focus:ring-violet/30 focus:border-violet focus:bg-white',
-              )}
-            />
-          </div>
-
-          {/* Payoff Type */}
-          <select
-            value={payoffType ?? ''}
-            onChange={(e) => setFilter('payoffType', e.target.value ? (e.target.value as PayoffType) : null)}
-            className={selectCls}
-          >
-            <option value="">Type de produit</option>
-            {PAYOFF_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
-
-          {/* Status */}
-          <select
-            value={status}
-            onChange={(e) => setFilter('status', e.target.value)}
-            className={selectCls}
-          >
-            <option value="">Statut</option>
-            {STATUS_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
-
-          {/* Advanced toggle */}
-          <button
-            onClick={() => setShowAdvanced(!showAdvanced)}
+      {/* ── Search & Filters Bar ───────────────────────────────────────── */}
+      <div className="flex items-center gap-3 flex-wrap mb-5">
+        {/* Search input - full width feel */}
+        <div className="relative flex-1 min-w-[240px]">
+          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-3/50 pointer-events-none" />
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setFilter('search', e.target.value)}
+            placeholder="Rechercher par nom, ISIN, sous-jacent..."
             className={cn(
-              'h-9 px-3 rounded-lg border text-[12px] font-medium font-body',
-              'flex items-center gap-1.5 transition-all duration-150',
-              showAdvanced
-                ? 'border-violet/40 text-violet bg-violet-ghost'
-                : 'border-border/80 text-ink-3 bg-white hover:border-violet/40 hover:text-violet',
+              'w-full h-10 rounded-xl bg-white border border-border/60 pl-10 pr-4 text-[13px] font-body text-ink',
+              'placeholder:text-ink-3/50 transition-all duration-200',
+              'focus:outline-none focus:ring-2 focus:ring-violet/20 focus:border-violet/40 focus:shadow-sm',
             )}
-          >
-            <SlidersHorizontal size={12} />
-            Filtres avancés
-          </button>
-
-          {/* Reset */}
-          {hasActiveFilters && (
-            <button
-              onClick={() => {
-                resetFilters();
-                setIssuerFilter('');
-              }}
-              className={cn(
-                'h-9 px-3 rounded-lg border border-red/30 text-red bg-red-light',
-                'text-[12px] font-semibold font-body flex items-center gap-1.5',
-                'transition-all duration-150 hover:bg-red/10 hover:border-red/50',
-              )}
-            >
-              <X size={12} />
-              Réinitialiser
-              <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-red text-white text-[9px] font-bold">
-                {activeFilterCount}
-              </span>
-            </button>
-          )}
+          />
         </div>
 
-        {/* Advanced filters row */}
-        {showAdvanced && (
-          <div className="flex items-center gap-3 flex-wrap mt-3 pt-3 border-t border-border/50">
-            {/* SRI Range */}
-            <div className="flex items-center gap-1.5 text-[12px] font-body text-ink-3">
-              <span>SRI</span>
-              <select
-                value={minSri ?? ''}
-                onChange={(e) => setFilter('minSri', e.target.value ? Number(e.target.value) : null)}
-                className={cn(selectCls, 'w-16 text-center')}
-              >
-                <option value="">Min</option>
-                {[1, 2, 3, 4, 5, 6, 7].map((n) => (
-                  <option key={n} value={n}>{n}</option>
-                ))}
-              </select>
-              <span>—</span>
-              <select
-                value={maxSri ?? ''}
-                onChange={(e) => setFilter('maxSri', e.target.value ? Number(e.target.value) : null)}
-                className={cn(selectCls, 'w-16 text-center')}
-              >
-                <option value="">Max</option>
-                {[1, 2, 3, 4, 5, 6, 7].map((n) => (
-                  <option key={n} value={n}>{n}</option>
-                ))}
-              </select>
-            </div>
+        {/* Payoff Type */}
+        <select
+          value={payoffType ?? ''}
+          onChange={(e) => setFilter('payoffType', e.target.value ? (e.target.value as PayoffType) : null)}
+          className={cn(selectCls, 'rounded-lg')}
+        >
+          <option value="">Type de produit</option>
+          {PAYOFF_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
 
-            {/* Issuer filter */}
-            <select
-              value={issuerFilter}
-              onChange={(e) => setIssuerFilter(e.target.value)}
-              className={selectCls}
-            >
-              <option value="">Émetteur</option>
-              {ISSUER_OPTIONS.map((name) => (
-                <option key={name} value={name}>{name}</option>
-              ))}
-            </select>
-          </div>
+        {/* Status */}
+        <select
+          value={status}
+          onChange={(e) => setFilter('status', e.target.value)}
+          className={cn(selectCls, 'rounded-lg')}
+        >
+          <option value="">Statut</option>
+          {STATUS_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
+
+        {/* Sort control */}
+        <div className="flex items-center gap-1.5">
+          <select
+            value={sortField}
+            onChange={(e) => setSortField(e.target.value as SortField)}
+            className={cn(selectCls, 'rounded-lg')}
+          >
+            {SORT_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>Tri : {o.label}</option>
+            ))}
+          </select>
+          <button
+            onClick={() => setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))}
+            className={cn(
+              'h-9 w-9 rounded-lg border border-border/60 bg-white flex items-center justify-center',
+              'text-ink-3 hover:text-violet hover:border-violet/40 transition-all duration-200',
+              'focus:outline-none focus:ring-2 focus:ring-violet/20 focus:border-violet/40',
+            )}
+            title={sortDir === 'asc' ? 'Croissant' : 'Décroissant'}
+          >
+            {sortDir === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />}
+          </button>
+        </div>
+
+        {/* Advanced toggle */}
+        <button
+          onClick={() => setShowAdvanced(!showAdvanced)}
+          className={cn(
+            'h-9 px-3.5 rounded-lg border text-[12px] font-medium font-body',
+            'flex items-center gap-1.5 transition-all duration-200',
+            showAdvanced
+              ? 'border-violet/40 text-violet bg-violet-ghost shadow-sm'
+              : 'border-border/60 text-ink-3 bg-white hover:border-violet/40 hover:text-violet',
+          )}
+        >
+          <SlidersHorizontal size={12} />
+          Filtres avancés
+          <ChevronDown
+            size={11}
+            className={cn('transition-transform duration-200', showAdvanced && 'rotate-180')}
+          />
+        </button>
+
+        {/* Reset */}
+        {hasActiveFilters && (
+          <button
+            onClick={() => {
+              resetFilters();
+              setIssuerFilter('');
+            }}
+            className={cn(
+              'h-9 px-3.5 rounded-lg border border-red/20 text-red bg-red-light',
+              'text-[12px] font-semibold font-body flex items-center gap-1.5',
+              'transition-all duration-200 hover:bg-red/10 hover:border-red/40',
+            )}
+          >
+            <X size={12} />
+            Réinitialiser
+            <span className="inline-flex items-center justify-center h-[18px] min-w-[18px] px-1 rounded-full bg-red text-white text-[10px] font-bold">
+              {activeFilterCount}
+            </span>
+          </button>
         )}
       </div>
 
-      {/* ── Results count ───────────────────────────────────────────────── */}
+      {/* Advanced filters expandable */}
+      <div
+        className={cn(
+          'overflow-hidden transition-all duration-300 ease-out',
+          showAdvanced ? 'max-h-24 opacity-100 mb-5' : 'max-h-0 opacity-0 mb-0',
+        )}
+      >
+        <div className="flex items-center gap-3 flex-wrap bg-surface/60 rounded-xl border border-border/40 px-4 py-3">
+          {/* SRI Range */}
+          <div className="flex items-center gap-1.5 text-[12px] font-body text-ink-3">
+            <span className="font-medium">SRI</span>
+            <select
+              value={minSri ?? ''}
+              onChange={(e) => setFilter('minSri', e.target.value ? Number(e.target.value) : null)}
+              className={cn(selectCls, 'w-16 text-center')}
+            >
+              <option value="">Min</option>
+              {[1, 2, 3, 4, 5, 6, 7].map((n) => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
+            <span className="text-ink-3/40">—</span>
+            <select
+              value={maxSri ?? ''}
+              onChange={(e) => setFilter('maxSri', e.target.value ? Number(e.target.value) : null)}
+              className={cn(selectCls, 'w-16 text-center')}
+            >
+              <option value="">Max</option>
+              {[1, 2, 3, 4, 5, 6, 7].map((n) => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="w-px h-5 bg-border/40" />
+
+          {/* Issuer filter */}
+          <select
+            value={issuerFilter}
+            onChange={(e) => setIssuerFilter(e.target.value)}
+            className={selectCls}
+          >
+            <option value="">Émetteur</option>
+            {ISSUER_OPTIONS.map((name) => (
+              <option key={name} value={name}>{name}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* ── Results Count ──────────────────────────────────────────────── */}
       {!isLoading && !isError && (
         <div className="flex items-center justify-between mb-4">
-          <p className="text-[12px] text-ink-3 font-body">
-            <span className="font-semibold text-ink">{filtered.length}</span> produit{filtered.length > 1 ? 's' : ''} trouvé{filtered.length > 1 ? 's' : ''}
+          <p className="text-[13px] text-ink-3 font-body">
+            <span className="font-semibold text-ink">{filtered.length}</span>{' '}
+            produit{filtered.length > 1 ? 's' : ''} trouvé{filtered.length > 1 ? 's' : ''}
             {viewFilter === 'favorites' && ' dans vos favoris'}
-            {viewFilter === 'recommended' && ' suggérés par l’IA'}
+            {viewFilter === 'recommended' && " suggérés par l'IA"}
             {viewFilter === 'popular' && ' les plus consultés'}
           </p>
           {viewFilter === 'recommended' && (
@@ -555,14 +610,14 @@ export default function ProductsPage() {
       {/* ── Content ─────────────────────────────────────────────────────── */}
       {isLoading ? (
         view === 'grid' ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 stagger-children">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 stagger-children">
             {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
           </div>
         ) : (
-          <div className="bg-white rounded-xl border border-border/80 overflow-hidden">
+          <div className="bg-white rounded-xl border border-border/60 overflow-hidden">
             <table className="w-full">
-              <thead>
-                <tr className="border-b border-border/60" style={{ background: 'rgba(237,232,255,0.3)' }}>
+              <thead className="sticky top-0 z-10">
+                <tr className="border-b border-border/40 bg-surface/80 backdrop-blur-sm">
                   {['', 'Produit', 'ISIN', 'Émetteur', 'Type', 'Barrière', 'Gain max', 'SRI', 'Échéance', 'Statut'].map((h) => (
                     <th key={h} className="px-4 py-3 text-left text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">{h}</th>
                   ))}
@@ -575,39 +630,68 @@ export default function ProductsPage() {
           </div>
         )
       ) : isError ? (
-        <div className="flex items-center justify-center py-20 text-red font-body text-sm bg-white rounded-xl border border-border/80">
-          Une erreur est survenue lors du chargement des produits.
+        <div className="flex flex-col items-center justify-center py-20 gap-3 bg-white rounded-xl border border-border/60">
+          <div className="w-14 h-14 rounded-2xl bg-red-light flex items-center justify-center">
+            <X size={24} className="text-red" />
+          </div>
+          <p className="text-red font-body text-sm font-medium">
+            Une erreur est survenue lors du chargement des produits.
+          </p>
+          <p className="text-ink-3 font-body text-xs">
+            Veuillez réessayer dans quelques instants.
+          </p>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 gap-3 bg-white rounded-xl border border-border/80">
-          <div className="w-12 h-12 rounded-full bg-violet-ghost flex items-center justify-center">
-            {viewFilter === 'favorites' ? <Heart size={20} className="text-ink-3" /> :
-             viewFilter === 'recommended' ? <Sparkles size={20} className="text-ink-3" /> :
-             <Search size={20} className="text-ink-3" />}
+        /* ── Empty State ──────────────────────────────────────────── */
+        <div className="flex flex-col items-center justify-center py-24 gap-4 bg-white rounded-xl border border-border/60">
+          <div className="w-16 h-16 rounded-2xl bg-violet-ghost flex items-center justify-center">
+            {viewFilter === 'favorites' ? (
+              <Heart size={28} className="text-violet/50" />
+            ) : viewFilter === 'recommended' ? (
+              <Sparkles size={28} className="text-violet/50" />
+            ) : (
+              <PackageSearch size={28} className="text-violet/50" />
+            )}
           </div>
-          <p className="font-body text-sm text-ink-3">
-            {viewFilter === 'favorites' ? "Vous n’avez pas encore de favoris. Cliquez sur le ❤️ pour en ajouter." :
-             viewFilter === 'recommended' ? "Pas de suggestions IA. Cliquez sur «Suggestions IA» pour générer des recommandations." :
-             'Aucun produit ne correspond à vos critères.'}
-          </p>
+          <div className="text-center">
+            <p className="font-body text-sm font-medium text-ink mb-1">
+              {viewFilter === 'favorites'
+                ? 'Aucun favori pour le moment'
+                : viewFilter === 'recommended'
+                ? 'Pas encore de suggestions IA'
+                : 'Aucun produit trouvé'}
+            </p>
+            <p className="font-body text-xs text-ink-3 max-w-sm">
+              {viewFilter === 'favorites'
+                ? 'Cliquez sur le coeur sur un produit pour le retrouver ici.'
+                : viewFilter === 'recommended'
+                ? 'Lancez une analyse IA pour recevoir des recommandations personnalisées.'
+                : 'Essayez de modifier vos filtres ou votre recherche.'}
+            </p>
+          </div>
           {viewFilter === 'recommended' && (
             <button
               onClick={() => generateRecs.mutate()}
               disabled={generateRecs.isPending}
-              className="text-xs text-white bg-violet px-4 py-2 rounded-lg font-semibold hover:bg-violet-mid transition-colors disabled:opacity-50"
+              className="text-[13px] text-white bg-violet px-5 py-2.5 rounded-full font-semibold hover:bg-violet-mid transition-all duration-200 hover:shadow-md disabled:opacity-50 flex items-center gap-2"
             >
+              <Sparkles size={14} />
               {generateRecs.isPending ? 'Analyse en cours...' : 'Générer des suggestions'}
             </button>
           )}
           {(viewFilter === 'all' || viewFilter === 'popular') && hasActiveFilters && (
-            <button onClick={() => { resetFilters(); setIssuerFilter(''); }} className="text-xs text-violet font-semibold hover:underline">
+            <button
+              onClick={() => { resetFilters(); setIssuerFilter(''); }}
+              className="text-[13px] text-violet font-semibold hover:underline flex items-center gap-1.5"
+            >
+              <X size={12} />
               Réinitialiser les filtres
             </button>
           )}
         </div>
       ) : view === 'grid' ? (
         /* ── Grid View ────────────────────────────────────────────── */
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 stagger-children">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 stagger-children">
           {filtered.map((product: any) => (
             <ProductCard
               key={product.id}
@@ -619,11 +703,11 @@ export default function ProductsPage() {
         </div>
       ) : (
         /* ── Table View ───────────────────────────────────────────── */
-        <div className="bg-white rounded-xl border border-border/80 overflow-hidden shadow-sm">
+        <div className="bg-white rounded-xl border border-border/60 overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-[13px] font-body">
-              <thead>
-                <tr className="border-b border-border/60" style={{ background: 'rgba(237,232,255,0.3)' }}>
+              <thead className="sticky top-0 z-10">
+                <tr className="border-b border-border/40 bg-surface/80 backdrop-blur-sm">
                   <th className="px-3 py-3 w-10" />
                   <SortTh label="Produit" field="name" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
                   <th className="px-4 py-3 text-left text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">ISIN</th>
@@ -639,17 +723,22 @@ export default function ProductsPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((p: any) => {
+                {filtered.map((p: any, idx: number) => {
                   const payoffStyle = PAYOFF_BADGE[p.payoffType] ?? { bg: '#F4F3EF', text: '#7B6FA0' };
                   const statusStyle = STATUS_BADGE[p.status] ?? { bg: '#F4F3EF', text: '#7B6FA0', label: p.status };
                   const sriColor = p.sri <= 2 ? '#008B6E' : p.sri <= 4 ? '#A07800' : '#C41F36';
                   const isFav = favoriteIds.has(p.id);
                   const recScore = recommendationMap.get(p.id);
+                  const isEven = idx % 2 === 1;
 
                   return (
                     <tr
                       key={p.id}
-                      className="border-b border-border/40 last:border-0 hover:bg-violet-ghost/40 transition-colors duration-150 group"
+                      className={cn(
+                        'border-b border-border/30 last:border-0 transition-colors duration-150 group',
+                        'hover:bg-violet-ghost/50',
+                        isEven && 'bg-surface/30',
+                      )}
                     >
                       {/* Favorite */}
                       <td className="px-3 py-3">
@@ -746,7 +835,7 @@ export default function ProductsPage() {
                       <td className="px-4 py-3">
                         <Link
                           href={`/products/${p.id}`}
-                          className="text-ink-3 hover:text-violet transition-colors"
+                          className="text-ink-3/40 hover:text-violet transition-colors group-hover:text-ink-3"
                         >
                           <ArrowUpRight size={14} />
                         </Link>

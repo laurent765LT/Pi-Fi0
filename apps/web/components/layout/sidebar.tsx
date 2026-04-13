@@ -37,7 +37,7 @@ import { LocaleSwitcher } from '@/components/ui/locale-switcher';
 const mainNav = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/products', label: 'Produits', icon: Package },
-  { href: '/evenements', label: 'Evenements', icon: Calendar },
+  { href: '/evenements', label: 'Événements', icon: Calendar },
   { href: '/portfolio', label: 'Portfolio', icon: Briefcase },
   { href: '/commissions', label: 'Commissions', icon: Wallet },
 ];
@@ -96,23 +96,22 @@ function NavLink({
       href={href}
       className={cn(
         'group relative flex items-center gap-3 px-3 h-[38px] rounded-lg font-body text-[13px] font-medium',
-        'transition-all duration-200 ease-out',
+        'transition-colors duration-150 ease-out',
         isActive
-          ? 'text-violet border-l-2 border-violet shadow-sm'
-          : 'text-ink-2 hover:text-ink border-l-2 border-transparent hover:border-violet-p',
-        !isActive && 'hover:translate-x-[2px]',
+          ? 'bg-violet/[0.08] text-violet'
+          : 'text-ink-2 hover:text-ink hover:bg-ink/[0.04]',
       )}
-      style={
-        isActive
-          ? { background: 'linear-gradient(90deg, rgba(59,31,168,0.10) 0%, rgba(85,53,196,0.04) 100%)' }
-          : undefined
-      }
     >
+      {/* Active dot indicator */}
+      {isActive && (
+        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[3px] rounded-full bg-violet" />
+      )}
+
       <Icon
         size={16}
         strokeWidth={isActive ? 2.2 : 1.8}
         className={cn(
-          'shrink-0 transition-all duration-200',
+          'shrink-0 transition-colors duration-150',
           isActive ? 'text-violet' : 'text-ink-3 group-hover:text-violet-m',
         )}
       />
@@ -135,7 +134,7 @@ function NavLink({
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <span className="text-[9px] uppercase tracking-[0.25em] text-ink-3 font-bold px-3 mb-2 select-none">
+    <span className="text-[8px] uppercase tracking-[0.3em] text-ink-3/50 font-bold px-3 mb-2 select-none">
       {children}
     </span>
   );
@@ -225,15 +224,16 @@ export function Sidebar({ isOpen, onClose }: SidebarProps = {}) {
         )}
         style={{
           width: 248,
-          background: 'linear-gradient(180deg, #FAFAFF 0%, #FFFFFF 50%, #FAFAF8 100%)',
+          background: 'var(--bg-1)',
           borderRight: '1px solid var(--border)',
         }}
       >
         {/* Left accent line */}
         <div
-          className="absolute left-0 top-0 bottom-0 w-[2px]"
+          className="absolute left-0 top-0 bottom-0 w-px"
           style={{
-            background: 'linear-gradient(180deg, var(--violet) 0%, var(--violet-m) 40%, var(--cobalt-l) 100%)',
+            background: 'linear-gradient(180deg, var(--violet) 0%, var(--violet-m) 40%, transparent 100%)',
+            opacity: 0.4,
           }}
         />
 
@@ -330,11 +330,11 @@ export function Sidebar({ isOpen, onClose }: SidebarProps = {}) {
         <Dropdown
           trigger={
             <div className="flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-violet-p/30 transition-all duration-200 group cursor-pointer w-full">
-              {/* Avatar with gradient */}
+              {/* Avatar */}
               <div
-                className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-md ring-2 ring-white"
+                className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
                 style={{
-                  background: 'linear-gradient(135deg, var(--violet) 0%, var(--cobalt-m) 100%)',
+                  background: 'linear-gradient(135deg, var(--violet) 0%, var(--violet-mid) 100%)',
                 }}
               >
                 <span className="font-display font-bold text-[10px] text-white leading-none">
@@ -382,13 +382,13 @@ export function Sidebar({ isOpen, onClose }: SidebarProps = {}) {
           />
           <DropdownItem
             icon={<Settings size={14} strokeWidth={1.8} />}
-            label="Parametres"
+            label="Paramètres"
             onClick={() => router.push('/settings')}
           />
           <DropdownSeparator />
           <DropdownItem
             icon={<LogOut size={14} strokeWidth={1.8} />}
-            label="Se deconnecter"
+            label="Se déconnecter"
             danger
             onClick={logout}
           />

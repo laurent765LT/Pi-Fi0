@@ -92,11 +92,14 @@ export default function LoginPage() {
           }
         }
         @keyframes pulse-dot {
-          0%, 100% {
-            box-shadow: 0 0 0 0 rgba(0, 184, 148, 0.6);
+          0% {
+            box-shadow: 0 0 0 0 rgba(0, 184, 148, 0.5);
           }
-          50% {
-            box-shadow: 0 0 0 6px rgba(0, 184, 148, 0);
+          70% {
+            box-shadow: 0 0 0 5px rgba(0, 184, 148, 0);
+          }
+          100% {
+            box-shadow: 0 0 0 0 rgba(0, 184, 148, 0);
           }
         }
       `}</style>
@@ -161,7 +164,7 @@ export default function LoginPage() {
         />
 
         <div
-          className="relative w-full max-w-sm"
+          className="relative w-full max-w-[400px]"
           style={{
             animation: mounted ? 'card-entrance 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards' : 'none',
             opacity: mounted ? undefined : 0,
@@ -206,7 +209,7 @@ export default function LoginPage() {
                   }}
                   aria-hidden="true"
                 />
-                100&nbsp;% ind&eacute;pendante
+                100 % indépendante
               </span>
             </div>
 
@@ -265,7 +268,8 @@ export default function LoginPage() {
                 variant="primary"
                 size="lg"
                 disabled={loading || !email || !password}
-                className="w-full mt-1"
+                className="w-full mt-1 font-bold text-[15px] shadow-lg shadow-violet/25"
+                style={{ background: 'linear-gradient(135deg, #3B1FA8 0%, #5535C4 60%, #6B47E0 100%)' }}
               >
                 {loading ? (
                   <span className="inline-flex items-center gap-2">
@@ -283,9 +287,9 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setShowDemo(!showDemo)}
-                className="w-full flex items-center justify-between text-xs font-semibold font-body text-ink-2 hover:text-ink transition-colors"
+                className="w-full flex items-center justify-between text-[11px] font-medium font-body text-ink-3 hover:text-ink-2 transition-colors"
               >
-                <span>Comptes demo</span>
+                <span>Comptes démo</span>
                 <ChevronDown
                   size={16}
                   className={`transition-transform duration-200 ${showDemo ? 'rotate-180' : ''}`}
@@ -305,7 +309,7 @@ export default function LoginPage() {
                       key={account.email}
                       type="button"
                       onClick={() => fillDemo(account)}
-                      className="group flex items-center justify-between px-3 py-2 rounded-lg text-left text-xs font-body bg-violet-pale/50 hover:bg-violet-pale border border-transparent hover:border-violet/20 transition-all duration-150"
+                      className="group flex items-center justify-between px-3 py-1.5 rounded-lg text-left text-[11px] font-body bg-ink/[0.03] hover:bg-ink/[0.06] border border-transparent hover:border-border/60 transition-all duration-150"
                     >
                       <div>
                         <span className="font-semibold text-ink">{account.label}</span>
@@ -334,7 +338,7 @@ export default function LoginPage() {
               ))}
             </div>
             <p className="text-center text-white/35 text-[11px] font-body">
-              Acc&egrave;s r&eacute;serv&eacute; aux partenaires institutionnels agr&eacute;&eacute;s
+              Accès réservé aux partenaires institutionnels agréés
             </p>
           </div>
         </div>

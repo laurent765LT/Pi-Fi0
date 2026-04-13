@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Calendar, ArrowUpRight, Heart, Clock, Sparkles as SparkleIcon, Layers, Check } from 'lucide-react';
+import { ArrowRight, Heart, Layers, Check, Clock, Sparkles as SparkleIcon } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useToggleFavorite } from '@/hooks/use-favorites';
 import { useCompareStore } from '@/stores/compare-store';
@@ -46,12 +46,12 @@ interface ProductCardProps {
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const PAYOFF_COLORS: Record<PayoffType, { bg: string; text: string; border: string; gradient: string }> = {
-  AUTOCALL_PHOENIX: { bg: '#EDE8FF', text: '#3B1FA8', border: '#D5CCFA', gradient: 'linear-gradient(135deg, #3B1FA8, #7B5FE0)' },
-  AUTOCALL_COUPON: { bg: '#EDE8FF', text: '#5535C4', border: '#D5CCFA', gradient: 'linear-gradient(135deg, #5535C4, #9B7FF0)' },
-  CAPITAL_PROTECTED: { bg: '#E6FAF5', text: '#008B6E', border: '#B3F0DE', gradient: 'linear-gradient(135deg, #008B6E, #00D4AA)' },
-  CONDITIONAL_RATE: { bg: '#E4EAFF', text: '#0A2799', border: '#C5D2FA', gradient: 'linear-gradient(135deg, #0A2799, #3D63F5)' },
-  BARRIER_NOTE: { bg: '#FFF8E7', text: '#A07800', border: '#F0E0A8', gradient: 'linear-gradient(135deg, #D4A017, #F0C84D)' },
+const PAYOFF_COLORS: Record<PayoffType, { gradient: string; dot: string }> = {
+  AUTOCALL_PHOENIX: { gradient: 'linear-gradient(135deg, #3B1FA8, #7B5FE0)', dot: '#7B5FE0' },
+  AUTOCALL_COUPON: { gradient: 'linear-gradient(135deg, #5535C4, #9B7FF0)', dot: '#9B7FF0' },
+  CAPITAL_PROTECTED: { gradient: 'linear-gradient(135deg, #008B6E, #00D4AA)', dot: '#00D4AA' },
+  CONDITIONAL_RATE: { gradient: 'linear-gradient(135deg, #0A2799, #3D63F5)', dot: '#3D63F5' },
+  BARRIER_NOTE: { gradient: 'linear-gradient(135deg, #D4A017, #F0C84D)', dot: '#F0C84D' },
 };
 
 const PAYOFF_LABELS: Record<PayoffType, string> = {
@@ -62,26 +62,15 @@ const PAYOFF_LABELS: Record<PayoffType, string> = {
   BARRIER_NOTE: 'Barrier',
 };
 
-const SRI_COLORS: Record<number, { bg: string; text: string }> = {
-  1: { bg: '#E6FAF5', text: '#008B6E' },
-  2: { bg: '#E6FAF5', text: '#008B6E' },
-  3: { bg: '#F0FAE6', text: '#4A8C1F' },
-  4: { bg: '#FFF8E7', text: '#A07800' },
-  5: { bg: '#FFF0E6', text: '#C25700' },
-  6: { bg: '#FFF0F2', text: '#C41F36' },
-  7: { bg: '#FFF0F2', text: '#C41F36' },
+const SRI_PILL_COLORS: Record<number, { bg: string; text: string; darkBg: string; darkText: string }> = {
+  1: { bg: 'bg-emerald-50', text: 'text-emerald-700', darkBg: 'dark:bg-emerald-950', darkText: 'dark:text-emerald-400' },
+  2: { bg: 'bg-emerald-50', text: 'text-emerald-700', darkBg: 'dark:bg-emerald-950', darkText: 'dark:text-emerald-400' },
+  3: { bg: 'bg-amber-50', text: 'text-amber-700', darkBg: 'dark:bg-amber-950', darkText: 'dark:text-amber-400' },
+  4: { bg: 'bg-amber-50', text: 'text-amber-700', darkBg: 'dark:bg-amber-950', darkText: 'dark:text-amber-400' },
+  5: { bg: 'bg-orange-50', text: 'text-orange-700', darkBg: 'dark:bg-orange-950', darkText: 'dark:text-orange-400' },
+  6: { bg: 'bg-red-50', text: 'text-red-700', darkBg: 'dark:bg-red-950', darkText: 'dark:text-red-400' },
+  7: { bg: 'bg-red-50', text: 'text-red-700', darkBg: 'dark:bg-red-950', darkText: 'dark:text-red-400' },
 };
-
-/** Color for each SRI dot position (1-7): green -> yellow -> red */
-const SRI_DOT_COLORS = [
-  '#00B894', // 1
-  '#2ECC71', // 2
-  '#82C91E', // 3
-  '#D4A017', // 4
-  '#E67E22', // 5
-  '#E8334A', // 6
-  '#C41F36', // 7
-];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -93,62 +82,9 @@ function formatDate(isoDate: string): string {
 }
 
 function formatCompact(amount: number): string {
-  if (amount >= 1_000_000) {
-    return `${(amount / 1_000_000).toFixed(0)}M\u20AC`;
-  }
-  if (amount >= 1_000) {
-    return `${(amount / 1_000).toFixed(0)}k\u20AC`;
-  }
+  if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(0)}M\u20AC`;
+  if (amount >= 1_000) return `${(amount / 1_000).toFixed(0)}k\u20AC`;
   return `${amount}\u20AC`;
-}
-
-// ─── Sub-components ─────────────────────────────────────────────────────────
-
-/** Mini SRI gauge: 7 dots colored green->yellow->red, filled up to SRI level */
-function SriGauge({ level }: { level: number }) {
-  return (
-    <div className="inline-flex items-center gap-[3px]" title={`Risque : ${level}/7`}>
-      <span className="text-[9px] font-bold font-mono text-ink-3 mr-1">SRI</span>
-      {Array.from({ length: 7 }, (_, i) => {
-        const filled = i < level;
-        return (
-          <span
-            key={i}
-            className="block rounded-full transition-all duration-300"
-            style={{
-              width: 6,
-              height: 6,
-              backgroundColor: filled ? SRI_DOT_COLORS[i] : '#E2DFF5',
-              boxShadow: filled ? `0 0 4px ${SRI_DOT_COLORS[i]}40` : 'none',
-            }}
-          />
-        );
-      })}
-    </div>
-  );
-}
-
-/** Issuer avatar: colored circle with first 2 letters */
-function IssuerAvatar({ name, color }: { name: string; color: string }) {
-  const initials = name
-    .split(/[\s-]+/)
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join('')
-    .toUpperCase();
-
-  return (
-    <span
-      className="inline-flex items-center justify-center rounded-full text-[8px] font-bold text-white shrink-0"
-      style={{
-        width: 20,
-        height: 20,
-        background: `linear-gradient(135deg, ${color}, ${color}CC)`,
-      }}
-    >
-      {initials}
-    </span>
-  );
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -162,7 +98,6 @@ export function ProductCard({ product, className, isFavorited = false, recommend
     issuerName,
     barrierCapPct,
     maxGainPct,
-    couponPct,
     sri,
     maturityDate,
     fillPct = 0,
@@ -183,13 +118,21 @@ export function ProductCard({ product, className, isFavorited = false, recommend
   const isClosed = status === 'CLOSED' || status === 'MATURED';
 
   const [heartBounce, setHeartBounce] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const barRef = useRef<HTMLDivElement>(null);
+
+  // Animate progress bar on mount
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 50);
+    return () => clearTimeout(t);
+  }, []);
 
   // Badge logic
   const isNew = createdAt ? (Date.now() - new Date(createdAt).getTime()) < 7 * 24 * 60 * 60 * 1000 : false;
   const closingDays = shelfClosingDate ? Math.ceil((new Date(shelfClosingDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : null;
   const isClosingSoon = closingDays !== null && closingDays > 0 && closingDays <= 30;
 
-  const highCoupon = couponPct != null && couponPct > 8;
+  const sriStyle = SRI_PILL_COLORS[sri] ?? SRI_PILL_COLORS[4];
 
   const handleFavorite = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -213,174 +156,184 @@ export function ProductCard({ product, className, isFavorited = false, recommend
     <Link
       href={`/products/${id}`}
       className={cn(
-        'group relative flex flex-col rounded-xl border border-border/80 bg-white overflow-hidden',
+        'stagger-item group relative flex flex-col rounded-xl overflow-hidden',
+        'bg-white dark:bg-[#1E1636]',
+        'border border-border/50 dark:border-white/[0.06]',
         'transition-all duration-300 ease-out',
-        'hover:shadow-lg hover:-translate-y-[2px]',
-        'hover:border-transparent',
-        isClosed && 'opacity-60',
+        'hover:shadow-xl hover:shadow-violet/[0.08] dark:hover:shadow-violet/[0.15]',
+        'hover:scale-[1.01] hover:border-violet/20 dark:hover:border-violet-light/20',
+        isClosed && 'opacity-55 saturate-[0.6]',
         className,
       )}
     >
-      {/* ── Compare toggle (top-right corner) ── */}
-      <button
-        onClick={handleCompare}
-        className={cn(
-          'absolute top-3 right-3 z-10 p-1.5 rounded-lg border transition-all duration-200',
-          isCompared
-            ? 'bg-violet text-white border-violet shadow-md'
-            : 'bg-white/90 text-ink-3/50 border-border/60 opacity-0 group-hover:opacity-100 hover:text-violet hover:border-violet/40 hover:bg-violet-p/30',
-        )}
-        title={isCompared ? 'Retirer de la comparaison' : 'Ajouter a la comparaison'}
-      >
-        {isCompared ? <Check size={13} strokeWidth={3} /> : <Layers size={13} />}
-      </button>
-
-      {/* ── Gradient accent strip (2px, color by payoff type) ── */}
+      {/* ── Top accent strip (3px, gradient by payoff type) ── */}
       <div
-        className="h-[2px] w-full shrink-0"
+        className="h-[3px] w-full shrink-0"
         style={{ background: payoff.gradient }}
       />
 
-      <div className="flex flex-col gap-3.5 px-5 py-4 flex-1">
-        {/* Header: Badges row -- type, SRI, status, favorite */}
-        <div className="flex items-center gap-1.5 min-w-0">
-          {/* Type badge with gradient background */}
+      {/* ── Hover overlay actions: heart + compare ── */}
+      <div className="absolute top-[15px] right-3 z-10 flex items-center gap-1.5">
+        <button
+          onClick={handleCompare}
+          className={cn(
+            'p-1.5 rounded-lg transition-all duration-200',
+            isCompared
+              ? 'bg-violet text-white shadow-sm'
+              : 'bg-white/90 dark:bg-white/10 text-ink-3/40 dark:text-ink-3 border border-transparent opacity-0 group-hover:opacity-100 hover:text-violet dark:hover:text-violet-light hover:border-violet/20 hover:bg-violet-pale/50 dark:hover:bg-violet/20',
+          )}
+          title={isCompared ? 'Retirer de la comparaison' : 'Comparer'}
+        >
+          {isCompared ? <Check size={13} strokeWidth={3} /> : <Layers size={13} />}
+        </button>
+
+        <button
+          onClick={handleFavorite}
+          className={cn(
+            'p-1.5 rounded-lg transition-all duration-200',
+            heartBounce && 'animate-heart-bounce',
+            isFavorited
+              ? 'text-red bg-red-light dark:bg-red/20'
+              : 'bg-white/90 dark:bg-white/10 text-ink-3/40 dark:text-ink-3 border border-transparent opacity-0 group-hover:opacity-100 hover:text-red hover:border-red/20 hover:bg-red-light/50 dark:hover:bg-red/10',
+          )}
+          title={isFavorited ? 'Retirer des favoris' : 'Favoris'}
+        >
+          <Heart size={13} fill={isFavorited ? 'currentColor' : 'none'} />
+        </button>
+      </div>
+
+      <div className="flex flex-col gap-4 p-5 flex-1">
+        {/* ── Header: Payoff badge + status pills + SRI ── */}
+        <div className="flex items-center gap-1.5 min-w-0 pr-16">
+          {/* Payoff type pill */}
           <span
-            className="inline-flex items-center rounded-md px-2 py-[3px] text-[10px] font-semibold font-body tracking-wide text-white shrink-0"
-            style={{
-              background: payoff.gradient,
-            }}
+            className="inline-flex items-center rounded-full px-2.5 py-[3px] text-[10px] font-bold uppercase tracking-wider text-white shrink-0"
+            style={{ background: payoff.gradient }}
           >
             {PAYOFF_LABELS[payoffType]}
           </span>
 
-          {/* Status badges */}
+          {/* New badge */}
           {isNew && (
             <span
-              className="inline-flex items-center gap-1 rounded-md px-1.5 py-[3px] text-[9px] font-bold font-body text-white shrink-0"
-              style={{
-                background: 'linear-gradient(135deg, #3D63F5, #5535C4)',
-              }}
+              className="inline-flex items-center gap-1 rounded-full px-2 py-[3px] text-[9px] font-bold text-white shrink-0"
+              style={{ background: 'linear-gradient(135deg, #3D63F5, #5535C4)' }}
             >
               <SparkleIcon size={8} />
               Nouveau
             </span>
           )}
+
+          {/* Closing soon badge */}
           {isClosingSoon && (
             <span
-              className="inline-flex items-center gap-1 rounded-md px-1.5 py-[3px] text-[9px] font-bold font-body text-white shrink-0 animate-pulse-closing"
-              style={{
-                background: 'linear-gradient(135deg, #E8334A, #FF6B81)',
-              }}
+              className="inline-flex items-center gap-1 rounded-full px-2 py-[3px] text-[9px] font-bold text-white shrink-0 animate-pulse-closing"
+              style={{ background: 'linear-gradient(135deg, #E8334A, #FF6B81)' }}
             >
               <Clock size={8} />
               J-{closingDays}
             </span>
           )}
 
-          {/* AI badge */}
+          {/* AI recommendation */}
           {recommendationScore != null && recommendationScore >= 70 && (
-            <span className="inline-flex items-center gap-1 rounded-md px-1.5 py-[3px] bg-violet/10 text-violet text-[9px] font-bold shrink-0">
-              <span className="w-1.5 h-1.5 rounded-full bg-violet animate-pulse" />
+            <span className="inline-flex items-center gap-1 rounded-full px-2 py-[3px] bg-violet/10 dark:bg-violet/20 text-violet dark:text-violet-light text-[9px] font-bold shrink-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-violet dark:bg-violet-light animate-pulse" />
               IA {recommendationScore}%
             </span>
           )}
 
-          {/* Spacer + SRI gauge + Favorite */}
           <span className="flex-1 min-w-0" />
 
-          <SriGauge level={sri} />
-
-          <button
-            onClick={handleFavorite}
+          {/* SRI numbered pill */}
+          <span
             className={cn(
-              'p-1 rounded-full transition-all duration-200 shrink-0',
-              heartBounce && 'animate-heart-bounce',
-              isFavorited
-                ? 'text-red'
-                : 'text-ink-3/30 hover:text-red opacity-0 group-hover:opacity-100',
+              'inline-flex items-center gap-1 rounded-full px-2 py-[2px] text-[11px] font-bold shrink-0',
+              sriStyle.bg, sriStyle.text, sriStyle.darkBg, sriStyle.darkText,
             )}
-            title={isFavorited ? 'Retirer des favoris' : 'Ajouter aux favoris'}
           >
-            <Heart size={13} fill={isFavorited ? 'currentColor' : 'none'} />
-          </button>
+            SRI {sri}
+          </span>
         </div>
 
-        {/* Product name + ISIN */}
-        <div>
-          <p className="text-[13px] font-semibold text-ink leading-snug font-body line-clamp-2 group-hover:text-violet transition-colors">
+        {/* ── Product name + ISIN ── */}
+        <div className="space-y-0.5">
+          <p className="font-display text-[15px] font-bold text-ink dark:text-white leading-snug truncate group-hover:text-violet dark:group-hover:text-violet-light transition-colors duration-200">
             {name}
           </p>
-          <p className="text-[10px] font-mono text-ink-3 mt-0.5 tabular-nums">
+          <p className="font-mono text-[11px] text-ink-3 dark:text-ink-3 tabular-nums">
             {isin}
           </p>
         </div>
 
-        {/* Issuer with avatar */}
-        <div className="flex items-center gap-1.5 -mt-1">
-          <IssuerAvatar name={issuerName} color={payoff.text} />
-          <p className="text-[11px] text-ink-3 truncate font-body">
+        {/* ── Issuer row ── */}
+        <div className="flex items-center gap-2 -mt-1">
+          <span
+            className="w-2 h-2 rounded-full shrink-0"
+            style={{ backgroundColor: payoff.dot }}
+          />
+          <p className="text-[12px] text-ink-2 dark:text-ink-3 truncate font-body">
             {issuerName}
           </p>
         </div>
 
-        {/* Key metrics grid */}
-        <div className="grid grid-cols-3 gap-2 bg-surface rounded-lg p-3 -mx-0.5">
-          <div className="flex flex-col">
-            <span className="text-[9px] uppercase tracking-wider text-ink-3 font-semibold">
+        {/* ── Key metrics grid ── */}
+        <div className="grid grid-cols-3 gap-3">
+          {/* Gain max */}
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[9px] uppercase tracking-widest text-ink-3/70 dark:text-ink-3/50 font-semibold">
               Gain max
             </span>
-            <span className="font-display text-base font-bold text-ink leading-tight">
+            <span className="font-display text-[18px] font-extrabold text-ink dark:text-white leading-none">
               {(maxGainPct ?? 0).toFixed(0)}
-              <span className="text-xs text-ink-3">%</span>
+              <span className="text-[13px] font-bold text-ink-3/50 dark:text-ink-3/40">%</span>
             </span>
           </div>
-          <div className="flex flex-col">
-            <span className="text-[9px] uppercase tracking-wider text-ink-3 font-semibold">
+
+          {/* Barrière */}
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[9px] uppercase tracking-widest text-ink-3/70 dark:text-ink-3/50 font-semibold">
               Barrière
             </span>
-            <span className="font-display text-base font-bold text-red leading-tight">
+            <span className="font-display text-[18px] font-extrabold text-orange-600 dark:text-orange-400 leading-none">
               {(barrierCapPct ?? 0).toFixed(0)}
-              <span className="text-xs text-red/60">%</span>
+              <span className="text-[13px] font-bold text-orange-400/60 dark:text-orange-500/50">%</span>
             </span>
           </div>
-          <div className="flex flex-col">
-            <span className="text-[9px] uppercase tracking-wider text-ink-3 font-semibold">
-              {couponPct != null ? 'Coupon' : 'Échéance'}
+
+          {/* Échéance */}
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[9px] uppercase tracking-widest text-ink-3/70 dark:text-ink-3/50 font-semibold">
+              Échéance
             </span>
-            <span className="font-display text-base font-bold text-ink leading-tight">
-              {couponPct != null ? (
-                <span className={cn(highCoupon && 'coupon-glow')}>
-                  {couponPct.toFixed(1)}
-                  <span className={cn('text-xs', highCoupon ? 'text-gold' : 'text-ink-3')}>%</span>
-                </span>
-              ) : (
-                <span className="text-xs font-body font-semibold flex items-center gap-1">
-                  <Calendar size={10} className="text-ink-3" />
-                  {formatDate(maturityDate)}
-                </span>
-              )}
+            <span className="font-display text-[18px] font-extrabold text-ink dark:text-white leading-none">
+              <span className="text-[13px] font-bold">
+                {formatDate(maturityDate)}
+              </span>
             </span>
           </div>
         </div>
 
-        {/* Fill progress */}
+        {/* ── Enveloppe progress bar ── */}
         <div className="flex flex-col gap-1.5 mt-auto">
-          <div className="flex items-center justify-between text-[11px] font-body">
-            <span className="text-ink-3">Enveloppe</span>
-            <span className="font-semibold text-ink-2 tabular-nums font-mono text-[11px]">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] text-ink-3 dark:text-ink-3 font-body">
+              Enveloppe
+            </span>
+            <span className="text-[11px] font-semibold text-ink-2 dark:text-ink-3 tabular-nums font-mono">
               {(fillPct ?? 0).toFixed(0)}%
-              <span className="font-normal text-ink-3 ml-1">
+              <span className="font-normal text-ink-3/70 dark:text-ink-3/50 ml-1">
                 / {formatCompact(targetAmount ?? 0)}
               </span>
             </span>
           </div>
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-2">
+          <div className="h-[6px] w-full overflow-hidden rounded-full bg-ink/[0.05] dark:bg-white/[0.06]">
             <div
-              className="h-full rounded-full transition-all duration-700 ease-out progress-bar-animated"
+              ref={barRef}
+              className="h-full rounded-full transition-[width] duration-700 ease-out"
               style={{
-                width: `${clampedFill}%`,
-                background: clampedFill > 80
+                width: mounted ? `${clampedFill}%` : '0%',
+                background: clampedFill >= 80
                   ? 'linear-gradient(90deg, #00B894, #2ECC71, #00D4AA)'
                   : 'linear-gradient(90deg, #3B1FA8, #5535C4, #7B5FE0)',
               }}
@@ -389,15 +342,22 @@ export function ProductCard({ product, className, isFavorited = false, recommend
         </div>
       </div>
 
-      {/* Footer CTA */}
-      <div className="px-5 py-3 border-t border-border/50 bg-surface/50 flex items-center justify-between">
-        <span className="text-[11px] font-semibold text-violet group-hover:text-violet-mid transition-colors">
-          {isClosed ? 'Fermé' : "Marque d'intérêt"}
+      {/* ── Footer CTA ── */}
+      <div className="px-5 py-3 border-t border-border/30 dark:border-white/[0.04] flex items-center justify-between">
+        <span className={cn(
+          'text-[12px] font-semibold transition-colors duration-200',
+          isClosed
+            ? 'text-ink-3'
+            : 'text-ink-3 group-hover:text-violet dark:group-hover:text-violet-light',
+        )}>
+          {isClosed ? 'Produit fermé' : "Marque d'intérêt"}
         </span>
-        <ArrowUpRight
-          size={14}
-          className="text-violet/50 group-hover:text-violet group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-200"
-        />
+        {!isClosed && (
+          <ArrowRight
+            size={14}
+            className="text-ink-3/30 dark:text-ink-3/20 group-hover:text-violet dark:group-hover:text-violet-light group-hover:translate-x-1 transition-all duration-200"
+          />
+        )}
       </div>
     </Link>
   );

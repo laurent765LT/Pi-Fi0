@@ -35,17 +35,7 @@ export const useAuthStore = create<AuthState>()(
       isDemo: false,
 
       login: async (email: string, password: string) => {
-        // Try real API first
-        try {
-          const { accessToken, refreshToken, user } = await api.login(email, password);
-          api.setToken(accessToken);
-          set({ user, token: accessToken, refreshToken, isDemo: false });
-          return;
-        } catch {
-          // API unreachable — fall through to demo mode
-        }
-
-        // Demo mode fallback
+        // Check demo credentials FIRST (instant, no network)
         const demoUser = DEMO_USERS[email.toLowerCase()];
         if (demoUser && demoUser.password === password) {
           const fakeToken = 'demo-token-' + Date.now();
@@ -66,7 +56,16 @@ export const useAuthStore = create<AuthState>()(
           return;
         }
 
-        // Neither API nor demo worked
+        // Not a demo account — try real API
+        try {
+          const { accessToken, refreshToken, user } = await api.login(email, password);
+          api.setToken(accessToken);
+          set({ user, token: accessToken, refreshToken, isDemo: false });
+          return;
+        } catch {
+          // API unreachable
+        }
+
         throw new Error('Identifiants incorrects. Veuillez réessayer.');
       },
 

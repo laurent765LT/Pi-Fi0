@@ -57,7 +57,7 @@ const PAYOFF_COLORS: Record<PayoffType, { bg: string; text: string; border: stri
 const PAYOFF_LABELS: Record<PayoffType, string> = {
   AUTOCALL_PHOENIX: 'Phoenix',
   AUTOCALL_COUPON: 'Autocall',
-  CAPITAL_PROTECTED: 'Capital Prot\u00E9g\u00E9',
+  CAPITAL_PROTECTED: 'Capital Protégé',
   CONDITIONAL_RATE: 'Taux Cond.',
   BARRIER_NOTE: 'Barrier',
 };
@@ -243,10 +243,10 @@ export function ProductCard({ product, className, isFavorited = false, recommend
 
       <div className="flex flex-col gap-3.5 px-5 py-4 flex-1">
         {/* Header: Badges row -- type, SRI, status, favorite */}
-        <div className="flex items-center gap-1.5 flex-wrap">
+        <div className="flex items-center gap-1.5 min-w-0">
           {/* Type badge with gradient background */}
           <span
-            className="inline-flex items-center rounded-md px-2 py-[3px] text-[10px] font-semibold font-body tracking-wide text-white"
+            className="inline-flex items-center rounded-md px-2 py-[3px] text-[10px] font-semibold font-body tracking-wide text-white shrink-0"
             style={{
               background: payoff.gradient,
             }}
@@ -257,7 +257,7 @@ export function ProductCard({ product, className, isFavorited = false, recommend
           {/* Status badges */}
           {isNew && (
             <span
-              className="inline-flex items-center gap-1 rounded-md px-1.5 py-[3px] text-[9px] font-bold font-body text-white"
+              className="inline-flex items-center gap-1 rounded-md px-1.5 py-[3px] text-[9px] font-bold font-body text-white shrink-0"
               style={{
                 background: 'linear-gradient(135deg, #3D63F5, #5535C4)',
               }}
@@ -268,7 +268,7 @@ export function ProductCard({ product, className, isFavorited = false, recommend
           )}
           {isClosingSoon && (
             <span
-              className="inline-flex items-center gap-1 rounded-md px-1.5 py-[3px] text-[9px] font-bold font-body text-white animate-pulse-closing"
+              className="inline-flex items-center gap-1 rounded-md px-1.5 py-[3px] text-[9px] font-bold font-body text-white shrink-0 animate-pulse-closing"
               style={{
                 background: 'linear-gradient(135deg, #E8334A, #FF6B81)',
               }}
@@ -280,14 +280,14 @@ export function ProductCard({ product, className, isFavorited = false, recommend
 
           {/* AI badge */}
           {recommendationScore != null && recommendationScore >= 70 && (
-            <span className="inline-flex items-center gap-1 rounded-md px-1.5 py-[3px] bg-violet/10 text-violet text-[9px] font-bold">
+            <span className="inline-flex items-center gap-1 rounded-md px-1.5 py-[3px] bg-violet/10 text-violet text-[9px] font-bold shrink-0">
               <span className="w-1.5 h-1.5 rounded-full bg-violet animate-pulse" />
               IA {recommendationScore}%
             </span>
           )}
 
           {/* Spacer + SRI gauge + Favorite */}
-          <span className="flex-1" />
+          <span className="flex-1 min-w-0" />
 
           <SriGauge level={sri} />
 
@@ -337,7 +337,7 @@ export function ProductCard({ product, className, isFavorited = false, recommend
           </div>
           <div className="flex flex-col">
             <span className="text-[9px] uppercase tracking-wider text-ink-3 font-semibold">
-              Barri{'\u00E8'}re
+              Barrière
             </span>
             <span className="font-display text-base font-bold text-red leading-tight">
               {(barrierCapPct ?? 0).toFixed(0)}
@@ -346,7 +346,7 @@ export function ProductCard({ product, className, isFavorited = false, recommend
           </div>
           <div className="flex flex-col">
             <span className="text-[9px] uppercase tracking-wider text-ink-3 font-semibold">
-              {couponPct != null ? 'Coupon' : '\u00C9ch\u00E9ance'}
+              {couponPct != null ? 'Coupon' : 'Échéance'}
             </span>
             <span className="font-display text-base font-bold text-ink leading-tight">
               {couponPct != null ? (
@@ -392,7 +392,7 @@ export function ProductCard({ product, className, isFavorited = false, recommend
       {/* Footer CTA */}
       <div className="px-5 py-3 border-t border-border/50 bg-surface/50 flex items-center justify-between">
         <span className="text-[11px] font-semibold text-violet group-hover:text-violet-mid transition-colors">
-          {isClosed ? 'Ferm\u00E9' : "Marque d\u2019int\u00E9r\u00EAt"}
+          {isClosed ? 'Fermé' : "Marque d'intérêt"}
         </span>
         <ArrowUpRight
           size={14}

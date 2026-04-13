@@ -324,7 +324,7 @@ export default function LoginPage() {
           {/* ---- Footer ---- */}
           <div className="flex flex-col items-center gap-3 mt-6">
             <div className="flex items-center gap-2">
-              {['Produits structur\u00e9s', 'MIF2', 'PRIIPs'].map((tag) => (
+              {['Produits structurés', 'MIF2', 'PRIIPs'].map((tag) => (
                 <span
                   key={tag}
                   className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold font-body tracking-wide text-white/60 border border-white/15 bg-white/5"

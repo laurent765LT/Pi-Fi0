@@ -20,6 +20,8 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: npm run build --workspace=packages/shared
+      - name: Generate Prisma client
+        run: cd apps/api && npx prisma generate
       - name: Type-check web
         run: cd apps/web && npx tsc --noEmit
       - name: Type-check API

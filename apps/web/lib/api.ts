@@ -66,14 +66,21 @@ class ApiClient {
   // ── Auth ────────────────────────────────────────────────────────────────────
 
   async login(email: string, password: string) {
-    return this.request<{
-      accessToken: string;
-      refreshToken: string;
-      user: any;
-    }>('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000);
+    try {
+      return await this.request<{
+        accessToken: string;
+        refreshToken: string;
+        user: any;
+      }>('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timeout);
+    }
   }
 
   async refresh(refreshToken: string) {

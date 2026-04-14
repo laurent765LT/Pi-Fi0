@@ -295,7 +295,7 @@ export default function EventsPage() {
                   const isUrgent = evt.type === 'closing' && days <= 30;
 
                   return (
-                    <div key={`${evt.productId}-${evt.type}-${evt.date}-${i}`} className="relative reveal-hidden [.stagger-children_&]:reveal-visible">
+                    <div key={`${evt.productId}-${evt.type}-${evt.date}-${i}`} className="relative">
                       {/* Timeline dot */}
                       <div className="absolute -left-6 top-1/2 -translate-y-1/2 flex items-center justify-center">
                         {days <= 7 ? (

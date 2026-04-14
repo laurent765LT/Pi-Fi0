@@ -289,7 +289,31 @@ export default function PricingPage() {
 
   const selectCls = cn(inputCls, 'cursor-pointer appearance-none');
 
-  const labelCls = 'text-[9px] uppercase tracking-[0.2em] font-bold text-violet/80 dark:text-violet-pale font-body';
+  const labelCls = 'text-[9px] uppercase tracking-[0.2em] font-bold text-violet/80 dark:text-violet-pale font-body flex items-center gap-1';
+
+  // Field tooltip helper
+  const FIELD_TIPS: Record<string, string> = {
+    'Nom du produit': 'Identifiant commercial du produit structuré',
+    'Type de structure': 'Type de payoff: Autocall, Phoenix, Capital Protégé, etc.',
+    'Devise': 'Devise de dénomination du produit',
+    'Nominal': 'Montant total de l\'émission en devise',
+    'Sous-jacent': 'Actif de référence pour le calcul du payoff',
+    'Date de strike': 'Date de fixing initial (constatation du niveau de référence)',
+    'Maturite': 'Date d\'échéance maximale du produit',
+    'Type de coupon': 'Mécanique de distribution des coupons',
+    'Coupon (%/an)': 'Taux de coupon annuel exprimé en pourcentage',
+    'Barriere coupon (%)': 'Niveau du sous-jacent sous lequel le coupon n\'est pas versé',
+    'Barriere autocall (%)': 'Niveau au-dessus duquel le produit est rappelé par anticipation',
+    'Barriere protection (%)': 'Niveau de protection du capital (en % du strike)',
+    'Monitoring': 'Méthode d\'observation de la barrière',
+    'Participation hausse (%)': 'Taux de participation à la hausse du sous-jacent',
+    'Cap (%)': 'Plafond de rendement (0 = pas de cap)',
+    'Taux sans risque (%)': 'Taux EUR swap utilisé pour le pricing',
+    'Spread funding (%)': 'Spread de financement de l\'émetteur',
+    'Marge structuration (%)': 'Marge de la banque structureuse',
+    'Frais distribution (%)': 'Commission de distribution embarquée',
+    'Simulations Monte Carlo': 'Nombre de trajectoires simulées (plus = plus précis)',
+  };
 
   // ── Card wrapper ──────────────────────────────────────────────────────────
   const cardCls = cn(
@@ -443,12 +467,16 @@ export default function PricingPage() {
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className={labelCls}>Nom du produit</label>
+                  <Tooltip content={FIELD_TIPS['Nom du produit']!} side="right">
+                    <label className={labelCls}>Nom du produit</label>
+                  </Tooltip>
                   <input value={productName} onChange={(e) => setProductName(e.target.value)} className={inputCls} />
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className={labelCls}>Type de structure</label>
+                  <Tooltip content={FIELD_TIPS['Type de structure']!} side="right">
+                    <label className={labelCls}>Type de structure</label>
+                  </Tooltip>
                   <select value={structureType} onChange={(e) => setStructureType(e.target.value)} className={selectCls}>
                     {STRUCTURE_TYPES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
                   </select>
@@ -912,6 +940,40 @@ export default function PricingPage() {
                     ))}
                   </div>
                 </div>
+
+                {/* Greeks display */}
+                {pricingResult.result.greeks && (
+                  <div className={cn(cardCls, 'p-4')}>
+                    <div
+                      className="absolute top-0 left-0 right-0 h-[2px] rounded-t-xl opacity-40"
+                      style={{ background: 'linear-gradient(90deg, #00B894, #3B1FA8)' }}
+                    />
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-6 h-6 rounded-md bg-teal/10 dark:bg-teal/20 flex items-center justify-center">
+                        <Activity size={12} className="text-teal" />
+                      </div>
+                      <h3 className="font-display text-[13px] font-bold text-ink dark:text-white">Greeks &amp; Sensibilités</h3>
+                    </div>
+                    <div className="grid grid-cols-5 gap-2.5">
+                      {[
+                        { label: 'Delta', value: pricingResult.result.greeks.delta, color: '#3B1FA8', tooltip: 'Sensibilité au spot du sous-jacent' },
+                        { label: 'Gamma', value: pricingResult.result.greeks.gamma, color: '#5535C4', tooltip: 'Dérivée seconde / convexité' },
+                        { label: 'Vega', value: pricingResult.result.greeks.vega, color: '#00B894', tooltip: 'Sensibilité à la volatilité' },
+                        { label: 'Theta', value: pricingResult.result.greeks.theta, color: '#D4A017', tooltip: 'Décroissance temporelle (par jour)' },
+                        { label: 'Rho', value: pricingResult.result.greeks.rho, color: '#0A2799', tooltip: 'Sensibilité aux taux' },
+                      ].map((g) => (
+                        <Tooltip key={g.label} content={g.tooltip} side="top">
+                          <div className="rounded-xl p-3 bg-ink/[0.02] dark:bg-white/5 text-center group hover:bg-violet/5 transition-all duration-200 cursor-help">
+                            <span className="text-[9px] uppercase tracking-[0.12em] text-ink-3 dark:text-white/40 font-body block mb-1">{g.label}</span>
+                            <span className="font-mono text-sm font-bold block" style={{ color: g.color }}>
+                              {typeof g.value === 'number' ? g.value.toFixed(4) : g.value ?? '—'}
+                            </span>
+                          </div>
+                        </Tooltip>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Scenario table */}
                 <div className={cn(cardCls, 'overflow-hidden')}>

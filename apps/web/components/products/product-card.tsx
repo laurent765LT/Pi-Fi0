@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Heart, Layers, Check, Clock, Sparkles as SparkleIcon } from 'lucide-react';
+import { ArrowRight, Heart, Layers, Check, Clock, Sparkles as SparkleIcon, Copy, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useToggleFavorite } from '@/hooks/use-favorites';
 import { useCompareStore } from '@/stores/compare-store';
+import { Tooltip } from '@/components/ui/tooltip';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -58,7 +59,7 @@ const PAYOFF_COLORS: Record<PayoffType, { gradient: string; dot: string }> = {
 const PAYOFF_LABELS: Record<PayoffType, string> = {
   AUTOCALL_PHOENIX: 'Phoenix',
   AUTOCALL_COUPON: 'Autocall',
-  CAPITAL_PROTECTED: 'Capital Protégé',
+  CAPITAL_PROTECTED: 'Capital Protege',
   CONDITIONAL_RATE: 'Taux Cond.',
   BARRIER_NOTE: 'Barrier',
 };
@@ -122,6 +123,7 @@ export function ProductCard({ product, className, isFavorited = false, recommend
 
   const [heartBounce, setHeartBounce] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isinCopied, setIsinCopied] = useState(false);
   const barRef = useRef<HTMLDivElement>(null);
 
   // Animate progress bar on mount
@@ -155,6 +157,15 @@ export function ProductCard({ product, className, isFavorited = false, recommend
     }
   };
 
+  const handleCopyIsin = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigator.clipboard.writeText(isin).then(() => {
+      setIsinCopied(true);
+      setTimeout(() => setIsinCopied(false), 2000);
+    });
+  };
+
   return (
     <Link
       href={`/products/${id}`}
@@ -181,9 +192,14 @@ export function ProductCard({ product, className, isFavorited = false, recommend
           onClick={handleCompare}
           className={cn(
             'p-1.5 rounded-lg transition-all duration-200',
+            // Always visible on mobile, hover-only on desktop
             isCompared
               ? 'bg-violet text-white shadow-sm'
-              : 'bg-white/90 dark:bg-white/10 text-ink-3/40 dark:text-ink-3 border border-transparent opacity-0 group-hover:opacity-100 hover:text-violet dark:hover:text-violet-light hover:border-violet/20 hover:bg-violet-pale/50 dark:hover:bg-violet/20',
+              : cn(
+                  'bg-white/90 dark:bg-white/10 text-ink-3/40 dark:text-ink-3 border border-transparent',
+                  'opacity-100 md:opacity-0 md:group-hover:opacity-100',
+                  'hover:text-violet dark:hover:text-violet-light hover:border-violet/20 hover:bg-violet-pale/50 dark:hover:bg-violet/20',
+                ),
           )}
           title={isCompared ? 'Retirer de la comparaison' : 'Comparer'}
         >
@@ -194,10 +210,16 @@ export function ProductCard({ product, className, isFavorited = false, recommend
           onClick={handleFavorite}
           className={cn(
             'p-1.5 rounded-lg transition-all duration-200',
+            // Larger touch targets on mobile
+            'min-w-[28px] min-h-[28px] flex items-center justify-center',
             heartBounce && 'animate-heart-bounce',
             isFavorited
               ? 'text-red bg-red-light dark:bg-red/20'
-              : 'bg-white/90 dark:bg-white/10 text-ink-3/40 dark:text-ink-3 border border-transparent opacity-0 group-hover:opacity-100 hover:text-red hover:border-red/20 hover:bg-red-light/50 dark:hover:bg-red/10',
+              : cn(
+                  'bg-white/90 dark:bg-white/10 text-ink-3/40 dark:text-ink-3 border border-transparent',
+                  'opacity-100 md:opacity-0 md:group-hover:opacity-100',
+                  'hover:text-red hover:border-red/20 hover:bg-red-light/50 dark:hover:bg-red/10',
+                ),
           )}
           title={isFavorited ? 'Retirer des favoris' : 'Favoris'}
         >
@@ -259,14 +281,29 @@ export function ProductCard({ product, className, isFavorited = false, recommend
           </span>
         </div>
 
-        {/* ── Product name + ISIN ── */}
+        {/* ── Product name + ISIN with copy button ── */}
         <div className="space-y-0.5">
           <p className="font-display text-[15px] font-bold text-ink dark:text-white leading-snug truncate group-hover:text-violet dark:group-hover:text-violet-light transition-colors duration-200">
             {name}
           </p>
-          <p className="font-mono text-[11px] text-ink-3 dark:text-ink-3 tabular-nums">
-            {isin}
-          </p>
+          <div className="flex items-center gap-1.5">
+            <p className="font-mono text-[11px] text-ink-3 dark:text-ink-3 tabular-nums">
+              {isin}
+            </p>
+            <button
+              onClick={handleCopyIsin}
+              className={cn(
+                'p-0.5 rounded transition-all duration-200',
+                'hover:bg-surface-2 dark:hover:bg-white/10',
+                isinCopied
+                  ? 'text-teal'
+                  : 'text-ink-3/40 hover:text-ink-3 dark:hover:text-ink-3',
+              )}
+              title="Copier l'ISIN"
+            >
+              {isinCopied ? <Check size={11} strokeWidth={2.5} /> : <Copy size={11} />}
+            </button>
+          </div>
         </div>
 
         {/* ── Issuer + Underlying row ── */}
@@ -298,60 +335,74 @@ export function ProductCard({ product, className, isFavorited = false, recommend
           </div>
         )}
 
-        {/* ── Key metrics grid ── */}
-        <div className="grid grid-cols-4 gap-2">
+        {/* ── Key metrics grid (2 cols mobile, 4 cols desktop) ── */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {/* Coupon (hero) */}
-          <div className="flex flex-col gap-0.5">
-            <span className="text-[8px] uppercase tracking-widest text-ink-3/70 dark:text-ink-3/50 font-semibold">
-              Coupon
-            </span>
-            <span className="font-display text-[18px] font-extrabold leading-none" style={{ color: couponPct != null && couponPct > 0 ? '#008B6E' : undefined }}>
-              {couponPct != null && couponPct > 0 ? (
-                <>{couponPct.toFixed(1)}<span className="text-[12px] font-bold opacity-50">%</span></>
-              ) : (
-                <span className="text-[13px] text-ink-3/40 dark:text-ink-3/30">—</span>
-              )}
-            </span>
-          </div>
+          <Tooltip content="Taux de coupon annuel conditionnel" side="top">
+            <div className="flex flex-col gap-0.5 cursor-default">
+              <span className="text-[8px] uppercase tracking-widest text-ink-3/70 dark:text-ink-3/50 font-semibold">
+                Coupon
+              </span>
+              <span className="font-display text-[18px] font-extrabold leading-none" style={{ color: couponPct != null && couponPct > 0 ? '#008B6E' : undefined }}>
+                {couponPct != null && couponPct > 0 ? (
+                  <>{couponPct.toFixed(1)}<span className="text-[12px] font-bold opacity-50">%</span></>
+                ) : (
+                  <span className="text-[13px] text-ink-3/40 dark:text-ink-3/30">&mdash;</span>
+                )}
+              </span>
+            </div>
+          </Tooltip>
 
           {/* Gain max */}
-          <div className="flex flex-col gap-0.5">
-            <span className="text-[8px] uppercase tracking-widest text-ink-3/70 dark:text-ink-3/50 font-semibold">
-              Gain max
-            </span>
-            <span className="font-display text-[18px] font-extrabold text-ink dark:text-white leading-none">
-              {(maxGainPct ?? 0).toFixed(0)}
-              <span className="text-[12px] font-bold text-ink-3/50 dark:text-ink-3/40">%</span>
-            </span>
-          </div>
+          <Tooltip content="Gain maximum potentiel a maturite" side="top">
+            <div className="flex flex-col gap-0.5 cursor-default">
+              <span className="text-[8px] uppercase tracking-widest text-ink-3/70 dark:text-ink-3/50 font-semibold">
+                Gain max
+              </span>
+              <span className="font-display text-[18px] font-extrabold text-ink dark:text-white leading-none">
+                {(maxGainPct ?? 0).toFixed(0)}
+                <span className="text-[12px] font-bold text-ink-3/50 dark:text-ink-3/40">%</span>
+              </span>
+            </div>
+          </Tooltip>
 
-          {/* Barrière */}
-          <div className="flex flex-col gap-0.5">
-            <span className="text-[8px] uppercase tracking-widest text-ink-3/70 dark:text-ink-3/50 font-semibold">
-              Barrière
-            </span>
-            <span className="font-display text-[18px] font-extrabold text-orange-600 dark:text-orange-400 leading-none">
-              {(barrierCapPct ?? 0).toFixed(0)}
-              <span className="text-[12px] font-bold text-orange-400/60 dark:text-orange-500/50">%</span>
-            </span>
-          </div>
+          {/* Barriere */}
+          <Tooltip content="Niveau de protection du capital" side="top">
+            <div className="flex flex-col gap-0.5 cursor-default">
+              <span className="text-[8px] uppercase tracking-widest text-ink-3/70 dark:text-ink-3/50 font-semibold">
+                Barriere
+              </span>
+              <span className="font-display text-[18px] font-extrabold text-orange-600 dark:text-orange-400 leading-none">
+                {(barrierCapPct ?? 0).toFixed(0)}
+                <span className="text-[12px] font-bold text-orange-400/60 dark:text-orange-500/50">%</span>
+              </span>
+            </div>
+          </Tooltip>
 
-          {/* Échéance */}
-          <div className="flex flex-col gap-0.5">
-            <span className="text-[8px] uppercase tracking-widest text-ink-3/70 dark:text-ink-3/50 font-semibold">
-              Échéance
-            </span>
-            <span className="font-display text-[13px] font-bold text-ink dark:text-white leading-none mt-[3px]">
-              {formatDate(maturityDate)}
-            </span>
-          </div>
+          {/* Echeance */}
+          <Tooltip content="Date de maturite du produit" side="top">
+            <div className="flex flex-col gap-0.5 cursor-default">
+              <span className="text-[8px] uppercase tracking-widest text-ink-3/70 dark:text-ink-3/50 font-semibold">
+                Echeance
+              </span>
+              <span className="font-display text-[13px] font-bold text-ink dark:text-white leading-none mt-[3px]">
+                {formatDate(maturityDate)}
+              </span>
+            </div>
+          </Tooltip>
         </div>
 
-        {/* ── Enveloppe progress bar ── */}
+        {/* ── Enveloppe progress bar with shimmer and threshold markers ── */}
         <div className="flex flex-col gap-1.5 mt-auto">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] text-ink-3 dark:text-ink-3 font-body">
+            <span className="text-[11px] text-ink-3 dark:text-ink-3 font-body flex items-center gap-1.5">
               Enveloppe
+              {clampedFill > 90 && (
+                <span className="inline-flex items-center gap-0.5 px-1.5 py-[1px] rounded-full text-[9px] font-bold text-white bg-gradient-to-r from-[#E8334A] to-[#FF6B81] animate-pulse">
+                  <AlertTriangle size={8} />
+                  Presque complet
+                </span>
+              )}
             </span>
             <span className="text-[11px] font-semibold text-ink-2 dark:text-ink-3 tabular-nums font-mono">
               {(fillPct ?? 0).toFixed(0)}%
@@ -360,17 +411,41 @@ export function ProductCard({ product, className, isFavorited = false, recommend
               </span>
             </span>
           </div>
-          <div className="h-[6px] w-full overflow-hidden rounded-full bg-ink/[0.05] dark:bg-white/[0.06]">
+          <div className="relative h-[6px] w-full overflow-hidden rounded-full bg-ink/[0.05] dark:bg-white/[0.06]">
+            {/* Threshold markers when fill >= 80% */}
+            {clampedFill >= 80 && (
+              <>
+                <div
+                  className="absolute top-0 h-full w-[1px] bg-ink/20 dark:bg-white/20 z-10"
+                  style={{ left: '80%' }}
+                />
+                <div
+                  className="absolute top-0 h-full w-[1px] bg-ink/30 dark:bg-white/30 z-10"
+                  style={{ left: '100%' }}
+                />
+              </>
+            )}
             <div
               ref={barRef}
-              className="h-full rounded-full transition-[width] duration-700 ease-out"
+              className={cn(
+                'h-full rounded-full transition-[width] duration-700 ease-out relative overflow-hidden',
+              )}
               style={{
                 width: mounted ? `${clampedFill}%` : '0%',
                 background: clampedFill >= 80
                   ? 'linear-gradient(90deg, #00B894, #2ECC71, #00D4AA)'
                   : 'linear-gradient(90deg, #3B1FA8, #5535C4, #7B5FE0)',
               }}
-            />
+            >
+              {/* Shimmer effect */}
+              <div
+                className="absolute inset-0 opacity-30"
+                style={{
+                  background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.6) 50%, transparent 100%)',
+                  animation: 'shimmer 2s ease-in-out infinite',
+                }}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -383,7 +458,7 @@ export function ProductCard({ product, className, isFavorited = false, recommend
             ? 'text-ink-3'
             : 'text-ink-3 group-hover:text-violet dark:group-hover:text-violet-light',
         )}>
-          {isClosed ? 'Produit fermé' : "Marque d'intérêt"}
+          {isClosed ? 'Produit ferme' : "Marque d'interet"}
         </span>
         {!isClosed && (
           <ArrowRight
@@ -392,6 +467,7 @@ export function ProductCard({ product, className, isFavorited = false, recommend
           />
         )}
       </div>
+
     </Link>
   );
 }

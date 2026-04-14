@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from 'react';
 import {
-  Wallet,
   TrendingUp,
   Clock,
   CheckCircle2,
@@ -10,15 +9,19 @@ import {
   FileSpreadsheet,
   Filter,
   CircleDollarSign,
-  ArrowUpRight,
   BarChart3,
   PieChart,
+  ChevronUp,
+  ChevronDown,
+  ChevronsUpDown,
+  ChevronLeft,
+  ChevronRight,
+  Calendar,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
-import { useCommissionSummary } from '@/hooks/use-commissions';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Tooltip } from '@/components/ui/tooltip';
+import { Dropdown, DropdownItem, DropdownSeparator } from '@/components/ui/dropdown';
 import { exportToExcel } from '@/lib/export-utils';
 
 // ─── Demo Commission Data ────────────────────────────────────────────────────
@@ -62,6 +65,13 @@ function formatEur(n: number) {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n);
 }
 
+// ─── Types ──────────────────────────────────────────────────────────────────
+
+type SortCol = 'productName' | 'type' | 'ratePct' | 'amount' | 'status' | 'period';
+type SortDir = 'asc' | 'desc';
+
+type PeriodPreset = 'all' | 'month' | 'quarter' | 'year';
+
 // ─── KPI Card ───────────────────────────────────────────────────────────────
 
 function KpiCard({ icon, label, value, accent, subtitle }: {
@@ -101,7 +111,53 @@ function KpiCard({ icon, label, value, accent, subtitle }: {
   );
 }
 
-// ─── Premium Table Head ─────────────────────────────────────────────────────
+// ─── Sortable Table Head ────────────────────────────────────────────────────
+
+function SortableTh({
+  children,
+  className,
+  column,
+  sortCol,
+  sortDir,
+  onSort,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  column: SortCol;
+  sortCol: SortCol;
+  sortDir: SortDir;
+  onSort: (col: SortCol) => void;
+}) {
+  const isActive = sortCol === column;
+  return (
+    <th
+      className={cn(
+        'px-3 py-2.5 text-[10px] uppercase tracking-[0.18em] font-bold',
+        'font-body cursor-pointer select-none group/th transition-colors duration-200',
+        isActive
+          ? 'text-[#3B1FA8] dark:text-[#C9BCFF]'
+          : 'text-[#1A0A3E]/55 dark:text-white/50 hover:text-[#3B1FA8]/80 dark:hover:text-[#C9BCFF]/80',
+        className,
+      )}
+      onClick={() => onSort(column)}
+    >
+      <span className="inline-flex items-center gap-1">
+        {children}
+        {isActive ? (
+          sortDir === 'asc' ? (
+            <ChevronUp size={11} className="text-[#3B1FA8] dark:text-[#C9BCFF]" />
+          ) : (
+            <ChevronDown size={11} className="text-[#3B1FA8] dark:text-[#C9BCFF]" />
+          )
+        ) : (
+          <ChevronsUpDown size={11} className="opacity-0 group-hover/th:opacity-50 transition-opacity" />
+        )}
+      </span>
+    </th>
+  );
+}
+
+// ─── Non-sortable Table Head ────────────────────────────────────────────────
 
 function PremiumTh({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
@@ -193,23 +249,161 @@ function DonutChart({ segments }: { segments: { label: string; value: number; co
   );
 }
 
+// ─── Mobile Commission Card ─────────────────────────────────────────────────
+
+function CommissionCard({ c }: { c: typeof DEMO_COMMISSIONS[number] }) {
+  return (
+    <div className={cn(
+      'relative rounded-xl border border-border/60 dark:border-white/10 p-4',
+      'bg-white/80 dark:bg-white/5 backdrop-blur-md',
+      'ring-1 ring-black/[0.03] dark:ring-white/[0.06]',
+      'shadow-card hover:shadow-card-hover transition-all duration-200',
+    )}>
+      <div
+        className="absolute top-0 left-0 right-0 h-[2px] rounded-t-xl opacity-50"
+        style={{
+          background: c.status === 'PAID'
+            ? 'linear-gradient(90deg, #00B894, #00B89480)'
+            : c.status === 'PAYABLE'
+            ? 'linear-gradient(90deg, #D4A017, #D4A01780)'
+            : 'linear-gradient(90deg, #3D63F5, #3D63F580)',
+        }}
+      />
+      <div className="flex items-start justify-between gap-3 mb-2">
+        <h3 className="font-body text-[13px] font-semibold text-ink dark:text-white leading-tight">
+          {c.productName}
+        </h3>
+        <Badge variant={STATUS_VARIANT[c.status] ?? 'muted'} size="sm">{STATUS_LABEL[c.status]}</Badge>
+      </div>
+      <div className="flex items-center gap-2 mb-3">
+        <span className="text-[10px] font-body font-medium text-ink-3 dark:text-white/50 bg-surface-2/40 dark:bg-white/5 border border-border/20 px-2 py-0.5 rounded-md">
+          {TYPE_LABELS[c.type] ?? c.type}
+        </span>
+        <span className="text-[10px] font-mono text-ink-3 dark:text-white/40 tabular-nums">{c.period}</span>
+      </div>
+      <div className="flex items-end justify-between">
+        <div>
+          <p className="text-[9px] text-ink-3 dark:text-white/40 font-body uppercase tracking-wider">Montant</p>
+          <p className="font-display text-lg font-bold text-ink dark:text-white tabular-nums [font-variant-numeric:tabular-nums] tracking-tight">
+            {formatEur(c.amount)}
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-[9px] text-ink-3 dark:text-white/40 font-body uppercase tracking-wider">Taux</p>
+          <p className="text-[13px] font-mono font-semibold text-ink dark:text-white/80 tabular-nums">{c.ratePct}%</p>
+        </div>
+      </div>
+      {c.paidDate && (
+        <p className="text-[10px] text-ink-3 dark:text-white/40 font-mono mt-2 pt-2 border-t border-border/20 tabular-nums">
+          Verse le {c.paidDate}
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ─── Period helpers ─────────────────────────────────────────────────────────
+
+function matchesPeriodPreset(period: string, preset: PeriodPreset): boolean {
+  if (preset === 'all') return true;
+  // period format: "2026-Q1", "2025-Q4"
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1; // 1-12
+  const currentQ = Math.ceil(month / 3);
+
+  const [pYear, pQ] = period.split('-Q');
+  const periodYear = parseInt(pYear, 10);
+  const periodQuarter = parseInt(pQ, 10);
+
+  if (preset === 'month') {
+    // Current quarter only (closest approximation since data is quarterly)
+    return periodYear === year && periodQuarter === currentQ;
+  }
+  if (preset === 'quarter') {
+    return periodYear === year && periodQuarter === currentQ;
+  }
+  if (preset === 'year') {
+    return periodYear === year;
+  }
+  return true;
+}
+
+const PERIOD_PRESETS: { key: PeriodPreset; label: string }[] = [
+  { key: 'all', label: 'Tout' },
+  { key: 'month', label: 'Ce mois' },
+  { key: 'quarter', label: 'Ce trimestre' },
+  { key: 'year', label: 'Cette annee' },
+];
+
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function CommissionsPage() {
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [periodFilter, setPeriodFilter] = useState<string | null>(null);
+  const [periodPreset, setPeriodPreset] = useState<PeriodPreset>('all');
+
+  // Sorting
+  const [sortCol, setSortCol] = useState<SortCol>('amount');
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
+
+  // Pagination
+  const [page, setPage] = useState(1);
+  const perPage = 10;
+
+  const handleSort = (col: SortCol) => {
+    if (sortCol === col) {
+      setSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortCol(col);
+      setSortDir('desc');
+    }
+    setPage(1);
+  };
 
   const filtered = useMemo(() => {
     let data = [...DEMO_COMMISSIONS];
     if (statusFilter) data = data.filter(c => c.status === statusFilter);
     if (periodFilter) data = data.filter(c => c.period === periodFilter);
+    if (periodPreset !== 'all') data = data.filter(c => matchesPeriodPreset(c.period, periodPreset));
+
+    // Sort
+    data.sort((a, b) => {
+      let cmp = 0;
+      switch (sortCol) {
+        case 'productName':
+          cmp = a.productName.localeCompare(b.productName);
+          break;
+        case 'type':
+          cmp = (TYPE_LABELS[a.type] ?? a.type).localeCompare(TYPE_LABELS[b.type] ?? b.type);
+          break;
+        case 'ratePct':
+          cmp = a.ratePct - b.ratePct;
+          break;
+        case 'amount':
+          cmp = a.amount - b.amount;
+          break;
+        case 'status':
+          cmp = a.status.localeCompare(b.status);
+          break;
+        case 'period':
+          cmp = a.period.localeCompare(b.period);
+          break;
+      }
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+
     return data;
-  }, [statusFilter, periodFilter]);
+  }, [statusFilter, periodFilter, periodPreset, sortCol, sortDir]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
+  const paginatedData = filtered.slice((page - 1) * perPage, page * perPage);
 
   const totalPaid = DEMO_COMMISSIONS.filter(c => c.status === 'PAID').reduce((s, c) => s + c.amount, 0);
   const totalPayable = DEMO_COMMISSIONS.filter(c => c.status === 'PAYABLE').reduce((s, c) => s + c.amount, 0);
   const totalAccrued = DEMO_COMMISSIONS.filter(c => c.status === 'ACCRUED').reduce((s, c) => s + c.amount, 0);
   const grandTotal = totalPaid + totalPayable + totalAccrued;
+  const filteredTotal = filtered.reduce((s, c) => s + c.amount, 0);
 
   const periods = [...new Set(DEMO_COMMISSIONS.map(c => c.period))].sort();
   const quarterlyData = periods.map(p => ({
@@ -256,34 +450,38 @@ export default function CommissionsPage() {
             Suivi et rapprochement de vos commissions
           </p>
         </div>
-        <div className="flex items-center gap-1.5">
-          <button
+
+        {/* Export dropdown */}
+        <Dropdown
+          align="right"
+          trigger={
+            <button
+              className={cn(
+                'h-8 px-3.5 rounded-xl border border-border/60 dark:border-white/15',
+                'bg-white/80 dark:bg-white/5 backdrop-blur-sm text-ink-3 dark:text-white/60',
+                'text-[11px] font-medium font-body flex items-center gap-1.5',
+                'hover:border-[#3B1FA8]/40 hover:text-[#3B1FA8] dark:hover:text-[#C9BCFF]',
+                'hover:shadow-sm transition-all duration-200',
+              )}
+            >
+              <Download size={12} />
+              Exporter
+              <ChevronDown size={10} className="ml-0.5 opacity-60" />
+            </button>
+          }
+        >
+          <DropdownItem
+            icon={<Download size={14} />}
+            label="Exporter CSV"
             onClick={handleExportCSV}
-            className={cn(
-              'h-8 px-3 rounded-xl border border-border/60 dark:border-white/15',
-              'bg-white/80 dark:bg-white/5 backdrop-blur-sm text-ink-3 dark:text-white/60',
-              'text-[11px] font-medium font-body flex items-center gap-1.5',
-              'hover:border-[#3B1FA8]/40 hover:text-[#3B1FA8] dark:hover:text-[#C9BCFF]',
-              'hover:shadow-sm transition-all duration-200',
-            )}
-          >
-            <Download size={12} />
-            CSV
-          </button>
-          <button
+          />
+          <DropdownSeparator />
+          <DropdownItem
+            icon={<FileSpreadsheet size={14} />}
+            label="Exporter Excel"
             onClick={handleExportExcel}
-            className={cn(
-              'h-8 px-3 rounded-xl border border-border/60 dark:border-white/15',
-              'bg-white/80 dark:bg-white/5 backdrop-blur-sm text-ink-3 dark:text-white/60',
-              'text-[11px] font-medium font-body flex items-center gap-1.5',
-              'hover:border-[#3B1FA8]/40 hover:text-[#3B1FA8] dark:hover:text-[#C9BCFF]',
-              'hover:shadow-sm transition-all duration-200',
-            )}
-          >
-            <FileSpreadsheet size={12} />
-            Excel
-          </button>
-        </div>
+          />
+        </Dropdown>
       </div>
 
       <div className="h-px bg-gradient-to-r from-[#3B1FA8]/20 via-[#3B1FA8]/10 to-transparent dark:from-[#3B1FA8]/30 dark:via-[#3B1FA8]/10" />
@@ -422,12 +620,43 @@ export default function CommissionsPage() {
         ))}
       </div>
 
-      {/* ── Table ──────────────────────────────────────────────────── */}
+      {/* ── Period Preset Filter ───────────────────────────────────── */}
+      <div className="flex items-center gap-1.5 flex-wrap">
+        <div className="w-6 h-6 rounded-md bg-[#D4A017]/8 dark:bg-[#D4A017]/20 flex items-center justify-center mr-0.5">
+          <Calendar size={11} className="text-[#D4A017]" />
+        </div>
+        {PERIOD_PRESETS.map((preset) => (
+          <button
+            key={preset.key}
+            onClick={() => {
+              setPeriodPreset(preset.key);
+              setPeriodFilter(null);
+              setPage(1);
+            }}
+            className={cn(
+              'text-[11px] px-3 py-1.5 rounded-full font-semibold font-body border transition-all duration-200',
+              periodPreset === preset.key
+                ? 'bg-gradient-to-r from-[#D4A017] to-[#D4A017]/80 text-white border-transparent shadow-sm shadow-[#D4A017]/20'
+                : 'border-border/60 dark:border-white/15 text-ink-3 dark:text-white/50 hover:text-ink dark:hover:text-white/80 hover:border-[#D4A017]/40',
+            )}
+          >
+            {preset.label}
+          </button>
+        ))}
+        {periodPreset !== 'all' && (
+          <span className="text-[11px] font-mono font-semibold text-[#D4A017] ml-2 tabular-nums">
+            Total filtre : {formatEur(filteredTotal)}
+          </span>
+        )}
+      </div>
+
+      {/* ── Desktop Table ─────────────────────────────────────────── */}
       <div className={cn(
         'relative rounded-xl border border-border/60 dark:border-white/10 overflow-hidden',
         'bg-white/80 dark:bg-white/5 backdrop-blur-md',
         'ring-1 ring-black/[0.04] dark:ring-white/[0.06]',
         'shadow-card hover:shadow-card-hover transition-shadow duration-200',
+        'hidden md:block',
       )}>
         <div
           className="absolute top-0 left-0 right-0 h-[2px] rounded-t-xl opacity-40"
@@ -437,17 +666,17 @@ export default function CommissionsPage() {
           <table className="w-full text-[12px] font-body">
             <thead>
               <tr className="border-b border-border/60 dark:border-white/10 bg-gradient-to-r from-[#F8F6FF]/60 to-[#F0ECFF]/30 dark:from-white/[0.02] dark:to-transparent">
-                <PremiumTh className="text-left">Produit</PremiumTh>
-                <PremiumTh className="text-left">Type</PremiumTh>
-                <PremiumTh className="text-right">Taux</PremiumTh>
-                <PremiumTh className="text-right">Montant</PremiumTh>
-                <PremiumTh className="text-center">Statut</PremiumTh>
-                <PremiumTh className="text-left">Periode</PremiumTh>
+                <SortableTh column="productName" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} className="text-left">Produit</SortableTh>
+                <SortableTh column="type" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} className="text-left">Type</SortableTh>
+                <SortableTh column="ratePct" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} className="text-right">Taux</SortableTh>
+                <SortableTh column="amount" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} className="text-right">Montant</SortableTh>
+                <SortableTh column="status" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} className="text-center">Statut</SortableTh>
+                <SortableTh column="period" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} className="text-left">Periode</SortableTh>
                 <PremiumTh className="text-right">Date versement</PremiumTh>
               </tr>
             </thead>
             <tbody className="stagger-rows">
-              {filtered.map(c => (
+              {paginatedData.map(c => (
                 <tr
                   key={c.id}
                   className={cn(
@@ -477,12 +706,101 @@ export default function CommissionsPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Table Footer with Pagination */}
         <div className="px-4 py-2.5 border-t border-border/60 dark:border-white/10 flex items-center justify-between bg-gradient-to-r from-[#F8F6FF]/40 to-transparent dark:from-white/[0.02] dark:to-transparent">
           <span className="text-[10px] text-ink-3 dark:text-white/40 font-body">
             {filtered.length} commission{filtered.length > 1 ? 's' : ''}
           </span>
+
+          {/* Pagination controls */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className={cn(
+                'h-7 px-2.5 rounded-lg text-[11px] font-body font-semibold flex items-center gap-1 transition-all duration-200',
+                page === 1
+                  ? 'text-ink-3/30 cursor-not-allowed'
+                  : 'text-ink-3 hover:text-[#3B1FA8] hover:bg-[#3B1FA8]/5',
+              )}
+            >
+              <ChevronLeft size={12} />
+              Precedent
+            </button>
+            <span className="text-[11px] font-body text-ink-3 dark:text-white/50">
+              Page <span className="font-mono font-bold text-[#3B1FA8] dark:text-[#C9BCFF] tabular-nums">{page}</span> sur{' '}
+              <span className="font-mono font-bold tabular-nums">{totalPages}</span>
+            </span>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className={cn(
+                'h-7 px-2.5 rounded-lg text-[11px] font-body font-semibold flex items-center gap-1 transition-all duration-200',
+                page === totalPages
+                  ? 'text-ink-3/30 cursor-not-allowed'
+                  : 'text-ink-3 hover:text-[#3B1FA8] hover:bg-[#3B1FA8]/5',
+              )}
+            >
+              Suivant
+              <ChevronRight size={12} />
+            </button>
+          </div>
+
           <span className="font-display font-bold text-[13px] text-ink dark:text-white tabular-nums [font-variant-numeric:tabular-nums]">
-            Total: {formatEur(filtered.reduce((s, c) => s + c.amount, 0))}
+            Total: {formatEur(filteredTotal)}
+          </span>
+        </div>
+      </div>
+
+      {/* ── Mobile Cards ──────────────────────────────────────────── */}
+      <div className="md:hidden space-y-3">
+        {paginatedData.map((c) => (
+          <CommissionCard key={c.id} c={c} />
+        ))}
+
+        {/* Mobile Pagination */}
+        <div className="flex items-center justify-between px-2 py-3">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className={cn(
+              'h-8 px-3 rounded-xl text-[11px] font-body font-semibold flex items-center gap-1 border transition-all duration-200',
+              page === 1
+                ? 'text-ink-3/30 border-border/20 cursor-not-allowed'
+                : 'text-ink-3 border-border/40 hover:text-[#3B1FA8] hover:border-[#3B1FA8]/40',
+            )}
+          >
+            <ChevronLeft size={12} />
+            Precedent
+          </button>
+          <span className="text-[11px] font-body text-ink-3 dark:text-white/50">
+            <span className="font-mono font-bold text-[#3B1FA8] dark:text-[#C9BCFF] tabular-nums">{page}</span>
+            <span className="mx-1">/</span>
+            <span className="font-mono font-bold tabular-nums">{totalPages}</span>
+          </span>
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+            className={cn(
+              'h-8 px-3 rounded-xl text-[11px] font-body font-semibold flex items-center gap-1 border transition-all duration-200',
+              page === totalPages
+                ? 'text-ink-3/30 border-border/20 cursor-not-allowed'
+                : 'text-ink-3 border-border/40 hover:text-[#3B1FA8] hover:border-[#3B1FA8]/40',
+            )}
+          >
+            Suivant
+            <ChevronRight size={12} />
+          </button>
+        </div>
+
+        {/* Mobile footer total */}
+        <div className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-white/80 dark:bg-white/5 border border-border/60 dark:border-white/10">
+          <span className="text-[10px] text-ink-3 dark:text-white/40 font-body">
+            {filtered.length} commission{filtered.length > 1 ? 's' : ''}
+          </span>
+          <span className="font-display font-bold text-[13px] text-ink dark:text-white tabular-nums">
+            Total: {formatEur(filteredTotal)}
           </span>
         </div>
       </div>

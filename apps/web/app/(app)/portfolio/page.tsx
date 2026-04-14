@@ -10,6 +10,8 @@ import {
   Clock,
   Download,
   ArrowUpRight,
+  ArrowUp,
+  ArrowDown,
   CheckCircle2,
   Eye,
   X,
@@ -36,11 +38,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip } from '@/components/ui/tooltip';
 import { useAnimatedCounter } from '@/hooks/use-animated-counter';
+import { exportToExcel } from '@/lib/export-utils';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 type PortfolioTab = 'products' | 'underlyings' | 'timeline' | 'allocations' | 'expired';
 type BarrierStatus = 'above' | 'below' | 'watch' | 'barrier';
+type SortColumn = 'name' | 'amount' | 'coupon' | 'barrier' | 'sri' | 'date' | 'status';
+type SortDir = 'asc' | 'desc';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -221,14 +226,45 @@ function KpiCard({ icon, label, value, accent, trend, trendLabel, sparkData }: {
 
 // ─── Premium Table Head ─────────────────────────────────────────────────────
 
-function PremiumTh({ children, className }: { children: React.ReactNode; className?: string }) {
+function PremiumTh({
+  children,
+  className,
+  sortable,
+  sortKey,
+  activeSort,
+  activeSortDir,
+  onSort,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  sortable?: boolean;
+  sortKey?: SortColumn;
+  activeSort?: SortColumn;
+  activeSortDir?: SortDir;
+  onSort?: (col: SortColumn) => void;
+}) {
+  const isActive = sortable && sortKey && activeSort === sortKey;
+
+  const handleClick = () => {
+    if (sortable && sortKey && onSort) onSort(sortKey);
+  };
+
   return (
-    <th className={cn(
-      'px-3 py-2.5 text-[10px] uppercase tracking-[0.18em] font-bold',
-      'text-[#1A0A3E]/50 dark:text-white/45 font-body whitespace-nowrap',
-      className,
-    )}>
-      {children}
+    <th
+      className={cn(
+        'px-3 py-2.5 text-[10px] uppercase tracking-[0.18em] font-bold',
+        'text-[#1A0A3E]/50 dark:text-white/45 font-body whitespace-nowrap',
+        sortable && 'cursor-pointer select-none hover:text-[#3B1FA8] dark:hover:text-[#C9BCFF] transition-colors duration-150',
+        isActive && 'text-[#3B1FA8] dark:text-[#C9BCFF]',
+        className,
+      )}
+      onClick={handleClick}
+    >
+      <span className="inline-flex items-center gap-1">
+        {children}
+        {isActive && activeSortDir === 'asc' && <ArrowUp size={10} className="text-[#3B1FA8] dark:text-[#C9BCFF]" />}
+        {isActive && activeSortDir === 'desc' && <ArrowDown size={10} className="text-[#3B1FA8] dark:text-[#C9BCFF]" />}
+      </span>
     </th>
   );
 }
@@ -893,6 +929,8 @@ function AllocationChart({ products, commitments }: { products: any[]; commitmen
 export default function PortfolioPage() {
   const [activeTab, setActiveTab] = useState<PortfolioTab>('products');
   const [barrierFilter, setBarrierFilter] = useState<BarrierStatus | ''>('');
+  const [sortCol, setSortCol] = useState<SortColumn>('name');
+  const [sortDir, setSortDir] = useState<SortDir>('asc');
   const { data: commitments, isLoading: loadingCommitments } = useMyCommitments();
   const { data: productsData, isLoading: loadingProducts } = useProducts({});
   const cancelMutation = useCancelCommitment();
@@ -945,6 +983,78 @@ export default function PortfolioPage() {
     }
   };
 
+  // Sort handler
+  const handleSort = (col: SortColumn) => {
+    if (sortCol === col) {
+      setSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortCol(col);
+      setSortDir('asc');
+    }
+  };
+
+  // Sorted commitments
+  const sortedCommitments = useMemo(() => {
+    if (!commitments) return [];
+    const items = [...commitments];
+    items.sort((a: any, b: any) => {
+      const pa = productMap.get(a.shelfId) || productMap.get(a.productId);
+      const pb = productMap.get(b.shelfId) || productMap.get(b.productId);
+      let cmp = 0;
+      switch (sortCol) {
+        case 'name': {
+          const na = (a.productName ?? pa?.name ?? '').toLowerCase();
+          const nb = (b.productName ?? pb?.name ?? '').toLowerCase();
+          cmp = na.localeCompare(nb, 'fr');
+          break;
+        }
+        case 'amount':
+          cmp = (a.amount ?? 0) - (b.amount ?? 0);
+          break;
+        case 'coupon':
+          cmp = (pa?.couponPct ?? 0) - (pb?.couponPct ?? 0);
+          break;
+        case 'barrier':
+          cmp = (pa?.barrierCapPct ?? 0) - (pb?.barrierCapPct ?? 0);
+          break;
+        case 'sri':
+          cmp = (pa?.sri ?? 0) - (pb?.sri ?? 0);
+          break;
+        case 'date':
+          cmp = new Date(a.createdAt ?? 0).getTime() - new Date(b.createdAt ?? 0).getTime();
+          break;
+        case 'status': {
+          const sa = (a.status ?? '').toLowerCase();
+          const sb = (b.status ?? '').toLowerCase();
+          cmp = sa.localeCompare(sb, 'fr');
+          break;
+        }
+      }
+      return sortDir === 'desc' ? -cmp : cmp;
+    });
+    return items;
+  }, [commitments, sortCol, sortDir, productMap]);
+
+  // Export to Excel
+  const handleExport = () => {
+    if (!commitments || commitments.length === 0) return;
+    const rows = commitments.map((c: any) => {
+      const product = productMap.get(c.shelfId) || productMap.get(c.productId);
+      return {
+        Produit: c.productName ?? product?.name ?? '--',
+        ISIN: c.isin || product?.isin || '--',
+        'Sous-jacent': product?.underlyingYahoo ?? '--',
+        'Montant (EUR)': c.amount ?? 0,
+        SRI: product?.sri ?? '--',
+        'Coupon (%)': product?.couponPct != null ? product.couponPct.toFixed(1) : '--',
+        'Barriere (%)': product?.barrierCapPct != null ? String(product.barrierCapPct) : '--',
+        Statut: STATUS_LABEL[c.status] ?? c.status ?? '--',
+        Date: c.createdAt ? formatDate(c.createdAt) : '--',
+      };
+    });
+    exportToExcel(rows, `portfolio-export-${new Date().toISOString().slice(0, 10)}`, 'Portfolio');
+  };
+
   return (
     <div className="animate-fade-in space-y-4">
       {/* ── Header ─────────────────────────────────────────────────── */}
@@ -961,21 +1071,22 @@ export default function PortfolioPage() {
           </div>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
-          {['Rapport global', 'Export Excel'].map((label) => (
-            <button
-              key={label}
-              className={cn(
-                'h-8 px-3 rounded-lg border border-border/50 dark:border-white/12',
-                'bg-white/70 dark:bg-white/[0.04] backdrop-blur-sm text-ink-3 dark:text-white/55',
-                'text-[11px] font-medium font-body flex items-center gap-1.5',
-                'hover:border-[#3B1FA8]/35 hover:text-[#3B1FA8] dark:hover:text-[#C9BCFF]',
-                'hover:shadow-sm transition-all duration-150',
-              )}
-            >
-              <Download size={12} />
-              {label}
-            </button>
-          ))}
+          <button
+            onClick={handleExport}
+            disabled={!commitments || commitments.length === 0}
+            className={cn(
+              'h-8 px-3.5 rounded-lg border',
+              'bg-gradient-to-r from-[#3B1FA8] to-[#5535C4] border-[#3B1FA8]/30',
+              'text-white text-[11px] font-semibold font-body flex items-center gap-1.5',
+              'shadow-sm shadow-[#3B1FA8]/15 hover:shadow-md hover:shadow-[#3B1FA8]/25',
+              'hover:brightness-110 active:brightness-95',
+              'transition-all duration-150',
+              'disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:brightness-100',
+            )}
+          >
+            <Download size={12} />
+            Exporter
+          </button>
         </div>
       </div>
 
@@ -995,7 +1106,7 @@ export default function PortfolioPage() {
           value={loadingCommitments ? '...' : formatAmount(animatedTotal)}
           accent="#3B1FA8"
           trend="up"
-          trendLabel="+12.3%"
+          trendLabel="+12.3% vs mois precedent"
           sparkData={sparklinePoints('total-engaged', 12)}
         />
         <KpiCard
@@ -1004,7 +1115,7 @@ export default function PortfolioPage() {
           value={loadingCommitments ? '...' : stats.confirmed}
           accent="#00B894"
           trend="up"
-          trendLabel="+2"
+          trendLabel="+8% vs mois precedent"
           sparkData={sparklinePoints('confirmed', 12)}
         />
         <KpiCard
@@ -1013,7 +1124,7 @@ export default function PortfolioPage() {
           value={loadingCommitments ? '...' : stats.waiting}
           accent="#D4A017"
           trend="neutral"
-          trendLabel="stable"
+          trendLabel="stable vs mois precedent"
           sparkData={sparklinePoints('waiting', 12)}
         />
         <KpiCard
@@ -1021,6 +1132,9 @@ export default function PortfolioPage() {
           label="Annules"
           value={loadingCommitments ? '...' : stats.cancelled}
           accent="#E8334A"
+          trend="down"
+          trendLabel="-3% vs mois precedent"
+          sparkData={sparklinePoints('cancelled', 12)}
         />
       </section>
 
@@ -1095,178 +1209,254 @@ export default function PortfolioPage() {
               </Link>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-[12px] font-body">
-                <thead>
-                  <tr className="border-b border-border/50 dark:border-white/8 bg-gradient-to-r from-[#F8F6FF]/50 to-[#F0ECFF]/20 dark:from-white/[0.015] dark:to-transparent">
-                    <PremiumTh className="text-left">Produit</PremiumTh>
-                    <PremiumTh className="text-left">Sous-jacent</PremiumTh>
-                    <PremiumTh className="text-right">Montant</PremiumTh>
-                    <PremiumTh className="text-center">SRI</PremiumTh>
-                    <PremiumTh className="text-right">Coupon</PremiumTh>
-                    <PremiumTh className="text-right">Barriere</PremiumTh>
-                    <PremiumTh className="text-center">Statut</PremiumTh>
-                    <PremiumTh className="text-center">Rang</PremiumTh>
-                    <PremiumTh className="text-right">Date</PremiumTh>
-                    <PremiumTh className="text-center">Action</PremiumTh>
-                  </tr>
-                </thead>
-                <tbody className="stagger-rows">
-                  {commitments.map((c: any, rowIdx: number) => {
-                    const status = c.status ?? 'PENDING';
-                    const product = productMap.get(c.shelfId) || productMap.get(c.productId);
+            <>
+              {/* Mobile Card Layout */}
+              <div className="md:hidden space-y-2.5 p-3">
+                {sortedCommitments.map((c: any) => {
+                  const status = c.status ?? 'PENDING';
+                  const product = productMap.get(c.shelfId) || productMap.get(c.productId);
 
-                    return (
-                      <tr
-                        key={c.id}
-                        className={cn(
-                          'border-b border-border/20 dark:border-white/[0.04] last:border-0',
-                          rowIdx % 2 === 1 && 'bg-[#F8F6FF]/20 dark:bg-white/[0.01]',
-                          'hover:bg-[#3B1FA8]/[0.03] dark:hover:bg-white/[0.03]',
-                          'transition-colors duration-150 group/row',
-                        )}
-                      >
-                        {/* Product */}
-                        <td className="px-3 py-2.5">
-                          <div className="flex flex-col gap-0">
-                            {product ? (
-                              <Link
-                                href={`/products/${product.id}`}
-                                className="font-medium text-ink dark:text-white leading-snug truncate max-w-[200px] text-[12px] hover:text-[#3B1FA8] dark:hover:text-[#C9BCFF] transition-colors inline-flex items-center gap-1 group/link"
-                              >
-                                {c.productName ?? product.name ?? c.shelfId ?? '--'}
-                                <ExternalLink size={9} className="opacity-0 group-hover/link:opacity-50 transition-opacity" />
-                              </Link>
-                            ) : (
-                              <span className="font-medium text-ink dark:text-white leading-snug truncate max-w-[200px] text-[12px]">
-                                {c.productName ?? c.shelfId ?? '--'}
-                              </span>
-                            )}
-                            {(c.isin || product?.isin) && (
-                              <span className="font-mono text-[9px] text-ink-3 dark:text-white/35">{c.isin || product?.isin}</span>
-                            )}
-                          </div>
-                        </td>
-
-                        {/* Underlying */}
-                        <td className="px-3 py-2.5 text-[11px] text-ink-2 dark:text-white/55 font-medium truncate max-w-[100px]">
-                          {product?.underlyingYahoo ?? '--'}
-                        </td>
-
-                        {/* Amount */}
-                        <td className="px-3 py-2.5 text-right font-mono font-semibold text-ink dark:text-white tabular-nums text-[13px] tracking-tight [font-variant-numeric:tabular-nums]">
-                          {formatAmount(c.amount ?? 0)}
-                        </td>
-
-                        {/* SRI */}
-                        <td className="px-3 py-2.5 text-center">
-                          {product?.sri ? <SriPill sri={product.sri} /> : <span className="text-ink-3 dark:text-white/25 text-[11px]">--</span>}
-                        </td>
-
-                        {/* Coupon */}
-                        <td className="px-3 py-2.5 text-right">
-                          {product?.couponPct != null ? (
-                            <span className="font-mono font-semibold text-[#00B894] text-[12px] tabular-nums">
-                              {product.couponPct.toFixed(1)}%
-                            </span>
+                  return (
+                    <div
+                      key={c.id}
+                      className={cn(
+                        'rounded-xl border border-border/50 dark:border-white/8 p-3.5',
+                        'bg-white/90 dark:bg-white/[0.04] backdrop-blur-md',
+                        'shadow-sm hover:shadow-md transition-all duration-200',
+                        'ring-1 ring-black/[0.02] dark:ring-white/[0.04]',
+                      )}
+                    >
+                      {/* Card Header */}
+                      <div className="flex items-start justify-between mb-2.5">
+                        <div className="flex-1 min-w-0">
+                          {product ? (
+                            <Link
+                              href={`/products/${product.id}`}
+                              className="font-display text-[13px] font-bold text-ink dark:text-white hover:text-[#3B1FA8] dark:hover:text-[#C9BCFF] transition-colors leading-snug inline-flex items-center gap-1"
+                            >
+                              {c.productName ?? product.name ?? '--'}
+                              <ExternalLink size={9} className="opacity-50" />
+                            </Link>
                           ) : (
-                            <span className="text-ink-3 dark:text-white/25 text-[11px]">--</span>
-                          )}
-                        </td>
-
-                        {/* Barrier */}
-                        <td className="px-3 py-2.5 text-right">
-                          {product?.barrierCapPct != null ? (
-                            <span className="font-mono text-[12px] tabular-nums text-[#E8334A] font-semibold">
-                              {product.barrierCapPct}%
+                            <span className="font-display text-[13px] font-bold text-ink dark:text-white">
+                              {c.productName ?? c.shelfId ?? '--'}
                             </span>
-                          ) : (
-                            <span className="text-ink-3 dark:text-white/25 text-[11px]">--</span>
                           )}
-                        </td>
-
-                        {/* Status */}
-                        <td className="px-3 py-2.5 text-center">
-                          <Badge variant={STATUS_VARIANT[status] ?? 'muted'}>{STATUS_LABEL[status] ?? status}</Badge>
-                        </td>
-
-                        {/* Rank */}
-                        <td className="px-3 py-2.5 text-center">
-                          {status === 'WAITING' && c.rank != null ? (
-                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-[#D4A017]/12 to-[#D4A017]/[0.04] border border-[#D4A017]/25 text-[#D4A017] text-[11px] font-bold">
-                              {c.rank}
-                            </span>
-                          ) : (
-                            <span className="text-ink-3 dark:text-white/25 text-[11px]">--</span>
+                          {(c.isin || product?.isin) && (
+                            <p className="font-mono text-[9px] text-ink-3 dark:text-white/35 mt-0.5">{c.isin || product?.isin}</p>
                           )}
-                        </td>
+                        </div>
+                        <Badge variant={STATUS_VARIANT[status] ?? 'muted'}>{STATUS_LABEL[status] ?? status}</Badge>
+                      </div>
 
-                        {/* Date */}
-                        <td className="px-3 py-2.5 text-right text-[11px] text-ink-3 dark:text-white/35 font-mono">
+                      {/* Card Metrics */}
+                      <div className="grid grid-cols-3 gap-2 mb-2.5">
+                        <div>
+                          <p className="text-[8px] uppercase tracking-wider text-ink-3 dark:text-white/35 font-body font-semibold">Montant</p>
+                          <p className="font-mono text-[12px] font-semibold text-ink dark:text-white tabular-nums">{formatAmount(c.amount ?? 0)}</p>
+                        </div>
+                        <div>
+                          <p className="text-[8px] uppercase tracking-wider text-ink-3 dark:text-white/35 font-body font-semibold">Coupon</p>
+                          <p className="font-mono text-[12px] font-semibold tabular-nums" style={{ color: product?.couponPct != null ? '#00B894' : undefined }}>
+                            {product?.couponPct != null ? `${product.couponPct.toFixed(1)}%` : '--'}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-[8px] uppercase tracking-wider text-ink-3 dark:text-white/35 font-body font-semibold">SRI</p>
+                          {product?.sri ? <SriPill sri={product.sri} /> : <span className="text-ink-3 text-[11px]">--</span>}
+                        </div>
+                      </div>
+
+                      {/* Card Footer */}
+                      <div className="flex items-center justify-between pt-2 border-t border-border/30 dark:border-white/6">
+                        <span className="text-[10px] text-ink-3 dark:text-white/35 font-mono">
                           {c.createdAt ? formatDate(c.createdAt) : '--'}
-                        </td>
+                        </span>
+                        {product?.barrierCapPct != null && (
+                          <span className="font-mono text-[10px] tabular-nums text-[#E8334A] font-semibold">
+                            Barriere: {product.barrierCapPct}%
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
 
-                        {/* Action */}
-                        <td className="px-3 py-2.5 text-center">
-                          <div className="flex items-center justify-center gap-1">
-                            {status === 'PENDING' && (
-                              <>
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleReview(c.id)}
-                                  disabled={reviewMutation.isPending}
-                                  className="bg-amber-500 hover:bg-amber-600 text-white text-[10px] px-2 py-0.5 rounded-md font-semibold shadow-sm"
+              {/* Desktop Table */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-[12px] font-body">
+                  <thead>
+                    <tr className="border-b border-border/50 dark:border-white/8 bg-gradient-to-r from-[#F8F6FF]/50 to-[#F0ECFF]/20 dark:from-white/[0.015] dark:to-transparent">
+                      <PremiumTh className="text-left" sortable sortKey="name" activeSort={sortCol} activeSortDir={sortDir} onSort={handleSort}>Produit</PremiumTh>
+                      <PremiumTh className="text-left">Sous-jacent</PremiumTh>
+                      <PremiumTh className="text-right" sortable sortKey="amount" activeSort={sortCol} activeSortDir={sortDir} onSort={handleSort}>Montant</PremiumTh>
+                      <PremiumTh className="text-center" sortable sortKey="sri" activeSort={sortCol} activeSortDir={sortDir} onSort={handleSort}>SRI</PremiumTh>
+                      <PremiumTh className="text-right" sortable sortKey="coupon" activeSort={sortCol} activeSortDir={sortDir} onSort={handleSort}>Coupon</PremiumTh>
+                      <PremiumTh className="text-right" sortable sortKey="barrier" activeSort={sortCol} activeSortDir={sortDir} onSort={handleSort}>Barriere</PremiumTh>
+                      <PremiumTh className="text-center" sortable sortKey="status" activeSort={sortCol} activeSortDir={sortDir} onSort={handleSort}>Statut</PremiumTh>
+                      <PremiumTh className="text-center">Rang</PremiumTh>
+                      <PremiumTh className="text-right" sortable sortKey="date" activeSort={sortCol} activeSortDir={sortDir} onSort={handleSort}>Date</PremiumTh>
+                      <PremiumTh className="text-center">Action</PremiumTh>
+                    </tr>
+                  </thead>
+                  <tbody className="stagger-rows">
+                    {sortedCommitments.map((c: any, rowIdx: number) => {
+                      const status = c.status ?? 'PENDING';
+                      const product = productMap.get(c.shelfId) || productMap.get(c.productId);
+
+                      return (
+                        <tr
+                          key={c.id}
+                          className={cn(
+                            'border-b border-border/20 dark:border-white/[0.04] last:border-0',
+                            rowIdx % 2 === 1 && 'bg-[#F8F6FF]/20 dark:bg-white/[0.01]',
+                            'hover:bg-[#3B1FA8]/[0.03] dark:hover:bg-white/[0.03]',
+                            'transition-colors duration-150 group/row',
+                          )}
+                        >
+                          {/* Product */}
+                          <td className="px-3 py-2.5">
+                            <div className="flex flex-col gap-0">
+                              {product ? (
+                                <Link
+                                  href={`/products/${product.id}`}
+                                  className="font-medium text-ink dark:text-white leading-snug truncate max-w-[200px] text-[12px] hover:text-[#3B1FA8] dark:hover:text-[#C9BCFF] transition-colors inline-flex items-center gap-1 group/link"
                                 >
-                                  Examiner
-                                </Button>
+                                  {c.productName ?? product.name ?? c.shelfId ?? '--'}
+                                  <ExternalLink size={9} className="opacity-0 group-hover/link:opacity-50 transition-opacity" />
+                                </Link>
+                              ) : (
+                                <span className="font-medium text-ink dark:text-white leading-snug truncate max-w-[200px] text-[12px]">
+                                  {c.productName ?? c.shelfId ?? '--'}
+                                </span>
+                              )}
+                              {(c.isin || product?.isin) && (
+                                <span className="font-mono text-[9px] text-ink-3 dark:text-white/35">{c.isin || product?.isin}</span>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* Underlying */}
+                          <td className="px-3 py-2.5 text-[11px] text-ink-2 dark:text-white/55 font-medium truncate max-w-[100px]">
+                            {product?.underlyingYahoo ?? '--'}
+                          </td>
+
+                          {/* Amount */}
+                          <td className="px-3 py-2.5 text-right font-mono font-semibold text-ink dark:text-white tabular-nums text-[13px] tracking-tight [font-variant-numeric:tabular-nums]">
+                            {formatAmount(c.amount ?? 0)}
+                          </td>
+
+                          {/* SRI */}
+                          <td className="px-3 py-2.5 text-center">
+                            {product?.sri ? <SriPill sri={product.sri} /> : <span className="text-ink-3 dark:text-white/25 text-[11px]">--</span>}
+                          </td>
+
+                          {/* Coupon */}
+                          <td className="px-3 py-2.5 text-right">
+                            {product?.couponPct != null ? (
+                              <span className="font-mono font-semibold text-[#00B894] text-[12px] tabular-nums">
+                                {product.couponPct.toFixed(1)}%
+                              </span>
+                            ) : (
+                              <span className="text-ink-3 dark:text-white/25 text-[11px]">--</span>
+                            )}
+                          </td>
+
+                          {/* Barrier */}
+                          <td className="px-3 py-2.5 text-right">
+                            {product?.barrierCapPct != null ? (
+                              <span className="font-mono text-[12px] tabular-nums text-[#E8334A] font-semibold">
+                                {product.barrierCapPct}%
+                              </span>
+                            ) : (
+                              <span className="text-ink-3 dark:text-white/25 text-[11px]">--</span>
+                            )}
+                          </td>
+
+                          {/* Status */}
+                          <td className="px-3 py-2.5 text-center">
+                            <Badge variant={STATUS_VARIANT[status] ?? 'muted'}>{STATUS_LABEL[status] ?? status}</Badge>
+                          </td>
+
+                          {/* Rank */}
+                          <td className="px-3 py-2.5 text-center">
+                            {status === 'WAITING' && c.rank != null ? (
+                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-[#D4A017]/12 to-[#D4A017]/[0.04] border border-[#D4A017]/25 text-[#D4A017] text-[11px] font-bold">
+                                {c.rank}
+                              </span>
+                            ) : (
+                              <span className="text-ink-3 dark:text-white/25 text-[11px]">--</span>
+                            )}
+                          </td>
+
+                          {/* Date */}
+                          <td className="px-3 py-2.5 text-right text-[11px] text-ink-3 dark:text-white/35 font-mono">
+                            {c.createdAt ? formatDate(c.createdAt) : '--'}
+                          </td>
+
+                          {/* Action */}
+                          <td className="px-3 py-2.5 text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              {status === 'PENDING' && (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleReview(c.id)}
+                                    disabled={reviewMutation.isPending}
+                                    className="bg-amber-500 hover:bg-amber-600 text-white text-[10px] px-2 py-0.5 rounded-md font-semibold shadow-sm"
+                                  >
+                                    Examiner
+                                  </Button>
+                                  <Button variant="danger" size="sm" onClick={() => handleCancel(c.id)} disabled={cancelMutation.isPending}>
+                                    Annuler
+                                  </Button>
+                                </>
+                              )}
+                              {status === 'REVIEW' && (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleApprove(c.id)}
+                                    disabled={approveMutation.isPending}
+                                    className="bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded-md font-semibold shadow-sm"
+                                  >
+                                    Approuver
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleReject(c.id)}
+                                    disabled={rejectMutation.isPending}
+                                    className="bg-red-500 hover:bg-red-600 text-white text-[10px] px-2 py-0.5 rounded-md font-semibold shadow-sm"
+                                  >
+                                    Rejeter
+                                  </Button>
+                                </>
+                              )}
+                              {status === 'CONFIRMED' && (
+                                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#00B894]/8 text-[#00B894] ring-1 ring-[#00B894]/15">
+                                  <CheckCircle2 size={12} />
+                                </span>
+                              )}
+                              {status === 'CANCELLED' && (
+                                <span className="text-[#E8334A] text-[11px] font-semibold">
+                                  {c.rejectionReason ? `Rejete : ${c.rejectionReason}` : 'Rejete'}
+                                </span>
+                              )}
+                              {status === 'WAITING' && (
                                 <Button variant="danger" size="sm" onClick={() => handleCancel(c.id)} disabled={cancelMutation.isPending}>
                                   Annuler
                                 </Button>
-                              </>
-                            )}
-                            {status === 'REVIEW' && (
-                              <>
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleApprove(c.id)}
-                                  disabled={approveMutation.isPending}
-                                  className="bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded-md font-semibold shadow-sm"
-                                >
-                                  Approuver
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleReject(c.id)}
-                                  disabled={rejectMutation.isPending}
-                                  className="bg-red-500 hover:bg-red-600 text-white text-[10px] px-2 py-0.5 rounded-md font-semibold shadow-sm"
-                                >
-                                  Rejeter
-                                </Button>
-                              </>
-                            )}
-                            {status === 'CONFIRMED' && (
-                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#00B894]/8 text-[#00B894] ring-1 ring-[#00B894]/15">
-                                <CheckCircle2 size={12} />
-                              </span>
-                            )}
-                            {status === 'CANCELLED' && (
-                              <span className="text-[#E8334A] text-[11px] font-semibold">
-                                {c.rejectionReason ? `Rejete : ${c.rejectionReason}` : 'Rejete'}
-                              </span>
-                            )}
-                            {status === 'WAITING' && (
-                              <Button variant="danger" size="sm" onClick={() => handleCancel(c.id)} disabled={cancelMutation.isPending}>
-                                Annuler
-                              </Button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       )}

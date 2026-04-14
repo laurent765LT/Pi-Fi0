@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -11,6 +12,7 @@ import {
   Zap,
   Shield,
   ChevronRight,
+  ChevronLeft,
   Calculator,
   BookOpen,
   TrendingUp,
@@ -29,25 +31,26 @@ import { useNotificationsStore } from '@/stores/notifications-store';
 import { Dropdown, DropdownItem, DropdownSeparator } from '@/components/ui/dropdown';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { LocaleSwitcher } from '@/components/ui/locale-switcher';
+import { Tooltip } from '@/components/ui/tooltip';
 
 // ---------------------------------------------------------------------------
 // Nav items
 // ---------------------------------------------------------------------------
 
 const mainNav = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/products', label: 'Produits', icon: Package },
-  { href: '/evenements', label: 'Événements', icon: Calendar },
-  { href: '/portfolio', label: 'Portfolio', icon: Briefcase },
-  { href: '/commissions', label: 'Commissions', icon: Wallet },
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, shortcut: '\u2318D' },
+  { href: '/products', label: 'Produits', icon: Package, shortcut: '\u2318P' },
+  { href: '/evenements', label: '\u00c9v\u00e9nements', icon: Calendar, shortcut: '\u2318E' },
+  { href: '/portfolio', label: 'Portfolio', icon: Briefcase, shortcut: '\u2318O' },
+  { href: '/commissions', label: 'Commissions', icon: Wallet, shortcut: '\u2318K' },
 ];
 
 const toolsNav = [
-  { href: '/pricing', label: 'Pricing', icon: Calculator },
+  { href: '/pricing', label: 'Pricing', icon: Calculator, shortcut: '\u2318R' },
   { href: '/pricing/live', label: 'Consultation live', icon: Radio },
   { href: '/rfq', label: 'RFQ Screener', icon: FileSearch },
   { href: '/research', label: 'Research', icon: BookOpen },
-  { href: '/notifications', label: 'Notifications', icon: Bell },
+  { href: '/notifications', label: 'Notifications', icon: Bell, shortcut: '\u2318N' },
 ];
 
 const ROLE_LABELS: Record<string, string> = {
@@ -56,6 +59,29 @@ const ROLE_LABELS: Record<string, string> = {
   MANAGER: 'Manager',
   VIEWER: 'CGP',
 };
+
+// ---------------------------------------------------------------------------
+// localStorage helper for collapsed state
+// ---------------------------------------------------------------------------
+
+const COLLAPSED_KEY = 'strickin-sidebar-collapsed';
+
+function getStoredCollapsed(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    return localStorage.getItem(COLLAPSED_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+function setStoredCollapsed(v: boolean) {
+  try {
+    localStorage.setItem(COLLAPSED_KEY, String(v));
+  } catch {
+    // noop
+  }
+}
 
 // ---------------------------------------------------------------------------
 // User initials helper
@@ -84,27 +110,37 @@ function NavLink({
   icon: Icon,
   isActive,
   badge,
+  collapsed,
+  shortcut,
 }: {
   href: string;
   label: string;
   icon: any;
   isActive: boolean;
   badge?: React.ReactNode;
+  collapsed?: boolean;
+  shortcut?: string;
 }) {
-  return (
+  const inner = (
     <Link
       href={href}
       className={cn(
-        'group relative flex items-center gap-3 px-3 h-[38px] rounded-lg font-body text-[13px] font-medium',
-        'transition-colors duration-150 ease-out',
+        'group/navlink relative flex items-center gap-3 h-[38px] rounded-lg font-body text-[13px] font-medium',
+        'transition-all duration-200 ease-out',
+        collapsed ? 'px-0 justify-center' : 'px-3',
         isActive
-          ? 'bg-violet/[0.08] text-violet'
+          ? 'bg-gradient-to-r from-[#3B1FA8]/[0.10] to-[#5535C4]/[0.05] text-[#3B1FA8] dark:text-[#C9BCFF]'
           : 'text-ink-2 hover:text-ink hover:bg-ink/[0.04]',
       )}
     >
-      {/* Active dot indicator */}
+      {/* Active gradient left border */}
       {isActive && (
-        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[3px] rounded-full bg-violet" />
+        <span
+          className="absolute left-0 top-[6px] bottom-[6px] w-[3px] rounded-full animate-[slide-in_200ms_ease-out]"
+          style={{
+            background: 'linear-gradient(180deg, #3B1FA8 0%, #5535C4 50%, #7B5FE0 100%)',
+          }}
+        />
       )}
 
       <Icon
@@ -112,27 +148,53 @@ function NavLink({
         strokeWidth={isActive ? 2.2 : 1.8}
         className={cn(
           'shrink-0 transition-colors duration-150',
-          isActive ? 'text-violet' : 'text-ink-3 group-hover:text-violet-m',
+          isActive ? 'text-[#3B1FA8] dark:text-[#C9BCFF]' : 'text-ink-3 group-hover/navlink:text-[#5535C4]',
         )}
       />
-      <span className="flex-1">{label}</span>
 
-      {/* Active indicator */}
-      {isActive && (
-        <ChevronRight size={13} className="text-violet/40" />
+      {!collapsed && (
+        <>
+          <span className="flex-1 truncate">{label}</span>
+
+          {/* Keyboard shortcut hint (desktop hover only) */}
+          {shortcut && (
+            <span className="hidden md:inline-flex opacity-0 group-hover/navlink:opacity-100 transition-opacity duration-150 text-[9px] font-mono text-ink-3/50 dark:text-white/25 px-1 py-0.5 rounded bg-ink/[0.03] dark:bg-white/[0.04] leading-none">
+              {shortcut}
+            </span>
+          )}
+
+          {/* Active indicator */}
+          {isActive && !badge && (
+            <ChevronRight size={13} className="text-[#3B1FA8]/40 dark:text-[#C9BCFF]/40" />
+          )}
+
+          {/* Badge */}
+          {badge}
+        </>
       )}
-
-      {/* Badge */}
-      {badge}
     </Link>
   );
+
+  // When collapsed, wrap with a tooltip showing the label
+  if (collapsed) {
+    return (
+      <Tooltip content={label} side="right">
+        {inner}
+      </Tooltip>
+    );
+  }
+
+  return inner;
 }
 
 // ---------------------------------------------------------------------------
 // Section Label
 // ---------------------------------------------------------------------------
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
+function SectionLabel({ children, collapsed }: { children: React.ReactNode; collapsed?: boolean }) {
+  if (collapsed) {
+    return <div className="h-px bg-border/30 mx-2 my-1" />;
+  }
   return (
     <span className="text-[8px] uppercase tracking-[0.3em] text-ink-3/50 font-bold px-3 mb-2 select-none">
       {children}
@@ -157,8 +219,8 @@ function NotificationBadge({ count, isActive }: { count: number; isActive: boole
         className={cn(
           'relative inline-flex items-center justify-center h-[18px] min-w-[18px] px-1 rounded-full text-[10px] font-bold leading-none',
           isActive
-            ? 'bg-white/20 text-violet'
-            : 'bg-red text-white',
+            ? 'bg-white/20 text-[#3B1FA8]'
+            : 'bg-[#E8334A] text-white',
         )}
       >
         {count > 99 ? '99+' : count}
@@ -183,6 +245,21 @@ export function Sidebar({ isOpen, onClose }: SidebarProps = {}) {
   const logoutAction = useAuthStore((s) => s.logout);
   const unreadCount = useNotificationsStore((s) => s.notifications.filter((n) => !n.read).length);
 
+  const [collapsed, setCollapsed] = useState(false);
+
+  // Hydrate collapsed state from localStorage on mount
+  useEffect(() => {
+    setCollapsed(getStoredCollapsed());
+  }, []);
+
+  const toggleCollapsed = useCallback(() => {
+    setCollapsed((prev) => {
+      const next = !prev;
+      setStoredCollapsed(next);
+      return next;
+    });
+  }, []);
+
   const logout = () => {
     logoutAction();
     router.replace('/login');
@@ -201,6 +278,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps = {}) {
 
   const env = process.env.NODE_ENV === 'production' ? 'PROD' : 'DEV';
 
+  // Desktop width depends on collapsed state; mobile always full width
+  const sidebarWidth = collapsed ? 64 : 248;
+
   return (
     <>
       {/* Mobile backdrop overlay */}
@@ -214,15 +294,18 @@ export function Sidebar({ isOpen, onClose }: SidebarProps = {}) {
 
       <aside
         className={cn(
-          'fixed left-0 top-0 h-screen flex flex-col overflow-hidden transition-transform duration-300 ease-in-out bg-white/90 dark:bg-ink/90 backdrop-blur-xl border-r border-border/60',
-          // Mobile: z-50 so it sits above backdrop (z-40), slide in/out via CSS media query classes
+          'fixed left-0 top-0 h-screen flex flex-col overflow-hidden bg-white/90 dark:bg-ink/90 backdrop-blur-xl border-r border-border/60',
+          // Mobile: z-50 so it sits above backdrop (z-40), slide in/out
           'z-50 md:z-20',
           'sidebar-mobile-enter',
           isOpen && 'sidebar-mobile-open',
           // Desktop: always visible, no transform
           'md:translate-x-0',
         )}
-        style={{ width: 248 }}
+        style={{
+          width: sidebarWidth,
+          transition: 'width 300ms ease',
+        }}
         data-sidebar
       >
         {/* Left accent line */}
@@ -234,10 +317,13 @@ export function Sidebar({ isOpen, onClose }: SidebarProps = {}) {
           }}
         />
 
-      {/* ── Logo ──────────────────────────────────────────────── */}
-      <div className="flex items-center gap-2.5 px-5 h-[60px] border-b border-border/40 shrink-0">
+      {/* -- Logo -------------------------------------------------- */}
+      <div className={cn(
+        'flex items-center h-[60px] border-b border-border/40 shrink-0',
+        collapsed ? 'justify-center px-2' : 'gap-2.5 px-5',
+      )}>
         <span
-          className="group/logo w-8 h-8 rounded-lg bg-gradient-to-br from-violet to-violet-mid flex items-center justify-center shrink-0 shadow-md cursor-default transition-shadow duration-300 hover:shadow-lg hover:shadow-violet/20"
+          className="group/logo w-8 h-8 rounded-lg bg-gradient-to-br from-[#3B1FA8] to-[#5535C4] flex items-center justify-center shrink-0 shadow-md cursor-default transition-shadow duration-300 hover:shadow-lg hover:shadow-[#3B1FA8]/20"
           aria-hidden="true"
         >
           <Zap
@@ -246,26 +332,30 @@ export function Sidebar({ isOpen, onClose }: SidebarProps = {}) {
             strokeWidth={2.5}
           />
         </span>
-        <span className="font-display font-extrabold text-[17px] leading-none tracking-tight select-none">
-          <span className="text-ink">Strick</span>
-          <span className="text-violet-mid">&lsquo;in</span>
-        </span>
-        {/* Beta badge */}
-        <span
-          className="ml-auto text-[8px] uppercase tracking-[0.12em] font-bold px-1.5 py-0.5 rounded-full select-none max-md:hidden"
-          style={{
-            background: 'linear-gradient(135deg, var(--violet-p) 0%, rgba(85,53,196,0.15) 100%)',
-            color: 'var(--violet)',
-          }}
-        >
-          BETA
-        </span>
+        {!collapsed && (
+          <>
+            <span className="font-display font-extrabold text-[17px] leading-none tracking-tight select-none">
+              <span className="text-ink">Strick</span>
+              <span className="text-[#5535C4]">&lsquo;in</span>
+            </span>
+            {/* Beta badge */}
+            <span
+              className="ml-auto text-[8px] uppercase tracking-[0.12em] font-bold px-1.5 py-0.5 rounded-full select-none max-md:hidden"
+              style={{
+                background: 'linear-gradient(135deg, var(--violet-p) 0%, rgba(85,53,196,0.15) 100%)',
+                color: 'var(--violet)',
+              }}
+            >
+              BETA
+            </span>
+          </>
+        )}
 
         {/* Mobile close button */}
         {onClose && (
           <button
             onClick={onClose}
-            className="ml-auto md:hidden p-1 rounded-lg hover:bg-violet-p/50 transition-colors"
+            className="ml-auto md:hidden p-1 rounded-lg hover:bg-[#3B1FA8]/10 transition-colors"
             aria-label="Fermer le menu"
           >
             <X size={18} className="text-ink-2" />
@@ -273,32 +363,39 @@ export function Sidebar({ isOpen, onClose }: SidebarProps = {}) {
         )}
       </div>
 
-      {/* ── Navigation ────────────────────────────────────────── */}
-      <nav className="flex-1 py-5 px-3 flex flex-col gap-0.5 overflow-y-auto">
+      {/* -- Navigation ------------------------------------------- */}
+      <nav className={cn(
+        'flex-1 py-5 flex flex-col gap-0.5 overflow-y-auto',
+        collapsed ? 'px-1.5' : 'px-3',
+      )}>
         {/* Main section */}
-        <SectionLabel>Navigation</SectionLabel>
+        <SectionLabel collapsed={collapsed}>Navigation</SectionLabel>
 
-        {mainNav.map(({ href, label, icon }) => (
+        {mainNav.map(({ href, label, icon, shortcut }) => (
           <NavLink
             key={href}
             href={href}
             label={label}
             icon={icon}
             isActive={isActivePath(href)}
+            collapsed={collapsed}
+            shortcut={shortcut}
           />
         ))}
 
         {/* Tools section */}
-        <div className="h-px bg-border/40 my-3 mx-2" />
-        <SectionLabel>Outils</SectionLabel>
+        <div className={cn('h-px bg-border/40 my-3', collapsed ? 'mx-1' : 'mx-2')} />
+        <SectionLabel collapsed={collapsed}>Outils</SectionLabel>
 
-        {toolsNav.map(({ href, label, icon }) => (
+        {toolsNav.map(({ href, label, icon, shortcut }) => (
           <NavLink
             key={href}
             href={href}
             label={label}
             icon={icon}
             isActive={isActivePath(href)}
+            collapsed={collapsed}
+            shortcut={shortcut}
             badge={
               label === 'Notifications' ? (
                 <NotificationBadge count={unreadCount} isActive={isActivePath(href)} />
@@ -310,26 +407,26 @@ export function Sidebar({ isOpen, onClose }: SidebarProps = {}) {
         {/* Admin section */}
         {isAdmin && (
           <>
-            <div className="h-px bg-border/40 my-3 mx-2" />
-            <SectionLabel>Administration</SectionLabel>
+            <div className={cn('h-px bg-border/40 my-3', collapsed ? 'mx-1' : 'mx-2')} />
+            <SectionLabel collapsed={collapsed}>Administration</SectionLabel>
             <NavLink
               href="/admin"
               label="Admin"
               icon={Shield}
               isActive={isActivePath('/admin')}
+              collapsed={collapsed}
             />
           </>
         )}
       </nav>
 
-      {/* ── User footer ───────────────────────────────────────── */}
-      <div className="px-3 pb-2 pt-3 border-t border-border/40 shrink-0">
-        <Dropdown
-          trigger={
-            <div className="flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-violet-p/30 transition-all duration-200 group cursor-pointer w-full">
-              {/* Avatar */}
+      {/* -- User footer ------------------------------------------ */}
+      <div className={cn('pb-2 pt-3 border-t border-border/40 shrink-0', collapsed ? 'px-1.5' : 'px-3')}>
+        {collapsed ? (
+          <Tooltip content={displayName} side="right">
+            <div className="flex items-center justify-center py-2">
               <div
-                className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
+                className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 cursor-pointer"
                 style={{
                   background: 'linear-gradient(135deg, var(--violet) 0%, var(--violet-mid) 100%)',
                 }}
@@ -338,80 +435,127 @@ export function Sidebar({ isOpen, onClose }: SidebarProps = {}) {
                   {initials}
                 </span>
               </div>
-
-              {/* User info */}
-              <div className="flex-1 min-w-0">
-                <p className="font-body text-[12px] font-semibold text-ink truncate leading-tight">
-                  {displayName}
-                </p>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <span
-                    className="inline-flex text-[8px] uppercase tracking-wider font-bold px-1.5 py-[1px] rounded-full"
-                    style={{
-                      background: isAdmin
-                        ? 'linear-gradient(135deg, var(--violet-p) 0%, rgba(85,53,196,0.18) 100%)'
-                        : 'var(--bg-2)',
-                      color: isAdmin ? 'var(--violet)' : 'var(--ink-3)',
-                    }}
-                  >
-                    {roleLabel}
+            </div>
+          </Tooltip>
+        ) : (
+          <Dropdown
+            trigger={
+              <div className="flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-[#3B1FA8]/[0.06] transition-all duration-200 group cursor-pointer w-full">
+                {/* Avatar */}
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
+                  style={{
+                    background: 'linear-gradient(135deg, var(--violet) 0%, var(--violet-mid) 100%)',
+                  }}
+                >
+                  <span className="font-display font-bold text-[10px] text-white leading-none">
+                    {initials}
                   </span>
                 </div>
+
+                {/* User info */}
+                <div className="flex-1 min-w-0">
+                  <p className="font-body text-[12px] font-semibold text-ink truncate leading-tight">
+                    {displayName}
+                  </p>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span
+                      className="inline-flex text-[8px] uppercase tracking-wider font-bold px-1.5 py-[1px] rounded-full"
+                      style={{
+                        background: isAdmin
+                          ? 'linear-gradient(135deg, var(--violet-p) 0%, rgba(85,53,196,0.18) 100%)'
+                          : 'var(--bg-2)',
+                        color: isAdmin ? 'var(--violet)' : 'var(--ink-3)',
+                      }}
+                    >
+                      {roleLabel}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Chevron */}
+                <ChevronUp
+                  size={14}
+                  className="text-ink-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                />
               </div>
-
-              {/* Chevron */}
-              <ChevronUp
-                size={14}
-                className="text-ink-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-              />
-            </div>
-          }
-          align="left"
-          className="w-full"
-        >
-          <div className="px-3 py-2 border-b border-border/60">
-            <p className="font-body text-[11px] text-ink-3 truncate">{u?.email ?? ''}</p>
-          </div>
-          <DropdownItem
-            icon={<User size={14} strokeWidth={1.8} />}
-            label="Mon profil"
-            onClick={() => router.push('/profile')}
-          />
-          <DropdownItem
-            icon={<Settings size={14} strokeWidth={1.8} />}
-            label="Paramètres"
-            onClick={() => router.push('/settings')}
-          />
-          <DropdownSeparator />
-          <DropdownItem
-            icon={<LogOut size={14} strokeWidth={1.8} />}
-            label="Se déconnecter"
-            danger
-            onClick={logout}
-          />
-        </Dropdown>
-      </div>
-
-      {/* ── Version / Environment ─────────────────────────────── */}
-      <div className="px-5 py-2 border-t border-border/30 shrink-0 flex items-center justify-between">
-        <span className="font-mono text-[9px] text-ink-3/60 select-none">v2.1.0</span>
-        <div className="flex items-center gap-2">
-          <LocaleSwitcher />
-          <ThemeToggle />
-          <span
-            className={cn(
-              'text-[8px] uppercase tracking-wider font-bold px-1.5 py-[1px] rounded-full select-none',
-              env === 'PROD'
-                ? 'bg-teal/10 text-teal'
-                : 'bg-gold/10 text-gold',
-            )}
+            }
+            align="left"
+            className="w-full"
           >
-            {env}
-          </span>
-        </div>
+            <div className="px-3 py-2 border-b border-border/60">
+              <p className="font-body text-[11px] text-ink-3 truncate">{u?.email ?? ''}</p>
+            </div>
+            <DropdownItem
+              icon={<User size={14} strokeWidth={1.8} />}
+              label="Mon profil"
+              onClick={() => router.push('/profile')}
+            />
+            <DropdownItem
+              icon={<Settings size={14} strokeWidth={1.8} />}
+              label="Param\u00e8tres"
+              onClick={() => router.push('/settings')}
+            />
+            <DropdownSeparator />
+            <DropdownItem
+              icon={<LogOut size={14} strokeWidth={1.8} />}
+              label="Se d\u00e9connecter"
+              danger
+              onClick={logout}
+            />
+          </Dropdown>
+        )}
       </div>
 
-      {/* ── Keyframe animations (injected once via style tag) ─── */}
+      {/* -- Version / Environment / Collapse Toggle -------------- */}
+      <div className={cn(
+        'py-2 border-t border-border/30 shrink-0 flex items-center',
+        collapsed ? 'px-2 justify-center' : 'px-5 justify-between',
+      )}>
+        {!collapsed && (
+          <>
+            <span className="font-mono text-[9px] text-ink-3/60 select-none">v2.1.0</span>
+            <div className="flex items-center gap-2">
+              <LocaleSwitcher />
+              <ThemeToggle />
+              <span
+                className={cn(
+                  'text-[8px] uppercase tracking-wider font-bold px-1.5 py-[1px] rounded-full select-none',
+                  env === 'PROD'
+                    ? 'bg-[#00B894]/10 text-[#00B894]'
+                    : 'bg-[#D4A017]/10 text-[#D4A017]',
+                )}
+              >
+                {env}
+              </span>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* -- Collapse toggle button (desktop only) ---------------- */}
+      <div className="hidden md:flex px-2 pb-3 justify-center">
+        <button
+          onClick={toggleCollapsed}
+          className={cn(
+            'flex items-center justify-center w-full h-7 rounded-lg',
+            'border border-border/50 dark:border-white/10',
+            'bg-white/60 dark:bg-white/[0.04] backdrop-blur-sm',
+            'text-ink-3 dark:text-white/45 hover:text-[#3B1FA8] dark:hover:text-[#C9BCFF]',
+            'hover:border-[#3B1FA8]/30 hover:bg-[#3B1FA8]/[0.04]',
+            'transition-all duration-200',
+          )}
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          {collapsed ? (
+            <ChevronRight size={14} />
+          ) : (
+            <ChevronLeft size={14} />
+          )}
+        </button>
+      </div>
+
+      {/* -- Keyframe animations (injected once via style tag) ---- */}
       <style jsx>{`
         @keyframes pulse-ring {
           0%, 100% { transform: scale(1); opacity: 0.5; }
@@ -420,6 +564,10 @@ export function Sidebar({ isOpen, onClose }: SidebarProps = {}) {
         @keyframes icon-pulse {
           0%, 100% { transform: scale(1); }
           50% { transform: scale(1.2); }
+        }
+        @keyframes slide-in {
+          from { opacity: 0; transform: translateX(-4px); }
+          to { opacity: 1; transform: translateX(0); }
         }
       `}</style>
     </aside>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Search,
@@ -20,7 +20,10 @@ import {
   SlidersHorizontal,
   PackageSearch,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Filter,
+  Layers,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useFiltersStore } from '@/stores/filters-store';
@@ -29,6 +32,7 @@ import { ProductCard } from '@/components/products/product-card';
 import type { PayoffType } from '@/components/products/product-card';
 import { useFavorites, useToggleFavorite, useMostViewed } from '@/hooks/use-favorites';
 import { useRecommendations, useGenerateRecommendations } from '@/hooks/use-recommendations';
+import { useCompareStore } from '@/stores/compare-store';
 import { Countdown } from '@/components/ui/countdown';
 import { Tooltip } from '@/components/ui/tooltip';
 
@@ -37,7 +41,7 @@ import { Tooltip } from '@/components/ui/tooltip';
 const PAYOFF_OPTIONS: { value: PayoffType; label: string }[] = [
   { value: 'AUTOCALL_PHOENIX', label: 'Autocall Phoenix' },
   { value: 'AUTOCALL_COUPON', label: 'Autocall Coupon' },
-  { value: 'CAPITAL_PROTECTED', label: 'Capital Protégé' },
+  { value: 'CAPITAL_PROTECTED', label: 'Capital Protege' },
   { value: 'CONDITIONAL_RATE', label: 'Taux Conditionnel' },
   { value: 'BARRIER_NOTE', label: 'Barrier Note' },
 ];
@@ -45,9 +49,9 @@ const PAYOFF_OPTIONS: { value: PayoffType; label: string }[] = [
 const STATUS_OPTIONS = [
   { value: 'ACTIVE', label: 'Actif' },
   { value: 'OPEN', label: 'Ouvert' },
-  { value: 'UPCOMING', label: 'À venir' },
-  { value: 'CLOSED', label: 'Fermé' },
-  { value: 'MATURED', label: 'Échu' },
+  { value: 'UPCOMING', label: 'A venir' },
+  { value: 'CLOSED', label: 'Ferme' },
+  { value: 'MATURED', label: 'Echu' },
 ];
 
 const ISSUER_OPTIONS = [
@@ -69,7 +73,7 @@ const PAYOFF_BADGE: Record<string, { bg: string; text: string }> = {
 const PAYOFF_SHORT: Record<string, string> = {
   AUTOCALL_PHOENIX: 'Phoenix',
   AUTOCALL_COUPON: 'Autocall',
-  CAPITAL_PROTECTED: 'Protégé',
+  CAPITAL_PROTECTED: 'Protege',
   CONDITIONAL_RATE: 'Taux Cond.',
   BARRIER_NOTE: 'Barrier',
 };
@@ -78,24 +82,42 @@ const STATUS_BADGE: Record<string, { bg: string; text: string; label: string }> 
   ACTIVE: { bg: '#E6FAF5', text: '#008B6E', label: 'Actif' },
   OPEN: { bg: '#E6FAF5', text: '#008B6E', label: 'Ouvert' },
   DRAFT: { bg: '#F4F3EF', text: '#7B6FA0', label: 'Brouillon' },
-  UPCOMING: { bg: '#E4EAFF', text: '#0A2799', label: 'À venir' },
-  CLOSED: { bg: '#F4F3EF', text: '#7B6FA0', label: 'Fermé' },
-  MATURED: { bg: '#FFF0F2', text: '#C41F36', label: 'Échu' },
+  UPCOMING: { bg: '#E4EAFF', text: '#0A2799', label: 'A venir' },
+  CLOSED: { bg: '#F4F3EF', text: '#7B6FA0', label: 'Ferme' },
+  MATURED: { bg: '#FFF0F2', text: '#C41F36', label: 'Echu' },
 };
 
 const SORT_OPTIONS: { value: SortField; label: string }[] = [
   { value: 'name', label: 'Nom' },
-  { value: 'issuerName', label: 'Émetteur' },
-  { value: 'maturityDate', label: 'Échéance' },
+  { value: 'issuerName', label: 'Emetteur' },
+  { value: 'maturityDate', label: 'Echeance' },
   { value: 'maxGainPct', label: 'Gain max' },
   { value: 'couponPct', label: 'Coupon' },
-  { value: 'barrierCapPct', label: 'Barrière' },
+  { value: 'barrierCapPct', label: 'Barriere' },
   { value: 'sri', label: 'SRI' },
 ];
+
+const PAYOFF_FILTER_LABELS: Record<string, string> = {
+  AUTOCALL_PHOENIX: 'Autocall Phoenix',
+  AUTOCALL_COUPON: 'Autocall Coupon',
+  CAPITAL_PROTECTED: 'Capital Protege',
+  CONDITIONAL_RATE: 'Taux Conditionnel',
+  BARRIER_NOTE: 'Barrier Note',
+};
+
+const STATUS_FILTER_LABELS: Record<string, string> = {
+  ACTIVE: 'Actif',
+  OPEN: 'Ouvert',
+  UPCOMING: 'A venir',
+  CLOSED: 'Ferme',
+  MATURED: 'Echu',
+};
 
 type SortField = 'name' | 'issuerName' | 'maturityDate' | 'maxGainPct' | 'barrierCapPct' | 'sri' | 'couponPct';
 type SortDir = 'asc' | 'desc';
 type ViewFilter = 'all' | 'favorites' | 'recommended' | 'popular';
+
+const PER_PAGE = 12;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -104,7 +126,7 @@ function formatDate(iso: string) {
 }
 
 function formatPct(v: number | null | undefined) {
-  if (v == null) return '—';
+  if (v == null) return '\u2014';
   return v.toFixed(1) + '%';
 }
 
@@ -232,6 +254,122 @@ function TabPill({
   );
 }
 
+// ─── Active Filter Pill ─────────────────────────────────────────────────────
+
+function FilterPill({ label, onRemove }: { label: string; onRemove: () => void }) {
+  return (
+    <span className={cn(
+      'inline-flex items-center gap-1 h-6 px-2 rounded-lg',
+      'bg-violet-ghost dark:bg-violet/10 text-violet dark:text-violet-light',
+      'text-[11px] font-semibold font-body',
+      'border border-violet/15 dark:border-violet/20',
+      'transition-all duration-150 hover:border-violet/30 hover:bg-violet/10',
+    )}>
+      {label}
+      <button
+        onClick={onRemove}
+        className="p-0.5 rounded-full hover:bg-violet/15 transition-colors"
+      >
+        <X size={10} />
+      </button>
+    </span>
+  );
+}
+
+// ─── Pagination ─────────────────────────────────────────────────────────────
+
+function Pagination({
+  page,
+  totalPages,
+  totalItems,
+  perPage,
+  onPageChange,
+}: {
+  page: number;
+  totalPages: number;
+  totalItems: number;
+  perPage: number;
+  onPageChange: (p: number) => void;
+}) {
+  const start = (page - 1) * perPage + 1;
+  const end = Math.min(page * perPage, totalItems);
+
+  // Build page numbers array with ellipsis
+  const pageNumbers: (number | 'ellipsis')[] = [];
+  if (totalPages <= 7) {
+    for (let i = 1; i <= totalPages; i++) pageNumbers.push(i);
+  } else {
+    pageNumbers.push(1);
+    if (page > 3) pageNumbers.push('ellipsis');
+    for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) {
+      pageNumbers.push(i);
+    }
+    if (page < totalPages - 2) pageNumbers.push('ellipsis');
+    pageNumbers.push(totalPages);
+  }
+
+  return (
+    <div className="flex items-center justify-between mt-4 px-1">
+      <p className="text-[12px] font-body text-ink-3 dark:text-ink-3">
+        Affichage{' '}
+        <span className="font-mono font-semibold text-ink dark:text-surface tabular-nums">{start}-{end}</span>
+        {' '}sur{' '}
+        <span className="font-mono font-semibold text-ink dark:text-surface tabular-nums">{totalItems}</span>
+        {' '}produits
+      </p>
+
+      <div className="flex items-center gap-1">
+        <button
+          onClick={() => onPageChange(page - 1)}
+          disabled={page <= 1}
+          className={cn(
+            'h-8 w-8 rounded-lg flex items-center justify-center transition-all duration-200',
+            'border border-border/50 bg-white dark:bg-ink/40',
+            page <= 1
+              ? 'opacity-40 cursor-not-allowed'
+              : 'hover:border-violet/40 hover:text-violet dark:hover:text-violet-light hover:bg-violet-ghost dark:hover:bg-violet/10',
+          )}
+        >
+          <ChevronLeft size={14} />
+        </button>
+
+        {pageNumbers.map((pn, idx) =>
+          pn === 'ellipsis' ? (
+            <span key={`e-${idx}`} className="w-8 text-center text-ink-3/50 text-[12px] font-mono">...</span>
+          ) : (
+            <button
+              key={pn}
+              onClick={() => onPageChange(pn)}
+              className={cn(
+                'h-8 min-w-[32px] px-1.5 rounded-lg text-[12px] font-mono font-semibold tabular-nums transition-all duration-200',
+                pn === page
+                  ? 'bg-violet text-white shadow-sm shadow-violet/25'
+                  : 'text-ink-3 hover:text-violet dark:hover:text-violet-light hover:bg-violet-ghost dark:hover:bg-violet/10 border border-transparent hover:border-violet/20',
+              )}
+            >
+              {pn}
+            </button>
+          ),
+        )}
+
+        <button
+          onClick={() => onPageChange(page + 1)}
+          disabled={page >= totalPages}
+          className={cn(
+            'h-8 w-8 rounded-lg flex items-center justify-center transition-all duration-200',
+            'border border-border/50 bg-white dark:bg-ink/40',
+            page >= totalPages
+              ? 'opacity-40 cursor-not-allowed'
+              : 'hover:border-violet/40 hover:text-violet dark:hover:text-violet-light hover:bg-violet-ghost dark:hover:bg-violet/10',
+          )}
+        >
+          <ChevronRight size={14} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function ProductsPage() {
@@ -242,6 +380,32 @@ export default function ProductsPage() {
   const [viewFilter, setViewFilter] = useState<ViewFilter>('all');
   const [issuerFilter, setIssuerFilter] = useState<string>('');
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [page, setPage] = useState(1);
+
+  // Debounced search
+  const [searchInput, setSearchInput] = useState(search);
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchInput(value);
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(() => {
+      setFilter('search', value);
+      setPage(1);
+    }, 300);
+  }, [setFilter]);
+
+  // Sync external search state to local input (e.g. on reset)
+  useEffect(() => {
+    setSearchInput(search);
+  }, [search]);
+
+  // Cleanup timer
+  useEffect(() => {
+    return () => {
+      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    };
+  }, []);
 
   // Data queries
   const { data: productsData, isLoading, isError } = useProducts({
@@ -258,6 +422,10 @@ export default function ProductsPage() {
   const generateRecs = useGenerateRecommendations();
   const toggleFavorite = useToggleFavorite();
   const [aiJustGenerated, setAiJustGenerated] = useState(false);
+
+  // Compare store
+  const compareIds = useCompareStore((s) => s.productIds);
+  const clearCompare = useCompareStore((s) => s.clearAll);
 
   const products = productsData?.data ?? [];
   const favoriteIds = new Set(
@@ -317,6 +485,19 @@ export default function ProductsPage() {
     return arr;
   }, [products, sortField, sortDir, viewFilter, favoriteIds, recommendationMap, mostViewedIds, issuerFilter]);
 
+  // Pagination
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+  const safePage = Math.min(page, totalPages);
+  const paginatedProducts = useMemo(() => {
+    const start = (safePage - 1) * PER_PAGE;
+    return filtered.slice(start, start + PER_PAGE);
+  }, [filtered, safePage]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [payoffType, minSri, maxSri, status, viewFilter, issuerFilter, sortField, sortDir]);
+
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
@@ -326,13 +507,64 @@ export default function ProductsPage() {
     }
   };
 
+  const handleClearSearch = () => {
+    setSearchInput('');
+    setFilter('search', '');
+    setPage(1);
+  };
+
+  // Build active filter pills
+  const activeFilters: { key: string; label: string; onRemove: () => void }[] = [];
+  if (search) {
+    activeFilters.push({
+      key: 'search',
+      label: `Recherche : "${search}"`,
+      onRemove: () => { setFilter('search', ''); setSearchInput(''); },
+    });
+  }
+  if (payoffType) {
+    activeFilters.push({
+      key: 'payoffType',
+      label: `Type : ${PAYOFF_FILTER_LABELS[payoffType] ?? payoffType}`,
+      onRemove: () => setFilter('payoffType', null),
+    });
+  }
+  if (status) {
+    activeFilters.push({
+      key: 'status',
+      label: `Statut : ${STATUS_FILTER_LABELS[status] ?? status}`,
+      onRemove: () => setFilter('status', ''),
+    });
+  }
+  if (minSri !== null) {
+    activeFilters.push({
+      key: 'minSri',
+      label: `SRI min : ${minSri}`,
+      onRemove: () => setFilter('minSri', null),
+    });
+  }
+  if (maxSri !== null) {
+    activeFilters.push({
+      key: 'maxSri',
+      label: `SRI max : ${maxSri}`,
+      onRemove: () => setFilter('maxSri', null),
+    });
+  }
+  if (issuerFilter) {
+    activeFilters.push({
+      key: 'issuer',
+      label: `Emetteur : ${issuerFilter}`,
+      onRemove: () => setIssuerFilter(''),
+    });
+  }
+
   return (
     <div className="animate-fade-in">
       {/* ── Page Header ──────────────────────────────────────── */}
       <div className="flex items-center justify-between mb-1.5">
         <div className="flex items-center gap-4">
           <h1 className="font-display text-[22px] font-bold leading-none bg-gradient-to-r from-[#3B1FA8] via-[#1A0A3E] to-[#3B1FA8] bg-clip-text text-transparent dark:from-white dark:via-[#C9BCFF] dark:to-white">
-            Produits structurés
+            Produits structures
           </h1>
           {/* Inline stat pills */}
           {!isLoading && !isError && (
@@ -457,7 +689,7 @@ export default function ProductsPage() {
                 </div>
                 <div className="w-px h-4 bg-border/40 dark:bg-white/8" />
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[9px] uppercase tracking-wider text-ink-3 dark:text-white/40 font-semibold font-body">Barrière moy.</span>
+                  <span className="text-[9px] uppercase tracking-wider text-ink-3 dark:text-white/40 font-semibold font-body">Barriere moy.</span>
                   <span className="font-mono text-[13px] font-bold text-[#E8334A] tabular-nums">{avgBarrier.toFixed(0)}%</span>
                 </div>
                 <div className="w-px h-4 bg-border/40 dark:bg-white/8" />
@@ -532,7 +764,7 @@ export default function ProductsPage() {
             <div className="flex items-center gap-2">
               <p className="text-[11px] text-ink-3 dark:text-ink-3 font-body">
                 <span className="font-semibold text-ink dark:text-surface font-mono tabular-nums">{filtered.length}</span>{' '}
-                résultat{filtered.length > 1 ? 's' : ''}
+                resultat{filtered.length > 1 ? 's' : ''}
               </p>
               {viewFilter === 'recommended' && (
                 <span className="text-[10px] text-violet/60 dark:text-violet-light/50 font-body flex items-center gap-0.5">
@@ -546,20 +778,36 @@ export default function ProductsPage() {
 
         {/* Row 2: Search + filters all on one line */}
         <div className="flex items-center gap-2">
-          {/* Search input */}
+          {/* Search input with clear button and result count */}
           <div className="relative flex-1 min-w-[180px]">
             <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-3/40 pointer-events-none" />
             <input
-              type="search"
-              value={search}
-              onChange={(e) => setFilter('search', e.target.value)}
+              type="text"
+              value={searchInput}
+              onChange={(e) => handleSearchChange(e.target.value)}
               placeholder="Rechercher nom, ISIN, sous-jacent..."
               className={cn(
-                'w-full h-8 rounded-lg bg-surface/60 dark:bg-surface-3/10 border border-border/40 dark:border-border/20 pl-8 pr-3 text-[12px] font-body text-ink dark:text-surface',
+                'w-full h-8 rounded-lg bg-surface/60 dark:bg-surface-3/10 border border-border/40 dark:border-border/20 pl-8 pr-16 text-[12px] font-body text-ink dark:text-surface',
                 'placeholder:text-ink-3/40 dark:placeholder:text-ink-3/30 transition-all duration-200',
                 'focus:outline-none focus:ring-2 focus:ring-violet/20 focus:border-violet/40 focus:bg-white dark:focus:bg-ink/60 focus:shadow-sm',
               )}
             />
+            {/* Result count + clear button inside input */}
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+              {searchInput && !isLoading && (
+                <span className="text-[10px] font-mono text-ink-3/60 tabular-nums">
+                  {filtered.length} resultat{filtered.length !== 1 ? 's' : ''}
+                </span>
+              )}
+              {searchInput && (
+                <button
+                  onClick={handleClearSearch}
+                  className="p-0.5 rounded hover:bg-surface-2 dark:hover:bg-white/10 text-ink-3/40 hover:text-ink-3 transition-colors"
+                >
+                  <X size={12} />
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Payoff Type */}
@@ -604,7 +852,7 @@ export default function ProductsPage() {
                 'text-ink-3 hover:text-violet dark:hover:text-violet-light hover:border-violet/40 transition-all duration-200',
                 'focus:outline-none focus:ring-2 focus:ring-violet/20 focus:border-violet/40',
               )}
-              title={sortDir === 'asc' ? 'Croissant' : 'Décroissant'}
+              title={sortDir === 'asc' ? 'Croissant' : 'Decroissant'}
             >
               {sortDir === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />}
             </button>
@@ -622,7 +870,7 @@ export default function ProductsPage() {
             )}
           >
             <SlidersHorizontal size={11} />
-            <span className="hidden lg:inline">Avancés</span>
+            <span className="hidden lg:inline">Avances</span>
             <ChevronDown
               size={10}
               className={cn('transition-transform duration-200', showAdvanced && 'rotate-180')}
@@ -635,6 +883,7 @@ export default function ProductsPage() {
               onClick={() => {
                 resetFilters();
                 setIssuerFilter('');
+                setSearchInput('');
               }}
               className={cn(
                 'h-8 px-2.5 rounded-lg border border-red/20 text-red bg-red-light dark:bg-red/10',
@@ -651,7 +900,7 @@ export default function ProductsPage() {
           )}
         </div>
 
-        {/* Advanced filters expandable — inside sticky bar */}
+        {/* Advanced filters expandable -- inside sticky bar */}
         <div
           className={cn(
             'overflow-hidden transition-all duration-300 ease-out',
@@ -672,7 +921,7 @@ export default function ProductsPage() {
                   <option key={n} value={n}>{n}</option>
                 ))}
               </select>
-              <span className="text-ink-3/30">—</span>
+              <span className="text-ink-3/30">&mdash;</span>
               <select
                 value={maxSri ?? ''}
                 onChange={(e) => setFilter('maxSri', e.target.value ? Number(e.target.value) : null)}
@@ -693,13 +942,32 @@ export default function ProductsPage() {
               onChange={(e) => setIssuerFilter(e.target.value)}
               className={selectCls}
             >
-              <option value="">Émetteur</option>
+              <option value="">Emetteur</option>
               {ISSUER_OPTIONS.map((name) => (
                 <option key={name} value={name}>{name}</option>
               ))}
             </select>
           </div>
         </div>
+
+        {/* ── Active Filters Pills ── */}
+        {activeFilters.length > 0 && (
+          <div className="flex items-center gap-1.5 flex-wrap pt-0.5 pb-0.5">
+            {activeFilters.map((af) => (
+              <FilterPill key={af.key} label={af.label} onRemove={af.onRemove} />
+            ))}
+            <button
+              onClick={() => {
+                resetFilters();
+                setIssuerFilter('');
+                setSearchInput('');
+              }}
+              className="text-[11px] text-ink-3 hover:text-red font-semibold font-body ml-1 transition-colors duration-150"
+            >
+              Reinitialiser tout
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ── Content ─────────────────────────────────────────────────────── */}
@@ -714,7 +982,7 @@ export default function ProductsPage() {
               <table className="w-full">
                 <thead className="sticky top-0 z-10">
                   <tr className="border-b border-border/30 bg-surface/80 dark:bg-ink/60 backdrop-blur-sm">
-                    {['', 'Produit', 'ISIN', 'Émetteur', 'Type', 'Barrière', 'Gain max', 'SRI', 'Échéance', 'Statut'].map((h) => (
+                    {['', 'Produit', 'ISIN', 'Emetteur', 'Type', 'Barriere', 'Gain max', 'SRI', 'Echeance', 'Statut'].map((h) => (
                       <th key={h} className="px-3 py-2.5 text-left text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">{h}</th>
                     ))}
                   </tr>
@@ -735,7 +1003,7 @@ export default function ProductsPage() {
               Erreur lors du chargement des produits.
             </p>
             <p className="text-ink-3 font-body text-[11px]">
-              Veuillez réessayer dans quelques instants.
+              Veuillez reessayer dans quelques instants.
             </p>
           </div>
         ) : filtered.length === 0 ? (
@@ -764,13 +1032,13 @@ export default function ProductsPage() {
                   ? 'Aucun favori pour le moment'
                   : viewFilter === 'recommended'
                   ? 'Pas encore de suggestions IA'
-                  : 'Aucun produit trouvé'}
+                  : 'Aucun produit trouve'}
               </p>
               <p className="font-body text-[11px] text-ink-3 dark:text-ink-3 max-w-[280px] leading-relaxed">
                 {viewFilter === 'favorites'
                   ? 'Cliquez sur le coeur sur un produit pour le retrouver ici.'
                   : viewFilter === 'recommended'
-                  ? 'Lancez une analyse IA pour recevoir des recommandations personnalisées.'
+                  ? 'Lancez une analyse IA pour recevoir des recommandations personnalisees.'
                   : 'Essayez de modifier vos filtres ou votre recherche.'}
               </p>
             </div>
@@ -798,181 +1066,263 @@ export default function ProductsPage() {
             )}
             {(viewFilter === 'all' || viewFilter === 'popular') && hasActiveFilters && (
               <button
-                onClick={() => { resetFilters(); setIssuerFilter(''); }}
+                onClick={() => { resetFilters(); setIssuerFilter(''); setSearchInput(''); }}
                 className="text-[12px] text-violet dark:text-violet-light font-semibold hover:underline flex items-center gap-1"
               >
                 <X size={11} />
-                Réinitialiser les filtres
+                Reinitialiser les filtres
               </button>
             )}
           </div>
         ) : view === 'grid' ? (
           /* ── Grid View ─────────────────────────────────────────── */
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 stagger-children stagger-grid">
-            {filtered.map((product: any) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                isFavorited={favoriteIds.has(product.id)}
-                recommendationScore={recommendationMap.get(product.id) ?? null}
-                aiReason={recommendationReasonMap.get(product.id) ?? null}
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 stagger-children stagger-grid">
+              {paginatedProducts.map((product: any) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  isFavorited={favoriteIds.has(product.id)}
+                  recommendationScore={recommendationMap.get(product.id) ?? null}
+                  aiReason={recommendationReasonMap.get(product.id) ?? null}
+                />
+              ))}
+            </div>
+            {filtered.length > PER_PAGE && (
+              <Pagination
+                page={safePage}
+                totalPages={totalPages}
+                totalItems={filtered.length}
+                perPage={PER_PAGE}
+                onPageChange={setPage}
               />
-            ))}
-          </div>
+            )}
+          </>
         ) : (
           /* ── Table View ────────────────────────────────────────── */
-          <div className="bg-white dark:bg-ink/30 rounded-xl border border-border/40 dark:border-border/20 overflow-hidden shadow-sm">
-            <div className="overflow-x-auto">
-              <table className="w-full text-[12px] font-body">
-                <thead className="sticky top-0 z-10">
-                  <tr className="border-b border-border/30 bg-surface/80 dark:bg-ink/60 backdrop-blur-sm">
-                    <th className="px-2.5 py-2.5 w-9" />
-                    <SortTh label="Produit" field="name" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
-                    <th className="px-3 py-2.5 text-left text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">ISIN</th>
-                    <SortTh label="Émetteur" field="issuerName" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
-                    <th className="px-3 py-2.5 text-left text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">Type</th>
-                    <SortTh label="Barrière" field="barrierCapPct" sortField={sortField} sortDir={sortDir} onSort={handleSort} className="text-right" />
-                    <SortTh label="Coupon" field="couponPct" sortField={sortField} sortDir={sortDir} onSort={handleSort} className="text-right" />
-                    <SortTh label="Gain max" field="maxGainPct" sortField={sortField} sortDir={sortDir} onSort={handleSort} className="text-right" />
-                    <SortTh label="SRI" field="sri" sortField={sortField} sortDir={sortDir} onSort={handleSort} className="text-center" />
-                    <SortTh label="Échéance" field="maturityDate" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
-                    <th className="px-3 py-2.5 text-center text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">Statut</th>
-                    <th className="px-3 py-2.5 w-9" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((p: any, idx: number) => {
-                    const payoffStyle = PAYOFF_BADGE[p.payoffType] ?? { bg: '#F4F3EF', text: '#7B6FA0' };
-                    const statusStyle = STATUS_BADGE[p.status] ?? { bg: '#F4F3EF', text: '#7B6FA0', label: p.status };
-                    const sriColor = p.sri <= 2 ? '#008B6E' : p.sri <= 4 ? '#A07800' : '#C41F36';
-                    const isFav = favoriteIds.has(p.id);
-                    const recScore = recommendationMap.get(p.id);
-                    const isEven = idx % 2 === 1;
+          <>
+            <div className="bg-white dark:bg-ink/30 rounded-xl border border-border/40 dark:border-border/20 overflow-hidden shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full text-[12px] font-body">
+                  <thead className="sticky top-0 z-10">
+                    <tr className="border-b border-border/30 bg-surface/80 dark:bg-ink/60 backdrop-blur-sm">
+                      <th className="px-2.5 py-2.5 w-9" />
+                      <SortTh label="Produit" field="name" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
+                      <th className="px-3 py-2.5 text-left text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">ISIN</th>
+                      <SortTh label="Emetteur" field="issuerName" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
+                      <th className="px-3 py-2.5 text-left text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">Type</th>
+                      <SortTh label="Barriere" field="barrierCapPct" sortField={sortField} sortDir={sortDir} onSort={handleSort} className="text-right" />
+                      <SortTh label="Coupon" field="couponPct" sortField={sortField} sortDir={sortDir} onSort={handleSort} className="text-right" />
+                      <SortTh label="Gain max" field="maxGainPct" sortField={sortField} sortDir={sortDir} onSort={handleSort} className="text-right" />
+                      <SortTh label="SRI" field="sri" sortField={sortField} sortDir={sortDir} onSort={handleSort} className="text-center" />
+                      <SortTh label="Echeance" field="maturityDate" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
+                      <th className="px-3 py-2.5 text-center text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">Statut</th>
+                      <th className="px-3 py-2.5 w-9" />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedProducts.map((p: any, idx: number) => {
+                      const payoffStyle = PAYOFF_BADGE[p.payoffType] ?? { bg: '#F4F3EF', text: '#7B6FA0' };
+                      const statusStyle = STATUS_BADGE[p.status] ?? { bg: '#F4F3EF', text: '#7B6FA0', label: p.status };
+                      const sriColor = p.sri <= 2 ? '#008B6E' : p.sri <= 4 ? '#A07800' : '#C41F36';
+                      const isFav = favoriteIds.has(p.id);
+                      const recScore = recommendationMap.get(p.id);
+                      const isEven = idx % 2 === 1;
 
-                    return (
-                      <tr
-                        key={p.id}
-                        className={cn(
-                          'border-b border-border/20 dark:border-border/10 last:border-0 transition-colors duration-150 group',
-                          'hover:bg-violet-ghost/50 dark:hover:bg-violet/5',
-                          isEven && 'bg-surface/30 dark:bg-surface-3/5',
-                        )}
-                      >
-                        {/* Favorite */}
-                        <td className="px-2.5 py-2.5">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleFavorite.mutate(p.id);
-                            }}
-                            className={cn(
-                              'p-0.5 rounded-full transition-all duration-200',
-                              isFav
-                                ? 'text-red'
-                                : 'text-ink-3/30 hover:text-red opacity-0 group-hover:opacity-100',
-                            )}
-                          >
-                            <Heart size={12} fill={isFav ? 'currentColor' : 'none'} />
-                          </button>
-                        </td>
-
-                        {/* Product name */}
-                        <td className="px-3 py-2.5">
-                          <Link href={`/products/${p.id}`} className="hover:text-violet dark:hover:text-violet-light transition-colors font-medium text-ink dark:text-surface leading-tight block max-w-[180px] truncate text-[12px]">
-                            {p.name}
-                          </Link>
-                          {recScore != null && recScore >= 70 && (
-                            <span className="inline-flex items-center gap-0.5 mt-0.5 text-[9px] text-violet dark:text-violet-light font-medium">
-                              <Sparkles size={7} /> IA {recScore}%
-                            </span>
+                      return (
+                        <tr
+                          key={p.id}
+                          className={cn(
+                            'border-b border-border/20 dark:border-border/10 last:border-0 transition-colors duration-150 group',
+                            'hover:bg-violet-ghost/50 dark:hover:bg-violet/5',
+                            isEven && 'bg-surface/30 dark:bg-surface-3/5',
                           )}
-                        </td>
-
-                        {/* ISIN */}
-                        <td className="px-3 py-2.5">
-                          <span className="font-mono text-[10px] text-ink-3 tabular-nums">{p.isin}</span>
-                        </td>
-
-                        {/* Issuer */}
-                        <td className="px-3 py-2.5 text-ink-2 dark:text-ink-3 max-w-[130px] truncate text-[12px]">{p.issuerName}</td>
-
-                        {/* Type badge */}
-                        <td className="px-3 py-2.5">
-                          <span
-                            className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[9px] font-semibold"
-                            style={{ backgroundColor: payoffStyle.bg, color: payoffStyle.text }}
-                          >
-                            {PAYOFF_SHORT[p.payoffType] ?? p.payoffType}
-                          </span>
-                        </td>
-
-                        {/* Barrier */}
-                        <td className="px-3 py-2.5 text-right font-mono tabular-nums text-red font-semibold text-[11px]">
-                          {formatPct(p.barrierCapPct)}
-                        </td>
-
-                        {/* Coupon */}
-                        <td className="px-3 py-2.5 text-right font-mono tabular-nums text-teal font-semibold text-[11px]">
-                          {formatPct(p.couponPct)}
-                        </td>
-
-                        {/* Max Gain */}
-                        <td className="px-3 py-2.5 text-right font-mono tabular-nums font-bold text-ink dark:text-surface text-[11px]">
-                          {formatPct(p.maxGainPct)}
-                        </td>
-
-                        {/* SRI */}
-                        <td className="px-3 py-2.5 text-center">
-                          <Tooltip content="Indicateur de risque de 1 (faible) à 7 (élevé)">
-                            <span
-                              className="inline-flex items-center justify-center w-5 h-5 rounded-md text-[9px] font-bold"
-                              style={{ backgroundColor: `${sriColor}15`, color: sriColor }}
+                        >
+                          {/* Favorite */}
+                          <td className="px-2.5 py-2.5">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleFavorite.mutate(p.id);
+                              }}
+                              className={cn(
+                                'p-0.5 rounded-full transition-all duration-200',
+                                isFav
+                                  ? 'text-red'
+                                  : 'text-ink-3/30 hover:text-red opacity-0 group-hover:opacity-100',
+                              )}
                             >
-                              {p.sri}
+                              <Heart size={12} fill={isFav ? 'currentColor' : 'none'} />
+                            </button>
+                          </td>
+
+                          {/* Product name */}
+                          <td className="px-3 py-2.5">
+                            <Link href={`/products/${p.id}`} className="hover:text-violet dark:hover:text-violet-light transition-colors font-medium text-ink dark:text-surface leading-tight block max-w-[180px] truncate text-[12px]">
+                              {p.name}
+                            </Link>
+                            {recScore != null && recScore >= 70 && (
+                              <span className="inline-flex items-center gap-0.5 mt-0.5 text-[9px] text-violet dark:text-violet-light font-medium">
+                                <Sparkles size={7} /> IA {recScore}%
+                              </span>
+                            )}
+                          </td>
+
+                          {/* ISIN */}
+                          <td className="px-3 py-2.5">
+                            <span className="font-mono text-[10px] text-ink-3 tabular-nums">{p.isin}</span>
+                          </td>
+
+                          {/* Issuer */}
+                          <td className="px-3 py-2.5 text-ink-2 dark:text-ink-3 max-w-[130px] truncate text-[12px]">{p.issuerName}</td>
+
+                          {/* Type badge */}
+                          <td className="px-3 py-2.5">
+                            <span
+                              className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[9px] font-semibold"
+                              style={{ backgroundColor: payoffStyle.bg, color: payoffStyle.text }}
+                            >
+                              {PAYOFF_SHORT[p.payoffType] ?? p.payoffType}
                             </span>
-                          </Tooltip>
-                        </td>
+                          </td>
 
-                        {/* Maturity */}
-                        <td className="px-3 py-2.5 text-[11px] text-ink-2 dark:text-ink-3 whitespace-nowrap">
-                          <span className="inline-flex items-center gap-1">
-                            <Calendar size={9} className="text-ink-3" />
-                            {p.maturityDate ? formatDate(p.maturityDate) : '—'}
-                          </span>
-                        </td>
+                          {/* Barrier */}
+                          <td className="px-3 py-2.5 text-right font-mono tabular-nums text-red font-semibold text-[11px]">
+                            {formatPct(p.barrierCapPct)}
+                          </td>
 
-                        {/* Status */}
-                        <td className="px-3 py-2.5 text-center">
-                          <span
-                            className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[9px] font-semibold"
-                            style={{ backgroundColor: statusStyle.bg, color: statusStyle.text }}
-                          >
-                            {statusStyle.label}
-                          </span>
-                          {p.shelfClosingDate && new Date(p.shelfClosingDate) > new Date() && (
-                            <div className="mt-0.5">
-                              <Countdown targetDate={p.shelfClosingDate} label="Clôture" className="text-[9px]" />
-                            </div>
-                          )}
-                        </td>
+                          {/* Coupon */}
+                          <td className="px-3 py-2.5 text-right font-mono tabular-nums text-teal font-semibold text-[11px]">
+                            {formatPct(p.couponPct)}
+                          </td>
 
-                        {/* Action */}
-                        <td className="px-3 py-2.5">
-                          <Link
-                            href={`/products/${p.id}`}
-                            className="text-ink-3/30 hover:text-violet dark:hover:text-violet-light transition-colors group-hover:text-ink-3"
-                          >
-                            <ArrowUpRight size={13} />
-                          </Link>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                          {/* Max Gain */}
+                          <td className="px-3 py-2.5 text-right font-mono tabular-nums font-bold text-ink dark:text-surface text-[11px]">
+                            {formatPct(p.maxGainPct)}
+                          </td>
+
+                          {/* SRI */}
+                          <td className="px-3 py-2.5 text-center">
+                            <Tooltip content="Indicateur de risque de 1 (faible) a 7 (eleve)">
+                              <span
+                                className="inline-flex items-center justify-center w-5 h-5 rounded-md text-[9px] font-bold"
+                                style={{ backgroundColor: `${sriColor}15`, color: sriColor }}
+                              >
+                                {p.sri}
+                              </span>
+                            </Tooltip>
+                          </td>
+
+                          {/* Maturity */}
+                          <td className="px-3 py-2.5 text-[11px] text-ink-2 dark:text-ink-3 whitespace-nowrap">
+                            <span className="inline-flex items-center gap-1">
+                              <Calendar size={9} className="text-ink-3" />
+                              {p.maturityDate ? formatDate(p.maturityDate) : '\u2014'}
+                            </span>
+                          </td>
+
+                          {/* Status */}
+                          <td className="px-3 py-2.5 text-center">
+                            <span
+                              className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[9px] font-semibold"
+                              style={{ backgroundColor: statusStyle.bg, color: statusStyle.text }}
+                            >
+                              {statusStyle.label}
+                            </span>
+                            {p.shelfClosingDate && new Date(p.shelfClosingDate) > new Date() && (
+                              <div className="mt-0.5">
+                                <Countdown targetDate={p.shelfClosingDate} label="Cloture" className="text-[9px]" />
+                              </div>
+                            )}
+                          </td>
+
+                          {/* Action */}
+                          <td className="px-3 py-2.5">
+                            <Link
+                              href={`/products/${p.id}`}
+                              className="text-ink-3/30 hover:text-violet dark:hover:text-violet-light transition-colors group-hover:text-ink-3"
+                            >
+                              <ArrowUpRight size={13} />
+                            </Link>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+            {filtered.length > PER_PAGE && (
+              <Pagination
+                page={safePage}
+                totalPages={totalPages}
+                totalItems={filtered.length}
+                perPage={PER_PAGE}
+                onPageChange={setPage}
+              />
+            )}
+          </>
         )}
+      </div>
+
+      {/* ── Batch Actions Bar (floating, appears when products are selected for compare) ── */}
+      <div
+        className={cn(
+          'fixed bottom-0 left-0 right-0 z-50',
+          'transition-all duration-300 ease-out',
+          compareIds.length > 0
+            ? 'translate-y-0 opacity-100'
+            : 'translate-y-full opacity-0 pointer-events-none',
+        )}
+      >
+        <div className={cn(
+          'mx-auto max-w-3xl mb-4 px-5 py-3 rounded-xl',
+          'bg-[#1A0A3E]/95 backdrop-blur-xl border border-violet/20',
+          'shadow-2xl shadow-violet/20',
+          'flex items-center justify-between gap-4',
+        )}>
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-violet/20 flex items-center justify-center">
+              <Layers size={14} className="text-violet-light" />
+            </div>
+            <span className="text-[13px] font-body text-white">
+              <span className="font-mono font-bold tabular-nums">{compareIds.length}</span>{' '}
+              produit{compareIds.length > 1 ? 's' : ''} selectionne{compareIds.length > 1 ? 's' : ''}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/products/compare"
+              className={cn(
+                'h-8 px-4 rounded-lg text-[12px] font-semibold font-body',
+                'bg-violet text-white',
+                'flex items-center gap-1.5',
+                'transition-all duration-200 hover:bg-violet-mid hover:shadow-md hover:shadow-violet/30',
+              )}
+            >
+              <Layers size={12} />
+              Comparer
+            </Link>
+            <button
+              className={cn(
+                'h-8 px-4 rounded-lg text-[12px] font-semibold font-body',
+                'bg-white/10 text-white border border-white/10',
+                'flex items-center gap-1.5',
+                'transition-all duration-200 hover:bg-white/20 hover:border-white/20',
+              )}
+            >
+              <Download size={12} />
+              Exporter
+            </button>
+            <button
+              onClick={() => clearCompare()}
+              className="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-all duration-200"
+              title="Effacer la selection"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -66,6 +66,14 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     <div className="min-h-screen bg-surface dark:bg-ink">
+      {/* Skip to content — accessibility */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-gradient-to-r focus:from-[#3B1FA8] focus:to-[#5535C4] focus:text-white focus:font-body focus:text-sm focus:font-semibold focus:shadow-lg focus:outline-none"
+      >
+        Aller au contenu principal
+      </a>
+
       {/* Scroll progress bar at the very top */}
       <ScrollProgress />
 
@@ -95,7 +103,7 @@ export function AppShell({ children }: AppShellProps) {
       </div>
 
       {/* Main content — offset by sidebar width on desktop, full width on mobile */}
-      <main className="min-h-screen md:pl-[248px]">
+      <main id="main-content" className="min-h-screen md:pl-[248px]" role="main">
         <div className="px-4 py-5 md:px-6 lg:px-8 xl:px-10 md:py-6">
           <ErrorBoundary>{children}</ErrorBoundary>
         </div>

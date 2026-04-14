@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
+import Link from 'next/link';
 import {
   Bell,
   CheckCheck,
@@ -9,6 +10,9 @@ import {
   AlertTriangle,
   XCircle,
   Inbox,
+  ChevronRight,
+  Trash2,
+  Settings,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
@@ -18,6 +22,8 @@ import { Button } from '@/components/ui/button';
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type NotificationType = 'info' | 'success' | 'warning' | 'error';
+
+type FilterType = 'all' | NotificationType;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -40,6 +46,21 @@ function formatRelativeTime(isoDate: string): string {
   });
 }
 
+// ─── Navigation mapping ──────────────────────────────────────────────────────
+
+function getNotificationLink(type: string): string | null {
+  switch (type) {
+    case 'info':
+      return '/products';
+    case 'success':
+      return '/portfolio';
+    case 'warning':
+      return '/products';
+    default:
+      return null;
+  }
+}
+
 // ─── Notification icon & colors ───────────────────────────────────────────────
 
 const TYPE_CONFIG: Record<
@@ -49,6 +70,7 @@ const TYPE_CONFIG: Record<
     accent: string;
     bgGradient: string;
     ringColor: string;
+    label: string;
   }
 > = {
   info: {
@@ -56,26 +78,39 @@ const TYPE_CONFIG: Record<
     accent: '#3B1FA8',
     bgGradient: 'from-[#3B1FA8]/10 to-[#3B1FA8]/5',
     ringColor: 'ring-[#3B1FA8]/15',
+    label: 'Info',
   },
   success: {
     icon: CheckCircle2,
     accent: '#00B894',
     bgGradient: 'from-[#00B894]/10 to-[#00B894]/5',
     ringColor: 'ring-[#00B894]/15',
+    label: 'Succes',
   },
   warning: {
     icon: AlertTriangle,
     accent: '#D4A017',
     bgGradient: 'from-[#D4A017]/10 to-[#D4A017]/5',
     ringColor: 'ring-[#D4A017]/15',
+    label: 'Avertissement',
   },
   error: {
     icon: XCircle,
     accent: '#E8334A',
     bgGradient: 'from-[#E8334A]/10 to-[#E8334A]/5',
     ringColor: 'ring-[#E8334A]/15',
+    label: 'Erreur',
   },
 };
+
+// Map store types to our local NotificationType
+function normalizeType(type: string): NotificationType {
+  if (type === 'info' || type === 'success' || type === 'warning' || type === 'error') return type;
+  // Map other store types
+  if (type === 'closing' || type === 'observation') return 'warning';
+  if (type === 'status' || type === 'system' || type === 'coupon') return 'info';
+  return 'info';
+}
 
 // ─── Demo notifications ───────────────────────────────────────────────────────
 
@@ -106,6 +141,50 @@ const DEMO_NOTIFICATIONS = [
   },
 ];
 
+// ─── Auto-mark-read hook ─────────────────────────────────────────────────────
+
+function useAutoMarkRead(
+  id: string,
+  read: boolean,
+  markRead: (id: string) => void,
+) {
+  const ref = useRef<HTMLDivElement>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (read) return;
+    const el = ref.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          timerRef.current = setTimeout(() => {
+            markRead(id);
+          }, 3000);
+        } else {
+          if (timerRef.current) {
+            clearTimeout(timerRef.current);
+            timerRef.current = null;
+          }
+        }
+      },
+      { threshold: 0.5 },
+    );
+
+    observer.observe(el);
+
+    return () => {
+      observer.disconnect();
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, [id, read, markRead]);
+
+  return ref;
+}
+
 // ─── Notification Card ────────────────────────────────────────────────────────
 
 interface NotificationCardProps {
@@ -116,6 +195,7 @@ interface NotificationCardProps {
   read: boolean;
   createdAt: string;
   onMarkRead: (id: string) => void;
+  onDismiss: (id: string) => void;
 }
 
 function NotificationCard({
@@ -126,14 +206,19 @@ function NotificationCard({
   read,
   createdAt,
   onMarkRead,
+  onDismiss,
 }: NotificationCardProps) {
   const config = TYPE_CONFIG[type] ?? TYPE_CONFIG.info;
   const Icon = config.icon;
+  const link = getNotificationLink(type);
 
-  return (
+  const autoReadRef = useAutoMarkRead(id, read, onMarkRead);
+
+  const cardContent = (
     <div
+      ref={autoReadRef}
       className={cn(
-        'group relative flex gap-3 p-3.5 rounded-xl border transition-all duration-200',
+        'group relative flex gap-3 p-3.5 rounded-xl border transition-all duration-300',
         'focus-within:ring-2 focus-within:ring-[#3B1FA8]/20 focus-within:border-[#3B1FA8]/30',
         read
           ? 'bg-white/50 dark:bg-white/[0.03] border-border/40 opacity-55 hover:opacity-75 hover:shadow-sm'
@@ -142,6 +227,7 @@ function NotificationCard({
               'shadow-card hover:shadow-card-hover',
               'hover:-translate-y-0.5',
             ],
+        link && 'cursor-pointer',
       )}
       role="article"
       aria-label={title}
@@ -189,25 +275,73 @@ function NotificationCard({
         <p className="font-body text-[12px] text-ink-3 dark:text-white/50 leading-relaxed">{message}</p>
       </div>
 
-      {/* Mark read button */}
-      {!read && (
+      {/* Action buttons */}
+      <div className="flex flex-col items-center gap-1 shrink-0 self-start">
+        {/* Mark read button */}
+        {!read && (
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onMarkRead(id);
+            }}
+            title="Marquer comme lu"
+            className={cn(
+              'p-1 rounded-lg',
+              'text-ink-3 hover:text-[#3B1FA8] dark:hover:text-[#C9BCFF]',
+              'hover:bg-[#3B1FA8]/10',
+              'opacity-0 group-hover:opacity-100',
+              'transition-all duration-200',
+            )}
+            aria-label="Marquer comme lu"
+          >
+            <CheckCheck size={13} />
+          </button>
+        )}
+
+        {/* Dismiss button */}
         <button
-          onClick={() => onMarkRead(id)}
-          title="Marquer comme lu"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onDismiss(id);
+          }}
+          title="Supprimer"
           className={cn(
-            'p-1 rounded-lg shrink-0 self-start',
-            'text-ink-3 hover:text-[#3B1FA8] dark:hover:text-[#C9BCFF]',
-            'hover:bg-[#3B1FA8]/10',
+            'p-1 rounded-lg',
+            'text-ink-3 hover:text-[#E8334A]',
+            'hover:bg-[#E8334A]/10',
             'opacity-0 group-hover:opacity-100',
             'transition-all duration-200',
           )}
-          aria-label="Marquer comme lu"
+          aria-label="Supprimer la notification"
         >
-          <CheckCheck size={13} />
+          <Trash2 size={13} />
         </button>
-      )}
+
+        {/* Clickable indicator arrow */}
+        {link && (
+          <ChevronRight
+            size={13}
+            className={cn(
+              'text-ink-3/30 group-hover:text-[#3B1FA8]/60 dark:group-hover:text-[#C9BCFF]/60',
+              'transition-all duration-200 mt-auto',
+            )}
+          />
+        )}
+      </div>
     </div>
   );
+
+  if (link) {
+    return (
+      <Link href={link} className="block no-underline">
+        {cardContent}
+      </Link>
+    );
+  }
+
+  return cardContent;
 }
 
 // ─── Section Label ────────────────────────────────────────────────────────────
@@ -230,18 +364,70 @@ function SectionLabel({ children, accent }: { children: React.ReactNode; accent:
   );
 }
 
+// ─── Filter Pill ─────────────────────────────────────────────────────────────
+
+function FilterPill({
+  active,
+  onClick,
+  icon: Icon,
+  label,
+  count,
+  accent,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon?: LucideIcon;
+  label: string;
+  count: number;
+  accent: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold font-body',
+        'border transition-all duration-200',
+        active
+          ? 'text-white border-transparent shadow-sm'
+          : 'border-border/60 dark:border-white/15 text-ink-3 dark:text-white/50 hover:text-ink dark:hover:text-white/80',
+      )}
+      style={
+        active
+          ? { background: `linear-gradient(135deg, ${accent}, ${accent}CC)` }
+          : undefined
+      }
+    >
+      {Icon && <Icon size={12} className={active ? 'text-white' : ''} style={!active ? { color: accent } : undefined} />}
+      {label}
+      <span
+        className={cn(
+          'inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full text-[9px] font-bold leading-none',
+          active
+            ? 'bg-white/25 text-white'
+            : 'bg-ink-3/8 text-ink-3 dark:bg-white/10 dark:text-white/50',
+        )}
+      >
+        {count}
+      </span>
+    </button>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function NotificationsPage() {
   const {
     notifications,
     unreadCount,
-    addNotification,
     markRead,
     markAllRead,
+    dismiss,
   } = useNotificationsStore();
 
   const initDemo = useNotificationsStore((s) => s.initDemoNotifications);
+
+  // Type filter
+  const [typeFilter, setTypeFilter] = useState<FilterType>('all');
 
   // Seed demo notifications on first load if store is empty
   useEffect(() => {
@@ -252,6 +438,27 @@ export default function NotificationsPage() {
   }, []);
 
   const hasUnread = unreadCount() > 0;
+
+  // Compute type counts for filter pills
+  const typeCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: 0, info: 0, success: 0, warning: 0, error: 0 };
+    notifications.forEach((n) => {
+      const nt = normalizeType(n.type);
+      counts[nt] = (counts[nt] || 0) + 1;
+      counts.all += 1;
+    });
+    return counts;
+  }, [notifications]);
+
+  // Filter notifications by type
+  const filteredNotifications = useMemo(() => {
+    if (typeFilter === 'all') return notifications;
+    return notifications.filter((n) => normalizeType(n.type) === typeFilter);
+  }, [notifications, typeFilter]);
+
+  const filteredUnread = filteredNotifications.filter((n) => !n.read);
+  const filteredRead = filteredNotifications.filter((n) => n.read);
+  const hasFilteredUnread = filteredUnread.length > 0;
 
   return (
     <main className="w-full animate-fade-in">
@@ -290,65 +497,124 @@ export default function NotificationsPage() {
           </Button>
         )}
       </div>
+
+      {/* Preferences link */}
+      <div className="mb-3">
+        <Link
+          href="/settings"
+          className={cn(
+            'inline-flex items-center gap-1.5 text-[11px] font-body font-medium',
+            'text-ink-3/60 dark:text-white/30 hover:text-[#3B1FA8] dark:hover:text-[#C9BCFF]',
+            'transition-colors duration-200',
+          )}
+        >
+          <Settings size={11} />
+          Gerer les preferences
+        </Link>
+      </div>
+
       <div
-        className="h-[2px] rounded-full mb-5 mt-3"
+        className="h-[2px] rounded-full mb-5"
         style={{
           background:
             'linear-gradient(90deg, #3B1FA8, #00B894 50%, transparent)',
         }}
       />
 
+      {/* ── Filter Pills ──────────────────────────────────────────────────── */}
+      <div className="flex items-center gap-1.5 flex-wrap mb-5">
+        <FilterPill
+          active={typeFilter === 'all'}
+          onClick={() => setTypeFilter('all')}
+          label="Toutes"
+          count={typeCounts.all}
+          accent="#3B1FA8"
+        />
+        <FilterPill
+          active={typeFilter === 'info'}
+          onClick={() => setTypeFilter('info')}
+          icon={Info}
+          label="Info"
+          count={typeCounts.info}
+          accent="#3B1FA8"
+        />
+        <FilterPill
+          active={typeFilter === 'success'}
+          onClick={() => setTypeFilter('success')}
+          icon={CheckCircle2}
+          label="Succes"
+          count={typeCounts.success}
+          accent="#00B894"
+        />
+        <FilterPill
+          active={typeFilter === 'warning'}
+          onClick={() => setTypeFilter('warning')}
+          icon={AlertTriangle}
+          label="Avertissement"
+          count={typeCounts.warning}
+          accent="#D4A017"
+        />
+        <FilterPill
+          active={typeFilter === 'error'}
+          onClick={() => setTypeFilter('error')}
+          icon={XCircle}
+          label="Erreur"
+          count={typeCounts.error}
+          accent="#E8334A"
+        />
+      </div>
+
       {/* ── Notifications list ─────────────────────────────────────────────── */}
-      {notifications.length === 0 ? (
+      {filteredNotifications.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 py-20 text-center bg-white/80 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 shadow-card">
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#3B1FA8]/10 to-[#00B894]/10 border border-border/40 flex items-center justify-center">
             <Inbox size={20} className="text-ink-3 opacity-40" />
           </div>
           <div>
             <p className="font-display text-[13px] font-bold text-ink dark:text-white">
-              Aucune notification
+              {typeFilter === 'all' ? 'Aucune notification' : 'Aucune notification de ce type'}
             </p>
             <p className="font-body text-[11px] text-ink-3 dark:text-white/40 mt-0.5 max-w-xs">
-              Vous serez averti ici des nouvelles opportunites et mises a jour importantes.
+              {typeFilter === 'all'
+                ? 'Vous serez averti ici des nouvelles opportunites et mises a jour importantes.'
+                : 'Essayez un autre filtre pour voir vos notifications.'}
             </p>
           </div>
         </div>
       ) : (
         <div className="flex flex-col gap-2.5 stagger-children">
           {/* Unread section */}
-          {hasUnread && (
+          {hasFilteredUnread && (
             <div>
               <SectionLabel accent="#3B1FA8">Non lues</SectionLabel>
               <div className="flex flex-col gap-1.5 stagger-children">
-                {notifications
-                  .filter((n) => !n.read)
-                  .map((n) => (
-                    <NotificationCard
-                      key={n.id}
-                      {...n}
-                      type={n.type as NotificationType}
-                      onMarkRead={markRead}
-                    />
-                  ))}
+                {filteredUnread.map((n) => (
+                  <NotificationCard
+                    key={n.id}
+                    {...n}
+                    type={normalizeType(n.type)}
+                    onMarkRead={markRead}
+                    onDismiss={dismiss}
+                  />
+                ))}
               </div>
             </div>
           )}
 
           {/* Read section */}
-          {notifications.some((n) => n.read) && (
-            <div className={hasUnread ? 'mt-4' : ''}>
-              {hasUnread && <SectionLabel accent="#7B6FA0">Lues</SectionLabel>}
+          {filteredRead.length > 0 && (
+            <div className={hasFilteredUnread ? 'mt-4' : ''}>
+              {hasFilteredUnread && <SectionLabel accent="#7B6FA0">Lues</SectionLabel>}
               <div className="flex flex-col gap-1.5 stagger-children">
-                {notifications
-                  .filter((n) => n.read)
-                  .map((n) => (
-                    <NotificationCard
-                      key={n.id}
-                      {...n}
-                      type={n.type as NotificationType}
-                      onMarkRead={markRead}
-                    />
-                  ))}
+                {filteredRead.map((n) => (
+                  <NotificationCard
+                    key={n.id}
+                    {...n}
+                    type={normalizeType(n.type)}
+                    onMarkRead={markRead}
+                    onDismiss={dismiss}
+                  />
+                ))}
               </div>
             </div>
           )}

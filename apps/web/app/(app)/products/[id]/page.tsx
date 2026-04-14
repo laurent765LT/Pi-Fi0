@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
   ArrowLeft, Heart, Share2, FileText, AlertTriangle, Calendar,
   Shield, TrendingUp, Info, ExternalLink, Clock, Users, Download,
   Sparkles, Brain, Target, BarChart3, Lightbulb, CheckCircle2,
-  XCircle, Minus, Zap, Activity, PieChart,
+  XCircle, Minus, Zap, Activity, PieChart, Copy, Check, FileDown,
+  ChevronDown,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useProduct, useProductPayoff } from '@/hooks/use-products';
@@ -95,11 +96,11 @@ function DetailRow({ label, value, className }: { label: string; value: React.Re
 
 function StatBox({ label, value, color, icon: Icon }: { label: string; value: string; color?: string; icon?: any }) {
   return (
-    <div className="relative flex flex-col items-center gap-1 py-3 px-2.5 rounded-xl bg-white dark:bg-white/5 border border-border/60 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden group">
+    <div className="relative flex flex-col items-center gap-0.5 sm:gap-1 py-2 sm:py-3 px-2 sm:px-2.5 rounded-xl bg-white dark:bg-white/5 border border-border/60 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden group">
       <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-violet/60 to-teal/40 opacity-0 group-hover:opacity-100 transition-opacity" />
-      {Icon && <Icon size={12} className="text-ink-3/50" />}
-      <span className="text-[9px] uppercase tracking-wider text-ink-3 font-semibold font-body">{label}</span>
-      <span className={cn("font-display text-lg font-bold leading-none tabular-nums", color ?? 'text-ink')}>{value}</span>
+      {Icon && <Icon size={12} className="text-ink-3/50 hidden sm:block" />}
+      <span className="text-[8px] sm:text-[9px] uppercase tracking-wider text-ink-3 font-semibold font-body">{label}</span>
+      <span className={cn("font-display text-base sm:text-lg font-bold leading-none tabular-nums", color ?? 'text-ink')}>{value}</span>
     </div>
   );
 }
@@ -132,6 +133,151 @@ function SriGauge({ sri }: { sri: number }) {
         {sri >= 5 && sri <= 6 && ' (élevé)'}
         {sri === 7 && ' (très élevé)'}
       </p>
+    </div>
+  );
+}
+
+function CopyIsinButton({ isin }: { isin: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(isin);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback for older browsers
+      const el = document.createElement('textarea');
+      el.value = isin;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  }, [isin]);
+
+  return (
+    <button
+      onClick={handleCopy}
+      className={cn(
+        'inline-flex items-center gap-1 rounded px-1 py-0.5 text-[10px] font-mono transition-all duration-200',
+        copied
+          ? 'text-[#00B894] bg-[#00B894]/10'
+          : 'text-ink-3 hover:text-violet hover:bg-violet/10',
+      )}
+      title={copied ? 'Copié !' : 'Copier l\'ISIN'}
+    >
+      {copied ? <Check size={10} /> : <Copy size={10} />}
+    </button>
+  );
+}
+
+function BarrierDistanceBar({ barrierCapPct, currentPct }: { barrierCapPct: number; currentPct?: number }) {
+  const spot = currentPct ?? 100;
+  const distance = spot - barrierCapPct;
+  const distancePct = ((distance / spot) * 100);
+
+  // Color logic: green if >20% above barrier, yellow if 5-20%, red if <5% or below
+  const zone = distance > 20 ? 'green' : distance > 5 ? 'yellow' : 'red';
+  const zoneColors = {
+    green: { bar: '#00B894', bg: 'rgba(0,184,148,0.08)', border: 'rgba(0,184,148,0.2)', text: '#008B6E' },
+    yellow: { bar: '#D4A017', bg: 'rgba(212,160,23,0.08)', border: 'rgba(212,160,23,0.2)', text: '#A07800' },
+    red: { bar: '#E8334A', bg: 'rgba(232,51,74,0.08)', border: 'rgba(232,51,74,0.2)', text: '#C41F36' },
+  };
+  const colors = zoneColors[zone];
+
+  // Position calculation: barrier is at barrierCapPct% of the bar, spot at currentPct%
+  const maxVal = Math.max(spot, 110);
+  const barrierPos = (barrierCapPct / maxVal) * 100;
+  const spotPos = (spot / maxVal) * 100;
+
+  return (
+    <div className="rounded-xl border p-3" style={{ borderColor: colors.border, backgroundColor: colors.bg }}>
+      <div className="flex items-center justify-between mb-2">
+        <h4 className="font-body text-[10px] uppercase tracking-widest font-semibold" style={{ color: colors.text }}>
+          Distance a la barriere
+        </h4>
+        <span className="font-mono text-xs font-bold tabular-nums" style={{ color: colors.text }}>
+          {distancePct >= 0 ? '+' : ''}{distancePct.toFixed(1)}%
+        </span>
+      </div>
+      <div className="relative h-3 w-full rounded-full bg-white/80 dark:bg-white/10 overflow-visible">
+        {/* Red zone (below barrier) */}
+        <div
+          className="absolute inset-y-0 left-0 rounded-l-full"
+          style={{ width: `${barrierPos}%`, backgroundColor: 'rgba(232,51,74,0.15)' }}
+        />
+        {/* Green zone (above barrier) */}
+        <div
+          className="absolute inset-y-0 rounded-r-full"
+          style={{ left: `${barrierPos}%`, right: 0, backgroundColor: 'rgba(0,184,148,0.15)' }}
+        />
+        {/* Barrier marker */}
+        <div
+          className="absolute top-[-2px] w-0.5 h-[calc(100%+4px)] rounded-full"
+          style={{ left: `${barrierPos}%`, backgroundColor: '#E8334A' }}
+        />
+        {/* Spot marker */}
+        <div
+          className="absolute top-[-3px] w-2.5 h-2.5 rounded-full border-2 border-white shadow-sm"
+          style={{ left: `${Math.min(spotPos, 98)}%`, backgroundColor: colors.bar, transform: 'translateX(-50%)' }}
+        />
+      </div>
+      <div className="flex items-center justify-between mt-1.5">
+        <span className="text-[9px] font-body text-ink-3">
+          Barriere: <span className="font-mono font-semibold tabular-nums">{barrierCapPct}%</span>
+        </span>
+        <span className="text-[9px] font-body text-ink-3">
+          Spot: <span className="font-mono font-semibold tabular-nums">{spot}%</span>
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function RegulatoryAccordion() {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="mt-4 pt-3 border-t border-border/50">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between gap-2 group cursor-pointer"
+      >
+        <h4 className="text-[10px] uppercase tracking-widest text-ink-3 font-semibold font-body flex items-center gap-1.5">
+          <Shield size={11} className="text-[#3B1FA8]" />
+          Informations reglementaires
+        </h4>
+        <ChevronDown
+          size={14}
+          className={cn(
+            'text-ink-3 transition-transform duration-300',
+            isOpen && 'rotate-180',
+          )}
+        />
+      </button>
+      <div
+        className={cn(
+          'overflow-hidden transition-all duration-300 ease-in-out',
+          isOpen ? 'max-h-[500px] opacity-100 mt-2.5' : 'max-h-0 opacity-0 mt-0',
+        )}
+      >
+        <div className="rounded-xl border border-border/50 bg-surface-2/30 p-3 flex flex-col gap-2">
+          {REGULATORY_DISCLAIMERS.map((d, i) => (
+            <div key={i} className="flex items-start gap-2.5 text-[10px] text-ink-3 font-body leading-relaxed">
+              <span
+                className="shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold font-mono tabular-nums"
+                style={{ backgroundColor: 'rgba(59,31,168,0.08)', color: '#3B1FA8' }}
+              >
+                {i + 1}
+              </span>
+              <span>{d.text}</span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -508,6 +654,30 @@ export default function ProductDetailPage() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
+  const [urlCopied, setUrlCopied] = useState(false);
+  const [pdfToast, setPdfToast] = useState(false);
+  const tabsRef = useRef<HTMLDivElement>(null);
+
+  const handleShareUrl = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setUrlCopied(true);
+      setTimeout(() => setUrlCopied(false), 2000);
+    } catch {
+      // fallback
+    }
+  }, []);
+
+  const handleExportPdf = useCallback(() => {
+    setPdfToast(true);
+    setTimeout(() => setPdfToast(false), 3000);
+  }, []);
+
+  const handleTabChange = useCallback((value: string) => {
+    setActiveTab(value);
+    // Smooth scroll to the tabs section
+    tabsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
 
   useEffect(() => {
     if (id) trackView.mutate(id);
@@ -561,7 +731,7 @@ export default function ProductDetailPage() {
             </Link>
             <Breadcrumb items={[{ label: 'Produits', href: '/products' }, { label: product.name }]} />
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <button
               onClick={() => toggleFavorite.mutate(product.id)}
               className={cn(
@@ -574,11 +744,42 @@ export default function ProductDetailPage() {
             >
               <Heart size={16} fill={isFav ? 'currentColor' : 'none'} />
             </button>
-            <button className="p-2 rounded-lg border border-border text-ink-3 hover:text-violet hover:border-violet/30 hover:bg-violet-pale transition-all duration-200" title="Partager">
-              <Share2 size={16} />
+            <button
+              onClick={handleShareUrl}
+              className={cn(
+                'inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-2 text-xs font-semibold font-body transition-all duration-200',
+                urlCopied
+                  ? 'text-[#00B894] border-[#00B894]/30 bg-[#00B894]/10'
+                  : 'text-ink-3 border-border hover:text-[#3B1FA8] hover:border-[#3B1FA8]/30 hover:bg-[#3B1FA8]/5',
+              )}
+              title="Copier le lien"
+            >
+              {urlCopied ? <Check size={14} /> : <Share2 size={14} />}
+              <span className="hidden sm:inline">{urlCopied ? 'Copie' : 'Partager'}</span>
+            </button>
+            <button
+              onClick={handleExportPdf}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-2 text-xs font-semibold font-body text-ink-3 hover:text-[#3B1FA8] hover:border-[#3B1FA8]/30 hover:bg-[#3B1FA8]/5 transition-all duration-200"
+              title="Exporter en PDF"
+            >
+              <FileDown size={14} />
+              <span className="hidden sm:inline">Exporter PDF</span>
             </button>
             <ProductPdfExport product={product} />
           </div>
+
+          {/* PDF Export toast */}
+          {pdfToast && (
+            <div className="fixed bottom-6 right-6 z-50 animate-fade-in rounded-xl border border-border/60 bg-white dark:bg-[#1a1a2e] shadow-lg px-4 py-3 flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #3B1FA8, #5535C4)' }}>
+                <FileDown size={14} className="text-white" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold font-body text-ink">Export PDF en preparation...</p>
+                <p className="text-[10px] font-body text-ink-3">Cette fonctionnalite sera bientot disponible.</p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* ── Product Header ──────────────────────────────────────── */}
@@ -627,8 +828,9 @@ export default function ProductDetailPage() {
             {product.name}
           </h1>
           <div className="flex items-center gap-2 text-xs text-ink-3 font-body">
-            <span className="font-mono text-[11px] bg-surface-2 border border-border rounded px-1.5 py-0.5 tabular-nums">
+            <span className="inline-flex items-center gap-1 font-mono text-[11px] bg-surface-2 border border-border rounded px-1.5 py-0.5 tabular-nums">
               {product.isin}
+              <CopyIsinButton isin={product.isin} />
             </span>
             <span className="w-px h-3 bg-border/60" />
             <span>{product.issuerName}</span>
@@ -662,7 +864,7 @@ export default function ProductDetailPage() {
         </div>
 
         {/* ── Key Metrics ─────────────────────────────────────────── */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1.5 sm:gap-2 mb-5">
           {product.couponPct != null && (
             <StatBox label="Coupon" value={formatPct(product.couponPct)} color="text-teal" icon={Sparkles} />
           )}
@@ -689,17 +891,17 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Tabs */}
-            <div className="bg-white dark:bg-white/5 rounded-xl border border-border/60 shadow-sm overflow-hidden">
+            <div ref={tabsRef} className="bg-white dark:bg-white/5 rounded-xl border border-border/60 shadow-sm overflow-hidden scroll-mt-4">
               <Tabs
                 tabs={[
-                  { label: 'Caractéristiques', value: 'overview' },
-                  { label: 'Scénarios', value: 'scenarios' },
+                  { label: 'Caracteristiques', value: 'overview' },
+                  { label: 'Scenarios', value: 'scenarios' },
                   { label: "Dates d'observation", value: 'dates' },
                   { label: 'Analyse IA', value: 'ai' },
                 ]}
                 activeTab={activeTab}
-                onChange={setActiveTab}
-                className="px-4"
+                onChange={handleTabChange}
+                className="px-4 sticky top-0 z-10 bg-white dark:bg-[#0f0f1a]"
               />
 
               <TabPanel value="overview" activeTab={activeTab} className="p-4 stagger-grid">
@@ -725,21 +927,8 @@ export default function ProductDetailPage() {
                   {product.entryFeePct != null && <DetailRow label="Frais d'entrée" value={formatPct(product.entryFeePct)} />}
                 </div>
 
-                {/* Regulatory disclaimers */}
-                <div className="mt-4 pt-3 border-t border-border/50">
-                  <h4 className="text-[10px] uppercase tracking-widest text-ink-3 font-semibold font-body mb-2 flex items-center gap-1.5">
-                    <AlertTriangle size={11} />
-                    Mentions réglementaires
-                  </h4>
-                  <div className="flex flex-col gap-1.5">
-                    {REGULATORY_DISCLAIMERS.map((d, i) => (
-                      <div key={i} className="flex items-start gap-1.5 text-[10px] text-ink-3 font-body leading-relaxed">
-                        <d.icon size={11} className="shrink-0 mt-0.5 text-ink-3/60" />
-                        <span>{d.text}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                {/* Regulatory disclaimers - collapsible accordion */}
+                <RegulatoryAccordion />
               </TabPanel>
 
               <TabPanel value="scenarios" activeTab={activeTab} className="p-4 stagger-grid">
@@ -807,12 +996,20 @@ export default function ProductDetailPage() {
             {product.barrierCapPct != null && (
               <div className="bg-white dark:bg-white/5 rounded-xl border border-border/60 shadow-sm p-4">
                 <h3 className="font-body text-[10px] uppercase tracking-widest text-ink-3 font-semibold mb-3">
-                  Jauge barrière
+                  Jauge barriere
                 </h3>
                 <div className="flex justify-center py-2">
                   <BarrierGauge barrierPct={product.barrierCapPct} currentPct={product.currentPct ?? 100} size={220} />
                 </div>
               </div>
+            )}
+
+            {/* Barrier Distance Indicator */}
+            {product.barrierCapPct != null && (
+              <BarrierDistanceBar
+                barrierCapPct={product.barrierCapPct}
+                currentPct={product.currentPct}
+              />
             )}
           </div>
 

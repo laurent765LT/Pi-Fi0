@@ -16,6 +16,13 @@ import {
   Shield,
   AlertTriangle,
   Zap,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  CalendarDays,
+  Package,
+  Search,
+  Inbox,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useAuthStore } from '@/stores/auth-store';
@@ -109,6 +116,18 @@ const KPI_CARDS = [
   },
 ];
 
+const KPI_LINKS: Record<string, string> = {
+  'Produits actifs': '/products',
+  'Volume souscrit': '/portfolio',
+  'Engagements': '/portfolio',
+  'Taux de conversion': '/commissions',
+};
+
+// ─── Sort types for commitments table ──────────────────────────────────────
+
+type SortCol = 'product' | 'amount' | 'date' | 'status';
+type SortDir = 'asc' | 'desc';
+
 const AI_MARKET_INSIGHTS = [
   {
     icon: TrendingUp,
@@ -149,6 +168,88 @@ const SENTIMENT_CONFIG = {
   bearish: { label: 'Baissier', dotClass: 'bg-red', textClass: 'text-red' },
   neutral: { label: 'Neutre', dotClass: 'bg-gold', textClass: 'text-gold' },
 };
+
+// ─── Quick Actions ──────────────────────────────────────────────────────────
+
+const QUICK_ACTIONS = [
+  { label: 'Nouveau produit', href: '/admin/products', icon: Package, accentFrom: 'from-violet', accentTo: 'to-violet-mid' },
+  { label: 'Pricer', href: '/pricing', icon: Calculator, accentFrom: 'from-teal', accentTo: 'to-teal' },
+  { label: 'Voir le catalogue', href: '/products', icon: Search, accentFrom: 'from-cobalt-light', accentTo: 'to-cobalt-light' },
+];
+
+// ─── Empty State Component ──────────────────────────────────────────────────
+
+function EmptyState({
+  icon: Icon,
+  title,
+  description,
+}: {
+  icon: React.ComponentType<any>;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-3 py-14 text-center">
+      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#3B1FA8]/10 to-[#00B894]/10 border border-border/40 flex items-center justify-center">
+        <Icon size={20} className="text-ink-3 opacity-40" />
+      </div>
+      <div>
+        <p className="font-display text-[13px] font-bold text-ink dark:text-white">
+          {title}
+        </p>
+        <p className="font-body text-[11px] text-ink-3 dark:text-white/40 mt-0.5 max-w-xs">
+          {description}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ─── Sortable Column Header Component ───────────────────────────────────────
+
+function SortableHeader({
+  label,
+  col,
+  sortCol,
+  sortDir,
+  onSort,
+  align = 'left',
+}: {
+  label: string;
+  col: SortCol;
+  sortCol: SortCol;
+  sortDir: SortDir;
+  onSort: (col: SortCol) => void;
+  align?: 'left' | 'right' | 'center';
+}) {
+  const isActive = sortCol === col;
+  const alignClass = align === 'right' ? 'justify-end' : align === 'center' ? 'justify-center' : 'justify-start';
+  return (
+    <th
+      className={cn(
+        'px-4 py-2 text-[9px] uppercase tracking-[0.15em] font-semibold cursor-pointer select-none',
+        'transition-colors duration-200 hover:text-violet dark:hover:text-violet-light',
+        isActive ? 'text-violet dark:text-violet-light' : 'text-ink-4 dark:text-ink-3'
+      )}
+      onClick={() => onSort(col)}
+    >
+      <span className={cn('inline-flex items-center gap-1', alignClass)}>
+        {label}
+        <span className="transition-transform duration-200">
+          {isActive ? (
+            sortDir === 'asc' ? (
+              <ArrowUp size={10} className="text-violet dark:text-violet-light" />
+            ) : (
+              <ArrowDown size={10} className="text-violet dark:text-violet-light" />
+            )
+          ) : (
+            <ArrowUpDown size={10} className="opacity-30" />
+          )}
+        </span>
+      </span>
+    </th>
+  );
+}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -542,6 +643,42 @@ export default function DashboardPage() {
     setMounted(true);
   }, []);
 
+  // Sort state for commitments table
+  const [sortCol, setSortCol] = useState<SortCol>('date');
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
+
+  const handleSort = (col: SortCol) => {
+    if (sortCol === col) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortCol(col);
+      setSortDir('desc');
+    }
+  };
+
+  const sortedCommitments = useMemo(() => {
+    const items = [...RECENT_COMMITMENTS];
+    items.sort((a, b) => {
+      let cmp = 0;
+      switch (sortCol) {
+        case 'product':
+          cmp = a.product.localeCompare(b.product, 'fr');
+          break;
+        case 'amount':
+          cmp = a.amount - b.amount;
+          break;
+        case 'date':
+          cmp = a.date.localeCompare(b.date);
+          break;
+        case 'status':
+          cmp = a.status.localeCompare(b.status);
+          break;
+      }
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+    return items;
+  }, [sortCol, sortDir]);
+
   return (
     <div className={cn('transition-opacity duration-500', mounted ? 'opacity-100' : 'opacity-0')}>
       {/* ── Market Ticker ───────────────────────────────────────── */}
@@ -550,12 +687,27 @@ export default function DashboardPage() {
       {/* ── Page Header ─────────────────────────────────────────── */}
       <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
         <div>
-          <h1 className="font-display text-xl font-bold leading-none bg-gradient-to-r from-[#3B1FA8] via-[#1A0A3E] to-[#3B1FA8] bg-clip-text text-transparent dark:from-white dark:via-[#C9BCFF] dark:to-white">
-            Bonjour, {firstName}{' '}
-            <span role="img" aria-label="wave">
-              👋
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="font-display text-xl font-bold leading-none bg-gradient-to-r from-[#3B1FA8] via-[#1A0A3E] to-[#3B1FA8] bg-clip-text text-transparent dark:from-white dark:via-[#C9BCFF] dark:to-white">
+              Bonjour, {firstName}{' '}
+              <span role="img" aria-label="wave">
+                👋
+              </span>
+            </h1>
+            {/* ── Date Range Indicator (Periode badge) ──── */}
+            <span
+              className={cn(
+                'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full',
+                'bg-violet-pale/60 dark:bg-violet/10',
+                'border border-violet/15 dark:border-violet-light/15',
+                'text-[10px] font-semibold font-body text-violet dark:text-violet-light',
+                'whitespace-nowrap'
+              )}
+            >
+              <CalendarDays size={11} />
+              30 derniers jours
             </span>
-          </h1>
+          </div>
           <p className="text-xs text-ink-4 dark:text-ink-3 font-body mt-0.5 capitalize">{todayFormatted()}</p>
         </div>
         <div className="flex items-center gap-2">
@@ -596,13 +748,16 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-x-0 sm:divide-x divide-border/40 dark:divide-border-2/30 divide-y sm:divide-y-0">
             {KPI_CARDS.map((kpi, i) => {
               const Icon = kpi.icon;
+              const kpiHref = KPI_LINKS[kpi.label] ?? '/dashboard';
               return (
-                <div
+                <Link
                   key={i}
+                  href={kpiHref}
                   className={cn(
                     'group relative px-4 py-3.5 flex items-center gap-3',
                     'hover:bg-violet-ghost/30 dark:hover:bg-violet/5',
-                    'transition-colors duration-200 cursor-default'
+                    'transition-all duration-200 cursor-pointer',
+                    'hover:scale-[1.02] active:scale-[0.99]'
                   )}
                 >
                   {/* Icon */}
@@ -635,12 +790,47 @@ export default function DashboardPage() {
                         </span>
                       </Tooltip>
                     </div>
-                    <span className="text-[9px] text-ink-4 dark:text-ink-4 font-body">{kpi.trendLabel}</span>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] text-ink-4 dark:text-ink-4 font-body">{kpi.trendLabel}</span>
+                      <span className="text-[9px] font-semibold font-body text-violet dark:text-violet-light opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-0.5">
+                        Voir details <ArrowRight size={9} />
+                      </span>
+                    </div>
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>
+        </div>
+      </section>
+
+      {/* ── Quick Actions Bar ───────────────────────────────────── */}
+      <section className="mb-5">
+        <div className="flex items-center gap-2 flex-wrap">
+          {QUICK_ACTIONS.map((action) => {
+            const Icon = action.icon;
+            return (
+              <Link
+                key={action.href}
+                href={action.href}
+                className={cn(
+                  'inline-flex items-center gap-2 px-4 py-2 rounded-full',
+                  'bg-white/80 dark:bg-white/[0.04] backdrop-blur-sm',
+                  'border border-border/50 dark:border-border-2/40',
+                  'text-xs font-semibold font-body text-ink-2 dark:text-ink',
+                  'hover:bg-violet-ghost/40 dark:hover:bg-violet/8',
+                  'hover:border-violet/30 dark:hover:border-violet-light/20',
+                  'hover:text-violet dark:hover:text-violet-light',
+                  'hover:shadow-sm hover:scale-[1.02]',
+                  'active:scale-[0.98]',
+                  'transition-all duration-200'
+                )}
+              >
+                <Icon size={14} />
+                {action.label}
+              </Link>
+            );
+          })}
         </div>
       </section>
 
@@ -865,65 +1055,110 @@ export default function DashboardPage() {
                 Voir tout <ArrowRight size={11} />
               </Link>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs font-body">
-                <thead>
-                  <tr className="bg-surface-2/30 dark:bg-white/[0.02]">
-                    <th className="px-4 py-2 text-left text-[9px] uppercase tracking-[0.15em] text-ink-4 dark:text-ink-3 font-semibold">
-                      Produit
-                    </th>
-                    <th className="px-4 py-2 text-right text-[9px] uppercase tracking-[0.15em] text-ink-4 dark:text-ink-3 font-semibold">
-                      Montant
-                    </th>
-                    <th className="px-4 py-2 text-center text-[9px] uppercase tracking-[0.15em] text-ink-4 dark:text-ink-3 font-semibold">
-                      Statut
-                    </th>
-                    <th className="px-4 py-2 text-right text-[9px] uppercase tracking-[0.15em] text-ink-4 dark:text-ink-3 font-semibold">
-                      Date
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="stagger-rows">
-                  {RECENT_COMMITMENTS.map((c, idx) => {
+
+            {sortedCommitments.length === 0 ? (
+              <EmptyState
+                icon={Inbox}
+                title="Aucun engagement"
+                description="Vos derniers engagements sur les produits structures apparaitront ici."
+              />
+            ) : (
+              <>
+                {/* ── Desktop Table ── */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full text-xs font-body">
+                    <thead>
+                      <tr className="bg-surface-2/30 dark:bg-white/[0.02]">
+                        <SortableHeader label="Produit" col="product" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} align="left" />
+                        <SortableHeader label="Montant" col="amount" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} align="right" />
+                        <SortableHeader label="Statut" col="status" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} align="center" />
+                        <SortableHeader label="Date" col="date" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} align="right" />
+                      </tr>
+                    </thead>
+                    <tbody className="stagger-rows">
+                      {sortedCommitments.map((c, idx) => {
+                        const status = STATUS_CONFIG[c.status] ?? {
+                          label: c.status,
+                          classes: 'bg-surface-2 text-ink-3',
+                        };
+                        return (
+                          <tr
+                            key={c.id}
+                            className={cn(
+                              'border-b border-border/20 dark:border-border-2/20',
+                              'hover:bg-violet-ghost/30 dark:hover:bg-violet/5',
+                              'transition-colors duration-150',
+                              idx % 2 === 1 && 'bg-surface-2/20 dark:bg-white/[0.01]'
+                            )}
+                          >
+                            <td className="px-4 py-2.5 font-medium text-ink dark:text-ink truncate max-w-[200px]">
+                              {c.product}
+                            </td>
+                            <td className="px-4 py-2.5 text-right font-mono font-semibold text-ink dark:text-ink tabular-nums">
+                              {formatAmount(c.amount)}
+                            </td>
+                            <td className="px-4 py-2.5 text-center">
+                              <span
+                                className={cn(
+                                  'inline-flex items-center px-2 py-px rounded-full text-[10px] font-semibold',
+                                  status.classes
+                                )}
+                              >
+                                {status.label}
+                              </span>
+                            </td>
+                            <td className="px-4 py-2.5 text-right text-ink-3 text-[11px] tabular-nums font-mono">
+                              {formatDateNice(c.date)}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* ── Mobile Card Layout ── */}
+                <div className="md:hidden p-3 flex flex-col gap-2.5">
+                  {sortedCommitments.map((c) => {
                     const status = STATUS_CONFIG[c.status] ?? {
                       label: c.status,
                       classes: 'bg-surface-2 text-ink-3',
                     };
                     return (
-                      <tr
+                      <div
                         key={c.id}
                         className={cn(
-                          'border-b border-border/20 dark:border-border-2/20',
+                          'rounded-lg border border-border/30 dark:border-border-2/30 p-3',
+                          'bg-white/40 dark:bg-white/[0.02]',
                           'hover:bg-violet-ghost/30 dark:hover:bg-violet/5',
-                          'transition-colors duration-150',
-                          idx % 2 === 1 && 'bg-surface-2/20 dark:bg-white/[0.01]'
+                          'transition-all duration-200'
                         )}
                       >
-                        <td className="px-4 py-2.5 font-medium text-ink dark:text-ink truncate max-w-[200px]">
-                          {c.product}
-                        </td>
-                        <td className="px-4 py-2.5 text-right font-mono font-semibold text-ink dark:text-ink tabular-nums">
-                          {formatAmount(c.amount)}
-                        </td>
-                        <td className="px-4 py-2.5 text-center">
+                        <div className="flex items-start justify-between mb-2">
+                          <span className="font-body text-xs font-semibold text-ink dark:text-ink leading-snug pr-2">
+                            {c.product}
+                          </span>
                           <span
                             className={cn(
-                              'inline-flex items-center px-2 py-px rounded-full text-[10px] font-semibold',
+                              'inline-flex items-center px-2 py-px rounded-full text-[10px] font-semibold shrink-0',
                               status.classes
                             )}
                           >
                             {status.label}
                           </span>
-                        </td>
-                        <td className="px-4 py-2.5 text-right text-ink-3 text-[11px] tabular-nums font-mono">
+                        </div>
+                        <div className="font-display text-lg font-extrabold text-ink dark:text-ink tabular-nums mb-1">
+                          {formatAmount(c.amount)}
+                        </div>
+                        <div className="text-[10px] text-ink-3 dark:text-ink-3 font-mono tabular-nums">
                           {formatDateNice(c.date)}
-                        </td>
-                      </tr>
+                        </div>
+                      </div>
                     );
                   })}
-                </tbody>
-              </table>
-            </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -935,7 +1170,15 @@ export default function DashboardPage() {
             {/* Donut section */}
             <div className="p-4 pb-3">
               <SectionHeader dotColor="bg-cobalt-light">Repartition par type</SectionHeader>
-              <DonutChart />
+              {DONUT_DATA.length === 0 ? (
+                <EmptyState
+                  icon={BarChart3}
+                  title="Aucune donnee"
+                  description="La repartition par type de produit apparaitra ici."
+                />
+              ) : (
+                <DonutChart />
+              )}
             </div>
 
             {/* Divider */}
@@ -944,39 +1187,47 @@ export default function DashboardPage() {
             {/* Popular products section */}
             <div className="p-4 pt-3">
               <SectionHeader dotColor="bg-gold">Produits populaires</SectionHeader>
-              <div className="flex flex-col gap-2.5">
-                {POPULAR_PRODUCTS.map((p) => (
-                  <div key={p.rank} className="flex items-center gap-2.5 group">
-                    <span className="w-6 h-6 rounded-md bg-violet-pale/60 dark:bg-violet/10 flex items-center justify-center font-display text-[10px] font-extrabold text-violet dark:text-violet-light shrink-0">
-                      {p.rank}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-semibold text-ink dark:text-ink font-body truncate pr-2 inline-flex items-center gap-2">
-                          {p.name}
-                          <Sparkline
-                            data={PRODUCT_SPARKLINE_DATA[p.rank] ?? []}
-                            width={48}
-                            height={16}
-                            color="#3B1FA8"
-                            strokeWidth={1.2}
-                            className="opacity-60 group-hover:opacity-100 transition-opacity"
+              {POPULAR_PRODUCTS.length === 0 ? (
+                <EmptyState
+                  icon={Layers}
+                  title="Aucun produit populaire"
+                  description="Les produits les plus souscrits apparaitront ici."
+                />
+              ) : (
+                <div className="flex flex-col gap-2.5">
+                  {POPULAR_PRODUCTS.map((p) => (
+                    <div key={p.rank} className="flex items-center gap-2.5 group">
+                      <span className="w-6 h-6 rounded-md bg-violet-pale/60 dark:bg-violet/10 flex items-center justify-center font-display text-[10px] font-extrabold text-violet dark:text-violet-light shrink-0">
+                        {p.rank}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-semibold text-ink dark:text-ink font-body truncate pr-2 inline-flex items-center gap-2">
+                            {p.name}
+                            <Sparkline
+                              data={PRODUCT_SPARKLINE_DATA[p.rank] ?? []}
+                              width={48}
+                              height={16}
+                              color="#3B1FA8"
+                              strokeWidth={1.2}
+                              className="opacity-60 group-hover:opacity-100 transition-opacity"
+                            />
+                          </span>
+                          <span className="text-[10px] font-mono text-ink-3 dark:text-ink-3 shrink-0 tabular-nums">
+                            {p.volume}
+                          </span>
+                        </div>
+                        <div className="h-1 rounded-full bg-surface-2/80 dark:bg-white/5 overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-violet to-cobalt-light transition-all duration-700 group-hover:opacity-80"
+                            style={{ width: `${p.pct}%` }}
                           />
-                        </span>
-                        <span className="text-[10px] font-mono text-ink-3 dark:text-ink-3 shrink-0 tabular-nums">
-                          {p.volume}
-                        </span>
-                      </div>
-                      <div className="h-1 rounded-full bg-surface-2/80 dark:bg-white/5 overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-gradient-to-r from-violet to-cobalt-light transition-all duration-700 group-hover:opacity-80"
-                          style={{ width: `${p.pct}%` }}
-                        />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

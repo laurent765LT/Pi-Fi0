@@ -2,11 +2,11 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { Calendar, Eye, DollarSign, RefreshCw, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Calendar, Eye, DollarSign, RefreshCw, ArrowRight, ArrowLeft, Search, X, CalendarX } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useProducts } from '@/hooks/use-products';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// --- Types -------------------------------------------------------------------
 
 interface ProductEvent {
   date: string;
@@ -19,7 +19,7 @@ interface ProductEvent {
 
 type EventFilter = 'all' | 'closing' | 'observation' | 'coupon' | 'autocall';
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+// --- Constants ---------------------------------------------------------------
 
 const EVENT_CONFIG: Record<string, { icon: typeof Calendar; label: string; color: string; bg: string }> = {
   closing: { icon: Calendar, label: 'Cloture', color: '#E8334A', bg: '#FFF0F2' },
@@ -36,11 +36,7 @@ const FILTER_OPTIONS: { value: EventFilter; label: string }[] = [
   { value: 'autocall', label: 'Autocalls' },
 ];
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
-}
+// --- Helpers -----------------------------------------------------------------
 
 function formatDateShort(iso: string): string {
   return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
@@ -57,10 +53,17 @@ function daysUntil(iso: string): number {
   return Math.ceil((new Date(iso).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+function isToday(iso: string): boolean {
+  const d = new Date(iso);
+  const now = new Date();
+  return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+}
+
+// --- Page --------------------------------------------------------------------
 
 export default function EventsPage() {
   const [filter, setFilter] = useState<EventFilter>('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const { data: productsData, isLoading } = useProducts({});
 
   const products = productsData?.data ?? [];
@@ -128,7 +131,23 @@ export default function EventsPage() {
     return evts;
   }, [products]);
 
-  const filtered = filter === 'all' ? events : events.filter((e) => e.type === filter);
+  // Apply type filter + search query
+  const filtered = useMemo(() => {
+    let result = filter === 'all' ? events : events.filter((e) => e.type === filter);
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      result = result.filter(
+        (e) =>
+          e.productName.toLowerCase().includes(q) ||
+          e.productIsin?.toLowerCase().includes(q) ||
+          EVENT_CONFIG[e.type]?.label.toLowerCase().includes(q) ||
+          e.type.toLowerCase().includes(q),
+      );
+    }
+
+    return result;
+  }, [events, filter, searchQuery]);
 
   // Group by week
   const weeks = useMemo(() => {
@@ -188,6 +207,36 @@ export default function EventsPage() {
           background: 'linear-gradient(90deg, #3B1FA8, #00B894 40%, #D4A017 70%, transparent)',
         }}
       />
+
+      {/* Search Bar */}
+      <div className="mb-4">
+        <div className="relative max-w-md">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-3/50 dark:text-white/30 pointer-events-none" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Rechercher par produit, ISIN ou type..."
+            className={cn(
+              'w-full h-9 pl-9 pr-8 rounded-xl font-body text-[12px]',
+              'bg-white/80 dark:bg-white/5 backdrop-blur-md',
+              'border border-border/60 dark:border-white/10',
+              'text-ink dark:text-white placeholder:text-ink-3/40 dark:placeholder:text-white/25',
+              'focus:outline-none focus:ring-2 focus:ring-[#3B1FA8]/20 focus:border-[#3B1FA8]/40',
+              'shadow-sm transition-all duration-200',
+            )}
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-md hover:bg-ink/[0.06] dark:hover:bg-white/10 transition-colors"
+              aria-label="Effacer la recherche"
+            >
+              <X size={12} className="text-ink-3/60 dark:text-white/40" />
+            </button>
+          )}
+        </div>
+      </div>
 
       {/* Filters */}
       <div className="flex items-center gap-1.5 mb-5 flex-wrap">
@@ -251,17 +300,41 @@ export default function EventsPage() {
           ))}
         </div>
       ) : weeks.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 gap-3 bg-white/80 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 shadow-card">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#3B1FA8]/10 to-[#00B894]/10 flex items-center justify-center">
-            <Calendar size={20} className="text-[#3B1FA8] opacity-50" />
+        /* Empty state */
+        <div className="flex flex-col items-center justify-center py-20 gap-4 bg-white/80 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 shadow-card">
+          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#3B1FA8]/10 to-[#E8334A]/10 flex items-center justify-center ring-1 ring-[#3B1FA8]/10">
+            <CalendarX size={24} className="text-[#3B1FA8] opacity-40" />
           </div>
           <div className="text-center">
-            <p className="font-display text-[13px] font-bold text-ink dark:text-white">
-              Aucun evenement a venir
+            <p className="font-display text-[15px] font-bold text-ink dark:text-white">
+              Aucun evenement trouve
             </p>
-            <p className="font-body text-[11px] text-ink-3 dark:text-white/40 mt-0.5">
-              Les evenements apparaitront ici lorsque des produits auront des dates futures.
+            <p className="font-body text-[12px] text-ink-3 dark:text-white/40 mt-1 max-w-sm">
+              {searchQuery
+                ? `Aucun resultat pour "${searchQuery}". Essayez un autre terme ou ajustez vos filtres.`
+                : filter !== 'all'
+                  ? 'Aucun evenement pour ce type. Essayez de modifier le filtre ou selectionnez "Tous".'
+                  : 'Les evenements apparaitront ici lorsque des produits auront des dates futures.'}
             </p>
+            {(searchQuery || filter !== 'all') && (
+              <button
+                onClick={() => {
+                  setSearchQuery('');
+                  setFilter('all');
+                }}
+                className={cn(
+                  'mt-3 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg',
+                  'text-[11px] font-semibold font-body',
+                  'bg-[#3B1FA8]/[0.06] dark:bg-[#3B1FA8]/15',
+                  'text-[#3B1FA8] dark:text-[#C9BCFF]',
+                  'hover:bg-[#3B1FA8]/10 dark:hover:bg-[#3B1FA8]/25',
+                  'ring-1 ring-[#3B1FA8]/10 dark:ring-[#3B1FA8]/25',
+                  'transition-all duration-150',
+                )}
+              >
+                Reinitialiser les filtres
+              </button>
+            )}
           </div>
         </div>
       ) : (
@@ -293,12 +366,21 @@ export default function EventsPage() {
                   const Icon = config.icon;
                   const days = daysUntil(evt.date);
                   const isUrgent = evt.type === 'closing' && days <= 30;
+                  const isTodayEvent = isToday(evt.date);
 
                   return (
                     <div key={`${evt.productId}-${evt.type}-${evt.date}-${i}`} className="relative">
                       {/* Timeline dot */}
                       <div className="absolute -left-6 top-1/2 -translate-y-1/2 flex items-center justify-center">
-                        {days <= 7 ? (
+                        {isTodayEvent ? (
+                          <div
+                            className="w-3.5 h-3.5 rounded-full ring-2 ring-white dark:ring-[#1A0A3E] shadow-md animate-[today-pulse_2s_ease-in-out_infinite]"
+                            style={{
+                              background: 'linear-gradient(135deg, #3B1FA8, #7B5FE0)',
+                              boxShadow: '0 0 12px rgba(59,31,168,0.5)',
+                            }}
+                          />
+                        ) : days <= 7 ? (
                           <div
                             className="w-3 h-3 rounded-full ring-2 ring-white dark:ring-[#1A0A3E] shadow-sm"
                             style={{
@@ -325,18 +407,22 @@ export default function EventsPage() {
                           'shadow-card hover:shadow-card-hover hover:-translate-y-0.5',
                           'border-border/60 hover:border-[#3B1FA8]/30',
                           isUrgent && 'ring-1 ring-[#E8334A]/20 bg-[#E8334A]/[0.02]',
+                          isTodayEvent && 'ring-2 ring-[#3B1FA8]/25 bg-[#3B1FA8]/[0.03] dark:bg-[#3B1FA8]/[0.06] shadow-md shadow-[#3B1FA8]/10',
                         )}
                       >
                         {/* Left accent border */}
                         <div
                           className="absolute left-0 top-2.5 bottom-2.5 w-[3px] rounded-full"
-                          style={{ backgroundColor: config.color }}
+                          style={{ backgroundColor: isTodayEvent ? '#3B1FA8' : config.color }}
                         />
 
                         <div className="flex items-center gap-3 pl-1">
                           {/* Icon */}
                           <div
-                            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ring-1 ring-black/5 dark:ring-white/10"
+                            className={cn(
+                              'w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ring-1 ring-black/5 dark:ring-white/10',
+                              isTodayEvent && 'animate-[today-pulse_2s_ease-in-out_infinite]',
+                            )}
                             style={{
                               background: `linear-gradient(135deg, ${config.bg}, ${config.bg}cc)`,
                             }}
@@ -360,7 +446,13 @@ export default function EventsPage() {
                               <span className="text-[11px] text-ink dark:text-white font-mono font-semibold tabular-nums">
                                 {formatDateShort(evt.date)}
                               </span>
-                              {isUrgent && (
+                              {/* Today pill badge */}
+                              {isTodayEvent && (
+                                <span className="inline-flex items-center gap-1 text-[9px] font-bold text-white bg-gradient-to-r from-[#3B1FA8] to-[#5535C4] px-2 py-0.5 rounded-full shadow-sm shadow-[#3B1FA8]/30 animate-[today-pulse_2s_ease-in-out_infinite]">
+                                  Aujourd&apos;hui
+                                </span>
+                              )}
+                              {isUrgent && !isTodayEvent && (
                                 <span className="text-[9px] font-bold text-white bg-gradient-to-r from-[#E8334A] to-[#E8334A]/80 px-1.5 py-0.5 rounded-md shadow-sm animate-pulse">
                                   J-{days}
                                 </span>
@@ -389,6 +481,14 @@ export default function EventsPage() {
           ))}
         </div>
       )}
+
+      {/* Keyframe for today pulse */}
+      <style jsx>{`
+        @keyframes today-pulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(59,31,168,0.25); }
+          50% { box-shadow: 0 0 0 6px rgba(59,31,168,0); }
+        }
+      `}</style>
     </div>
   );
 }

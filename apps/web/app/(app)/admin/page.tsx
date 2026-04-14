@@ -11,6 +11,7 @@ import {
   Calculator,
   ShieldCheck,
   TrendingUp,
+  CalendarDays,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
@@ -49,9 +50,13 @@ function StatCard({
   icon: Icon,
   accent = '#3B1FA8',
   accentTo,
-}: StatCardProps) {
+  href,
+}: StatCardProps & { href?: string }) {
+  const Wrapper = href ? Link : 'div';
+  const wrapperProps = href ? { href } : {};
   return (
-    <div
+    <Wrapper
+      {...(wrapperProps as any)}
       className={cn(
         'group relative overflow-hidden',
         'bg-white dark:bg-[#1A0A3E]/40 border border-border/60 rounded-xl p-5',
@@ -59,6 +64,7 @@ function StatCard({
         'shadow-sm hover:shadow-md',
         'transition-all duration-200 ease-out',
         'hover:-translate-y-0.5',
+        href && 'cursor-pointer',
       )}
     >
       {/* Subtle gradient accent at top */}
@@ -85,8 +91,13 @@ function StatCard({
         <span className="font-display text-2xl font-bold text-ink dark:text-white leading-none tracking-tight">
           {value}
         </span>
+        {href && (
+          <span className="text-[10px] font-body font-semibold text-ink-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1 mt-1">
+            Voir détails <ChevronRight size={10} />
+          </span>
+        )}
       </div>
-    </div>
+    </Wrapper>
   );
 }
 
@@ -198,11 +209,17 @@ export default function AdminDashboardPage() {
 
       {/* ── Stats ──────────────────────────────────────────────────────────── */}
       <section aria-label="Statistiques generales" className="mb-10">
-        <div className="flex items-center gap-2 mb-5">
-          <TrendingUp size={16} className="text-[#3B1FA8]" />
-          <h2 className="font-display text-base font-bold text-ink dark:text-white uppercase tracking-wide">
-            Vue d&apos;ensemble
-          </h2>
+        <div className="flex items-center justify-between gap-4 mb-5">
+          <div className="flex items-center gap-2">
+            <TrendingUp size={16} className="text-[#3B1FA8]" />
+            <h2 className="font-display text-base font-bold text-ink dark:text-white uppercase tracking-wide">
+              Vue d&apos;ensemble
+            </h2>
+          </div>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-pale/50 dark:bg-violet/10 border border-violet/10 text-violet text-[11px] font-semibold font-body">
+            <CalendarDays size={12} />
+            30 derniers jours
+          </span>
         </div>
 
         {error ? (
@@ -223,6 +240,7 @@ export default function AdminDashboardPage() {
               icon={Package}
               accent="#3B1FA8"
               accentTo="#6C4FE0"
+              href="/admin/products"
             />
             <StatCard
               label="Enveloppes actives"
@@ -230,6 +248,7 @@ export default function AdminDashboardPage() {
               icon={Layers}
               accent="#1A0A3E"
               accentTo="#3B1FA8"
+              href="/admin/shelves"
             />
             <StatCard
               label="Volume total"
@@ -237,6 +256,7 @@ export default function AdminDashboardPage() {
               icon={BarChart3}
               accent="#00B894"
               accentTo="#00D4AA"
+              href="/portfolio"
             />
             <StatCard
               label="Utilisateurs actifs"
@@ -244,6 +264,7 @@ export default function AdminDashboardPage() {
               icon={Users}
               accent="#D4A017"
               accentTo="#E8B84A"
+              href="/admin/users"
             />
           </div>
         )}
@@ -283,6 +304,41 @@ export default function AdminDashboardPage() {
             description="Configurer et pricer un nouveau produit structure"
             icon={Calculator}
           />
+        </div>
+      </section>
+
+      {/* ── System status ─────────────────────────────────────────────────── */}
+      <section aria-label="Statut systeme" className="mt-10">
+        <div className="flex items-center gap-2 mb-5">
+          <ShieldCheck size={16} className="text-[#00B894]" />
+          <h2 className="font-display text-base font-bold text-ink dark:text-white uppercase tracking-wide">
+            Statut système
+          </h2>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {[
+            { label: 'API Backend', status: 'Opérationnel', color: '#00B894' },
+            { label: 'Pricing Engine', status: 'Opérationnel', color: '#00B894' },
+            { label: 'Market Data', status: 'Opérationnel', color: '#00B894' },
+          ].map((s) => (
+            <div
+              key={s.label}
+              className="bg-white dark:bg-[#1A0A3E]/30 border border-border/60 rounded-xl p-4 flex items-center gap-3 shadow-sm"
+            >
+              <span
+                className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm"
+                style={{ backgroundColor: s.color, boxShadow: `0 0 8px ${s.color}40` }}
+              />
+              <div className="flex flex-col">
+                <span className="font-body text-xs font-semibold text-ink dark:text-white">
+                  {s.label}
+                </span>
+                <span className="font-body text-[10px] text-ink-3" style={{ color: s.color }}>
+                  {s.status}
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
     </main>

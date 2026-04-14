@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore, selectIsAuthenticated } from '@/stores/auth-store';
 import { Sidebar } from './sidebar';
-import { ChatWidget, CompareBar, WelcomeSlides } from '@/lib/lazy';
+import { CompareBar, WelcomeSlides, AiChatWidget } from '@/lib/lazy';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { useRealtimeNotifications } from '@/hooks/use-realtime-notifications';
 import { Menu } from 'lucide-react';
@@ -67,8 +67,8 @@ export function AppShell({ children }: AppShellProps) {
       {/* Product comparison floating bar */}
       <CompareBar />
 
-      {/* Global chat widget — always available on authenticated pages */}
-      <ChatWidget />
+      {/* Global AI assistant chat widget — always available */}
+      <AiChatWidget />
 
       {/* Welcome onboarding slides — shown once on first login */}
       <WelcomeSlides />

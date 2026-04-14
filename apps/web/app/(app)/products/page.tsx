@@ -109,37 +109,37 @@ function formatPct(v: number | null | undefined) {
 // ─── Select Component ────────────────────────────────────────────────────────
 
 const selectCls = cn(
-  'h-9 rounded-lg border border-border/60 bg-white px-3 pr-8 text-[13px] font-body text-ink',
+  'h-8 rounded-lg border border-border/50 bg-white dark:bg-ink/60 px-2.5 pr-7 text-[12px] font-body text-ink dark:text-surface',
   'transition-all duration-150 cursor-pointer',
   'focus:outline-none focus:ring-2 focus:ring-violet/20 focus:border-violet/40',
-  'hover:border-border-2',
-  "appearance-none bg-[url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"6\" fill=\"none\"><path d=\"M1 1l4 4 4-4\" stroke=\"%237B6FA0\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>')] bg-no-repeat bg-[right_10px_center]",
+  'hover:border-border-2 dark:hover:border-border/60',
+  "appearance-none bg-[url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"6\" fill=\"none\"><path d=\"M1 1l4 4 4-4\" stroke=\"%237B6FA0\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>')] bg-no-repeat bg-[right_8px_center]",
 );
 
 // ─── Skeleton ────────────────────────────────────────────────────────────────
 
 function SkeletonCard() {
   return (
-    <div className="bg-white border border-border/60 rounded-xl p-5 animate-pulse flex flex-col gap-3">
+    <div className="bg-white dark:bg-ink/40 border border-border/40 dark:border-border/20 rounded-xl p-3.5 animate-pulse flex flex-col gap-2.5">
       <div className="flex justify-between">
-        <div className="h-5 w-20 bg-surface-2 rounded-md" />
-        <div className="h-5 w-12 bg-surface-2 rounded-md" />
+        <div className="h-4 w-20 bg-surface-2 dark:bg-surface-3/30 rounded-md" />
+        <div className="h-4 w-12 bg-surface-2 dark:bg-surface-3/30 rounded-md" />
       </div>
-      <div className="h-4 w-3/4 bg-surface-2 rounded" />
-      <div className="h-3 w-1/2 bg-surface-2 rounded" />
-      <div className="h-16 w-full bg-surface-2 rounded-lg mt-1" />
-      <div className="h-1.5 w-full bg-surface-2 rounded-full" />
-      <div className="h-10 w-full bg-surface-2 rounded-lg mt-auto" />
+      <div className="h-3.5 w-3/4 bg-surface-2 dark:bg-surface-3/30 rounded" />
+      <div className="h-3 w-1/2 bg-surface-2 dark:bg-surface-3/30 rounded" />
+      <div className="h-14 w-full bg-surface-2 dark:bg-surface-3/30 rounded-lg mt-0.5" />
+      <div className="h-1 w-full bg-surface-2 dark:bg-surface-3/30 rounded-full" />
+      <div className="h-9 w-full bg-surface-2 dark:bg-surface-3/30 rounded-lg mt-auto" />
     </div>
   );
 }
 
 function SkeletonRow() {
   return (
-    <tr className="border-b border-border/30 animate-pulse">
+    <tr className="border-b border-border/20 animate-pulse">
       {Array.from({ length: 9 }).map((_, i) => (
-        <td key={i} className="px-4 py-3.5">
-          <div className="h-3.5 bg-surface-2 rounded w-full" />
+        <td key={i} className="px-3 py-2.5">
+          <div className="h-3 bg-surface-2 dark:bg-surface-3/30 rounded w-full" />
         </td>
       ))}
     </tr>
@@ -168,9 +168,9 @@ function SortTh({
     <th
       onClick={() => onSort(field)}
       className={cn(
-        'px-4 py-3 text-left text-[10px] uppercase tracking-[0.15em] font-semibold cursor-pointer select-none group',
-        'transition-colors hover:text-violet',
-        active ? 'text-violet' : 'text-ink-3',
+        'px-3 py-2.5 text-left text-[10px] uppercase tracking-[0.15em] font-semibold cursor-pointer select-none group',
+        'transition-colors hover:text-violet dark:hover:text-violet-light',
+        active ? 'text-violet dark:text-violet-light' : 'text-ink-3 dark:text-ink-3',
         className,
       )}
     >
@@ -205,22 +205,22 @@ function TabPill({
     <button
       onClick={onClick}
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[13px] font-semibold font-body',
-        'transition-all duration-200 whitespace-nowrap',
+        'inline-flex items-center gap-1.5 px-3 py-1 text-[12px] font-semibold font-body',
+        'transition-all duration-200 whitespace-nowrap rounded-md',
         active
-          ? 'bg-violet text-white shadow-[0_2px_8px_rgba(53,53,196,0.25)]'
-          : 'text-ink-3 hover:text-ink hover:bg-surface-2 rounded-full',
+          ? 'bg-violet text-white shadow-[0_1px_6px_rgba(53,53,196,0.3)]'
+          : 'text-ink-3 dark:text-ink-3 hover:text-ink dark:hover:text-surface hover:bg-surface-2 dark:hover:bg-surface-3/20',
       )}
     >
-      <Icon size={13} className={active ? 'text-white' : ''} />
+      <Icon size={12} className={active ? 'text-white' : ''} />
       {label}
       {count != null && count > 0 && (
         <span
           className={cn(
-            'inline-flex items-center justify-center h-[18px] min-w-[18px] px-1 rounded-full text-[10px] font-bold leading-none',
+            'inline-flex items-center justify-center h-[16px] min-w-[16px] px-0.5 rounded-full text-[9px] font-bold leading-none',
             active
               ? 'bg-white/20 text-white'
-              : 'bg-violet/8 text-violet/70',
+              : 'bg-violet/8 text-violet/70 dark:bg-violet/20 dark:text-violet-light/80',
           )}
         >
           {count}
@@ -255,6 +255,7 @@ export default function ProductsPage() {
   const { data: mostViewedData } = useMostViewed(10);
   const generateRecs = useGenerateRecommendations();
   const toggleFavorite = useToggleFavorite();
+  const [aiJustGenerated, setAiJustGenerated] = useState(false);
 
   const products = productsData?.data ?? [];
   const favoriteIds = new Set(
@@ -262,6 +263,9 @@ export default function ProductsPage() {
   );
   const recommendationMap = new Map<string, number>(
     (recommendationsData as any[])?.map((r: any) => [r.productId, r.score]) ?? []
+  );
+  const recommendationReasonMap = new Map<string, string>(
+    (recommendationsData as any[])?.filter((r: any) => r.reason).map((r: any) => [r.productId, r.reason]) ?? []
   );
   const mostViewedIds = new Set(
     (mostViewedData as any[])?.map((m: any) => m.productId) ?? []
@@ -321,533 +325,590 @@ export default function ProductsPage() {
   };
 
   return (
-    <div className="animate-fade-in space-y-0">
-      {/* ── Page Header ────────────────────────────────────────────────── */}
-      <div className="flex items-start justify-between mb-1">
-        <div>
-          <h1 className="font-display text-[28px] font-bold text-ink leading-tight">
+    <div className="animate-fade-in">
+      {/* ── Compact Page Header ──────────────────────────────────────── */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-4">
+          <h1 className="font-display text-[22px] font-bold text-ink dark:text-surface leading-none">
             Produits structurés
           </h1>
-          <p className="text-ink-2 text-sm font-body mt-1.5 max-w-lg">
-            Découvrez, comparez et marquez votre intérêt sur les meilleurs produits du marché.
-          </p>
+          {/* Inline stat pills */}
+          {!isLoading && !isError && (
+            <div className="hidden md:flex items-center gap-1.5">
+              <span className="inline-flex items-center gap-1 h-6 px-2 rounded-md bg-surface-2/80 dark:bg-surface-3/20 text-[11px] font-mono font-semibold text-ink dark:text-surface tabular-nums">
+                {products.length}
+                <span className="text-ink-3 dark:text-ink-3 font-body font-normal">total</span>
+              </span>
+              {favoriteIds.size > 0 && (
+                <span className="inline-flex items-center gap-1 h-6 px-2 rounded-md bg-red-light/60 dark:bg-red/10 text-[11px] font-mono font-semibold text-red tabular-nums">
+                  <Heart size={9} fill="currentColor" />
+                  {favoriteIds.size}
+                </span>
+              )}
+              {recommendationMap.size > 0 && (
+                <span className="inline-flex items-center gap-1 h-6 px-2 rounded-md bg-violet-ghost dark:bg-violet/10 text-[11px] font-mono font-semibold text-violet dark:text-violet-light tabular-nums">
+                  <Sparkles size={9} />
+                  {recommendationMap.size}
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
-        <div className="flex items-center gap-2 pt-1">
+        <div className="flex items-center gap-1.5">
           {/* Generate Recommendations */}
           <button
-            onClick={() => generateRecs.mutate()}
+            onClick={() => {
+              setAiJustGenerated(false);
+              generateRecs.mutate(undefined, {
+                onSuccess: () => {
+                  setAiJustGenerated(true);
+                  setViewFilter('recommended');
+                  // Clear the "just generated" highlight after 5s
+                  setTimeout(() => setAiJustGenerated(false), 5000);
+                },
+              });
+            }}
             disabled={generateRecs.isPending}
             className={cn(
-              'h-9 px-4 rounded-full border border-violet/25 bg-violet-ghost text-violet',
-              'text-[12px] font-semibold font-body',
+              'h-8 px-3 rounded-lg border text-[11px] font-semibold font-body',
               'flex items-center gap-1.5 transition-all duration-200',
-              'hover:bg-violet/10 hover:border-violet/40 hover:shadow-sm',
-              'disabled:opacity-50',
+              generateRecs.isPending
+                ? 'bg-gradient-to-r from-violet to-cobalt-light text-white border-transparent shadow-md shadow-violet/25 animate-pulse-subtle'
+                : aiJustGenerated
+                ? 'bg-teal text-white border-teal shadow-md shadow-teal/25'
+                : 'border-violet/25 bg-violet-ghost dark:bg-violet/10 text-violet dark:text-violet-light hover:bg-violet/10 hover:border-violet/40 hover:shadow-sm',
+              'disabled:cursor-wait',
             )}
           >
-            <Sparkles size={13} />
-            {generateRecs.isPending ? 'Analyse...' : 'Suggestions IA'}
+            <Sparkles size={12} className={generateRecs.isPending ? 'animate-spin' : ''} />
+            {generateRecs.isPending ? 'Analyse IA...' : aiJustGenerated ? 'Pretes !' : 'Suggestions IA'}
           </button>
 
           {/* Export */}
           <button
             className={cn(
-              'h-9 px-4 rounded-full border border-border/60 bg-white text-ink-3',
-              'text-[12px] font-medium font-body',
+              'h-8 px-3 rounded-lg border border-border/50 bg-white dark:bg-ink/40 text-ink-3 dark:text-ink-3',
+              'text-[11px] font-medium font-body',
               'flex items-center gap-1.5 transition-all duration-200',
-              'hover:border-violet/40 hover:text-violet hover:bg-violet-ghost hover:shadow-sm',
+              'hover:border-violet/40 hover:text-violet dark:hover:text-violet-light hover:bg-violet-ghost dark:hover:bg-violet/10 hover:shadow-sm',
             )}
           >
-            <Download size={13} />
+            <Download size={12} />
             Export
           </button>
 
           {/* View toggle */}
-          <div className="flex items-center h-9 rounded-full border border-border/60 bg-white overflow-hidden">
+          <div className="flex items-center h-8 rounded-lg border border-border/50 bg-white dark:bg-ink/40 overflow-hidden">
             <button
               onClick={() => setView('grid')}
               className={cn(
-                'h-full px-3 flex items-center justify-center transition-all duration-200',
+                'h-full px-2.5 flex items-center justify-center transition-all duration-200',
                 view === 'grid'
                   ? 'bg-violet text-white'
-                  : 'text-ink-3 hover:bg-surface-2 hover:text-ink',
+                  : 'text-ink-3 hover:bg-surface-2 dark:hover:bg-surface-3/20 hover:text-ink dark:hover:text-surface',
               )}
               title="Vue grille"
             >
-              <LayoutGrid size={14} />
+              <LayoutGrid size={13} />
             </button>
+            <div className="w-px h-4 bg-border/40" />
             <button
               onClick={() => setView('table')}
               className={cn(
-                'h-full px-3 flex items-center justify-center transition-all duration-200',
+                'h-full px-2.5 flex items-center justify-center transition-all duration-200',
                 view === 'table'
                   ? 'bg-violet text-white'
-                  : 'text-ink-3 hover:bg-surface-2 hover:text-ink',
+                  : 'text-ink-3 hover:bg-surface-2 dark:hover:bg-surface-3/20 hover:text-ink dark:hover:text-surface',
               )}
               title="Vue tableau"
             >
-              <List size={14} />
+              <List size={13} />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Gradient separator */}
-      <div
-        className="h-[2px] rounded-full mb-6 mt-4"
-        style={{ background: 'linear-gradient(90deg, #5535C4, #3D63F5)' }}
-      />
-
-      {/* ── Tab Navigation ─────────────────────────────────────────────── */}
-      <div className="flex items-center gap-1.5 mb-5">
-        <TabPill
-          label="Tous"
-          icon={LayoutGrid}
-          active={viewFilter === 'all'}
-          count={products.length}
-          onClick={() => setViewFilter('all')}
-        />
-        <TabPill
-          label="Favoris"
-          icon={Heart}
-          active={viewFilter === 'favorites'}
-          count={favoriteIds.size}
-          onClick={() => setViewFilter('favorites')}
-        />
-        <TabPill
-          label="Suggérés par l'IA"
-          icon={Sparkles}
-          active={viewFilter === 'recommended'}
-          count={recommendationMap.size}
-          onClick={() => setViewFilter('recommended')}
-        />
-        <TabPill
-          label="Populaires"
-          icon={TrendingUp}
-          active={viewFilter === 'popular'}
-          count={mostViewedIds.size}
-          onClick={() => setViewFilter('popular')}
-        />
-      </div>
-
-      {/* ── Search & Filters Bar ───────────────────────────────────────── */}
-      <div className="flex items-center gap-3 flex-wrap mb-5">
-        {/* Search input - full width feel */}
-        <div className="relative flex-1 min-w-[240px]">
-          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-3/50 pointer-events-none" />
-          <input
-            type="search"
-            value={search}
-            onChange={(e) => setFilter('search', e.target.value)}
-            placeholder="Rechercher par nom, ISIN, sous-jacent..."
-            className={cn(
-              'w-full h-10 rounded-xl bg-white border border-border/60 pl-10 pr-4 text-[13px] font-body text-ink',
-              'placeholder:text-ink-3/50 transition-all duration-200',
-              'focus:outline-none focus:ring-2 focus:ring-violet/20 focus:border-violet/40 focus:shadow-sm',
-            )}
-          />
-        </div>
-
-        {/* Payoff Type */}
-        <select
-          value={payoffType ?? ''}
-          onChange={(e) => setFilter('payoffType', e.target.value ? (e.target.value as PayoffType) : null)}
-          className={cn(selectCls, 'rounded-lg')}
-        >
-          <option value="">Type de produit</option>
-          {PAYOFF_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
-        </select>
-
-        {/* Status */}
-        <select
-          value={status}
-          onChange={(e) => setFilter('status', e.target.value)}
-          className={cn(selectCls, 'rounded-lg')}
-        >
-          <option value="">Statut</option>
-          {STATUS_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
-        </select>
-
-        {/* Sort control */}
-        <div className="flex items-center gap-1.5">
-          <select
-            value={sortField}
-            onChange={(e) => setSortField(e.target.value as SortField)}
-            className={cn(selectCls, 'rounded-lg')}
-          >
-            {SORT_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>Tri : {o.label}</option>
-            ))}
-          </select>
-          <button
-            onClick={() => setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))}
-            className={cn(
-              'h-9 w-9 rounded-lg border border-border/60 bg-white flex items-center justify-center',
-              'text-ink-3 hover:text-violet hover:border-violet/40 transition-all duration-200',
-              'focus:outline-none focus:ring-2 focus:ring-violet/20 focus:border-violet/40',
-            )}
-            title={sortDir === 'asc' ? 'Croissant' : 'Décroissant'}
-          >
-            {sortDir === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />}
-          </button>
-        </div>
-
-        {/* Advanced toggle */}
-        <button
-          onClick={() => setShowAdvanced(!showAdvanced)}
-          className={cn(
-            'h-9 px-3.5 rounded-lg border text-[12px] font-medium font-body',
-            'flex items-center gap-1.5 transition-all duration-200',
-            showAdvanced
-              ? 'border-violet/40 text-violet bg-violet-ghost shadow-sm'
-              : 'border-border/60 text-ink-3 bg-white hover:border-violet/40 hover:text-violet',
-          )}
-        >
-          <SlidersHorizontal size={12} />
-          Filtres avancés
-          <ChevronDown
-            size={11}
-            className={cn('transition-transform duration-200', showAdvanced && 'rotate-180')}
-          />
-        </button>
-
-        {/* Reset */}
-        {hasActiveFilters && (
-          <button
-            onClick={() => {
-              resetFilters();
-              setIssuerFilter('');
-            }}
-            className={cn(
-              'h-9 px-3.5 rounded-lg border border-red/20 text-red bg-red-light',
-              'text-[12px] font-semibold font-body flex items-center gap-1.5',
-              'transition-all duration-200 hover:bg-red/10 hover:border-red/40',
-            )}
-          >
-            <X size={12} />
-            Réinitialiser
-            <span className="inline-flex items-center justify-center h-[18px] min-w-[18px] px-1 rounded-full bg-red text-white text-[10px] font-bold">
-              {activeFilterCount}
-            </span>
-          </button>
-        )}
-      </div>
-
-      {/* Advanced filters expandable */}
-      <div
-        className={cn(
-          'overflow-hidden transition-all duration-300 ease-out',
-          showAdvanced ? 'max-h-24 opacity-100 mb-5' : 'max-h-0 opacity-0 mb-0',
-        )}
-      >
-        <div className="flex items-center gap-3 flex-wrap bg-surface/60 rounded-xl border border-border/40 px-4 py-3">
-          {/* SRI Range */}
-          <div className="flex items-center gap-1.5 text-[12px] font-body text-ink-3">
-            <span className="font-medium">SRI</span>
-            <select
-              value={minSri ?? ''}
-              onChange={(e) => setFilter('minSri', e.target.value ? Number(e.target.value) : null)}
-              className={cn(selectCls, 'w-16 text-center')}
-            >
-              <option value="">Min</option>
-              {[1, 2, 3, 4, 5, 6, 7].map((n) => (
-                <option key={n} value={n}>{n}</option>
-              ))}
-            </select>
-            <span className="text-ink-3/40">—</span>
-            <select
-              value={maxSri ?? ''}
-              onChange={(e) => setFilter('maxSri', e.target.value ? Number(e.target.value) : null)}
-              className={cn(selectCls, 'w-16 text-center')}
-            >
-              <option value="">Max</option>
-              {[1, 2, 3, 4, 5, 6, 7].map((n) => (
-                <option key={n} value={n}>{n}</option>
-              ))}
-            </select>
+      {/* ── Sticky Toolbar: Tabs + Search + Filters ──────────────────── */}
+      <div className={cn(
+        'sticky top-0 z-20',
+        'bg-white/80 dark:bg-ink/80 backdrop-blur-xl',
+        'border-y border-border/30 dark:border-border/15',
+        '-mx-4 md:-mx-8 px-4 md:px-8 py-2.5',
+        'flex flex-col gap-2',
+      )}>
+        {/* Row 1: Tabs + result count */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center rounded-lg bg-surface/80 dark:bg-surface-3/15 p-0.5 gap-0.5">
+            <TabPill
+              label="Tous"
+              icon={LayoutGrid}
+              active={viewFilter === 'all'}
+              count={products.length}
+              onClick={() => setViewFilter('all')}
+            />
+            <TabPill
+              label="Favoris"
+              icon={Heart}
+              active={viewFilter === 'favorites'}
+              count={favoriteIds.size}
+              onClick={() => setViewFilter('favorites')}
+            />
+            <TabPill
+              label="IA"
+              icon={Sparkles}
+              active={viewFilter === 'recommended'}
+              count={recommendationMap.size}
+              onClick={() => setViewFilter('recommended')}
+            />
+            <TabPill
+              label="Populaires"
+              icon={TrendingUp}
+              active={viewFilter === 'popular'}
+              count={mostViewedIds.size}
+              onClick={() => setViewFilter('popular')}
+            />
           </div>
 
-          <div className="w-px h-5 bg-border/40" />
+          {!isLoading && !isError && (
+            <div className="flex items-center gap-2">
+              <p className="text-[11px] text-ink-3 dark:text-ink-3 font-body">
+                <span className="font-semibold text-ink dark:text-surface font-mono tabular-nums">{filtered.length}</span>{' '}
+                résultat{filtered.length > 1 ? 's' : ''}
+              </p>
+              {viewFilter === 'recommended' && (
+                <span className="text-[10px] text-violet/60 dark:text-violet-light/50 font-body flex items-center gap-0.5">
+                  <Sparkles size={8} />
+                  par pertinence
+                </span>
+              )}
+            </div>
+          )}
+        </div>
 
-          {/* Issuer filter */}
+        {/* Row 2: Search + filters all on one line */}
+        <div className="flex items-center gap-2">
+          {/* Search input */}
+          <div className="relative flex-1 min-w-[180px]">
+            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-3/40 pointer-events-none" />
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setFilter('search', e.target.value)}
+              placeholder="Rechercher nom, ISIN, sous-jacent..."
+              className={cn(
+                'w-full h-8 rounded-lg bg-surface/60 dark:bg-surface-3/10 border border-border/40 dark:border-border/20 pl-8 pr-3 text-[12px] font-body text-ink dark:text-surface',
+                'placeholder:text-ink-3/40 dark:placeholder:text-ink-3/30 transition-all duration-200',
+                'focus:outline-none focus:ring-2 focus:ring-violet/20 focus:border-violet/40 focus:bg-white dark:focus:bg-ink/60 focus:shadow-sm',
+              )}
+            />
+          </div>
+
+          {/* Payoff Type */}
           <select
-            value={issuerFilter}
-            onChange={(e) => setIssuerFilter(e.target.value)}
+            value={payoffType ?? ''}
+            onChange={(e) => setFilter('payoffType', e.target.value ? (e.target.value as PayoffType) : null)}
             className={selectCls}
           >
-            <option value="">Émetteur</option>
-            {ISSUER_OPTIONS.map((name) => (
-              <option key={name} value={name}>{name}</option>
+            <option value="">Type</option>
+            {PAYOFF_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
             ))}
           </select>
+
+          {/* Status */}
+          <select
+            value={status}
+            onChange={(e) => setFilter('status', e.target.value)}
+            className={selectCls}
+          >
+            <option value="">Statut</option>
+            {STATUS_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+
+          {/* Sort control */}
+          <div className="flex items-center gap-1">
+            <select
+              value={sortField}
+              onChange={(e) => setSortField(e.target.value as SortField)}
+              className={selectCls}
+            >
+              {SORT_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>Tri : {o.label}</option>
+              ))}
+            </select>
+            <button
+              onClick={() => setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))}
+              className={cn(
+                'h-8 w-8 rounded-lg border border-border/50 bg-white dark:bg-ink/40 flex items-center justify-center',
+                'text-ink-3 hover:text-violet dark:hover:text-violet-light hover:border-violet/40 transition-all duration-200',
+                'focus:outline-none focus:ring-2 focus:ring-violet/20 focus:border-violet/40',
+              )}
+              title={sortDir === 'asc' ? 'Croissant' : 'Décroissant'}
+            >
+              {sortDir === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />}
+            </button>
+          </div>
+
+          {/* Advanced toggle */}
+          <button
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className={cn(
+              'h-8 px-2.5 rounded-lg border text-[11px] font-medium font-body',
+              'flex items-center gap-1 transition-all duration-200',
+              showAdvanced
+                ? 'border-violet/40 text-violet dark:text-violet-light bg-violet-ghost dark:bg-violet/10 shadow-sm'
+                : 'border-border/50 text-ink-3 bg-white dark:bg-ink/40 hover:border-violet/40 hover:text-violet dark:hover:text-violet-light',
+            )}
+          >
+            <SlidersHorizontal size={11} />
+            <span className="hidden lg:inline">Avancés</span>
+            <ChevronDown
+              size={10}
+              className={cn('transition-transform duration-200', showAdvanced && 'rotate-180')}
+            />
+          </button>
+
+          {/* Reset */}
+          {hasActiveFilters && (
+            <button
+              onClick={() => {
+                resetFilters();
+                setIssuerFilter('');
+              }}
+              className={cn(
+                'h-8 px-2.5 rounded-lg border border-red/20 text-red bg-red-light dark:bg-red/10',
+                'text-[11px] font-semibold font-body flex items-center gap-1',
+                'transition-all duration-200 hover:bg-red/10 hover:border-red/40',
+              )}
+            >
+              <X size={11} />
+              <span className="hidden sm:inline">Reset</span>
+              <span className="inline-flex items-center justify-center h-[15px] min-w-[15px] px-0.5 rounded-full bg-red text-white text-[9px] font-bold">
+                {activeFilterCount}
+              </span>
+            </button>
+          )}
+        </div>
+
+        {/* Advanced filters expandable — inside sticky bar */}
+        <div
+          className={cn(
+            'overflow-hidden transition-all duration-300 ease-out',
+            showAdvanced ? 'max-h-16 opacity-100' : 'max-h-0 opacity-0',
+          )}
+        >
+          <div className="flex items-center gap-2.5 flex-wrap pt-1 pb-0.5">
+            {/* SRI Range */}
+            <div className="flex items-center gap-1.5 text-[11px] font-body text-ink-3 dark:text-ink-3">
+              <span className="font-semibold text-ink dark:text-surface text-[10px] uppercase tracking-wider">SRI</span>
+              <select
+                value={minSri ?? ''}
+                onChange={(e) => setFilter('minSri', e.target.value ? Number(e.target.value) : null)}
+                className={cn(selectCls, 'w-14 text-center')}
+              >
+                <option value="">Min</option>
+                {[1, 2, 3, 4, 5, 6, 7].map((n) => (
+                  <option key={n} value={n}>{n}</option>
+                ))}
+              </select>
+              <span className="text-ink-3/30">—</span>
+              <select
+                value={maxSri ?? ''}
+                onChange={(e) => setFilter('maxSri', e.target.value ? Number(e.target.value) : null)}
+                className={cn(selectCls, 'w-14 text-center')}
+              >
+                <option value="">Max</option>
+                {[1, 2, 3, 4, 5, 6, 7].map((n) => (
+                  <option key={n} value={n}>{n}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="w-px h-4 bg-border/30" />
+
+            {/* Issuer filter */}
+            <select
+              value={issuerFilter}
+              onChange={(e) => setIssuerFilter(e.target.value)}
+              className={selectCls}
+            >
+              <option value="">Émetteur</option>
+              {ISSUER_OPTIONS.map((name) => (
+                <option key={name} value={name}>{name}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
-      {/* ── Results Count ──────────────────────────────────────────────── */}
-      {!isLoading && !isError && (
-        <div className="flex items-center justify-between mb-4">
-          <p className="text-[13px] text-ink-3 font-body">
-            <span className="font-semibold text-ink">{filtered.length}</span>{' '}
-            produit{filtered.length > 1 ? 's' : ''} trouvé{filtered.length > 1 ? 's' : ''}
-            {viewFilter === 'favorites' && ' dans vos favoris'}
-            {viewFilter === 'recommended' && " suggérés par l'IA"}
-            {viewFilter === 'popular' && ' les plus consultés'}
-          </p>
-          {viewFilter === 'recommended' && (
-            <p className="text-[11px] text-violet/70 font-body flex items-center gap-1">
-              <Sparkles size={10} />
-              Triés par score de pertinence
-            </p>
-          )}
-        </div>
-      )}
-
       {/* ── Content ─────────────────────────────────────────────────────── */}
-      {isLoading ? (
-        view === 'grid' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 stagger-children">
-            {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
+      <div className="mt-3">
+        {isLoading ? (
+          view === 'grid' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 stagger-children">
+              {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
+            </div>
+          ) : (
+            <div className="bg-white dark:bg-ink/30 rounded-xl border border-border/40 dark:border-border/20 overflow-hidden">
+              <table className="w-full">
+                <thead className="sticky top-0 z-10">
+                  <tr className="border-b border-border/30 bg-surface/80 dark:bg-ink/60 backdrop-blur-sm">
+                    {['', 'Produit', 'ISIN', 'Émetteur', 'Type', 'Barrière', 'Gain max', 'SRI', 'Échéance', 'Statut'].map((h) => (
+                      <th key={h} className="px-3 py-2.5 text-left text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)}
+                </tbody>
+              </table>
+            </div>
+          )
+        ) : isError ? (
+          /* ── Error State ───────────────────────────────────────── */
+          <div className="flex flex-col items-center justify-center py-14 gap-2.5 bg-white dark:bg-ink/30 rounded-xl border border-red/10 dark:border-red/5">
+            <div className="w-11 h-11 rounded-xl bg-red-light dark:bg-red/10 flex items-center justify-center">
+              <X size={20} className="text-red" />
+            </div>
+            <p className="text-red font-body text-[13px] font-medium">
+              Erreur lors du chargement des produits.
+            </p>
+            <p className="text-ink-3 font-body text-[11px]">
+              Veuillez réessayer dans quelques instants.
+            </p>
           </div>
-        ) : (
-          <div className="bg-white rounded-xl border border-border/60 overflow-hidden">
-            <table className="w-full">
-              <thead className="sticky top-0 z-10">
-                <tr className="border-b border-border/40 bg-surface/80 backdrop-blur-sm">
-                  {['', 'Produit', 'ISIN', 'Émetteur', 'Type', 'Barrière', 'Gain max', 'SRI', 'Échéance', 'Statut'].map((h) => (
-                    <th key={h} className="px-4 py-3 text-left text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)}
-              </tbody>
-            </table>
-          </div>
-        )
-      ) : isError ? (
-        <div className="flex flex-col items-center justify-center py-20 gap-3 bg-white rounded-xl border border-border/60">
-          <div className="w-14 h-14 rounded-2xl bg-red-light flex items-center justify-center">
-            <X size={24} className="text-red" />
-          </div>
-          <p className="text-red font-body text-sm font-medium">
-            Une erreur est survenue lors du chargement des produits.
-          </p>
-          <p className="text-ink-3 font-body text-xs">
-            Veuillez réessayer dans quelques instants.
-          </p>
-        </div>
-      ) : filtered.length === 0 ? (
-        /* ── Empty State ──────────────────────────────────────────── */
-        <div className="flex flex-col items-center justify-center py-24 gap-4 bg-white rounded-xl border border-border/60">
-          <div className="w-16 h-16 rounded-2xl bg-violet-ghost flex items-center justify-center">
-            {viewFilter === 'favorites' ? (
-              <Heart size={28} className="text-violet/50" />
-            ) : viewFilter === 'recommended' ? (
-              <Sparkles size={28} className="text-violet/50" />
-            ) : (
-              <PackageSearch size={28} className="text-violet/50" />
+        ) : filtered.length === 0 ? (
+          /* ── Empty State ───────────────────────────────────────── */
+          <div className={cn(
+            'flex flex-col items-center justify-center py-16 gap-3',
+            'bg-gradient-to-b from-white to-surface/40 dark:from-ink/30 dark:to-ink/10',
+            'rounded-xl border border-border/30 dark:border-border/15',
+          )}>
+            <div className={cn(
+              'w-14 h-14 rounded-2xl flex items-center justify-center',
+              'bg-gradient-to-br from-violet-ghost to-violet-pale dark:from-violet/15 dark:to-violet/5',
+              'shadow-sm',
+            )}>
+              {viewFilter === 'favorites' ? (
+                <Heart size={24} className="text-violet/60 dark:text-violet-light/60" />
+              ) : viewFilter === 'recommended' ? (
+                <Sparkles size={24} className="text-violet/60 dark:text-violet-light/60" />
+              ) : (
+                <PackageSearch size={24} className="text-violet/60 dark:text-violet-light/60" />
+              )}
+            </div>
+            <div className="text-center">
+              <p className="font-body text-[13px] font-semibold text-ink dark:text-surface mb-0.5">
+                {viewFilter === 'favorites'
+                  ? 'Aucun favori pour le moment'
+                  : viewFilter === 'recommended'
+                  ? 'Pas encore de suggestions IA'
+                  : 'Aucun produit trouvé'}
+              </p>
+              <p className="font-body text-[11px] text-ink-3 dark:text-ink-3 max-w-[280px] leading-relaxed">
+                {viewFilter === 'favorites'
+                  ? 'Cliquez sur le coeur sur un produit pour le retrouver ici.'
+                  : viewFilter === 'recommended'
+                  ? 'Lancez une analyse IA pour recevoir des recommandations personnalisées.'
+                  : 'Essayez de modifier vos filtres ou votre recherche.'}
+              </p>
+            </div>
+            {viewFilter === 'recommended' && (
+              <button
+                onClick={() => {
+                  generateRecs.mutate(undefined, {
+                    onSuccess: () => {
+                      setAiJustGenerated(true);
+                      setTimeout(() => setAiJustGenerated(false), 5000);
+                    },
+                  });
+                }}
+                disabled={generateRecs.isPending}
+                className={cn(
+                  'text-[12px] text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 hover:shadow-md disabled:cursor-wait flex items-center gap-1.5',
+                  generateRecs.isPending
+                    ? 'bg-gradient-to-r from-violet to-cobalt-light animate-pulse-subtle'
+                    : 'bg-violet hover:bg-violet-mid',
+                )}
+              >
+                <Sparkles size={12} className={generateRecs.isPending ? 'animate-spin' : ''} />
+                {generateRecs.isPending ? 'Analyse IA...' : 'Generer des suggestions'}
+              </button>
+            )}
+            {(viewFilter === 'all' || viewFilter === 'popular') && hasActiveFilters && (
+              <button
+                onClick={() => { resetFilters(); setIssuerFilter(''); }}
+                className="text-[12px] text-violet dark:text-violet-light font-semibold hover:underline flex items-center gap-1"
+              >
+                <X size={11} />
+                Réinitialiser les filtres
+              </button>
             )}
           </div>
-          <div className="text-center">
-            <p className="font-body text-sm font-medium text-ink mb-1">
-              {viewFilter === 'favorites'
-                ? 'Aucun favori pour le moment'
-                : viewFilter === 'recommended'
-                ? 'Pas encore de suggestions IA'
-                : 'Aucun produit trouvé'}
-            </p>
-            <p className="font-body text-xs text-ink-3 max-w-sm">
-              {viewFilter === 'favorites'
-                ? 'Cliquez sur le coeur sur un produit pour le retrouver ici.'
-                : viewFilter === 'recommended'
-                ? 'Lancez une analyse IA pour recevoir des recommandations personnalisées.'
-                : 'Essayez de modifier vos filtres ou votre recherche.'}
-            </p>
+        ) : view === 'grid' ? (
+          /* ── Grid View ─────────────────────────────────────────── */
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 stagger-children">
+            {filtered.map((product: any) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                isFavorited={favoriteIds.has(product.id)}
+                recommendationScore={recommendationMap.get(product.id) ?? null}
+                aiReason={recommendationReasonMap.get(product.id) ?? null}
+              />
+            ))}
           </div>
-          {viewFilter === 'recommended' && (
-            <button
-              onClick={() => generateRecs.mutate()}
-              disabled={generateRecs.isPending}
-              className="text-[13px] text-white bg-violet px-5 py-2.5 rounded-full font-semibold hover:bg-violet-mid transition-all duration-200 hover:shadow-md disabled:opacity-50 flex items-center gap-2"
-            >
-              <Sparkles size={14} />
-              {generateRecs.isPending ? 'Analyse en cours...' : 'Générer des suggestions'}
-            </button>
-          )}
-          {(viewFilter === 'all' || viewFilter === 'popular') && hasActiveFilters && (
-            <button
-              onClick={() => { resetFilters(); setIssuerFilter(''); }}
-              className="text-[13px] text-violet font-semibold hover:underline flex items-center gap-1.5"
-            >
-              <X size={12} />
-              Réinitialiser les filtres
-            </button>
-          )}
-        </div>
-      ) : view === 'grid' ? (
-        /* ── Grid View ────────────────────────────────────────────── */
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 stagger-children">
-          {filtered.map((product: any) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              isFavorited={favoriteIds.has(product.id)}
-              recommendationScore={recommendationMap.get(product.id) ?? null}
-            />
-          ))}
-        </div>
-      ) : (
-        /* ── Table View ───────────────────────────────────────────── */
-        <div className="bg-white rounded-xl border border-border/60 overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-[13px] font-body">
-              <thead className="sticky top-0 z-10">
-                <tr className="border-b border-border/40 bg-surface/80 backdrop-blur-sm">
-                  <th className="px-3 py-3 w-10" />
-                  <SortTh label="Produit" field="name" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
-                  <th className="px-4 py-3 text-left text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">ISIN</th>
-                  <SortTh label="Émetteur" field="issuerName" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
-                  <th className="px-4 py-3 text-left text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">Type</th>
-                  <SortTh label="Barrière" field="barrierCapPct" sortField={sortField} sortDir={sortDir} onSort={handleSort} className="text-right" />
-                  <SortTh label="Coupon" field="couponPct" sortField={sortField} sortDir={sortDir} onSort={handleSort} className="text-right" />
-                  <SortTh label="Gain max" field="maxGainPct" sortField={sortField} sortDir={sortDir} onSort={handleSort} className="text-right" />
-                  <SortTh label="SRI" field="sri" sortField={sortField} sortDir={sortDir} onSort={handleSort} className="text-center" />
-                  <SortTh label="Échéance" field="maturityDate" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
-                  <th className="px-4 py-3 text-center text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">Statut</th>
-                  <th className="px-4 py-3 w-10" />
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((p: any, idx: number) => {
-                  const payoffStyle = PAYOFF_BADGE[p.payoffType] ?? { bg: '#F4F3EF', text: '#7B6FA0' };
-                  const statusStyle = STATUS_BADGE[p.status] ?? { bg: '#F4F3EF', text: '#7B6FA0', label: p.status };
-                  const sriColor = p.sri <= 2 ? '#008B6E' : p.sri <= 4 ? '#A07800' : '#C41F36';
-                  const isFav = favoriteIds.has(p.id);
-                  const recScore = recommendationMap.get(p.id);
-                  const isEven = idx % 2 === 1;
+        ) : (
+          /* ── Table View ────────────────────────────────────────── */
+          <div className="bg-white dark:bg-ink/30 rounded-xl border border-border/40 dark:border-border/20 overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-[12px] font-body">
+                <thead className="sticky top-0 z-10">
+                  <tr className="border-b border-border/30 bg-surface/80 dark:bg-ink/60 backdrop-blur-sm">
+                    <th className="px-2.5 py-2.5 w-9" />
+                    <SortTh label="Produit" field="name" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
+                    <th className="px-3 py-2.5 text-left text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">ISIN</th>
+                    <SortTh label="Émetteur" field="issuerName" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
+                    <th className="px-3 py-2.5 text-left text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">Type</th>
+                    <SortTh label="Barrière" field="barrierCapPct" sortField={sortField} sortDir={sortDir} onSort={handleSort} className="text-right" />
+                    <SortTh label="Coupon" field="couponPct" sortField={sortField} sortDir={sortDir} onSort={handleSort} className="text-right" />
+                    <SortTh label="Gain max" field="maxGainPct" sortField={sortField} sortDir={sortDir} onSort={handleSort} className="text-right" />
+                    <SortTh label="SRI" field="sri" sortField={sortField} sortDir={sortDir} onSort={handleSort} className="text-center" />
+                    <SortTh label="Échéance" field="maturityDate" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
+                    <th className="px-3 py-2.5 text-center text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">Statut</th>
+                    <th className="px-3 py-2.5 w-9" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((p: any, idx: number) => {
+                    const payoffStyle = PAYOFF_BADGE[p.payoffType] ?? { bg: '#F4F3EF', text: '#7B6FA0' };
+                    const statusStyle = STATUS_BADGE[p.status] ?? { bg: '#F4F3EF', text: '#7B6FA0', label: p.status };
+                    const sriColor = p.sri <= 2 ? '#008B6E' : p.sri <= 4 ? '#A07800' : '#C41F36';
+                    const isFav = favoriteIds.has(p.id);
+                    const recScore = recommendationMap.get(p.id);
+                    const isEven = idx % 2 === 1;
 
-                  return (
-                    <tr
-                      key={p.id}
-                      className={cn(
-                        'border-b border-border/30 last:border-0 transition-colors duration-150 group',
-                        'hover:bg-violet-ghost/50',
-                        isEven && 'bg-surface/30',
-                      )}
-                    >
-                      {/* Favorite */}
-                      <td className="px-3 py-3">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleFavorite.mutate(p.id);
-                          }}
-                          className={cn(
-                            'p-1 rounded-full transition-all duration-200',
-                            isFav
-                              ? 'text-red'
-                              : 'text-ink-3/30 hover:text-red opacity-0 group-hover:opacity-100',
-                          )}
-                        >
-                          <Heart size={13} fill={isFav ? 'currentColor' : 'none'} />
-                        </button>
-                      </td>
-
-                      {/* Product name */}
-                      <td className="px-4 py-3">
-                        <Link href={`/products/${p.id}`} className="hover:text-violet transition-colors font-medium text-ink leading-tight block max-w-[200px] truncate">
-                          {p.name}
-                        </Link>
-                        {recScore != null && recScore >= 70 && (
-                          <span className="inline-flex items-center gap-0.5 mt-0.5 text-[9px] text-violet font-medium">
-                            <Sparkles size={8} /> IA {recScore}%
-                          </span>
+                    return (
+                      <tr
+                        key={p.id}
+                        className={cn(
+                          'border-b border-border/20 dark:border-border/10 last:border-0 transition-colors duration-150 group',
+                          'hover:bg-violet-ghost/50 dark:hover:bg-violet/5',
+                          isEven && 'bg-surface/30 dark:bg-surface-3/5',
                         )}
-                      </td>
+                      >
+                        {/* Favorite */}
+                        <td className="px-2.5 py-2.5">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleFavorite.mutate(p.id);
+                            }}
+                            className={cn(
+                              'p-0.5 rounded-full transition-all duration-200',
+                              isFav
+                                ? 'text-red'
+                                : 'text-ink-3/30 hover:text-red opacity-0 group-hover:opacity-100',
+                            )}
+                          >
+                            <Heart size={12} fill={isFav ? 'currentColor' : 'none'} />
+                          </button>
+                        </td>
 
-                      {/* ISIN */}
-                      <td className="px-4 py-3">
-                        <span className="font-mono text-[11px] text-ink-3 tabular-nums">{p.isin}</span>
-                      </td>
+                        {/* Product name */}
+                        <td className="px-3 py-2.5">
+                          <Link href={`/products/${p.id}`} className="hover:text-violet dark:hover:text-violet-light transition-colors font-medium text-ink dark:text-surface leading-tight block max-w-[180px] truncate text-[12px]">
+                            {p.name}
+                          </Link>
+                          {recScore != null && recScore >= 70 && (
+                            <span className="inline-flex items-center gap-0.5 mt-0.5 text-[9px] text-violet dark:text-violet-light font-medium">
+                              <Sparkles size={7} /> IA {recScore}%
+                            </span>
+                          )}
+                        </td>
 
-                      {/* Issuer */}
-                      <td className="px-4 py-3 text-ink-2 max-w-[140px] truncate">{p.issuerName}</td>
+                        {/* ISIN */}
+                        <td className="px-3 py-2.5">
+                          <span className="font-mono text-[10px] text-ink-3 tabular-nums">{p.isin}</span>
+                        </td>
 
-                      {/* Type badge */}
-                      <td className="px-4 py-3">
-                        <span
-                          className="inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-semibold"
-                          style={{ backgroundColor: payoffStyle.bg, color: payoffStyle.text }}
-                        >
-                          {PAYOFF_SHORT[p.payoffType] ?? p.payoffType}
-                        </span>
-                      </td>
+                        {/* Issuer */}
+                        <td className="px-3 py-2.5 text-ink-2 dark:text-ink-3 max-w-[130px] truncate text-[12px]">{p.issuerName}</td>
 
-                      {/* Barrier */}
-                      <td className="px-4 py-3 text-right font-mono tabular-nums text-red font-semibold text-[12px]">
-                        {formatPct(p.barrierCapPct)}
-                      </td>
+                        {/* Type badge */}
+                        <td className="px-3 py-2.5">
+                          <span
+                            className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[9px] font-semibold"
+                            style={{ backgroundColor: payoffStyle.bg, color: payoffStyle.text }}
+                          >
+                            {PAYOFF_SHORT[p.payoffType] ?? p.payoffType}
+                          </span>
+                        </td>
 
-                      {/* Coupon */}
-                      <td className="px-4 py-3 text-right font-mono tabular-nums text-teal font-semibold text-[12px]">
-                        {formatPct(p.couponPct)}
-                      </td>
+                        {/* Barrier */}
+                        <td className="px-3 py-2.5 text-right font-mono tabular-nums text-red font-semibold text-[11px]">
+                          {formatPct(p.barrierCapPct)}
+                        </td>
 
-                      {/* Max Gain */}
-                      <td className="px-4 py-3 text-right font-mono tabular-nums font-bold text-ink text-[12px]">
-                        {formatPct(p.maxGainPct)}
-                      </td>
+                        {/* Coupon */}
+                        <td className="px-3 py-2.5 text-right font-mono tabular-nums text-teal font-semibold text-[11px]">
+                          {formatPct(p.couponPct)}
+                        </td>
 
-                      {/* SRI */}
-                      <td className="px-4 py-3 text-center">
-                        <span
-                          className="inline-flex items-center justify-center w-6 h-6 rounded-md text-[10px] font-bold"
-                          style={{ backgroundColor: `${sriColor}15`, color: sriColor }}
-                        >
-                          {p.sri}
-                        </span>
-                      </td>
+                        {/* Max Gain */}
+                        <td className="px-3 py-2.5 text-right font-mono tabular-nums font-bold text-ink dark:text-surface text-[11px]">
+                          {formatPct(p.maxGainPct)}
+                        </td>
 
-                      {/* Maturity */}
-                      <td className="px-4 py-3 text-[12px] text-ink-2 whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1">
-                          <Calendar size={10} className="text-ink-3" />
-                          {p.maturityDate ? formatDate(p.maturityDate) : '—'}
-                        </span>
-                      </td>
+                        {/* SRI */}
+                        <td className="px-3 py-2.5 text-center">
+                          <span
+                            className="inline-flex items-center justify-center w-5 h-5 rounded-md text-[9px] font-bold"
+                            style={{ backgroundColor: `${sriColor}15`, color: sriColor }}
+                          >
+                            {p.sri}
+                          </span>
+                        </td>
 
-                      {/* Status */}
-                      <td className="px-4 py-3 text-center">
-                        <span
-                          className="inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-semibold"
-                          style={{ backgroundColor: statusStyle.bg, color: statusStyle.text }}
-                        >
-                          {statusStyle.label}
-                        </span>
-                      </td>
+                        {/* Maturity */}
+                        <td className="px-3 py-2.5 text-[11px] text-ink-2 dark:text-ink-3 whitespace-nowrap">
+                          <span className="inline-flex items-center gap-1">
+                            <Calendar size={9} className="text-ink-3" />
+                            {p.maturityDate ? formatDate(p.maturityDate) : '—'}
+                          </span>
+                        </td>
 
-                      {/* Action */}
-                      <td className="px-4 py-3">
-                        <Link
-                          href={`/products/${p.id}`}
-                          className="text-ink-3/40 hover:text-violet transition-colors group-hover:text-ink-3"
-                        >
-                          <ArrowUpRight size={14} />
-                        </Link>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        {/* Status */}
+                        <td className="px-3 py-2.5 text-center">
+                          <span
+                            className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[9px] font-semibold"
+                            style={{ backgroundColor: statusStyle.bg, color: statusStyle.text }}
+                          >
+                            {statusStyle.label}
+                          </span>
+                        </td>
+
+                        {/* Action */}
+                        <td className="px-3 py-2.5">
+                          <Link
+                            href={`/products/${p.id}`}
+                            className="text-ink-3/30 hover:text-violet dark:hover:text-violet-light transition-colors group-hover:text-ink-3"
+                          >
+                            <ArrowUpRight size={13} />
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

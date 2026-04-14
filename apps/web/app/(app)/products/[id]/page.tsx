@@ -6,7 +6,8 @@ import { useParams } from 'next/navigation';
 import {
   ArrowLeft, Heart, Share2, FileText, AlertTriangle, Calendar,
   Shield, TrendingUp, Info, ExternalLink, Clock, Users, Download,
-  Sparkles,
+  Sparkles, Brain, Target, BarChart3, Lightbulb, CheckCircle2,
+  XCircle, Minus, Zap, Activity, PieChart,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useProduct, useProductPayoff } from '@/hooks/use-products';
@@ -83,20 +84,20 @@ const REGULATORY_DISCLAIMERS = [
 
 function DetailRow({ label, value, className }: { label: string; value: React.ReactNode; className?: string }) {
   return (
-    <div className={cn("flex items-start justify-between gap-4 py-2.5 border-b border-border/50 last:border-0", className)}>
-      <span className="text-[11px] text-ink-3 font-body uppercase tracking-widest shrink-0">{label}</span>
-      <span className="text-sm font-semibold text-ink font-body text-right">{value}</span>
+    <div className={cn("flex items-start justify-between gap-4 py-2 border-b border-border/50 last:border-0", className)}>
+      <span className="text-[10px] text-ink-3 font-body uppercase tracking-widest shrink-0">{label}</span>
+      <span className="text-[13px] font-semibold text-ink font-body text-right tabular-nums">{value}</span>
     </div>
   );
 }
 
 function StatBox({ label, value, color, icon: Icon }: { label: string; value: string; color?: string; icon?: any }) {
   return (
-    <div className="relative flex flex-col items-center gap-1.5 py-4 px-3 rounded-xl bg-white dark:bg-white/5 border border-border/60 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden group">
+    <div className="relative flex flex-col items-center gap-1 py-3 px-2.5 rounded-xl bg-white dark:bg-white/5 border border-border/60 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden group">
       <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-violet/60 to-teal/40 opacity-0 group-hover:opacity-100 transition-opacity" />
-      {Icon && <Icon size={13} className="text-ink-3/50 mb-0.5" />}
+      {Icon && <Icon size={12} className="text-ink-3/50" />}
       <span className="text-[9px] uppercase tracking-wider text-ink-3 font-semibold font-body">{label}</span>
-      <span className={cn("font-display text-xl font-bold leading-none", color ?? 'text-ink')}>{value}</span>
+      <span className={cn("font-display text-lg font-bold leading-none tabular-nums", color ?? 'text-ink')}>{value}</span>
     </div>
   );
 }
@@ -104,13 +105,13 @@ function StatBox({ label, value, color, icon: Icon }: { label: string; value: st
 function SriGauge({ sri }: { sri: number }) {
   const sriStyle = SRI_COLORS[sri] ?? SRI_COLORS[4];
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className="flex flex-col items-center gap-1.5">
       <div className="flex gap-0.5">
         {[1, 2, 3, 4, 5, 6, 7].map((n) => (
           <div
             key={n}
             className={cn(
-              "h-5 w-5 rounded-sm flex items-center justify-center text-[9px] font-bold font-mono transition-all",
+              "h-[18px] w-[18px] rounded-sm flex items-center justify-center text-[8px] font-bold font-mono tabular-nums transition-all",
               n === sri ? 'ring-2 ring-offset-1 scale-110' : n <= sri ? 'opacity-80' : 'opacity-30',
             )}
             style={{
@@ -122,8 +123,8 @@ function SriGauge({ sri }: { sri: number }) {
           </div>
         ))}
       </div>
-      <p className="text-[10px] text-ink-3 font-body">
-        Risque : <span className="font-semibold" style={{ color: sriStyle.text }}>{sri}/7</span>
+      <p className="text-[9px] text-ink-3 font-body">
+        Risque : <span className="font-semibold tabular-nums" style={{ color: sriStyle.text }}>{sri}/7</span>
         {sri <= 2 && ' (faible)'}
         {sri >= 3 && sri <= 4 && ' (modéré)'}
         {sri >= 5 && sri <= 6 && ' (élevé)'}
@@ -144,29 +145,29 @@ function ScenarioTable({ product }: { product: any }) {
 
   return (
     <div className="overflow-hidden rounded-xl border border-border/60 shadow-sm">
-      <table className="w-full text-sm font-body">
+      <table className="w-full text-xs font-body">
         <thead>
           <tr className="bg-gradient-to-r from-surface-2 to-surface-2/60 dark:from-white/5 dark:to-white/[0.02] border-b border-border/60">
-            <th className="px-4 py-3 text-left text-[10px] uppercase tracking-wider text-ink-3 font-semibold">Scénario</th>
-            <th className="px-4 py-3 text-right text-[10px] uppercase tracking-wider text-ink-3 font-semibold">Perf. %</th>
-            <th className="px-4 py-3 text-right text-[10px] uppercase tracking-wider text-ink-3 font-semibold">Pour 10 000 €</th>
+            <th className="px-3 py-2 text-left text-[9px] uppercase tracking-wider text-ink-3 font-semibold">Scénario</th>
+            <th className="px-3 py-2 text-right text-[9px] uppercase tracking-wider text-ink-3 font-semibold">Perf. %</th>
+            <th className="px-3 py-2 text-right text-[9px] uppercase tracking-wider text-ink-3 font-semibold">Pour 10 000 €</th>
           </tr>
         </thead>
         <tbody>
           {scenarios.map((s) => (
             <tr key={s.name} className="border-b border-border/30 last:border-0 hover:bg-surface-2/50 dark:hover:bg-white/[0.02] transition-colors">
-              <td className="px-4 py-3 font-semibold" style={{ color: s.color }}>
-                <span className="inline-flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: s.color }} />
+              <td className="px-3 py-2 text-xs font-semibold" style={{ color: s.color }}>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: s.color }} />
                   {s.name}
                 </span>
               </td>
-              <td className="px-4 py-3 text-right font-mono tabular-nums font-semibold">
-                <span className="inline-flex items-center rounded-md px-2 py-0.5 text-xs" style={{ backgroundColor: s.color + '15', color: s.color }}>
+              <td className="px-3 py-2 text-right font-mono tabular-nums font-semibold">
+                <span className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px]" style={{ backgroundColor: s.color + '15', color: s.color }}>
                   {s.pct >= 0 ? '+' : ''}{s.pct.toFixed(1)}%
                 </span>
               </td>
-              <td className="px-4 py-3 text-right font-mono tabular-nums text-ink-2">
+              <td className="px-3 py-2 text-right text-xs font-mono tabular-nums text-ink-2">
                 {formatAmount(investBase * (1 + s.pct / 100))}
               </td>
             </tr>
@@ -177,22 +178,314 @@ function ScenarioTable({ product }: { product: any }) {
   );
 }
 
+// ─── AI Analysis Panel ──────────────────────────────────────────────────────
+
+function computeAiInsights(product: any) {
+  const sri = product.sri ?? 4;
+  const barrier = product.barrierCapPct ?? 50;
+  const coupon = product.couponPct ?? 0;
+  const maxGain = product.maxGainPct ?? 0;
+  const maturity = product.maturityDate ? Math.ceil((new Date(product.maturityDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24 * 365)) : 3;
+  const autocall = product.autocallBarrierPct ?? null;
+  const fillPct = product.fillPct ?? 0;
+  const payoffType = product.payoffType ?? '';
+
+  // Risk-reward score (0-100)
+  const riskRewardScore = Math.round(
+    Math.min(100, Math.max(0,
+      (coupon > 0 ? coupon * 4 : maxGain * 1.5) + barrier * 0.3 - sri * 5 + (autocall ? 10 : 0)
+    ))
+  );
+
+  // Capital protection assessment
+  const protectionLevel = barrier >= 70 ? 'Fort' : barrier >= 50 ? 'Modéré' : 'Faible';
+  const protectionColor = barrier >= 70 ? 'text-teal' : barrier >= 50 ? 'text-gold' : 'text-red';
+
+  // Probability estimates based on barrier & type
+  const probAutocall = autocall != null ? Math.round(Math.min(85, 40 + (autocall <= 100 ? (100 - autocall) * 0.8 : 0) + (maturity > 3 ? 10 : 0))) : null;
+  const probCoupon = coupon > 0 ? Math.round(Math.min(90, 50 + barrier * 0.4 - coupon * 1.5)) : null;
+  const probCapitalLoss = Math.round(Math.max(5, Math.min(60, 45 - barrier * 0.5 + sri * 3)));
+
+  // Market context
+  const yieldVsEuribor = coupon > 0 ? coupon - 2.85 : maxGain - 2.85;
+  const yieldSpreadLabel = yieldVsEuribor > 5 ? 'Très attractif' : yieldVsEuribor > 2 ? 'Attractif' : yieldVsEuribor > 0 ? 'Correct' : 'Sous le marché';
+
+  // Suitability profiles
+  const profiles: { label: string; match: boolean; reason: string }[] = [
+    { label: 'Profil prudent (SRI ≤ 3)', match: sri <= 3 && barrier >= 60, reason: sri <= 3 ? `Risque ${sri}/7 adapté, barrière à ${barrier}%` : `SRI ${sri}/7 trop élevé` },
+    { label: 'Profil équilibré (SRI 3-5)', match: sri >= 3 && sri <= 5 && barrier >= 40, reason: `Bon ratio rendement/risque avec coupon ${coupon > 0 ? coupon.toFixed(1) + '%' : 'conditionnel'}` },
+    { label: 'Profil dynamique (SRI 5+)', match: sri >= 5, reason: sri >= 5 ? 'Adapté au profil de risque élevé' : 'Risque insuffisant pour ce profil' },
+    { label: 'Recherche de rendement', match: (coupon > 5 || maxGain > 15), reason: coupon > 5 ? `Coupon attractif de ${coupon.toFixed(1)}%` : `Gain potentiel de ${maxGain.toFixed(1)}%` },
+    { label: 'Diversification alternatives', match: true, reason: 'Les produits structurés offrent une exposition décorrélée' },
+  ];
+
+  // Key strengths & weaknesses
+  const strengths: string[] = [];
+  const weaknesses: string[] = [];
+
+  if (barrier >= 60) strengths.push(`Protection du capital solide (barrière à ${barrier}%)`);
+  if (coupon > 6) strengths.push(`Rendement attractif (${coupon.toFixed(1)}% p.a.)`);
+  if (autocall != null) strengths.push('Mécanisme de remboursement anticipé (liquidité potentielle)');
+  if (fillPct > 60) strengths.push(`Forte demande (${fillPct.toFixed(0)}% de remplissage)`);
+  if (payoffType === 'AUTOCALL_PHOENIX') strengths.push('Mémoire de coupon (coupons rattrapés)');
+  if (maturity <= 3) strengths.push(`Maturité courte (${maturity} an${maturity > 1 ? 's' : ''})`);
+
+  if (sri >= 6) weaknesses.push(`Risque élevé (SRI ${sri}/7)`);
+  if (barrier < 50) weaknesses.push(`Barrière basse (${barrier}%) — risque de perte en capital`);
+  if (maturity > 5) weaknesses.push(`Maturité longue (${maturity} ans) — liquidité réduite`);
+  if (coupon === 0 && maxGain < 10) weaknesses.push('Rendement limité par rapport au risque');
+  if (fillPct > 90) weaknesses.push('Étagère presque pleine — disponibilité limitée');
+
+  if (strengths.length === 0) strengths.push('Exposition aux marchés via un format structuré');
+  if (weaknesses.length === 0) weaknesses.push('Capital non garanti (risque inhérent aux produits structurés)');
+
+  // AI recommendation text
+  let recommendation: string;
+  if (riskRewardScore >= 70) {
+    recommendation = `Ce produit présente un excellent profil rendement/risque. Avec un coupon de ${coupon > 0 ? coupon.toFixed(1) + '%' : 'conditionnel'} et une barrière à ${barrier}%, il offre un bon compromis entre protection du capital et rendement. Recommandé pour les clients ${sri <= 3 ? 'prudents' : sri <= 5 ? 'équilibrés' : 'dynamiques'} recherchant une alternative aux fonds euros.`;
+  } else if (riskRewardScore >= 45) {
+    recommendation = `Ce produit offre un rapport rendement/risque correct. La barrière à ${barrier}% assure une protection ${protectionLevel.toLowerCase()} du capital. À considérer dans le cadre d'une diversification de portefeuille, en complément d'actifs moins volatils.`;
+  } else {
+    recommendation = `Ce produit présente un profil de risque significatif avec un SRI de ${sri}/7. La barrière à ${barrier}% offre une protection limitée. À réserver aux clients avertis avec une tolérance au risque élevée et un horizon d'investissement adapté.`;
+  }
+
+  return { riskRewardScore, protectionLevel, protectionColor, probAutocall, probCoupon, probCapitalLoss, yieldSpreadLabel, yieldVsEuribor, profiles, strengths, weaknesses, recommendation, maturity };
+}
+
+function AiAnalysisPanel({ product }: { product: any }) {
+  const [isAnalyzing, setIsAnalyzing] = useState(true);
+  const [showContent, setShowContent] = useState(false);
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setIsAnalyzing(false), 1800);
+    const t2 = setTimeout(() => setShowContent(true), 2000);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, []);
+
+  const insights = computeAiInsights(product);
+
+  if (isAnalyzing) {
+    return (
+      <div className="flex flex-col items-center justify-center py-10 gap-3">
+        <div className="relative">
+          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-violet to-cobalt flex items-center justify-center shadow-lg shadow-violet/20">
+            <Brain size={20} className="text-white animate-pulse" />
+          </div>
+          <div className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-teal animate-ping" />
+        </div>
+        <div className="text-center">
+          <p className="font-body text-xs font-semibold text-ink">Analyse IA en cours...</p>
+          <p className="font-body text-[11px] text-ink-3 mt-0.5">Évaluation du profil risque/rendement et du contexte marché</p>
+        </div>
+        <div className="flex gap-1.5 mt-2">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="w-2 h-2 rounded-full bg-violet animate-bounce" style={{ animationDelay: `${i * 150}ms` }} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (!showContent) return null;
+
+  return (
+    <div className="flex flex-col gap-3.5 animate-fade-in">
+      {/* AI Header */}
+      <div className="flex items-start gap-2.5 p-3 rounded-xl bg-gradient-to-r from-violet/[0.06] to-cobalt/[0.04] border border-violet/15">
+        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet to-cobalt flex items-center justify-center shrink-0 shadow-md shadow-violet/15">
+          <Brain size={15} className="text-white" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <h4 className="font-body text-xs font-bold text-ink">Analyse Strick&apos;in AI</h4>
+            <span className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider bg-violet/10 text-violet">
+              <Zap size={7} /> Auto-généré
+            </span>
+          </div>
+          <p className="font-body text-[11px] text-ink-2 leading-relaxed">{insights.recommendation}</p>
+        </div>
+      </div>
+
+      {/* Score Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className="flex flex-col items-center gap-1 py-2.5 px-2.5 rounded-xl bg-white dark:bg-white/5 border border-border/60 shadow-sm">
+          <Target size={12} className="text-violet" />
+          <span className="text-[8px] uppercase tracking-wider text-ink-3 font-semibold">Score R/R</span>
+          <span className={cn(
+            "font-display text-xl font-bold tabular-nums",
+            insights.riskRewardScore >= 70 ? 'text-teal' : insights.riskRewardScore >= 45 ? 'text-gold' : 'text-red',
+          )}>
+            {insights.riskRewardScore}
+          </span>
+          <span className="text-[8px] text-ink-3 font-body">/100</span>
+        </div>
+
+        <div className="flex flex-col items-center gap-1 py-2.5 px-2.5 rounded-xl bg-white dark:bg-white/5 border border-border/60 shadow-sm">
+          <Shield size={12} className={insights.protectionColor} />
+          <span className="text-[8px] uppercase tracking-wider text-ink-3 font-semibold">Protection</span>
+          <span className={cn("font-display text-base font-bold", insights.protectionColor)}>{insights.protectionLevel}</span>
+          <span className="text-[8px] text-ink-3 font-body tabular-nums">barrière {product.barrierCapPct ?? '—'}%</span>
+        </div>
+
+        <div className="flex flex-col items-center gap-1 py-2.5 px-2.5 rounded-xl bg-white dark:bg-white/5 border border-border/60 shadow-sm">
+          <BarChart3 size={12} className="text-cobalt" />
+          <span className="text-[8px] uppercase tracking-wider text-ink-3 font-semibold">Spread vs Euribor</span>
+          <span className={cn(
+            "font-display text-base font-bold tabular-nums",
+            insights.yieldVsEuribor > 3 ? 'text-teal' : insights.yieldVsEuribor > 0 ? 'text-gold' : 'text-red',
+          )}>
+            {insights.yieldVsEuribor > 0 ? '+' : ''}{insights.yieldVsEuribor.toFixed(1)}%
+          </span>
+          <span className="text-[8px] text-ink-3 font-body">{insights.yieldSpreadLabel}</span>
+        </div>
+
+        <div className="flex flex-col items-center gap-1 py-2.5 px-2.5 rounded-xl bg-white dark:bg-white/5 border border-border/60 shadow-sm">
+          <Activity size={12} className="text-gold" />
+          <span className="text-[8px] uppercase tracking-wider text-ink-3 font-semibold">Horizon</span>
+          <span className="font-display text-base font-bold text-ink tabular-nums">{insights.maturity} an{insights.maturity > 1 ? 's' : ''}</span>
+          <span className="text-[8px] text-ink-3 font-body">{insights.maturity <= 3 ? 'Court terme' : insights.maturity <= 6 ? 'Moyen terme' : 'Long terme'}</span>
+        </div>
+      </div>
+
+      {/* Probability Estimates */}
+      <div className="rounded-xl border border-border/60 bg-white dark:bg-white/5 shadow-sm overflow-hidden">
+        <div className="px-3 py-2 border-b border-border/40 bg-surface-2/50 dark:bg-white/[0.02]">
+          <h4 className="font-body text-[11px] font-bold text-ink flex items-center gap-1.5">
+            <PieChart size={12} className="text-violet" />
+            Probabilités estimées (Monte Carlo)
+          </h4>
+        </div>
+        <div className="p-3 flex flex-col gap-2.5">
+          {insights.probAutocall != null && (
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[11px] font-body text-ink-2">Remboursement anticipé (autocall)</span>
+                <span className="text-[11px] font-mono font-bold text-violet tabular-nums">{insights.probAutocall}%</span>
+              </div>
+              <div className="h-2 w-full rounded-full bg-surface-2 overflow-hidden">
+                <div className="h-full rounded-full bg-gradient-to-r from-violet to-violet/70 transition-all duration-1000" style={{ width: `${insights.probAutocall}%` }} />
+              </div>
+            </div>
+          )}
+          {insights.probCoupon != null && (
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[11px] font-body text-ink-2">Versement du coupon</span>
+                <span className="text-[11px] font-mono font-bold text-teal tabular-nums">{insights.probCoupon}%</span>
+              </div>
+              <div className="h-2 w-full rounded-full bg-surface-2 overflow-hidden">
+                <div className="h-full rounded-full bg-gradient-to-r from-teal to-teal/70 transition-all duration-1000" style={{ width: `${insights.probCoupon}%` }} />
+              </div>
+            </div>
+          )}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[11px] font-body text-ink-2">Perte en capital (&lt; barrière)</span>
+              <span className="text-[11px] font-mono font-bold text-red tabular-nums">{insights.probCapitalLoss}%</span>
+            </div>
+            <div className="h-2 w-full rounded-full bg-surface-2 overflow-hidden">
+              <div className="h-full rounded-full bg-gradient-to-r from-red to-red/70 transition-all duration-1000" style={{ width: `${insights.probCapitalLoss}%` }} />
+            </div>
+          </div>
+          <p className="text-[9px] text-ink-3/70 font-body mt-0.5 italic">
+            Estimations basées sur 10 000 simulations Monte Carlo avec volatilité implicite 20%, taux sans risque 3.0%.
+          </p>
+        </div>
+      </div>
+
+      {/* Strengths & Weaknesses */}
+      <div className="grid sm:grid-cols-2 gap-3">
+        <div className="rounded-xl border border-teal/20 bg-teal/[0.04] p-3">
+          <h4 className="font-body text-[11px] font-bold text-teal flex items-center gap-1.5 mb-2">
+            <CheckCircle2 size={12} /> Points forts
+          </h4>
+          <ul className="flex flex-col gap-1.5">
+            {insights.strengths.map((s, i) => (
+              <li key={i} className="flex items-start gap-1.5 text-[11px] font-body text-ink-2 leading-relaxed">
+                <CheckCircle2 size={10} className="text-teal shrink-0 mt-0.5" />
+                {s}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="rounded-xl border border-red/20 bg-red/[0.04] p-3">
+          <h4 className="font-body text-[11px] font-bold text-red flex items-center gap-1.5 mb-2">
+            <AlertTriangle size={12} /> Points de vigilance
+          </h4>
+          <ul className="flex flex-col gap-1.5">
+            {insights.weaknesses.map((w, i) => (
+              <li key={i} className="flex items-start gap-1.5 text-[11px] font-body text-ink-2 leading-relaxed">
+                <XCircle size={10} className="text-red shrink-0 mt-0.5" />
+                {w}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      {/* Client Suitability */}
+      <div className="rounded-xl border border-border/60 bg-white dark:bg-white/5 shadow-sm overflow-hidden">
+        <div className="px-3 py-2 border-b border-border/40 bg-surface-2/50 dark:bg-white/[0.02]">
+          <h4 className="font-body text-[11px] font-bold text-ink flex items-center gap-1.5">
+            <Users size={12} className="text-violet" />
+            Adéquation profil client
+          </h4>
+        </div>
+        <div className="p-3 flex flex-col gap-1.5">
+          {insights.profiles.map((p, i) => (
+            <div key={i} className={cn(
+              "flex items-center gap-2.5 px-2.5 py-2 rounded-lg border transition-colors",
+              p.match
+                ? 'border-teal/20 bg-teal/[0.04]'
+                : 'border-border/40 bg-surface-2/30',
+            )}>
+              {p.match ? (
+                <CheckCircle2 size={13} className="text-teal shrink-0" />
+              ) : (
+                <Minus size={13} className="text-ink-3/40 shrink-0" />
+              )}
+              <div className="flex-1 min-w-0">
+                <p className={cn("text-[11px] font-semibold font-body", p.match ? 'text-ink' : 'text-ink-3')}>{p.label}</p>
+                <p className="text-[9px] text-ink-3 font-body">{p.reason}</p>
+              </div>
+              {p.match && (
+                <span className="text-[9px] font-bold uppercase tracking-wider text-teal bg-teal/10 px-2 py-0.5 rounded-full shrink-0">
+                  Compatible
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Disclaimer */}
+      <div className="flex items-start gap-1.5 px-3 py-2 rounded-lg bg-surface-2/60 border border-border/40">
+        <Lightbulb size={11} className="text-gold shrink-0 mt-0.5" />
+        <p className="text-[9px] text-ink-3 font-body leading-relaxed">
+          Cette analyse est générée automatiquement par le moteur IA de Strick&apos;in à des fins indicatives. Elle ne constitue pas un conseil en investissement.
+          Les probabilités sont estimées via des simulations numériques et ne garantissent pas les résultats futurs. Consultez le KID/PRIIPS et votre conseiller avant toute décision.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 
 function PageSkeleton() {
   return (
     <main className="mx-auto max-w-5xl px-6 py-8 animate-pulse">
-      <div className="h-4 w-32 bg-surface-2 rounded mb-6" />
-      <div className="h-8 w-2/3 bg-surface-2 rounded mb-3" />
-      <div className="h-4 w-1/3 bg-surface-2 rounded mb-6" />
-      <div className="flex gap-2 mb-8">
-        <div className="h-6 w-28 bg-surface-2 rounded-md" />
-        <div className="h-6 w-16 bg-surface-2 rounded-md" />
-        <div className="h-6 w-20 bg-surface-2 rounded-md" />
+      <div className="h-3 w-28 bg-surface-2 rounded mb-4" />
+      <div className="h-6 w-2/3 bg-surface-2 rounded mb-2" />
+      <div className="h-3 w-1/3 bg-surface-2 rounded mb-5" />
+      <div className="flex gap-1.5 mb-5">
+        <div className="h-5 w-24 bg-surface-2 rounded-md" />
+        <div className="h-5 w-14 bg-surface-2 rounded-md" />
+        <div className="h-5 w-18 bg-surface-2 rounded-md" />
       </div>
-      <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 h-96 bg-surface-2 rounded-xl" />
-        <div className="h-96 bg-surface-2 rounded-xl" />
+      <div className="grid lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2 h-80 bg-surface-2 rounded-xl" />
+        <div className="h-80 bg-surface-2 rounded-xl" />
       </div>
     </main>
   );
@@ -224,10 +517,10 @@ export default function ProductDetailPage() {
   if (isError || !product) {
     return (
       <main className="mx-auto max-w-5xl px-6 py-8">
-        <Link href="/products" className="inline-flex items-center gap-1.5 text-sm text-ink-3 font-body hover:text-violet transition-colors mb-6">
-          <ArrowLeft size={14} /> Retour aux produits
+        <Link href="/products" className="inline-flex items-center gap-1.5 text-xs text-ink-3 font-body hover:text-violet transition-colors mb-4">
+          <ArrowLeft size={13} /> Retour aux produits
         </Link>
-        <div className="flex flex-col items-center justify-center py-24 gap-3">
+        <div className="flex flex-col items-center justify-center py-16 gap-3">
           <p className="font-body text-sm text-red">
             {isError ? 'Erreur lors du chargement du produit.' : 'Produit introuvable.'}
           </p>
@@ -257,10 +550,10 @@ export default function ProductDetailPage() {
 
   return (
     <>
-      <main className="mx-auto max-w-5xl px-6 py-8 animate-fade-in">
+      <main className="mx-auto max-w-5xl px-6 py-6 animate-fade-in">
         {/* ── Breadcrumb ──────────────────────────────────────────── */}
-        <div className="flex items-center justify-between mb-6">
-          <Link href="/products" className="inline-flex items-center gap-1.5 text-sm text-ink-3 font-body hover:text-violet transition-colors">
+        <div className="flex items-center justify-between mb-4">
+          <Link href="/products" className="inline-flex items-center gap-1.5 text-xs text-ink-3 font-body hover:text-violet transition-colors">
             <ArrowLeft size={14} /> Retour aux produits
           </Link>
           <div className="flex items-center gap-2">
@@ -284,50 +577,50 @@ export default function ProductDetailPage() {
         </div>
 
         {/* ── Product Header ──────────────────────────────────────── */}
-        <div className="mb-8">
-          <div className="h-1 w-24 rounded-full mb-4" style={{ background: payoff.text }} />
-          <div className="flex flex-wrap items-start gap-3 mb-3">
+        <div className="mb-5">
+          <div className="h-0.5 w-20 rounded-full mb-3" style={{ background: payoff.text }} />
+          <div className="flex flex-wrap items-start gap-1.5 mb-2">
             <span
-              className="inline-flex items-center rounded-md px-2.5 py-1 text-[11px] font-semibold font-body"
+              className="inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-semibold font-body"
               style={{ backgroundColor: payoff.bg, color: payoff.text, border: `1px solid ${payoff.border}` }}
             >
               {PAYOFF_LABELS[product.payoffType] ?? product.payoffType}
             </span>
             <span
-              className="inline-flex items-center rounded-md px-2.5 py-1 text-[11px] font-bold font-mono tabular-nums"
+              className="inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-bold font-mono tabular-nums"
               style={{ backgroundColor: sriStyle.bg, color: sriStyle.text }}
             >
               SRI {product.sri}/7
             </span>
             {!isClosed && (
-              <span className="inline-flex items-center rounded-md px-2.5 py-1 text-[11px] font-semibold font-body bg-[#E6FAF5] text-[#008B6E] border border-[#B3F0DE]">
+              <span className="inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-semibold font-body bg-[#E6FAF5] text-[#008B6E] border border-[#B3F0DE]">
                 En cours
               </span>
             )}
             {isClosed && (
-              <span className="inline-flex items-center rounded-md px-2.5 py-1 text-[11px] font-semibold font-body bg-[#F4F3EF] text-[#7B6FA0] border border-[#E2DFD8]">
+              <span className="inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-semibold font-body bg-[#F4F3EF] text-[#7B6FA0] border border-[#E2DFD8]">
                 Fermé
               </span>
             )}
             {product.createdAt && (Date.now() - new Date(product.createdAt).getTime()) < 7 * 24 * 60 * 60 * 1000 && (
-              <span className="inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-[11px] font-bold font-body bg-[#E4EAFF] text-[#0A2799] border border-[#C5D2FA]">
-                <Sparkles size={10} />
+              <span className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold font-body bg-[#E4EAFF] text-[#0A2799] border border-[#C5D2FA]">
+                <Sparkles size={9} />
                 Nouveau
               </span>
             )}
             {closingDays != null && closingDays > 0 && closingDays <= 30 && (
-              <span className="inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-[11px] font-bold font-body bg-[#FFF0F2] text-[#C41F36] border border-[#F8D0D5]">
-                <Clock size={10} />
+              <span className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold font-body bg-[#FFF0F2] text-[#C41F36] border border-[#F8D0D5]">
+                <Clock size={9} />
                 Clôture J-{closingDays}
               </span>
             )}
           </div>
 
-          <h1 className="font-display text-2xl md:text-3xl font-bold text-ink leading-tight mb-1.5">
+          <h1 className="font-display text-xl md:text-2xl font-bold text-ink leading-tight mb-1">
             {product.name}
           </h1>
-          <div className="flex items-center gap-3 text-sm text-ink-3 font-body">
-            <span className="font-mono text-xs bg-surface-2 border border-border rounded px-2 py-0.5 tabular-nums">
+          <div className="flex items-center gap-2 text-xs text-ink-3 font-body">
+            <span className="font-mono text-[11px] bg-surface-2 border border-border rounded px-1.5 py-0.5 tabular-nums">
               {product.isin}
             </span>
             <span>{product.issuerName}</span>
@@ -335,7 +628,7 @@ export default function ProductDetailPage() {
 
           {/* Compatible insurers */}
           {Array.isArray(product.compatibleInsurers) && product.compatibleInsurers.length > 0 && (
-            <div className="flex items-center gap-2 mt-3 flex-wrap">
+            <div className="flex items-center gap-1.5 mt-2 flex-wrap">
               <span className="text-[10px] uppercase tracking-widest text-ink-3 font-semibold font-body">Assureurs :</span>
               {product.compatibleInsurers.map((ins: string) => (
                 <span key={ins} className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium font-body bg-surface-2 text-ink-2 border border-border/60">
@@ -346,14 +639,14 @@ export default function ProductDetailPage() {
           )}
 
           {product.description && (
-            <p className="mt-4 text-sm text-ink-2 font-body leading-relaxed max-w-3xl">
+            <p className="mt-3 text-xs text-ink-2 font-body leading-relaxed max-w-3xl">
               {product.description}
             </p>
           )}
         </div>
 
         {/* ── Key Metrics ─────────────────────────────────────────── */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5">
           <StatBox label="Gain max" value={formatPct(product.maxGainPct)} color="text-gold" icon={TrendingUp} />
           <StatBox label="Barrière" value={formatPct(product.barrierCapPct)} color="text-red" icon={Shield} />
           <StatBox
@@ -366,12 +659,12 @@ export default function ProductDetailPage() {
         </div>
 
         {/* ── Two-column layout ───────────────────────────────────── */}
-        <div className="grid lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid lg:grid-cols-3 gap-4 mb-5">
           {/* Left: Main content (2/3) */}
-          <div className="lg:col-span-2 flex flex-col gap-6">
+          <div className="lg:col-span-2 flex flex-col gap-4">
             {/* SRI Gauge */}
-            <div className="bg-white dark:bg-white/5 rounded-xl border border-border/60 shadow-sm p-5">
-              <h3 className="font-body text-xs uppercase tracking-widest text-ink-3 font-semibold mb-4">
+            <div className="bg-white dark:bg-white/5 rounded-xl border border-border/60 shadow-sm p-4">
+              <h3 className="font-body text-[10px] uppercase tracking-widest text-ink-3 font-semibold mb-3">
                 Indicateur de risque (SRI)
               </h3>
               <SriGauge sri={product.sri} />
@@ -384,13 +677,14 @@ export default function ProductDetailPage() {
                   { label: 'Caractéristiques', value: 'overview' },
                   { label: 'Scénarios', value: 'scenarios' },
                   { label: "Dates d'observation", value: 'dates' },
+                  { label: 'Analyse IA', value: 'ai' },
                 ]}
                 activeTab={activeTab}
                 onChange={setActiveTab}
-                className="px-5"
+                className="px-4"
               />
 
-              <TabPanel value="overview" activeTab={activeTab} className="p-5">
+              <TabPanel value="overview" activeTab={activeTab} className="p-4">
                 <div className="divide-y divide-border/50">
                   <DetailRow label="Émetteur" value={product.issuerName} />
                   {product.underlyingName && <DetailRow label="Sous-jacent" value={product.underlyingName} />}
@@ -414,14 +708,14 @@ export default function ProductDetailPage() {
                 </div>
 
                 {/* Regulatory disclaimers */}
-                <div className="mt-6 pt-5 border-t border-border/50">
-                  <h4 className="text-[11px] uppercase tracking-widest text-ink-3 font-semibold font-body mb-3 flex items-center gap-1.5">
-                    <AlertTriangle size={12} />
+                <div className="mt-4 pt-3 border-t border-border/50">
+                  <h4 className="text-[10px] uppercase tracking-widest text-ink-3 font-semibold font-body mb-2 flex items-center gap-1.5">
+                    <AlertTriangle size={11} />
                     Mentions réglementaires
                   </h4>
-                  <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-1.5">
                     {REGULATORY_DISCLAIMERS.map((d, i) => (
-                      <div key={i} className="flex items-start gap-2 text-[11px] text-ink-3 font-body leading-relaxed">
+                      <div key={i} className="flex items-start gap-1.5 text-[10px] text-ink-3 font-body leading-relaxed">
                         <d.icon size={11} className="shrink-0 mt-0.5 text-ink-3/60" />
                         <span>{d.text}</span>
                       </div>
@@ -430,14 +724,14 @@ export default function ProductDetailPage() {
                 </div>
               </TabPanel>
 
-              <TabPanel value="scenarios" activeTab={activeTab} className="p-5">
-                <p className="text-xs text-ink-3 font-body mb-4">
+              <TabPanel value="scenarios" activeTab={activeTab} className="p-4">
+                <p className="text-[11px] text-ink-3 font-body mb-3">
                   Estimation des performances selon différents scénarios de marché, pour un investissement initial de 10 000 €.
                 </p>
                 <ScenarioTable product={product} />
                 {scenarios.length > 0 && (
-                  <div className="mt-6">
-                    <h4 className="text-[11px] uppercase tracking-widest text-ink-3 font-semibold font-body mb-3">
+                  <div className="mt-4">
+                    <h4 className="text-[10px] uppercase tracking-widest text-ink-3 font-semibold font-body mb-2">
                       Simulation graphique
                     </h4>
                     <PayoffCanvas scenarios={scenarios} height={280} />
@@ -445,10 +739,10 @@ export default function ProductDetailPage() {
                 )}
               </TabPanel>
 
-              <TabPanel value="dates" activeTab={activeTab} className="p-5">
+              <TabPanel value="dates" activeTab={activeTab} className="p-4">
                 {Array.isArray(product.observationDates) && product.observationDates.length > 0 ? (
                   <>
-                    <p className="text-xs text-ink-3 font-body mb-4">
+                    <p className="text-[11px] text-ink-3 font-body mb-3">
                       Dates de constatation pour le mécanisme de remboursement anticipé automatique.
                     </p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
@@ -458,7 +752,7 @@ export default function ProductDetailPage() {
                           <div
                             key={date}
                             className={cn(
-                              "flex items-center gap-2 rounded-lg border px-3 py-2.5",
+                              "flex items-center gap-1.5 rounded-lg border px-2.5 py-2",
                               isPast
                                 ? 'border-border/40 bg-surface-2 text-ink-3'
                                 : 'border-violet/20 bg-violet-pale text-violet',
@@ -485,12 +779,16 @@ export default function ProductDetailPage() {
                   </div>
                 )}
               </TabPanel>
+
+              <TabPanel value="ai" activeTab={activeTab} className="p-4">
+                <AiAnalysisPanel product={product} />
+              </TabPanel>
             </div>
 
             {/* Barrier Gauge */}
             {product.barrierCapPct != null && (
-              <div className="bg-white dark:bg-white/5 rounded-xl border border-border/60 shadow-sm p-5">
-                <h3 className="font-body text-xs uppercase tracking-widest text-ink-3 font-semibold mb-4">
+              <div className="bg-white dark:bg-white/5 rounded-xl border border-border/60 shadow-sm p-4">
+                <h3 className="font-body text-[10px] uppercase tracking-widest text-ink-3 font-semibold mb-3">
                   Jauge barrière
                 </h3>
                 <div className="flex justify-center py-2">
@@ -501,12 +799,12 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Right: CTA Card (1/3) */}
-          <div className="flex flex-col gap-5">
-            <div className="bg-white dark:bg-white/5 rounded-xl border border-border/60 shadow-sm p-5 flex flex-col gap-4 sticky top-6">
-              <h3 className="font-body text-xs uppercase tracking-widest text-ink-3 font-semibold">Étagère</h3>
+          <div className="flex flex-col gap-3">
+            <div className="bg-white dark:bg-white/5 rounded-xl border border-border/60 shadow-sm p-4 flex flex-col gap-3 sticky top-6">
+              <h3 className="font-body text-[10px] uppercase tracking-widest text-ink-3 font-semibold">Étagère</h3>
 
               <div>
-                <div className="flex items-center justify-between text-xs font-body mb-1.5">
+                <div className="flex items-center justify-between text-[11px] font-body mb-1">
                   <span className="text-ink-3">Remplissage</span>
                   <span className="font-bold text-ink tabular-nums font-mono">{(product.fillPct ?? 0).toFixed(0)}%</span>
                 </div>
@@ -529,28 +827,28 @@ export default function ProductDetailPage() {
               {(product.interestedCount != null || product.totalEngaged != null) && (
                 <div className="grid grid-cols-2 gap-2">
                   {product.interestedCount != null && (
-                    <div className="flex flex-col items-center py-2 rounded-md bg-surface-2">
-                      <Users size={13} className="text-violet mb-1" />
-                      <span className="font-display text-lg font-bold text-ink">{product.interestedCount}</span>
-                      <span className="text-[9px] uppercase tracking-wider text-ink-3 font-body">CGP intéressés</span>
+                    <div className="flex flex-col items-center py-1.5 rounded-md bg-surface-2">
+                      <Users size={12} className="text-violet mb-0.5" />
+                      <span className="font-display text-base font-bold text-ink tabular-nums">{product.interestedCount}</span>
+                      <span className="text-[8px] uppercase tracking-wider text-ink-3 font-body">CGP intéressés</span>
                     </div>
                   )}
                   {product.totalEngaged != null && (
-                    <div className="flex flex-col items-center py-2 rounded-md bg-surface-2">
-                      <TrendingUp size={13} className="text-teal mb-1" />
-                      <span className="font-display text-lg font-bold text-ink">{formatAmount(product.totalEngaged)}</span>
-                      <span className="text-[9px] uppercase tracking-wider text-ink-3 font-body">Engagé</span>
+                    <div className="flex flex-col items-center py-1.5 rounded-md bg-surface-2">
+                      <TrendingUp size={12} className="text-teal mb-0.5" />
+                      <span className="font-display text-base font-bold text-ink tabular-nums">{formatAmount(product.totalEngaged)}</span>
+                      <span className="text-[8px] uppercase tracking-wider text-ink-3 font-body">Engagé</span>
                     </div>
                   )}
                 </div>
               )}
 
               {product.shelfClosingDate && (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-surface-2 border border-border/50">
-                  <Clock size={12} className="text-ink-3" />
+                <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-surface-2 border border-border/50">
+                  <Clock size={11} className="text-ink-3" />
                   <div className="flex-1">
-                    <p className="text-[10px] text-ink-3 font-body uppercase tracking-wider">Clôture</p>
-                    <p className="text-xs font-semibold text-ink font-body">{formatDate(product.shelfClosingDate)}</p>
+                    <p className="text-[9px] text-ink-3 font-body uppercase tracking-wider">Clôture</p>
+                    <p className="text-[11px] font-semibold text-ink font-body tabular-nums">{formatDate(product.shelfClosingDate)}</p>
                   </div>
                   {closingDays != null && closingDays <= 30 && (
                     <span className="text-[10px] font-bold text-red bg-red-light px-1.5 py-0.5 rounded">J-{closingDays}</span>
@@ -558,7 +856,7 @@ export default function ProductDetailPage() {
                 </div>
               )}
 
-              <div className="mt-2">
+              <div className="mt-1">
                 <Button
                   variant={alreadyCommitted ? 'outline' : 'primary'}
                   size="lg"
@@ -567,21 +865,21 @@ export default function ProductDetailPage() {
                   onClick={() => setModalOpen(true)}
                 >
                   {alreadyCommitted ? (
-                    <><Shield size={16} /> Intérêt déjà enregistré</>
+                    <><Shield size={15} /> Intérêt déjà enregistré</>
                   ) : (
-                    <><TrendingUp size={16} /> {isClosed ? 'Produit fermé' : "Marquer mon intérêt"}</>
+                    <><TrendingUp size={15} /> {isClosed ? 'Produit fermé' : "Marquer mon intérêt"}</>
                   )}
                 </Button>
                 {!isClosed && (
-                  <p className="mt-2 text-center text-[10px] text-ink-3 font-body leading-relaxed">
+                  <p className="mt-1.5 text-center text-[9px] text-ink-3 font-body leading-relaxed">
                     Sans engagement ferme de souscription. Votre marque d&apos;intérêt sera transmise aux équipes de distribution.
                   </p>
                 )}
               </div>
 
               {/* Documents section */}
-              <div className="flex flex-col gap-2">
-                <h4 className="text-[10px] uppercase tracking-widest text-ink-3 font-semibold font-body">Documents</h4>
+              <div className="flex flex-col gap-1.5">
+                <h4 className="text-[9px] uppercase tracking-widest text-ink-3 font-semibold font-body">Documents</h4>
                 {[
                   { label: 'Document KID (PRIIPS)', sub: "Document d'informations clés", icon: FileText },
                   { label: 'Fiche produit', sub: 'Présentation détaillée', icon: FileText },
@@ -589,7 +887,7 @@ export default function ProductDetailPage() {
                 ].map(({ label, sub, icon: Icon }) => {
                   const isRecent = product.createdAt && (Date.now() - new Date(product.createdAt).getTime()) < 7 * 24 * 60 * 60 * 1000;
                   return (
-                    <button key={label} className="flex items-center gap-2 px-3 py-2.5 rounded-md border border-border/80 bg-surface-2 hover:border-violet/40 hover:bg-violet-pale text-ink-3 hover:text-violet transition-all duration-150 w-full text-left">
+                    <button key={label} className="flex items-center gap-2 px-2.5 py-2 rounded-md border border-border/80 bg-surface-2 hover:border-violet/40 hover:bg-violet-pale text-ink-3 hover:text-violet transition-all duration-150 w-full text-left">
                       <Icon size={14} />
                       <div className="flex-1">
                         <p className="text-xs font-semibold font-body flex items-center gap-1.5">
@@ -610,11 +908,11 @@ export default function ProductDetailPage() {
             </div>
 
             {product.entryFeePct != null && (
-              <div className="bg-white rounded-xl border border-border/80 p-4">
-                <h4 className="text-[10px] uppercase tracking-widest text-ink-3 font-semibold font-body mb-2">Commission</h4>
-                <p className="text-lg font-display font-bold text-ink">
+              <div className="bg-white rounded-xl border border-border/80 p-3">
+                <h4 className="text-[9px] uppercase tracking-widest text-ink-3 font-semibold font-body mb-1.5">Commission</h4>
+                <p className="text-base font-display font-bold text-ink tabular-nums">
                   {product.entryFeePct.toFixed(2)}%
-                  <span className="text-xs text-ink-3 font-body font-normal ml-1">frais d&apos;entrée</span>
+                  <span className="text-[11px] text-ink-3 font-body font-normal ml-1">frais d&apos;entrée</span>
                 </p>
               </div>
             )}

@@ -42,6 +42,7 @@ interface ProductCardProps {
   className?: string;
   isFavorited?: boolean;
   recommendationScore?: number | null;
+  aiReason?: string | null;
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -89,7 +90,7 @@ function formatCompact(amount: number): string {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export function ProductCard({ product, className, isFavorited = false, recommendationScore }: ProductCardProps) {
+export function ProductCard({ product, className, isFavorited = false, recommendationScore, aiReason }: ProductCardProps) {
   const {
     id,
     name,
@@ -276,6 +277,16 @@ export function ProductCard({ product, className, isFavorited = false, recommend
             {issuerName}
           </p>
         </div>
+
+        {/* ── AI Insight (when available) ── */}
+        {aiReason && (
+          <div className="flex items-start gap-2 px-2.5 py-2 rounded-lg bg-gradient-to-r from-violet/[0.06] to-cobalt-pale/30 border border-violet/10 -mt-0.5">
+            <SparkleIcon size={11} className="text-violet shrink-0 mt-0.5" />
+            <p className="text-[10px] text-ink-2 dark:text-ink-3 font-body leading-relaxed line-clamp-2">
+              {aiReason}
+            </p>
+          </div>
+        )}
 
         {/* ── Key metrics grid ── */}
         <div className="grid grid-cols-3 gap-3">

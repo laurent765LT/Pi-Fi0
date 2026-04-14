@@ -28,7 +28,7 @@ class ApiClient {
    */
   private async withDemoFallback<T>(
     realCall: () => Promise<T>,
-    demoFallback: () => T,
+    demoFallback: () => T | Promise<T>,
   ): Promise<T> {
     if (this.isDemo) return demoFallback();
     try {
@@ -724,17 +724,25 @@ class ApiClient {
 
   // ── AI Recommendations ──────────────────────────────────────────────────────
 
+  /** Track whether demo user has triggered AI generation */
+  private _demoRecsGenerated = false;
+
   async generateRecommendations(userId: string) {
     return this.withDemoFallback(
       () => this.request<any[]>(`/recommendations/generate/${userId}`, { method: 'POST' }),
-      () => DEMO_RECOMMENDATIONS,
+      async () => {
+        // Simulate AI analysis time (2.5s)
+        await new Promise((resolve) => setTimeout(resolve, 2500));
+        this._demoRecsGenerated = true;
+        return DEMO_RECOMMENDATIONS;
+      },
     );
   }
 
   async getRecommendations(userId: string) {
     return this.withDemoFallback(
       () => this.request<any[]>(`/recommendations/${userId}`),
-      () => DEMO_RECOMMENDATIONS,
+      () => this._demoRecsGenerated ? DEMO_RECOMMENDATIONS : [],
     );
   }
 

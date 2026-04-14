@@ -17,6 +17,9 @@ import {
   Target,
   AlertTriangle,
   ExternalLink,
+  Brain,
+  Sparkles,
+  Activity,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
@@ -31,6 +34,8 @@ interface TradeIdea {
   returnPct: number;
   category: 'thematic' | 'sector' | 'macro' | 'esg';
   imageColor: string;
+  aiConfidence: number;
+  aiVerdict: 'strong_buy' | 'buy' | 'hold' | 'cautious';
   analysis: {
     thesis: string;
     keyMetrics: { label: string; value: string }[];
@@ -53,6 +58,8 @@ const TRADE_IDEAS: TradeIdea[] = [
     returnPct: 19,
     category: 'sector',
     imageColor: '#0A2799',
+    aiConfidence: 91,
+    aiVerdict: 'strong_buy',
     analysis: {
       thesis: 'Les budgets de défense en Europe augmentent structurellement. Les pays de l\'OTAN visent 3-5% du PIB contre 2% précédemment. La Pologne dépasse 4.5% en 2025. Le STOXX Europe Aerospace & Defense Index a progressé de +65% en 2025. Rheinmetall a bondi de +200% depuis janvier 2025, portée par les commandes d\'armement terrestre. Thales est jugé sous-évalué par Morningstar avec un positionnement clé en cyberdéfense et avionique.',
       keyMetrics: [
@@ -89,6 +96,8 @@ const TRADE_IDEAS: TradeIdea[] = [
     returnPct: 16,
     category: 'thematic',
     imageColor: '#3B1FA8',
+    aiConfidence: 87,
+    aiVerdict: 'buy',
     analysis: {
       thesis: 'L\'industrie des semiconducteurs a généré $772Mrd de revenus en 2025 (+22.5%) et le consensus prévoit $975Mrd en 2026 (+26.3%). NVIDIA reste le leader incontesté de l\'IA avec Blackwell en ramp-up complet et Rubin prévu pour H2 2026. ASML a relevé ses prévisions : CA 2026 entre €34-39Mrd. Les dépenses en serveurs IA pourraient bondir de 45% en 2026 à $312Mrd selon Bloomberg Intelligence.',
       keyMetrics: [
@@ -126,6 +135,8 @@ const TRADE_IDEAS: TradeIdea[] = [
     returnPct: 12,
     category: 'macro',
     imageColor: '#D4A017',
+    aiConfidence: 83,
+    aiVerdict: 'buy',
     analysis: {
       thesis: 'L\'or a atteint $5,081/oz en mars 2026. J.P. Morgan cible $6,300 fin 2026, Goldman Sachs $5,400 et Wells Fargo $6,100-6,300. Les achats des banques centrales restent record : 95% d\'entre elles prévoient d\'augmenter leurs réserves d\'or. Les ETF or ont enregistré des flux entrants massifs. L\'incertitude géopolitique et la politique tarifaire américaine soutiennent la demande.',
       keyMetrics: [
@@ -163,6 +174,8 @@ const TRADE_IDEAS: TradeIdea[] = [
     returnPct: 6,
     category: 'macro',
     imageColor: '#008B6E',
+    aiConfidence: 78,
+    aiVerdict: 'hold',
     analysis: {
       thesis: 'La BCE maintient ses taux à 2.15% (MRO) et 2.00% (facilité de dépôt). Le consensus Reuters prévoit des taux stables jusqu\'à mi-2026 au minimum. La courbe des taux EUR s\'est pentifiée significativement en 2025 avec une hausse de 26bp du taux 10 ans nominal OIS. L\'inflation zone euro est tombée à 1.7% en janvier 2026, sous la cible de 2%. Environnement idéal pour les produits de taux conditionnels.',
       keyMetrics: [
@@ -200,6 +213,8 @@ const TRADE_IDEAS: TradeIdea[] = [
     returnPct: 14,
     category: 'esg',
     imageColor: '#00B894',
+    aiConfidence: 74,
+    aiVerdict: 'cautious',
     analysis: {
       thesis: 'Les actions d\'énergie renouvelable ont rebondi de +23 points de pourcentage en 2025. Après 9 trimestres de sorties nettes, les fonds européens clean energy ont reçu près de €900M d\'entrées au Q4 2025. La narration a évolué : sécurité énergétique, compétitivité industrielle et électrification IA dominent. RWE est identifiée comme bénéficiaire clé du mix transition + indépendance européenne.',
       keyMetrics: [
@@ -237,6 +252,8 @@ const TRADE_IDEAS: TradeIdea[] = [
     returnPct: 8,
     category: 'thematic',
     imageColor: '#5535C4',
+    aiConfidence: 93,
+    aiVerdict: 'strong_buy',
     analysis: {
       thesis: 'En 2025, 338 autocalls UK capital-at-risk liés au FTSE ont maturé : 100% ont rapporté capital + profit. Le rendement annualisé moyen était de 7.85%. Sur la décennie 2016-2025, plus de 2,000 maturités avec 99.7% de rendements positifs et zéro perte en capital. Le sentiment sur les produits structurés est au plus haut : 85% des professionnels sont optimistes ou très optimistes.',
       keyMetrics: [
@@ -274,6 +291,28 @@ const CATEGORY_LABELS: Record<string, { label: string; color: string }> = {
   esg: { label: 'ESG', color: '#00B894' },
 };
 
+const AI_VERDICT_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
+  strong_buy: { label: 'Achat fort', color: '#00B894', bg: '#00B89415' },
+  buy: { label: 'Achat', color: '#3B1FA8', bg: '#3B1FA815' },
+  hold: { label: 'Conserver', color: '#D4A017', bg: '#D4A01715' },
+  cautious: { label: 'Prudence', color: '#E8334A', bg: '#E8334A15' },
+};
+
+const AI_MARKET_BRIEF = {
+  sentiment: 'Haussier' as const,
+  sentimentScore: 72,
+  lastUpdate: 'il y a 8 min',
+  summary: 'Les marchés européens consolident près des plus hauts. L\'Euro Stoxx 50 teste la résistance des 5 100 pts avec une volatilité implicite contenue à 17.8%. Les conditions sont favorables aux émissions d\'autocalls (vol implicite > vol réalisée). Les spreads de crédit des émetteurs majeurs (BNP, SG, Natixis) restent stables, validant la solidité du gisement. Attention au risque tarifaire US qui pourrait générer un pic de volatilité ponctuel.',
+  keyData: [
+    { label: 'Euro Stoxx 50', value: '5 042 pts', change: '+0.8%', up: true },
+    { label: 'Vol. implicite 1M', value: '17.8%', change: '-1.2 pts', up: false },
+    { label: 'EUR CMS 10Y', value: '2.64%', change: '+3 bps', up: true },
+    { label: 'iTraxx Europe', value: '52 bps', change: '-2 bps', up: false },
+    { label: 'Or (XAU/USD)', value: '$5 081', change: '+1.4%', up: true },
+    { label: 'EUR/USD', value: '1.0842', change: '-0.2%', up: false },
+  ],
+};
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function formatDate(iso: string) {
@@ -304,53 +343,85 @@ export default function ResearchPage() {
 
   return (
     <div className="animate-fade-in">
-      {/* ── Header ──────────────────────────────────────────────────── */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-1">
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center shadow-md"
-            style={{ background: 'linear-gradient(135deg, #3B1FA8 0%, #5B3FD4 100%)' }}
-          >
-            <FileText size={18} className="text-white" />
+      {/* ── Unified Header + AI Market Brief ───────────────────────── */}
+      <div className="relative bg-white/80 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 ring-1 ring-black/[0.03] overflow-hidden mb-4 shadow-sm">
+        <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg, #3B1FA8, #00B894, #D4A017)' }} />
+        <div className="p-4">
+          {/* Header row */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2.5">
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center shadow-sm"
+                style={{ background: 'linear-gradient(135deg, #3B1FA8 0%, #5B3FD4 100%)' }}
+              >
+                <Brain size={14} className="text-white" />
+              </div>
+              <div>
+                <h1 className="font-display text-lg font-bold leading-tight bg-gradient-to-r from-[#3B1FA8] via-[#1A0A3E] to-[#3B1FA8] bg-clip-text text-transparent flex items-center gap-2">
+                  Research & Trade Ideas
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider bg-teal/10 text-teal">
+                    <span className="w-1 h-1 rounded-full bg-teal animate-pulse" />
+                    Live
+                  </span>
+                </h1>
+                <p className="text-[10px] text-ink-3 font-body">Synthèse IA du marché — mise à jour {AI_MARKET_BRIEF.lastUpdate}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-teal/10">
+              <TrendingUp size={10} className="text-teal" />
+              <span className="text-[10px] font-bold text-teal font-body">{AI_MARKET_BRIEF.sentiment}</span>
+              <span className="text-[9px] font-mono font-bold text-teal">{AI_MARKET_BRIEF.sentimentScore}/100</span>
+            </div>
           </div>
-          <div>
-            <h1 className="font-display text-[28px] font-bold leading-tight bg-gradient-to-r from-[#3B1FA8] via-[#1A0A3E] to-[#3B1FA8] bg-clip-text text-transparent">
-              Research & Trade Ideas
-            </h1>
-            <p className="text-sm text-ink-3 font-body mt-0.5 max-w-xl">
-              Analyses de marché et idées de structuration basées sur des données financières en temps réel.
-            </p>
+
+          <p className="text-[11px] text-ink-2 font-body leading-relaxed mb-3">{AI_MARKET_BRIEF.summary}</p>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1.5">
+            {AI_MARKET_BRIEF.keyData.map((d, i) => (
+              <div key={i} className="flex flex-col items-center gap-0.5 py-1.5 px-1.5 rounded-lg bg-surface-2/40 dark:bg-white/[0.03] border border-border/30 hover:border-violet/20 hover:shadow-sm transition-all duration-200">
+                <span className="text-[8px] uppercase tracking-wider text-ink-3 font-bold">{d.label}</span>
+                <span className="font-mono text-[12px] font-bold text-ink tabular-nums">{d.value}</span>
+                <span className={cn(
+                  'flex items-center gap-0.5 text-[9px] font-mono font-semibold tabular-nums',
+                  d.up ? 'text-teal' : 'text-red',
+                )}>
+                  {d.up ? <TrendingUp size={8} /> : <Activity size={8} />}
+                  {d.change}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
-        <div className="gradient-bar h-[2px] rounded-full mt-5 opacity-60" />
       </div>
 
       {/* ── Featured Carousel ───────────────────────────────────────── */}
-      <div className="relative bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 ring-1 ring-black/[0.03] overflow-hidden mb-6 shadow-sm hover:shadow-lg hover:shadow-violet/5 transition-all duration-300">
-        <div className="absolute top-0 left-0 right-0 h-[3px] rounded-b-full opacity-80" style={{ background: 'linear-gradient(90deg, #3B1FA8, #5B3FD4, #3D63F5)' }} />
-        <div className="p-6">
-          <div className="flex items-center gap-6">
+      <div className="relative bg-white/80 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 ring-1 ring-black/[0.03] overflow-hidden mb-4 shadow-sm hover:shadow-md hover:shadow-violet/5 transition-all duration-300">
+        <div className="absolute top-0 left-0 right-0 h-[2px] rounded-b-full opacity-80" style={{ background: 'linear-gradient(90deg, #3B1FA8, #5B3FD4, #3D63F5)' }} />
+        <div className="px-4 py-3">
+          <div className="flex items-center gap-4">
             <button
               onClick={() => setFeaturedIndex((i) => Math.max(0, i - 1))}
               disabled={featuredIndex === 0}
               className={cn(
-                'shrink-0 w-9 h-9 rounded-xl border border-border/60 flex items-center justify-center',
+                'shrink-0 w-7 h-7 rounded-lg border border-border/60 flex items-center justify-center',
                 'text-ink-3 hover:text-[#3B1FA8] hover:border-[#3B1FA8] hover:bg-[#3B1FA8]/5',
-                'hover:shadow-md hover:scale-110 transition-all duration-200 disabled:opacity-30 disabled:hover:scale-100',
+                'hover:shadow-sm hover:scale-110 transition-all duration-200 disabled:opacity-30 disabled:hover:scale-100',
               )}
             >
-              <ChevronLeft size={16} />
+              <ChevronLeft size={14} />
             </button>
 
-            <div className="flex-1 text-center">
-              <p className="text-[10px] text-[#3B1FA8] font-bold font-body uppercase tracking-[0.2em] mb-2">
-                {formatDate(currentFeatured.date)}
-              </p>
-              <h2 className="font-display text-xl font-bold text-ink leading-snug mb-1">
-                {currentFeatured.title}
-              </h2>
-              <p className="text-[13px] text-ink-3 font-body">{currentFeatured.subtitle}</p>
-              <p className="font-display text-3xl font-bold bg-gradient-to-r from-[#3B1FA8] to-[#00B894] bg-clip-text text-transparent mt-2">
+            <div className="flex-1 flex items-center justify-center gap-4">
+              <div className="text-center">
+                <p className="text-[9px] text-[#3B1FA8] font-bold font-body uppercase tracking-[0.15em] mb-0.5">
+                  {formatDate(currentFeatured.date)}
+                </p>
+                <h2 className="font-display text-base font-bold text-ink leading-snug">
+                  {currentFeatured.title}
+                </h2>
+                <p className="text-[11px] text-ink-3 font-body">{currentFeatured.subtitle}</p>
+              </div>
+              <p className="font-display text-2xl font-bold bg-gradient-to-r from-[#3B1FA8] to-[#00B894] bg-clip-text text-transparent shrink-0">
                 {currentFeatured.returnPct}%
               </p>
             </div>
@@ -359,34 +430,34 @@ export default function ResearchPage() {
               onClick={() => setFeaturedIndex((i) => Math.min(TRADE_IDEAS.length - 1, i + 1))}
               disabled={featuredIndex === TRADE_IDEAS.length - 1}
               className={cn(
-                'shrink-0 w-9 h-9 rounded-xl border border-border/60 flex items-center justify-center',
+                'shrink-0 w-7 h-7 rounded-lg border border-border/60 flex items-center justify-center',
                 'text-ink-3 hover:text-[#3B1FA8] hover:border-[#3B1FA8] hover:bg-[#3B1FA8]/5',
-                'hover:shadow-md hover:scale-110 transition-all duration-200 disabled:opacity-30 disabled:hover:scale-100',
+                'hover:shadow-sm hover:scale-110 transition-all duration-200 disabled:opacity-30 disabled:hover:scale-100',
               )}
             >
-              <ChevronRight size={16} />
+              <ChevronRight size={14} />
             </button>
 
-            <div className="shrink-0 flex flex-col gap-2 border-l border-border/40 pl-6">
+            <div className="shrink-0 flex items-center gap-2 border-l border-border/40 pl-4">
               <button className={cn(
-                'flex items-center gap-2 text-[12px] text-ink-3 font-body font-medium',
+                'flex items-center gap-1.5 text-[11px] text-ink-3 font-body font-medium',
                 'hover:text-[#3B1FA8] hover:translate-x-0.5 transition-all duration-200',
               )}>
-                <Download size={14} />
-                Télécharger
+                <Download size={12} />
+                PDF
               </button>
               <button className={cn(
-                'flex items-center gap-2 text-[12px] text-ink-3 font-body font-medium',
+                'flex items-center gap-1.5 text-[11px] text-ink-3 font-body font-medium',
                 'hover:text-[#3B1FA8] hover:translate-x-0.5 transition-all duration-200',
               )}>
-                <Share2 size={14} />
+                <Share2 size={12} />
                 Partager
               </button>
             </div>
           </div>
 
           {/* Carousel dots */}
-          <div className="flex items-center justify-center gap-1.5 mt-4">
+          <div className="flex items-center justify-center gap-1 mt-2">
             {TRADE_IDEAS.map((_, i) => (
               <button
                 key={i}
@@ -394,8 +465,8 @@ export default function ResearchPage() {
                 className={cn(
                   'rounded-full transition-all duration-200',
                   i === featuredIndex
-                    ? 'w-6 h-1.5 bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4]'
-                    : 'w-1.5 h-1.5 bg-ink-3/20 hover:bg-ink-3/40',
+                    ? 'w-5 h-1 bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4]'
+                    : 'w-1 h-1 bg-ink-3/20 hover:bg-ink-3/40',
                 )}
               />
             ))}
@@ -403,33 +474,35 @@ export default function ResearchPage() {
         </div>
       </div>
 
-      {/* ── Search & Filters ────────────────────────────────────────── */}
-      <div className="flex items-center gap-3 mb-6 flex-wrap">
-        <div className="relative flex-1 min-w-[200px] max-w-[320px]">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-3 pointer-events-none" />
+      {/* ── Search & Filters — inline toolbar ──────────────────────── */}
+      <div className="flex items-center gap-2 mb-4 bg-white/60 dark:bg-white/5 backdrop-blur-md rounded-lg border border-border/40 px-2.5 py-1.5 shadow-sm">
+        <div className="relative flex-1 min-w-[180px] max-w-[280px]">
+          <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-3 pointer-events-none" />
           <input
             type="search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Rechercher une idée de trade..."
+            placeholder="Rechercher..."
             className={cn(
-              'w-full h-10 rounded-xl border border-border/60 bg-white/80 dark:bg-white/10 backdrop-blur-sm pl-9 pr-4',
-              'text-[13px] font-body text-ink shadow-sm',
+              'w-full h-7 rounded-lg border border-border/40 bg-white/70 dark:bg-white/10 backdrop-blur-sm pl-7 pr-3',
+              'text-[11px] font-body text-ink',
               'placeholder:text-ink-3/50 transition-all duration-200',
-              'focus:outline-none focus:ring-2 focus:ring-[#3B1FA8]/15 focus:border-[#3B1FA8] focus:shadow-md focus:shadow-violet/5',
+              'focus:outline-none focus:ring-1 focus:ring-[#3B1FA8]/15 focus:border-[#3B1FA8]',
             )}
           />
         </div>
 
-        <div className="flex items-center gap-1.5 flex-wrap">
+        <div className="h-4 w-px bg-border/40" />
+
+        <div className="flex items-center gap-1">
           <button
             onClick={() => setSelectedCategory('')}
             className={cn(
-              'px-3.5 py-2 rounded-xl text-[11px] font-semibold font-body transition-all duration-200',
+              'px-2.5 py-1 rounded-lg text-[10px] font-semibold font-body transition-all duration-200',
               'hover:scale-[1.03] active:scale-[0.97]',
               !selectedCategory
-                ? 'bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] text-white shadow-md shadow-violet/20'
-                : 'bg-white/80 dark:bg-white/10 border border-border/60 text-ink-3 hover:text-ink hover:shadow-sm hover:border-violet/30',
+                ? 'bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] text-white shadow-sm shadow-violet/20'
+                : 'text-ink-3 hover:text-ink hover:bg-surface-2/60',
             )}
           >
             Tous
@@ -439,15 +512,15 @@ export default function ResearchPage() {
               key={key}
               onClick={() => setSelectedCategory(selectedCategory === key ? '' : key)}
               className={cn(
-                'px-3.5 py-2 rounded-xl text-[11px] font-semibold font-body transition-all duration-200 border',
+                'px-2.5 py-1 rounded-lg text-[10px] font-semibold font-body transition-all duration-200',
                 'hover:scale-[1.03] active:scale-[0.97]',
                 selectedCategory === key
-                  ? 'text-white border-transparent shadow-md'
-                  : 'bg-white/80 dark:bg-white/10 border-border/60 text-ink-3 hover:text-ink hover:shadow-sm',
+                  ? 'text-white shadow-sm'
+                  : 'text-ink-3 hover:text-ink hover:bg-surface-2/60',
               )}
               style={
                 selectedCategory === key
-                  ? { backgroundColor: color, borderColor: color, boxShadow: `0 4px 12px ${color}33` }
+                  ? { backgroundColor: color, boxShadow: `0 2px 8px ${color}33` }
                   : undefined
               }
             >
@@ -458,10 +531,10 @@ export default function ResearchPage() {
       </div>
 
       {/* ── Content: Grid + Preview ─────────────────────────────────── */}
-      <div className="flex gap-6">
+      <div className="flex gap-3">
         {/* ── Card Grid (left) ─────────────────────────────────── */}
-        <div className="w-[360px] shrink-0">
-          <div className="flex flex-col gap-3">
+        <div className="w-[300px] shrink-0">
+          <div className="flex flex-col gap-2">
             {filteredIdeas.map((idea) => {
               const cat = CATEGORY_LABELS[idea.category];
               const isSelected = selectedIdea?.id === idea.id;
@@ -470,38 +543,45 @@ export default function ResearchPage() {
                   key={idea.id}
                   onClick={() => setSelectedIdea(idea)}
                   className={cn(
-                    'group text-left bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border ring-1 ring-black/[0.03]',
+                    'group text-left bg-white/80 dark:bg-white/5 backdrop-blur-md rounded-lg border ring-1 ring-black/[0.03]',
                     'overflow-hidden transition-all duration-200',
-                    'hover:shadow-lg hover:shadow-violet/5 hover:-translate-y-0.5 hover:border-violet/40',
+                    'hover:shadow-md hover:shadow-violet/5 hover:-translate-y-0.5 hover:border-violet/40',
                     isSelected
-                      ? 'border-[#3B1FA8] shadow-lg ring-[#3B1FA8]/20 bg-gradient-to-r from-white to-[#3B1FA8]/3 dark:from-white/5 dark:to-[#3B1FA8]/5'
+                      ? 'border-[#3B1FA8] shadow-md ring-[#3B1FA8]/20 bg-gradient-to-r from-white to-[#3B1FA8]/3 dark:from-white/5 dark:to-[#3B1FA8]/5'
                       : 'border-border/60 shadow-sm',
                   )}
                 >
-                  <div className="flex gap-3 p-3.5">
+                  <div className="flex gap-2.5 p-2.5">
                     {/* Color accent */}
                     <div
-                      className="w-16 h-16 rounded-xl shrink-0 flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all duration-200"
+                      className="w-12 h-12 rounded-lg shrink-0 flex items-center justify-center shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-200"
                       style={{ background: `linear-gradient(135deg, ${idea.imageColor}, ${idea.imageColor}88)` }}
                     >
-                      <TrendingUp size={20} className="text-white/60 group-hover:text-white/90 transition-colors duration-200" />
+                      <TrendingUp size={16} className="text-white/60 group-hover:text-white/90 transition-colors duration-200" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 mb-1">
+                      <div className="flex items-center gap-1 mb-0.5">
                         <span
-                          className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[8px] font-bold text-white shadow-sm"
+                          className="inline-flex items-center px-1 py-px rounded text-[7px] font-bold text-white"
                           style={{ backgroundColor: cat?.color }}
                         >
                           {cat?.label}
                         </span>
-                        <span className="text-[9px] text-ink-3 font-mono">{formatShortDate(idea.date)}</span>
+                        <span className="text-[8px] text-ink-3 font-mono">{formatShortDate(idea.date)}</span>
                       </div>
-                      <h3 className="text-[12px] font-semibold text-ink leading-snug line-clamp-2 font-body mb-1">
+                      <h3 className="text-[11px] font-semibold text-ink leading-snug line-clamp-1 font-body mb-0.5">
                         {idea.title}
                       </h3>
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] text-ink-3 font-body truncate">{idea.underlying}</span>
-                        <span className="text-[14px] font-bold text-[#3B1FA8] font-display ml-2 shrink-0">{idea.returnPct}%</span>
+                        <span className="text-[9px] text-ink-3 font-body truncate">{idea.underlying}</span>
+                        <span className="text-[13px] font-bold text-[#3B1FA8] font-display ml-2 shrink-0">{idea.returnPct}%</span>
+                      </div>
+                      <div className="flex items-center gap-1 mt-1">
+                        <span className="flex items-center gap-0.5 text-[8px] font-bold rounded px-1 py-px" style={{ backgroundColor: AI_VERDICT_CONFIG[idea.aiVerdict]?.bg, color: AI_VERDICT_CONFIG[idea.aiVerdict]?.color }}>
+                          <Sparkles size={7} />
+                          {AI_VERDICT_CONFIG[idea.aiVerdict]?.label}
+                        </span>
+                        <span className="text-[8px] font-mono text-ink-3">IA {idea.aiConfidence}%</span>
                       </div>
                     </div>
                   </div>
@@ -514,105 +594,137 @@ export default function ResearchPage() {
         {/* ── Preview Panel (right) ────────────────────────────── */}
         <div className="flex-1 min-w-0">
           {selectedIdea ? (
-            <div className="relative bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 ring-1 ring-black/[0.03] overflow-hidden shadow-sm">
+            <div className="relative bg-white/80 dark:bg-white/5 backdrop-blur-md rounded-lg border border-border/60 ring-1 ring-black/[0.03] overflow-hidden shadow-sm">
               {/* Preview Header */}
               <div
-                className="px-6 py-6 text-white relative overflow-hidden"
+                className="px-4 py-3.5 text-white relative overflow-hidden"
                 style={{ background: `linear-gradient(135deg, ${selectedIdea.imageColor}, ${selectedIdea.imageColor}cc, ${selectedIdea.imageColor}99)` }}
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent" />
                 <div className="absolute inset-0 opacity-10">
-                  <div className="absolute top-4 right-4">
-                    <Globe size={80} className="text-white" />
+                  <div className="absolute top-2 right-3">
+                    <Globe size={56} className="text-white" />
                   </div>
                 </div>
                 <div className="relative z-10">
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white/20 text-white backdrop-blur-sm">
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-bold bg-white/20 text-white backdrop-blur-sm">
                       {CATEGORY_LABELS[selectedIdea.category]?.label}
                     </span>
-                    <span className="text-[11px] text-white/70 font-body">
+                    <span className="text-[10px] text-white/70 font-body">
                       {formatDate(selectedIdea.date)}
                     </span>
                   </div>
-                  <h2 className="font-display text-2xl font-bold leading-tight mb-1">
-                    {selectedIdea.title}
-                  </h2>
-                  <p className="text-white/70 font-body text-sm mb-3">{selectedIdea.subtitle}</p>
-                  <div className="flex items-center gap-4">
-                    <span className="text-[12px] text-white/80 font-body">{selectedIdea.underlying}</span>
-                    <span className="font-display text-3xl font-bold drop-shadow-lg">{selectedIdea.returnPct}%</span>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="font-display text-lg font-bold leading-tight">
+                        {selectedIdea.title}
+                      </h2>
+                      <p className="text-white/70 font-body text-[11px]">{selectedIdea.subtitle} — {selectedIdea.underlying}</p>
+                    </div>
+                    <span className="font-display text-2xl font-bold drop-shadow-lg shrink-0 ml-3">{selectedIdea.returnPct}%</span>
                   </div>
                 </div>
               </div>
 
               {/* Preview Content */}
-              <div className="p-6 flex flex-col gap-5">
+              <div className="p-4 flex flex-col gap-3">
                 {/* Thesis */}
                 <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-[#3B1FA8]/8">
-                      <FileText size={14} className="text-[#3B1FA8]" />
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <div className="w-5 h-5 rounded flex items-center justify-center bg-[#3B1FA8]/8">
+                      <FileText size={11} className="text-[#3B1FA8]" />
                     </div>
-                    <h3 className="font-display text-sm font-bold text-ink">Thèse d&apos;investissement</h3>
+                    <h3 className="font-display text-[12px] font-bold text-ink">Thèse d&apos;investissement</h3>
                   </div>
-                  <p className="text-[13px] text-ink-2 font-body leading-relaxed">
+                  <p className="text-[11px] text-ink-2 font-body leading-relaxed">
                     {selectedIdea.analysis.thesis}
                   </p>
                 </div>
 
+                {/* AI Verdict */}
+                <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-violet/15 bg-gradient-to-r from-violet/[0.04] to-transparent">
+                  <div className="flex items-center gap-1.5">
+                    <Brain size={13} className="text-violet" />
+                    <span className="text-[10px] font-bold text-ink font-body">Verdict IA :</span>
+                    <span
+                      className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold"
+                      style={{ backgroundColor: AI_VERDICT_CONFIG[selectedIdea.aiVerdict]?.bg, color: AI_VERDICT_CONFIG[selectedIdea.aiVerdict]?.color }}
+                    >
+                      <Sparkles size={9} />
+                      {AI_VERDICT_CONFIG[selectedIdea.aiVerdict]?.label}
+                    </span>
+                  </div>
+                  <div className="flex-1" />
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[9px] text-ink-3 font-body">Confiance</span>
+                    <div className="w-16 h-1.5 rounded-full bg-surface-2 overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-700"
+                        style={{
+                          width: `${selectedIdea.aiConfidence}%`,
+                          background: `linear-gradient(90deg, ${AI_VERDICT_CONFIG[selectedIdea.aiVerdict]?.color}, ${AI_VERDICT_CONFIG[selectedIdea.aiVerdict]?.color}88)`,
+                        }}
+                      />
+                    </div>
+                    <span className="text-[10px] font-mono font-bold tabular-nums" style={{ color: AI_VERDICT_CONFIG[selectedIdea.aiVerdict]?.color }}>
+                      {selectedIdea.aiConfidence}%
+                    </span>
+                  </div>
+                </div>
+
                 {/* Key Metrics */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
                   {selectedIdea.analysis.keyMetrics.map((m, i) => (
-                    <div key={i} className="p-3 rounded-xl bg-surface-2/40 border border-border/30 hover:bg-[#3B1FA8]/3 hover:border-[#3B1FA8]/10 hover:shadow-sm transition-all duration-200">
-                      <span className="text-[9px] uppercase tracking-[0.15em] text-ink-3 font-bold block mb-1">{m.label}</span>
-                      <span className="text-[14px] font-bold text-[#3B1FA8] font-display">{m.value}</span>
+                    <div key={i} className="p-2 rounded-lg bg-surface-2/40 border border-border/30 hover:bg-[#3B1FA8]/3 hover:border-[#3B1FA8]/10 hover:shadow-sm transition-all duration-200">
+                      <span className="text-[8px] uppercase tracking-[0.12em] text-ink-3 font-bold block mb-0.5">{m.label}</span>
+                      <span className="text-[12px] font-bold text-[#3B1FA8] font-display">{m.value}</span>
                     </div>
                   ))}
                 </div>
 
                 {/* Structure */}
-                <div className="bg-gradient-to-br from-[#3B1FA8]/5 to-[#3B1FA8]/2 rounded-xl p-4 border border-[#3B1FA8]/10 shadow-sm">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-[#3B1FA8]/10">
-                      <Target size={12} className="text-[#3B1FA8]" />
+                <div className="bg-gradient-to-br from-[#3B1FA8]/5 to-[#3B1FA8]/2 rounded-lg p-3 border border-[#3B1FA8]/10">
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <div className="w-5 h-5 rounded flex items-center justify-center bg-[#3B1FA8]/10">
+                      <Target size={10} className="text-[#3B1FA8]" />
                     </div>
-                    <span className="text-[12px] font-bold text-[#3B1FA8] font-body">Structure proposée</span>
+                    <span className="text-[11px] font-bold text-[#3B1FA8] font-body">Structure proposée</span>
                   </div>
-                  <p className="text-[12px] text-ink-2 font-body leading-relaxed">
+                  <p className="text-[11px] text-ink-2 font-body leading-relaxed">
                     {selectedIdea.analysis.structureDetails}
                   </p>
                 </div>
 
                 {/* Catalysts + Risks */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  <div className="bg-white/60 dark:bg-white/5 rounded-xl p-4 border border-border/30">
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-[#00B894]/10">
-                        <Zap size={12} className="text-[#00B894]" />
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-2.5">
+                  <div className="bg-white/60 dark:bg-white/5 rounded-lg p-3 border border-border/30">
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <div className="w-5 h-5 rounded flex items-center justify-center bg-[#00B894]/10">
+                        <Zap size={10} className="text-[#00B894]" />
                       </div>
-                      <span className="text-[12px] font-bold text-ink font-body">Catalyseurs</span>
+                      <span className="text-[11px] font-bold text-ink font-body">Catalyseurs</span>
                     </div>
-                    <ul className="flex flex-col gap-2">
+                    <ul className="flex flex-col gap-1.5">
                       {selectedIdea.analysis.catalysts.map((c, i) => (
-                        <li key={i} className="text-[11px] text-ink-2 font-body flex items-start gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#00B894] mt-1.5 shrink-0" />
+                        <li key={i} className="text-[10px] text-ink-2 font-body flex items-start gap-1.5">
+                          <span className="w-1 h-1 rounded-full bg-[#00B894] mt-1.5 shrink-0" />
                           {c}
                         </li>
                       ))}
                     </ul>
                   </div>
-                  <div className="bg-white/60 dark:bg-white/5 rounded-xl p-4 border border-border/30">
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-[#D4A017]/10">
-                        <AlertTriangle size={12} className="text-[#D4A017]" />
+                  <div className="bg-white/60 dark:bg-white/5 rounded-lg p-3 border border-border/30">
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <div className="w-5 h-5 rounded flex items-center justify-center bg-[#D4A017]/10">
+                        <AlertTriangle size={10} className="text-[#D4A017]" />
                       </div>
-                      <span className="text-[12px] font-bold text-ink font-body">Risques</span>
+                      <span className="text-[11px] font-bold text-ink font-body">Risques</span>
                     </div>
-                    <ul className="flex flex-col gap-2">
+                    <ul className="flex flex-col gap-1.5">
                       {selectedIdea.analysis.risks.map((r, i) => (
-                        <li key={i} className="text-[11px] text-ink-2 font-body flex items-start gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#D4A017] mt-1.5 shrink-0" />
+                        <li key={i} className="text-[10px] text-ink-2 font-body flex items-start gap-1.5">
+                          <span className="w-1 h-1 rounded-full bg-[#D4A017] mt-1.5 shrink-0" />
                           {r}
                         </li>
                       ))}
@@ -621,14 +733,14 @@ export default function ResearchPage() {
                 </div>
 
                 {/* Sources */}
-                <div className="border-t border-border/40 pt-5">
-                  <div className="flex items-center gap-2 mb-3">
-                    <ExternalLink size={13} className="text-ink-3" />
-                    <span className="text-[10px] uppercase tracking-[0.2em] text-ink-3 font-bold">Sources</span>
+                <div className="border-t border-border/40 pt-3">
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <ExternalLink size={11} className="text-ink-3" />
+                    <span className="text-[9px] uppercase tracking-[0.15em] text-ink-3 font-bold">Sources</span>
                   </div>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-1.5">
                     {selectedIdea.analysis.sources.map((s, i) => (
-                      <span key={i} className="inline-flex items-center px-2.5 py-1.5 rounded-lg bg-surface-2/40 border border-border/30 text-[10px] text-ink-3 font-body hover:bg-[#3B1FA8]/3 hover:text-[#3B1FA8]/80 hover:border-[#3B1FA8]/10 transition-all duration-200 cursor-default">
+                      <span key={i} className="inline-flex items-center px-2 py-1 rounded-md bg-surface-2/40 border border-border/30 text-[9px] text-ink-3 font-body hover:bg-[#3B1FA8]/3 hover:text-[#3B1FA8]/80 hover:border-[#3B1FA8]/10 transition-all duration-200 cursor-default">
                         {s}
                       </span>
                     ))}
@@ -636,34 +748,34 @@ export default function ResearchPage() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-3 pt-2">
+                <div className="flex items-center gap-2 pt-1">
                   <button className={cn(
-                    'h-10 px-5 rounded-xl font-body text-[12px] font-semibold inline-flex items-center gap-2',
-                    'bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] text-white shadow-md shadow-violet/20',
-                    'hover:shadow-lg hover:shadow-violet/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
+                    'h-8 px-4 rounded-lg font-body text-[11px] font-semibold inline-flex items-center gap-1.5',
+                    'bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] text-white shadow-sm shadow-violet/20',
+                    'hover:shadow-md hover:shadow-violet/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
                   )}>
-                    <Download size={13} />
+                    <Download size={11} />
                     Télécharger le PDF
                   </button>
                   <button className={cn(
-                    'h-10 px-5 rounded-xl border border-border/60 bg-white/80 dark:bg-white/10 backdrop-blur-sm',
-                    'font-body text-[12px] font-semibold text-ink-2 inline-flex items-center gap-2',
-                    'hover:border-violet hover:text-violet hover:bg-violet-ghost hover:shadow-md hover:shadow-violet/10',
+                    'h-8 px-4 rounded-lg border border-border/60 bg-white/80 dark:bg-white/10 backdrop-blur-sm',
+                    'font-body text-[11px] font-semibold text-ink-2 inline-flex items-center gap-1.5',
+                    'hover:border-violet hover:text-violet hover:bg-violet-ghost hover:shadow-sm hover:shadow-violet/10',
                     'hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
                   )}>
-                    <Share2 size={13} />
+                    <Share2 size={11} />
                     Partager
                   </button>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="relative bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 ring-1 ring-black/[0.03] p-12 flex flex-col items-center justify-center gap-4 shadow-sm overflow-hidden">
-              <div className="absolute top-0 left-0 right-0 h-[3px] rounded-b-full opacity-40" style={{ background: 'linear-gradient(90deg, #3B1FA8, #5B3FD4, #3D63F5)' }} />
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#3B1FA8]/10 to-[#5B3FD4]/5 flex items-center justify-center">
-                <FileText size={28} className="text-ink-3/30" />
+            <div className="relative bg-white/80 dark:bg-white/5 backdrop-blur-md rounded-lg border border-border/60 ring-1 ring-black/[0.03] p-8 flex flex-col items-center justify-center gap-3 shadow-sm overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-[2px] rounded-b-full opacity-40" style={{ background: 'linear-gradient(90deg, #3B1FA8, #5B3FD4, #3D63F5)' }} />
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#3B1FA8]/10 to-[#5B3FD4]/5 flex items-center justify-center">
+                <FileText size={22} className="text-ink-3/30" />
               </div>
-              <p className="text-sm text-ink-3 font-body">
+              <p className="text-[12px] text-ink-3 font-body">
                 Sélectionnez une idée de trade pour voir l&apos;aperçu.
               </p>
             </div>

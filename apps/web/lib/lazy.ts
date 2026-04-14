@@ -43,3 +43,11 @@ export const ProductPdfExport = dynamic(
     ),
   { ssr: false, loading: () => null },
 );
+
+export const AiChatWidget = dynamic(
+  () =>
+    import('@/components/ai/ai-chat-widget').then(
+      (m) => m.AiChatWidget,
+    ),
+  { ssr: false, loading: () => null },
+);

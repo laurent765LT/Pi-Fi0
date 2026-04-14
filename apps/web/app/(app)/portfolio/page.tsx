@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Package,
@@ -19,6 +19,12 @@ import {
   BarChart3,
   Shield,
   Layers,
+  Brain,
+  Sparkles,
+  Zap,
+  AlertCircle,
+  TrendingDown,
+  Target,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useMyCommitments, useCancelCommitment } from '@/hooks/use-commitments';
@@ -81,7 +87,7 @@ const BARRIER_FILTERS: { id: BarrierStatus | ''; label: string; color: string }[
   { id: 'barrier', label: 'Sous la barriere', color: '#E8334A' },
 ];
 
-// ─── KPI Card ───────────────────────────────────────────────────────────────
+// ─── KPI Card (compact inline style) ───────────────────────────────────────
 
 function KpiCard({ icon, label, value, accent, trend }: {
   icon: React.ReactNode;
@@ -92,34 +98,32 @@ function KpiCard({ icon, label, value, accent, trend }: {
 }) {
   return (
     <div className={cn(
-      'group relative rounded-xl border border-border/60 p-5 flex flex-col gap-3',
-      'bg-white/80 dark:bg-white/5 backdrop-blur-md',
-      'shadow-sm hover:shadow-md transition-all duration-200',
-      'ring-1 ring-black/[0.03] dark:ring-white/[0.06]',
+      'group relative rounded-lg border border-border/50 dark:border-white/8 px-3.5 py-3 flex items-center gap-3',
+      'bg-white/80 dark:bg-white/[0.04] backdrop-blur-md',
+      'hover:shadow-sm transition-all duration-200',
+      'ring-1 ring-black/[0.02] dark:ring-white/[0.04]',
     )}>
       <div
-        className="absolute top-0 left-0 right-0 h-[3px] rounded-t-xl opacity-60 group-hover:opacity-100 transition-opacity duration-200"
-        style={{ background: `linear-gradient(90deg, ${accent}, ${accent}80)` }}
+        className="absolute top-0 left-0 right-0 h-[2px] rounded-t-lg opacity-50 group-hover:opacity-90 transition-opacity duration-200"
+        style={{ background: `linear-gradient(90deg, ${accent}, ${accent}60)` }}
       />
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div
-            className="w-9 h-9 rounded-full flex items-center justify-center ring-1 ring-black/[0.04] dark:ring-white/[0.08]"
-            style={{ background: `${accent}12` }}
-          >
-            {icon}
-          </div>
-          <span className="text-[10px] uppercase tracking-[0.2em] text-ink-3 dark:text-ink-3/80 font-semibold font-body">{label}</span>
-        </div>
-        {trend && (
-          <span className="text-[10px] font-mono font-semibold text-[#00B894] bg-[#00B894]/8 px-1.5 py-0.5 rounded-md">
-            {trend}
-          </span>
-        )}
+      <div
+        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ring-1 ring-black/[0.03] dark:ring-white/[0.06]"
+        style={{ background: `${accent}10` }}
+      >
+        {icon}
       </div>
-      <span className="font-display text-2xl font-bold text-ink dark:text-white leading-none tracking-tight [font-variant-numeric:tabular-nums]">
-        {value}
-      </span>
+      <div className="flex flex-col min-w-0">
+        <span className="text-[9px] uppercase tracking-[0.18em] text-ink-3 dark:text-ink-3/70 font-semibold font-body leading-none">{label}</span>
+        <span className="font-display text-xl font-bold text-ink dark:text-white leading-tight tracking-tight [font-variant-numeric:tabular-nums] mt-0.5">
+          {value}
+        </span>
+      </div>
+      {trend && (
+        <span className="ml-auto text-[10px] font-mono font-semibold text-[#00B894] bg-[#00B894]/8 px-1.5 py-0.5 rounded-md shrink-0">
+          {trend}
+        </span>
+      )}
     </div>
   );
 }
@@ -129,8 +133,8 @@ function KpiCard({ icon, label, value, accent, trend }: {
 function PremiumTh({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
     <th className={cn(
-      'px-4 py-3.5 text-[10px] uppercase tracking-[0.18em] font-bold',
-      'text-[#1A0A3E]/55 dark:text-white/50 font-body',
+      'px-3 py-2.5 text-[10px] uppercase tracking-[0.18em] font-bold',
+      'text-[#1A0A3E]/50 dark:text-white/45 font-body',
       className,
     )}>
       {children}
@@ -150,48 +154,48 @@ function CalendarView() {
   const monthName = date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
 
   return (
-    <div className="bg-white/90 dark:bg-white/5 backdrop-blur-sm rounded-xl border border-border/60 dark:border-white/10 ring-1 ring-black/[0.04] dark:ring-white/[0.06] overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
-      <div className="px-5 py-4 border-b border-border/60 dark:border-white/10 flex items-center justify-between bg-gradient-to-r from-[#F8F6FF] to-transparent dark:from-white/[0.03] dark:to-transparent">
-        <h3 className="font-display text-sm font-bold text-ink dark:text-white flex items-center gap-2">
-          <Calendar size={15} className="text-[#3B1FA8]" />
+    <div className="bg-white/90 dark:bg-white/[0.04] backdrop-blur-sm rounded-lg border border-border/50 dark:border-white/8 ring-1 ring-black/[0.03] dark:ring-white/[0.04] overflow-hidden shadow-sm">
+      <div className="px-3.5 py-2.5 border-b border-border/50 dark:border-white/8 flex items-center justify-between bg-gradient-to-r from-[#F8F6FF]/80 to-transparent dark:from-white/[0.02] dark:to-transparent">
+        <h3 className="font-display text-[13px] font-bold text-ink dark:text-white flex items-center gap-1.5">
+          <Calendar size={13} className="text-[#3B1FA8]" />
           Calendrier
         </h3>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <button
             onClick={() => setDate(new Date(year, month - 1, 1))}
             className={cn(
-              'w-7 h-7 rounded-lg border border-border/80 dark:border-white/15 flex items-center justify-center',
-              'text-ink-3 dark:text-white/60 hover:text-[#3B1FA8] hover:border-[#3B1FA8]/40',
-              'hover:shadow-sm transition-all duration-200',
+              'w-6 h-6 rounded-md border border-border/70 dark:border-white/12 flex items-center justify-center',
+              'text-ink-3 dark:text-white/50 hover:text-[#3B1FA8] hover:border-[#3B1FA8]/40',
+              'transition-all duration-150',
             )}
           >
-            <ChevronLeft size={14} />
+            <ChevronLeft size={12} />
           </button>
-          <span className="text-sm font-semibold text-ink dark:text-white capitalize min-w-[120px] text-center font-display">{monthName}</span>
+          <span className="text-[12px] font-semibold text-ink dark:text-white capitalize min-w-[110px] text-center font-display">{monthName}</span>
           <button
             onClick={() => setDate(new Date(year, month + 1, 1))}
             className={cn(
-              'w-7 h-7 rounded-lg border border-border/80 dark:border-white/15 flex items-center justify-center',
-              'text-ink-3 dark:text-white/60 hover:text-[#3B1FA8] hover:border-[#3B1FA8]/40',
-              'hover:shadow-sm transition-all duration-200',
+              'w-6 h-6 rounded-md border border-border/70 dark:border-white/12 flex items-center justify-center',
+              'text-ink-3 dark:text-white/50 hover:text-[#3B1FA8] hover:border-[#3B1FA8]/40',
+              'transition-all duration-150',
             )}
           >
-            <ChevronRight size={14} />
+            <ChevronRight size={12} />
           </button>
         </div>
-        <div className="flex items-center gap-3 text-[10px] font-body">
-          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[#D4A017]" />Observation</span>
-          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[#3D63F5]" />Autocall</span>
-          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-ink-3" />Maturité</span>
+        <div className="flex items-center gap-2.5 text-[9px] font-body">
+          <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#D4A017]" />Observation</span>
+          <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#3D63F5]" />Autocall</span>
+          <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-ink-3" />Maturite</span>
         </div>
       </div>
-      <div className="p-4">
+      <div className="p-3">
         <div className="grid grid-cols-7 gap-0">
           {dayNames.map((d) => (
-            <div key={d} className="text-center text-[10px] text-ink-3 dark:text-white/40 font-semibold uppercase py-2">{d}</div>
+            <div key={d} className="text-center text-[9px] text-ink-3 dark:text-white/35 font-semibold uppercase py-1.5">{d}</div>
           ))}
           {Array.from({ length: firstDay }).map((_, i) => (
-            <div key={`empty-${i}`} className="h-10" />
+            <div key={`empty-${i}`} className="h-8" />
           ))}
           {Array.from({ length: daysInMonth }).map((_, i) => {
             const day = i + 1;
@@ -200,10 +204,10 @@ function CalendarView() {
               <div
                 key={day}
                 className={cn(
-                  'h-10 flex items-center justify-center text-[13px] font-body rounded-lg transition-all duration-200',
+                  'h-8 flex items-center justify-center text-[12px] font-body rounded-md transition-all duration-150',
                   isToday
-                    ? 'bg-gradient-to-br from-[#3B1FA8] to-[#5B3FD4] text-white font-bold shadow-md shadow-[#3B1FA8]/25'
-                    : 'text-ink dark:text-white/80 hover:bg-[#3B1FA8]/5 dark:hover:bg-white/5 cursor-pointer',
+                    ? 'bg-gradient-to-br from-[#3B1FA8] to-[#5B3FD4] text-white font-bold shadow-sm shadow-[#3B1FA8]/20'
+                    : 'text-ink dark:text-white/75 hover:bg-[#3B1FA8]/[0.04] dark:hover:bg-white/[0.04] cursor-pointer',
                 )}
               >
                 {day}
@@ -211,11 +215,274 @@ function CalendarView() {
             );
           })}
         </div>
-        <div className="mt-6 p-5 bg-gradient-to-br from-[#F8F6FF] to-[#F0ECFF] dark:from-white/[0.03] dark:to-white/[0.01] rounded-xl text-center border border-[#3B1FA8]/5 dark:border-white/5">
-          <p className="text-sm text-ink-3 dark:text-white/50 font-body">Aucun evenement pour la periode selectionnee.</p>
+        <div className="mt-3 px-3 py-2.5 bg-gradient-to-br from-[#F8F6FF] to-[#F0ECFF] dark:from-white/[0.02] dark:to-white/[0.01] rounded-lg text-center border border-[#3B1FA8]/5 dark:border-white/5">
+          <p className="text-[12px] text-ink-3 dark:text-white/45 font-body">Aucun evenement pour la periode selectionnee.</p>
         </div>
       </div>
     </div>
+  );
+}
+
+// ─── AI Portfolio Health ────────────────────────────────────────────────────
+
+const AI_ALERTS = [
+  {
+    icon: AlertCircle,
+    color: '#D4A017',
+    bg: '#D4A017',
+    text: '2 produits approchent de leur date d\u2019observation autocall ce mois. Probabilite de rappel anticipe estimee a 65%.',
+  },
+  {
+    icon: TrendingDown,
+    color: '#3D63F5',
+    bg: '#3D63F5',
+    text: 'Votre exposition Euro Stoxx 50 represente 45% du portefeuille. Envisagez de diversifier vers d\u2019autres sous-jacents.',
+  },
+  {
+    icon: TrendingUp,
+    color: '#00B894',
+    bg: '#00B894',
+    text: 'Le spread de credit SG Issuer s\u2019est resserre de 12 bps \u2014 impact positif sur la valorisation de 3 positions.',
+  },
+];
+
+const AI_METRICS = [
+  { label: 'Diversification', value: '72', suffix: '/100', color: '#D4A017' },
+  { label: 'Exposition barrieres', value: 'Moderee', suffix: '', color: '#3D63F5' },
+  { label: 'Rendement moyen', value: '8.2%', suffix: ' p.a.', color: '#00B894' },
+  { label: 'Horizon moyen', value: '3.4', suffix: ' ans', color: '#3B1FA8' },
+];
+
+function AiPortfolioHealth() {
+  const [aiLoading, setAiLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setAiLoading(false), 1800);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <section className="rounded-xl bg-gradient-to-br from-[#F8F6FF]/60 via-transparent to-[#F0ECFF]/30 dark:from-white/[0.02] dark:via-transparent dark:to-white/[0.01] p-3 border border-[#3B1FA8]/8 dark:border-[#3B1FA8]/15 ring-1 ring-[#3B1FA8]/[0.04] dark:ring-[#3B1FA8]/10">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+        {/* ── Health Score Card ─────────────────────────────────────── */}
+        <div
+          className={cn(
+            'lg:col-span-1 relative rounded-lg border border-[#3B1FA8]/15 dark:border-[#3B1FA8]/25 p-4',
+            'bg-white/90 dark:bg-white/[0.04] backdrop-blur-md',
+            'shadow-sm hover:shadow-md transition-all duration-200',
+            'ring-1 ring-[#3B1FA8]/[0.06] dark:ring-[#3B1FA8]/15',
+            'overflow-hidden',
+          )}
+        >
+          {/* Gradient top bar */}
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#3B1FA8] via-[#5B3FD4] to-[#00B894]" />
+          {/* Subtle background glow */}
+          <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-[#3B1FA8]/[0.04] dark:bg-[#3B1FA8]/8 blur-3xl pointer-events-none" />
+
+          {/* Header */}
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#3B1FA8] to-[#5B3FD4] flex items-center justify-center shadow-sm shadow-[#3B1FA8]/20">
+              <Brain size={13} className="text-white" />
+            </div>
+            <div>
+              <h3 className="font-display text-[13px] font-bold text-ink dark:text-white leading-none">
+                Analyse IA
+              </h3>
+              <p className="text-[9px] text-ink-3 dark:text-white/35 font-body mt-0.5 flex items-center gap-0.5">
+                <Sparkles size={8} className="text-[#D4A017]" />
+                Mis a jour il y a 2 min
+              </p>
+            </div>
+          </div>
+
+          {aiLoading ? (
+            <div className="flex flex-col items-center justify-center py-6 gap-2">
+              <div className="w-16 h-16 rounded-full border-3 border-[#3B1FA8]/10 border-t-[#3B1FA8] animate-spin" />
+              <p className="text-[10px] text-ink-3 dark:text-white/35 font-body animate-pulse">
+                Analyse en cours...
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Circular Score */}
+              <div className="flex items-center justify-center mb-3">
+                <div className="relative w-24 h-24">
+                  {/* Background ring */}
+                  <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
+                    <circle
+                      cx="60" cy="60" r="52"
+                      fill="none"
+                      stroke="currentColor"
+                      className="text-[#3B1FA8]/10 dark:text-[#3B1FA8]/20"
+                      strokeWidth="10"
+                    />
+                    <circle
+                      cx="60" cy="60" r="52"
+                      fill="none"
+                      stroke="url(#scoreGradient)"
+                      strokeWidth="10"
+                      strokeLinecap="round"
+                      strokeDasharray={`${2 * Math.PI * 52 * 0.85} ${2 * Math.PI * 52 * 0.15}`}
+                    />
+                    <defs>
+                      <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#3B1FA8" />
+                        <stop offset="50%" stopColor="#5B3FD4" />
+                        <stop offset="100%" stopColor="#00B894" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="font-display text-[28px] font-bold text-ink dark:text-white leading-none tracking-tight">
+                      85
+                    </span>
+                    <span className="text-[9px] text-ink-3 dark:text-white/35 font-body font-semibold uppercase tracking-wider">
+                      / 100
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Mini Metrics Grid */}
+              <div className="grid grid-cols-2 gap-1.5">
+                {AI_METRICS.map((m) => (
+                  <div
+                    key={m.label}
+                    className={cn(
+                      'rounded-md px-2.5 py-2 border border-border/30 dark:border-white/6',
+                      'bg-[#F8F6FF]/50 dark:bg-white/[0.02]',
+                      'transition-all duration-150 hover:border-[#3B1FA8]/15 dark:hover:border-[#3B1FA8]/25',
+                    )}
+                  >
+                    <p className="text-[8px] uppercase tracking-[0.16em] text-ink-3 dark:text-white/35 font-body font-semibold mb-0.5 truncate">
+                      {m.label}
+                    </p>
+                    <p className="font-display text-sm font-bold leading-none" style={{ color: m.color }}>
+                      {m.value}
+                      <span className="text-[9px] font-body font-medium text-ink-3 dark:text-white/35">
+                        {m.suffix}
+                      </span>
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* ── AI Alerts & Actions ──────────────────────────────────── */}
+        <div
+          className={cn(
+            'lg:col-span-2 relative rounded-lg border border-border/50 dark:border-white/8 p-4',
+            'bg-white/90 dark:bg-white/[0.04] backdrop-blur-md',
+            'shadow-sm hover:shadow-md transition-all duration-200',
+            'ring-1 ring-black/[0.02] dark:ring-white/[0.04]',
+            'overflow-hidden',
+          )}
+        >
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#D4A017] via-[#3D63F5] to-[#00B894] opacity-50" />
+
+          {/* Header */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#D4A017]/12 to-[#D4A017]/[0.04] flex items-center justify-center ring-1 ring-[#D4A017]/15">
+                <Zap size={13} className="text-[#D4A017]" />
+              </div>
+              <div>
+                <h3 className="font-display text-[13px] font-bold text-ink dark:text-white leading-none">
+                  Alertes & Suggestions IA
+                </h3>
+                <p className="text-[9px] text-ink-3 dark:text-white/35 font-body mt-0.5">
+                  3 recommandations actives
+                </p>
+              </div>
+            </div>
+            <span className="text-[9px] font-mono font-semibold text-[#3B1FA8] bg-[#3B1FA8]/6 dark:bg-[#3B1FA8]/15 dark:text-[#C9BCFF] px-1.5 py-0.5 rounded-md">
+              AI powered
+            </span>
+          </div>
+
+          {aiLoading ? (
+            <div className="space-y-2">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-start gap-2.5 p-3 animate-pulse rounded-lg bg-[#F8F6FF]/30 dark:bg-white/[0.015]">
+                  <div className="w-7 h-7 rounded-lg bg-[#3B1FA8]/[0.04] dark:bg-white/[0.04] shrink-0" />
+                  <div className="flex-1 space-y-1.5">
+                    <div className="h-2.5 w-full bg-[#3B1FA8]/[0.04] dark:bg-white/[0.04] rounded" />
+                    <div className="h-2.5 w-3/4 bg-[#3B1FA8]/[0.04] dark:bg-white/[0.04] rounded" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <>
+              {/* Alerts */}
+              <div className="space-y-2 mb-3">
+                {AI_ALERTS.map((alert, idx) => {
+                  const Icon = alert.icon;
+                  return (
+                    <div
+                      key={idx}
+                      className={cn(
+                        'flex items-start gap-2.5 px-3 py-2.5 rounded-lg',
+                        'bg-[#F8F6FF]/40 dark:bg-white/[0.015]',
+                        'border border-border/20 dark:border-white/[0.04]',
+                        'hover:border-[#3B1FA8]/12 dark:hover:border-white/8',
+                        'transition-all duration-150 group/alert',
+                      )}
+                    >
+                      <div
+                        className="w-6 h-6 rounded-md shrink-0 flex items-center justify-center mt-0.5"
+                        style={{
+                          background: `${alert.bg}10`,
+                          boxShadow: `0 0 0 1px ${alert.bg}25`,
+                        }}
+                      >
+                        <Icon size={12} style={{ color: alert.color }} />
+                      </div>
+                      <p className="text-[12px] text-ink-2 dark:text-white/65 font-body leading-relaxed">
+                        {alert.text}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Quick AI Actions */}
+              <div className="flex items-center gap-2 pt-3 border-t border-border/30 dark:border-white/6">
+                <button
+                  className={cn(
+                    'flex-1 h-8 rounded-lg text-[11px] font-semibold font-body',
+                    'bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] text-white',
+                    'shadow-sm shadow-[#3B1FA8]/15 hover:shadow-md hover:shadow-[#3B1FA8]/25',
+                    'hover:brightness-110 active:brightness-95',
+                    'transition-all duration-150',
+                    'flex items-center justify-center gap-1.5',
+                  )}
+                >
+                  <Target size={12} />
+                  Optimiser mon allocation
+                </button>
+                <button
+                  className={cn(
+                    'flex-1 h-8 rounded-lg text-[11px] font-semibold font-body',
+                    'border border-[#3B1FA8]/25 dark:border-[#3B1FA8]/35',
+                    'text-[#3B1FA8] dark:text-[#C9BCFF]',
+                    'bg-[#3B1FA8]/[0.04] dark:bg-[#3B1FA8]/8',
+                    'hover:bg-[#3B1FA8]/8 dark:hover:bg-[#3B1FA8]/15',
+                    'transition-all duration-150',
+                    'flex items-center justify-center gap-1.5',
+                  )}
+                >
+                  <Zap size={12} />
+                  Simuler un stress test
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -265,68 +532,72 @@ export default function PortfolioPage() {
   };
 
   return (
-    <div className="animate-fade-in space-y-6">
-      {/* ── Header ──────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-[28px] font-bold leading-tight bg-gradient-to-r from-[#3B1FA8] via-[#1A0A3E] to-[#3B1FA8] bg-clip-text text-transparent dark:from-white dark:via-[#C9BCFF] dark:to-white">
-            Mon Portfolio
-          </h1>
-          <p className="text-sm text-ink-3 dark:text-white/50 font-body mt-1">
-            Suivez vos investissements et engagements en produits structures.
-          </p>
+    <div className="animate-fade-in space-y-4">
+      {/* ── Header + Tabs inline ──────────────────────────────────── */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-4">
+            <h1 className="font-display text-[24px] font-bold leading-none bg-gradient-to-r from-[#3B1FA8] via-[#1A0A3E] to-[#3B1FA8] bg-clip-text text-transparent dark:from-white dark:via-[#C9BCFF] dark:to-white whitespace-nowrap">
+              Mon Portfolio
+            </h1>
+            <div className="h-5 w-px bg-border/60 dark:bg-white/10 shrink-0" />
+            <p className="text-[12px] text-ink-3 dark:text-white/45 font-body truncate">
+              Suivez vos investissements et engagements en produits structures.
+            </p>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 shrink-0">
           {['Rapport global', 'Export Excel'].map((label) => (
             <button
               key={label}
               className={cn(
-                'h-9 px-3.5 rounded-xl border border-border/60 dark:border-white/15',
-                'bg-white/80 dark:bg-white/5 backdrop-blur-sm text-ink-3 dark:text-white/60',
-                'text-[12px] font-medium font-body flex items-center gap-1.5',
-                'hover:border-[#3B1FA8]/40 hover:text-[#3B1FA8] dark:hover:text-[#C9BCFF]',
-                'hover:shadow-sm transition-all duration-200',
+                'h-8 px-3 rounded-lg border border-border/50 dark:border-white/12',
+                'bg-white/70 dark:bg-white/[0.04] backdrop-blur-sm text-ink-3 dark:text-white/55',
+                'text-[11px] font-medium font-body flex items-center gap-1.5',
+                'hover:border-[#3B1FA8]/35 hover:text-[#3B1FA8] dark:hover:text-[#C9BCFF]',
+                'transition-all duration-150',
               )}
             >
-              <Download size={13} />
+              <Download size={12} />
               {label}
             </button>
           ))}
         </div>
       </div>
 
-      <div className="h-px bg-gradient-to-r from-[#3B1FA8]/20 via-[#3B1FA8]/10 to-transparent dark:from-[#3B1FA8]/30 dark:via-[#3B1FA8]/10" />
-
       {/* ── KPI Cards ──────────────────────────────────────────────── */}
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
         <KpiCard
-          icon={<Wallet size={16} className="text-[#3B1FA8]" />}
+          icon={<Wallet size={15} className="text-[#3B1FA8]" />}
           label="Total engage"
           value={loadingCommitments ? '...' : formatAmount(stats.total)}
           accent="#3B1FA8"
         />
         <KpiCard
-          icon={<CheckCircle2 size={16} className="text-[#00B894]" />}
+          icon={<CheckCircle2 size={15} className="text-[#00B894]" />}
           label="Confirmes"
           value={loadingCommitments ? '...' : stats.confirmed}
           accent="#00B894"
         />
         <KpiCard
-          icon={<Clock size={16} className="text-[#D4A017]" />}
+          icon={<Clock size={15} className="text-[#D4A017]" />}
           label="En attente"
           value={loadingCommitments ? '...' : stats.waiting}
           accent="#D4A017"
         />
         <KpiCard
-          icon={<X size={16} className="text-[#E8334A]" />}
+          icon={<X size={15} className="text-[#E8334A]" />}
           label="Annules"
           value={loadingCommitments ? '...' : stats.cancelled}
           accent="#E8334A"
         />
       </section>
 
-      {/* ── Tab Navigation ──────────────────────────────────────────── */}
-      <div className="flex items-center gap-1 overflow-x-auto rounded-xl bg-[#F8F6FF]/60 dark:bg-white/[0.03] p-1 border border-border/40 dark:border-white/8">
+      {/* ── AI Portfolio Health ───────────────────────────────────────── */}
+      <AiPortfolioHealth />
+
+      {/* ── Tab Navigation (premium segmented control) ───────────────── */}
+      <div className="flex items-center gap-0.5 overflow-x-auto rounded-lg bg-[#F8F6FF]/50 dark:bg-white/[0.025] p-0.5 border border-border/30 dark:border-white/6 w-fit">
         {TABS.map((tab) => {
           const Icon = tab.icon;
           return (
@@ -334,13 +605,13 @@ export default function PortfolioPage() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                'px-4 py-2 rounded-lg text-[13px] font-semibold font-body transition-all duration-200 whitespace-nowrap flex items-center gap-2',
+                'px-3 py-1.5 rounded-md text-[12px] font-semibold font-body transition-all duration-150 whitespace-nowrap flex items-center gap-1.5',
                 activeTab === tab.id
                   ? 'bg-white dark:bg-white/10 text-[#3B1FA8] dark:text-[#C9BCFF] shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.08]'
-                  : 'text-ink-3 dark:text-white/50 hover:text-ink dark:hover:text-white/80 hover:bg-white/60 dark:hover:bg-white/5',
+                  : 'text-ink-3 dark:text-white/45 hover:text-ink dark:hover:text-white/70 hover:bg-white/50 dark:hover:bg-white/[0.04]',
               )}
             >
-              <Icon size={14} className={activeTab === tab.id ? 'text-[#3B1FA8] dark:text-[#C9BCFF]' : 'text-ink-3/60 dark:text-white/30'} />
+              <Icon size={12} className={activeTab === tab.id ? 'text-[#3B1FA8] dark:text-[#C9BCFF]' : 'text-ink-3/50 dark:text-white/25'} />
               {tab.label}
             </button>
           );
@@ -349,54 +620,54 @@ export default function PortfolioPage() {
 
       {/* ── Tab Content ─────────────────────────────────────────────── */}
       {activeTab === 'products' && (
-        <div className="bg-white/90 dark:bg-white/5 backdrop-blur-sm rounded-xl border border-border/60 dark:border-white/10 ring-1 ring-black/[0.04] dark:ring-white/[0.06] overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
-          <div className="px-5 py-4 border-b border-border/60 dark:border-white/10 flex items-center justify-between bg-gradient-to-r from-[#F8F6FF] to-transparent dark:from-white/[0.03] dark:to-transparent">
-            <h2 className="font-display text-sm font-bold text-ink dark:text-white flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-[#3B1FA8]/8 dark:bg-[#3B1FA8]/20 flex items-center justify-center">
-                <Package size={14} className="text-[#3B1FA8] dark:text-[#C9BCFF]" />
+        <div className="bg-white/90 dark:bg-white/[0.04] backdrop-blur-sm rounded-lg border border-border/50 dark:border-white/8 ring-1 ring-black/[0.03] dark:ring-white/[0.04] overflow-hidden shadow-sm">
+          <div className="px-3.5 py-2.5 border-b border-border/50 dark:border-white/8 flex items-center justify-between bg-gradient-to-r from-[#F8F6FF]/80 to-transparent dark:from-white/[0.02] dark:to-transparent">
+            <h2 className="font-display text-[13px] font-bold text-ink dark:text-white flex items-center gap-1.5">
+              <div className="w-6 h-6 rounded-md bg-[#3B1FA8]/6 dark:bg-[#3B1FA8]/15 flex items-center justify-center">
+                <Package size={12} className="text-[#3B1FA8] dark:text-[#C9BCFF]" />
               </div>
               Mes produits
             </h2>
-            <span className="text-[11px] text-ink-3 dark:text-white/40 font-body font-mono tabular-nums">
+            <span className="text-[10px] text-ink-3 dark:text-white/35 font-body font-mono tabular-nums">
               {(commitments ?? []).length} engagement{(commitments ?? []).length > 1 ? 's' : ''}
             </span>
           </div>
 
           {loadingCommitments ? (
-            <div className="p-5 space-y-3">
+            <div className="p-3 space-y-1.5">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="flex items-center gap-4 py-3 animate-pulse">
-                  <div className="h-4 w-48 bg-[#3B1FA8]/5 dark:bg-white/5 rounded-lg" />
-                  <div className="h-4 w-24 bg-[#3B1FA8]/5 dark:bg-white/5 rounded-lg ml-auto" />
-                  <div className="h-5 w-16 bg-[#3B1FA8]/5 dark:bg-white/5 rounded-lg" />
-                  <div className="h-4 w-16 bg-[#3B1FA8]/5 dark:bg-white/5 rounded-lg" />
-                  <div className="h-7 w-14 bg-[#3B1FA8]/5 dark:bg-white/5 rounded-lg" />
+                <div key={i} className="flex items-center gap-3 py-2.5 animate-pulse">
+                  <div className="h-3 w-40 bg-[#3B1FA8]/[0.04] dark:bg-white/[0.04] rounded" />
+                  <div className="h-3 w-20 bg-[#3B1FA8]/[0.04] dark:bg-white/[0.04] rounded ml-auto" />
+                  <div className="h-4 w-14 bg-[#3B1FA8]/[0.04] dark:bg-white/[0.04] rounded" />
+                  <div className="h-3 w-14 bg-[#3B1FA8]/[0.04] dark:bg-white/[0.04] rounded" />
+                  <div className="h-6 w-12 bg-[#3B1FA8]/[0.04] dark:bg-white/[0.04] rounded" />
                 </div>
               ))}
             </div>
           ) : !commitments || commitments.length === 0 ? (
-            <div className="p-16 flex flex-col items-center justify-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#3B1FA8]/10 to-[#3B1FA8]/5 flex items-center justify-center ring-1 ring-[#3B1FA8]/10 shadow-sm">
-                <Package size={28} className="text-[#3B1FA8]/30" />
+            <div className="p-10 flex flex-col items-center justify-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#3B1FA8]/8 to-[#3B1FA8]/[0.03] flex items-center justify-center ring-1 ring-[#3B1FA8]/8 shadow-sm">
+                <Package size={22} className="text-[#3B1FA8]/25" />
               </div>
-              <p className="font-body text-sm text-ink-3 dark:text-white/50">Aucune marque d&apos;interet pour le moment.</p>
+              <p className="font-body text-[12px] text-ink-3 dark:text-white/45">Aucune marque d&apos;interet pour le moment.</p>
               <Link
                 href="/products"
                 className={cn(
-                  'text-xs text-[#3B1FA8] dark:text-[#C9BCFF] font-semibold flex items-center gap-1',
-                  'px-4 py-2 rounded-xl bg-[#3B1FA8]/5 dark:bg-[#3B1FA8]/15',
-                  'hover:bg-[#3B1FA8]/10 dark:hover:bg-[#3B1FA8]/25 transition-all duration-200',
-                  'ring-1 ring-[#3B1FA8]/10 dark:ring-[#3B1FA8]/30',
+                  'text-[11px] text-[#3B1FA8] dark:text-[#C9BCFF] font-semibold flex items-center gap-1',
+                  'px-3 py-1.5 rounded-lg bg-[#3B1FA8]/[0.04] dark:bg-[#3B1FA8]/12',
+                  'hover:bg-[#3B1FA8]/8 dark:hover:bg-[#3B1FA8]/20 transition-all duration-150',
+                  'ring-1 ring-[#3B1FA8]/8 dark:ring-[#3B1FA8]/25',
                 )}
               >
-                Explorer les produits <ArrowUpRight size={12} />
+                Explorer les produits <ArrowUpRight size={11} />
               </Link>
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-[13px] font-body">
+              <table className="w-full text-[12px] font-body">
                 <thead>
-                  <tr className="border-b border-border/60 dark:border-white/10 bg-gradient-to-r from-[#F8F6FF]/60 to-[#F0ECFF]/30 dark:from-white/[0.02] dark:to-transparent">
+                  <tr className="border-b border-border/50 dark:border-white/8 bg-gradient-to-r from-[#F8F6FF]/50 to-[#F0ECFF]/20 dark:from-white/[0.015] dark:to-transparent">
                     <PremiumTh className="text-left">Produit</PremiumTh>
                     <PremiumTh className="text-right">Montant</PremiumTh>
                     <PremiumTh className="text-center">Statut</PremiumTh>
@@ -406,53 +677,53 @@ export default function PortfolioPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {commitments.map((c: any) => {
+                  {commitments.map((c: any, rowIdx: number) => {
                     const status = c.status ?? 'PENDING';
                     return (
                       <tr
                         key={c.id}
                         className={cn(
-                          'border-b border-border/30 dark:border-white/5 last:border-0',
-                          'even:bg-[#F8F6FF]/30 dark:even:bg-white/[0.015]',
-                          'hover:bg-[#3B1FA8]/[0.04] dark:hover:bg-white/[0.04]',
-                          'transition-colors duration-200 group/row',
+                          'border-b border-border/20 dark:border-white/[0.04] last:border-0',
+                          rowIdx % 2 === 1 && 'bg-[#F8F6FF]/20 dark:bg-white/[0.01]',
+                          'hover:bg-[#3B1FA8]/[0.03] dark:hover:bg-white/[0.03]',
+                          'transition-colors duration-150 group/row',
                         )}
                       >
-                        <td className="px-4 py-3.5">
-                          <div className="flex flex-col gap-0.5">
-                            <span className="font-medium text-ink dark:text-white leading-snug truncate max-w-[220px]">
+                        <td className="px-3 py-2.5">
+                          <div className="flex flex-col gap-0">
+                            <span className="font-medium text-ink dark:text-white leading-snug truncate max-w-[200px] text-[12px]">
                               {c.productName ?? c.shelfId ?? '--'}
                             </span>
-                            {c.isin && <span className="font-mono text-[10px] text-ink-3 dark:text-white/40">{c.isin}</span>}
+                            {c.isin && <span className="font-mono text-[9px] text-ink-3 dark:text-white/35">{c.isin}</span>}
                           </div>
                         </td>
-                        <td className="px-4 py-3.5 text-right font-mono font-semibold text-ink dark:text-white tabular-nums text-[14px] tracking-tight [font-variant-numeric:tabular-nums]">
+                        <td className="px-3 py-2.5 text-right font-mono font-semibold text-ink dark:text-white tabular-nums text-[13px] tracking-tight [font-variant-numeric:tabular-nums]">
                           {formatAmount(c.amount ?? 0)}
                         </td>
-                        <td className="px-4 py-3.5 text-center">
+                        <td className="px-3 py-2.5 text-center">
                           <Badge variant={STATUS_VARIANT[status] ?? 'muted'}>{STATUS_LABEL[status] ?? status}</Badge>
                         </td>
-                        <td className="px-4 py-3.5 text-center">
+                        <td className="px-3 py-2.5 text-center">
                           {status === 'WAITING' && c.rank != null ? (
-                            <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gradient-to-br from-[#D4A017]/15 to-[#D4A017]/5 border border-[#D4A017]/30 text-[#D4A017] text-xs font-bold shadow-sm shadow-[#D4A017]/10">
+                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-[#D4A017]/12 to-[#D4A017]/[0.04] border border-[#D4A017]/25 text-[#D4A017] text-[11px] font-bold">
                               {c.rank}
                             </span>
                           ) : (
-                            <span className="text-ink-3 dark:text-white/30 text-xs">--</span>
+                            <span className="text-ink-3 dark:text-white/25 text-[11px]">--</span>
                           )}
                         </td>
-                        <td className="px-4 py-3.5 text-right text-xs text-ink-3 dark:text-white/40 font-mono">
+                        <td className="px-3 py-2.5 text-right text-[11px] text-ink-3 dark:text-white/35 font-mono">
                           {c.createdAt ? formatDate(c.createdAt) : '--'}
                         </td>
-                        <td className="px-4 py-3.5 text-center">
-                          <div className="flex items-center justify-center gap-1.5">
+                        <td className="px-3 py-2.5 text-center">
+                          <div className="flex items-center justify-center gap-1">
                             {status === 'PENDING' && (
                               <>
                                 <Button
                                   size="sm"
                                   onClick={() => handleReview(c.id)}
                                   disabled={reviewMutation.isPending}
-                                  className="bg-amber-500 hover:bg-amber-600 text-white text-[11px] px-2.5 py-1 rounded-md font-semibold shadow-sm"
+                                  className="bg-amber-500 hover:bg-amber-600 text-white text-[10px] px-2 py-0.5 rounded-md font-semibold shadow-sm"
                                 >
                                   Examiner
                                 </Button>
@@ -467,7 +738,7 @@ export default function PortfolioPage() {
                                   size="sm"
                                   onClick={() => handleApprove(c.id)}
                                   disabled={approveMutation.isPending}
-                                  className="bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] px-2.5 py-1 rounded-md font-semibold shadow-sm"
+                                  className="bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded-md font-semibold shadow-sm"
                                 >
                                   Approuver
                                 </Button>
@@ -475,19 +746,19 @@ export default function PortfolioPage() {
                                   size="sm"
                                   onClick={() => handleReject(c.id)}
                                   disabled={rejectMutation.isPending}
-                                  className="bg-red-500 hover:bg-red-600 text-white text-[11px] px-2.5 py-1 rounded-md font-semibold shadow-sm"
+                                  className="bg-red-500 hover:bg-red-600 text-white text-[10px] px-2 py-0.5 rounded-md font-semibold shadow-sm"
                                 >
                                   Rejeter
                                 </Button>
                               </>
                             )}
                             {status === 'CONFIRMED' && (
-                              <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[#00B894]/10 text-[#00B894] ring-1 ring-[#00B894]/20">
-                                <CheckCircle2 size={14} />
+                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#00B894]/8 text-[#00B894] ring-1 ring-[#00B894]/15">
+                                <CheckCircle2 size={12} />
                               </span>
                             )}
                             {status === 'CANCELLED' && (
-                              <span className="text-[#E8334A] text-xs font-semibold">
+                              <span className="text-[#E8334A] text-[11px] font-semibold">
                                 {c.rejectionReason ? `Rejete : ${c.rejectionReason}` : 'Rejete'}
                               </span>
                             )}
@@ -509,18 +780,18 @@ export default function PortfolioPage() {
       )}
 
       {activeTab === 'underlyings' && (
-        <div className="space-y-4">
+        <div className="space-y-2.5">
           {/* Barrier status filters */}
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 flex-wrap">
             {BARRIER_FILTERS.map((f) => (
               <button
                 key={f.id}
                 onClick={() => setBarrierFilter(f.id as any)}
                 className={cn(
-                  'px-3.5 py-1.5 rounded-xl text-[11px] font-semibold font-body border transition-all duration-200',
+                  'px-3 py-1 rounded-lg text-[10px] font-semibold font-body border transition-all duration-150',
                   barrierFilter === f.id
                     ? 'text-white border-transparent shadow-sm'
-                    : 'bg-white/80 dark:bg-white/5 backdrop-blur-sm border-border/60 dark:border-white/15 text-ink-3 dark:text-white/50 hover:text-ink dark:hover:text-white/80 hover:shadow-sm',
+                    : 'bg-white/70 dark:bg-white/[0.04] backdrop-blur-sm border-border/50 dark:border-white/12 text-ink-3 dark:text-white/45 hover:text-ink dark:hover:text-white/70',
                 )}
                 style={barrierFilter === f.id ? { backgroundColor: f.color, borderColor: f.color } : undefined}
               >
@@ -528,26 +799,26 @@ export default function PortfolioPage() {
               </button>
             ))}
             <button className={cn(
-              'ml-auto h-8 px-3 rounded-xl border border-border/60 dark:border-white/15 bg-white/80 dark:bg-white/5 backdrop-blur-sm text-ink-3 dark:text-white/50',
-              'text-[11px] font-medium font-body flex items-center gap-1.5',
-              'hover:text-[#3B1FA8] dark:hover:text-[#C9BCFF] hover:border-[#3B1FA8]/40 hover:shadow-sm transition-all duration-200',
+              'ml-auto h-7 px-2.5 rounded-lg border border-border/50 dark:border-white/12 bg-white/70 dark:bg-white/[0.04] backdrop-blur-sm text-ink-3 dark:text-white/45',
+              'text-[10px] font-medium font-body flex items-center gap-1',
+              'hover:text-[#3B1FA8] dark:hover:text-[#C9BCFF] hover:border-[#3B1FA8]/35 transition-all duration-150',
             )}>
-              <Download size={12} />
+              <Download size={11} />
               Export Excel
             </button>
           </div>
 
-          <div className="bg-white/90 dark:bg-white/5 backdrop-blur-sm rounded-xl border border-border/60 dark:border-white/10 ring-1 ring-black/[0.04] dark:ring-white/[0.06] overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
+          <div className="bg-white/90 dark:bg-white/[0.04] backdrop-blur-sm rounded-lg border border-border/50 dark:border-white/8 ring-1 ring-black/[0.03] dark:ring-white/[0.04] overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
-              <table className="w-full text-[13px] font-body">
+              <table className="w-full text-[12px] font-body">
                 <thead>
-                  <tr className="border-b border-border/60 dark:border-white/10 bg-gradient-to-r from-[#F8F6FF]/60 to-[#F0ECFF]/30 dark:from-white/[0.02] dark:to-transparent">
+                  <tr className="border-b border-border/50 dark:border-white/8 bg-gradient-to-r from-[#F8F6FF]/50 to-[#F0ECFF]/20 dark:from-white/[0.015] dark:to-transparent">
                     <PremiumTh className="text-left">Sous-jacent</PremiumTh>
                     <PremiumTh className="text-right">Strike</PremiumTh>
                     <PremiumTh className="text-right">Dernier prix</PremiumTh>
                     <PremiumTh className="text-right">Performance</PremiumTh>
-                    <PremiumTh className="text-right">Barrière capital</PremiumTh>
-                    <PremiumTh className="text-right">Distance barrière</PremiumTh>
+                    <PremiumTh className="text-right">Barriere capital</PremiumTh>
+                    <PremiumTh className="text-right">Distance barriere</PremiumTh>
                     <PremiumTh className="text-left">ISIN</PremiumTh>
                     <PremiumTh className="text-left">Produit</PremiumTh>
                   </tr>
@@ -555,29 +826,29 @@ export default function PortfolioPage() {
                 <tbody>
                   {products.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="px-4 py-16 text-center text-sm text-ink-3 dark:text-white/50">
+                      <td colSpan={8} className="px-3 py-10 text-center text-[12px] text-ink-3 dark:text-white/45">
                         Aucun sous-jacent a afficher pour le moment.
                       </td>
                     </tr>
                   ) : (
-                    products.slice(0, 10).map((p: any) => (
+                    products.slice(0, 10).map((p: any, rowIdx: number) => (
                       <tr
                         key={p.id}
                         className={cn(
-                          'border-b border-border/30 dark:border-white/5 last:border-0',
-                          'even:bg-[#F8F6FF]/30 dark:even:bg-white/[0.015]',
-                          'hover:bg-[#3B1FA8]/[0.04] dark:hover:bg-white/[0.04]',
-                          'transition-colors duration-200',
+                          'border-b border-border/20 dark:border-white/[0.04] last:border-0',
+                          rowIdx % 2 === 1 && 'bg-[#F8F6FF]/20 dark:bg-white/[0.01]',
+                          'hover:bg-[#3B1FA8]/[0.03] dark:hover:bg-white/[0.03]',
+                          'transition-colors duration-150',
                         )}
                       >
-                        <td className="px-4 py-3.5 font-medium text-ink dark:text-white">{p.underlyingYahoo ?? p.underlyingName ?? '--'}</td>
-                        <td className="px-4 py-3.5 text-right font-mono tabular-nums text-ink-2 dark:text-white/60">100.00</td>
-                        <td className="px-4 py-3.5 text-right font-mono tabular-nums text-ink dark:text-white">--</td>
-                        <td className="px-4 py-3.5 text-right font-mono tabular-nums text-[#00B894] font-semibold">--</td>
-                        <td className="px-4 py-3.5 text-right font-mono tabular-nums text-[#E8334A]">{formatPct(p.barrierCapPct)}</td>
-                        <td className="px-4 py-3.5 text-right font-mono tabular-nums font-semibold text-ink dark:text-white">--</td>
-                        <td className="px-4 py-3.5 font-mono text-[11px] text-ink-3 dark:text-white/40">{p.isin}</td>
-                        <td className="px-4 py-3.5 text-ink-2 dark:text-white/60 truncate max-w-[160px]">{p.name}</td>
+                        <td className="px-3 py-2.5 font-medium text-ink dark:text-white">{p.underlyingYahoo ?? p.underlyingName ?? '--'}</td>
+                        <td className="px-3 py-2.5 text-right font-mono tabular-nums text-ink-2 dark:text-white/55">100.00</td>
+                        <td className="px-3 py-2.5 text-right font-mono tabular-nums text-ink dark:text-white">--</td>
+                        <td className="px-3 py-2.5 text-right font-mono tabular-nums text-[#00B894] font-semibold">--</td>
+                        <td className="px-3 py-2.5 text-right font-mono tabular-nums text-[#E8334A]">{formatPct(p.barrierCapPct)}</td>
+                        <td className="px-3 py-2.5 text-right font-mono tabular-nums font-semibold text-ink dark:text-white">--</td>
+                        <td className="px-3 py-2.5 font-mono text-[10px] text-ink-3 dark:text-white/35">{p.isin}</td>
+                        <td className="px-3 py-2.5 text-ink-2 dark:text-white/55 truncate max-w-[140px]">{p.name}</td>
                       </tr>
                     ))
                   )}
@@ -591,38 +862,38 @@ export default function PortfolioPage() {
       {activeTab === 'timeline' && <CalendarView />}
 
       {activeTab === 'allocations' && (
-        <div className="bg-white/90 dark:bg-white/5 backdrop-blur-sm rounded-xl border border-border/60 dark:border-white/10 ring-1 ring-black/[0.04] dark:ring-white/[0.06] overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
-          <div className="px-5 py-4 border-b border-border/60 dark:border-white/10 flex items-center justify-between bg-gradient-to-r from-[#F8F6FF] to-transparent dark:from-white/[0.03] dark:to-transparent">
-            <div className="flex items-center gap-2">
+        <div className="bg-white/90 dark:bg-white/[0.04] backdrop-blur-sm rounded-lg border border-border/50 dark:border-white/8 ring-1 ring-black/[0.03] dark:ring-white/[0.04] overflow-hidden shadow-sm">
+          <div className="px-3.5 py-2.5 border-b border-border/50 dark:border-white/8 flex items-center justify-between bg-gradient-to-r from-[#F8F6FF]/80 to-transparent dark:from-white/[0.02] dark:to-transparent">
+            <div className="flex items-center gap-1.5">
               <button className={cn(
-                'px-4 py-1.5 rounded-xl text-[12px] font-semibold font-body',
+                'px-3 py-1 rounded-lg text-[11px] font-semibold font-body',
                 'bg-white dark:bg-white/10 text-[#3B1FA8] dark:text-[#C9BCFF] shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.08]',
               )}>
                 Tous les comptes
               </button>
               <button className={cn(
-                'px-4 py-1.5 rounded-xl text-[12px] font-semibold font-body',
-                'bg-transparent border border-border/60 dark:border-white/15 text-ink-3 dark:text-white/50',
-                'hover:text-ink dark:hover:text-white/80 hover:shadow-sm transition-all duration-200',
+                'px-3 py-1 rounded-lg text-[11px] font-semibold font-body',
+                'bg-transparent border border-border/50 dark:border-white/12 text-ink-3 dark:text-white/45',
+                'hover:text-ink dark:hover:text-white/70 transition-all duration-150',
               )}>
                 A allouer
               </button>
             </div>
             <button className={cn(
-              'h-8 px-3 rounded-xl border border-border/60 dark:border-white/15 bg-white/80 dark:bg-white/5 backdrop-blur-sm text-ink-3 dark:text-white/50',
-              'text-[11px] font-medium font-body flex items-center gap-1.5',
-              'hover:text-[#3B1FA8] dark:hover:text-[#C9BCFF] hover:border-[#3B1FA8]/40 hover:shadow-sm transition-all duration-200',
+              'h-7 px-2.5 rounded-lg border border-border/50 dark:border-white/12 bg-white/70 dark:bg-white/[0.04] backdrop-blur-sm text-ink-3 dark:text-white/45',
+              'text-[10px] font-medium font-body flex items-center gap-1',
+              'hover:text-[#3B1FA8] dark:hover:text-[#C9BCFF] hover:border-[#3B1FA8]/35 transition-all duration-150',
             )}>
-              <Download size={12} />
+              <Download size={11} />
               Rapport global
             </button>
           </div>
-          <div className="p-16 flex flex-col items-center justify-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#3B1FA8]/10 to-[#3B1FA8]/5 flex items-center justify-center ring-1 ring-[#3B1FA8]/10 shadow-sm">
-              <Wallet size={28} className="text-[#3B1FA8]/30" />
+          <div className="p-10 flex flex-col items-center justify-center gap-2.5">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#3B1FA8]/8 to-[#3B1FA8]/[0.03] flex items-center justify-center ring-1 ring-[#3B1FA8]/8 shadow-sm">
+              <Wallet size={22} className="text-[#3B1FA8]/25" />
             </div>
-            <p className="font-body text-sm text-ink-3 dark:text-white/50">Aucune allocation pour le moment.</p>
-            <p className="font-body text-[11px] text-ink-3/60 dark:text-white/30">
+            <p className="font-body text-[12px] text-ink-3 dark:text-white/45">Aucune allocation pour le moment.</p>
+            <p className="font-body text-[10px] text-ink-3/50 dark:text-white/25">
               Les allocations seront visibles une fois vos engagements confirmes.
             </p>
           </div>
@@ -630,31 +901,31 @@ export default function PortfolioPage() {
       )}
 
       {activeTab === 'expired' && (
-        <div className="bg-white/90 dark:bg-white/5 backdrop-blur-sm rounded-xl border border-border/60 dark:border-white/10 ring-1 ring-black/[0.04] dark:ring-white/[0.06] overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
-          <div className="px-5 py-4 border-b border-border/60 dark:border-white/10 flex items-center justify-between bg-gradient-to-r from-[#F8F6FF] to-transparent dark:from-white/[0.03] dark:to-transparent">
-            <h2 className="font-display text-sm font-bold text-ink dark:text-white flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-ink-3/8 dark:bg-white/10 flex items-center justify-center">
-                <Clock size={14} className="text-ink-3 dark:text-white/50" />
+        <div className="bg-white/90 dark:bg-white/[0.04] backdrop-blur-sm rounded-lg border border-border/50 dark:border-white/8 ring-1 ring-black/[0.03] dark:ring-white/[0.04] overflow-hidden shadow-sm">
+          <div className="px-3.5 py-2.5 border-b border-border/50 dark:border-white/8 flex items-center justify-between bg-gradient-to-r from-[#F8F6FF]/80 to-transparent dark:from-white/[0.02] dark:to-transparent">
+            <h2 className="font-display text-[13px] font-bold text-ink dark:text-white flex items-center gap-1.5">
+              <div className="w-6 h-6 rounded-md bg-ink-3/6 dark:bg-white/8 flex items-center justify-center">
+                <Clock size={12} className="text-ink-3 dark:text-white/45" />
               </div>
               Produits expires
             </h2>
             <button className={cn(
-              'h-8 px-3 rounded-xl border border-border/60 dark:border-white/15 bg-white/80 dark:bg-white/5 text-ink-3 dark:text-white/50',
-              'text-[11px] font-medium font-body flex items-center gap-1.5',
-              'hover:text-[#3B1FA8] dark:hover:text-[#C9BCFF] hover:border-[#3B1FA8]/40 hover:shadow-sm transition-all duration-200',
+              'h-7 px-2.5 rounded-lg border border-border/50 dark:border-white/12 bg-white/70 dark:bg-white/[0.04] text-ink-3 dark:text-white/45',
+              'text-[10px] font-medium font-body flex items-center gap-1',
+              'hover:text-[#3B1FA8] dark:hover:text-[#C9BCFF] hover:border-[#3B1FA8]/35 transition-all duration-150',
             )}>
-              <Download size={12} />
+              <Download size={11} />
               Export Excel
             </button>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-[13px] font-body">
+            <table className="w-full text-[12px] font-body">
               <thead>
-                <tr className="border-b border-border/60 dark:border-white/10 bg-gradient-to-r from-[#F8F6FF]/60 to-[#F0ECFF]/30 dark:from-white/[0.02] dark:to-transparent">
+                <tr className="border-b border-border/50 dark:border-white/8 bg-gradient-to-r from-[#F8F6FF]/50 to-[#F0ECFF]/20 dark:from-white/[0.015] dark:to-transparent">
                   <PremiumTh className="text-left">Produit</PremiumTh>
                   <PremiumTh className="text-left">ISIN</PremiumTh>
                   <PremiumTh className="text-left">Emetteur</PremiumTh>
-                  <PremiumTh className="text-right">Maturité</PremiumTh>
+                  <PremiumTh className="text-right">Maturite</PremiumTh>
                   <PremiumTh className="text-right">Coupon</PremiumTh>
                   <PremiumTh className="text-right">Protection</PremiumTh>
                   <PremiumTh className="text-right">Prix expiration</PremiumTh>
@@ -662,7 +933,7 @@ export default function PortfolioPage() {
               </thead>
               <tbody>
                 <tr>
-                  <td colSpan={7} className="px-4 py-16 text-center text-sm text-ink-3 dark:text-white/50">
+                  <td colSpan={7} className="px-3 py-10 text-center text-[12px] text-ink-3 dark:text-white/45">
                     Aucun produit expire pour le moment.
                   </td>
                 </tr>

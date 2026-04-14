@@ -19,6 +19,8 @@ import { useMyCommitments } from '@/hooks/use-commitments';
 import { Button } from '@/components/ui/button';
 import { ProductPdfExport } from '@/components/products/product-pdf-export';
 import { Tabs, TabPanel } from '@/components/ui/tabs';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
+import { Tooltip } from '@/components/ui/tooltip';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -553,9 +555,12 @@ export default function ProductDetailPage() {
       <main className="w-full animate-fade-in">
         {/* ── Breadcrumb ──────────────────────────────────────────── */}
         <div className="flex items-center justify-between mb-4">
-          <Link href="/products" className="inline-flex items-center gap-1.5 text-xs text-ink-3 font-body hover:text-violet transition-colors">
-            <ArrowLeft size={14} /> Retour aux produits
-          </Link>
+          <div className="flex flex-col gap-1.5">
+            <Link href="/products" className="inline-flex items-center gap-1.5 text-xs text-ink-3 font-body hover:text-violet transition-colors">
+              <ArrowLeft size={14} /> Retour aux produits
+            </Link>
+            <Breadcrumb items={[{ label: 'Produits', href: '/products' }, { label: product.name }]} />
+          </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => toggleFavorite.mutate(product.id)}
@@ -586,12 +591,14 @@ export default function ProductDetailPage() {
             >
               {PAYOFF_LABELS[product.payoffType] ?? product.payoffType}
             </span>
-            <span
-              className="inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-bold font-mono tabular-nums"
-              style={{ backgroundColor: sriStyle.bg, color: sriStyle.text }}
-            >
-              SRI {product.sri}/7
-            </span>
+            <Tooltip content="Indicateur de risque de 1 (faible) à 7 (élevé)">
+              <span
+                className="inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-bold font-mono tabular-nums"
+                style={{ backgroundColor: sriStyle.bg, color: sriStyle.text }}
+              >
+                SRI {product.sri}/7
+              </span>
+            </Tooltip>
             {!isClosed && (
               <span className="inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-semibold font-body bg-[#E6FAF5] text-[#008B6E] border border-[#B3F0DE]">
                 En cours
@@ -664,9 +671,11 @@ export default function ProductDetailPage() {
           <div className="lg:col-span-2 flex flex-col gap-4">
             {/* SRI Gauge */}
             <div className="bg-white dark:bg-white/5 rounded-xl border border-border/60 shadow-sm p-4">
-              <h3 className="font-body text-[10px] uppercase tracking-widest text-ink-3 font-semibold mb-3">
-                Indicateur de risque (SRI)
-              </h3>
+              <Tooltip content="Indicateur de risque de 1 (faible) à 7 (élevé)">
+                <h3 className="font-body text-[10px] uppercase tracking-widest text-ink-3 font-semibold mb-3">
+                  Indicateur de risque (SRI)
+                </h3>
+              </Tooltip>
               <SriGauge sri={product.sri} />
             </div>
 
@@ -684,7 +693,7 @@ export default function ProductDetailPage() {
                 className="px-4"
               />
 
-              <TabPanel value="overview" activeTab={activeTab} className="p-4">
+              <TabPanel value="overview" activeTab={activeTab} className="p-4 stagger-grid">
                 <div className="divide-y divide-border/50">
                   <DetailRow label="Émetteur" value={product.issuerName} />
                   {product.underlyingName && <DetailRow label="Sous-jacent" value={product.underlyingName} />}
@@ -724,7 +733,7 @@ export default function ProductDetailPage() {
                 </div>
               </TabPanel>
 
-              <TabPanel value="scenarios" activeTab={activeTab} className="p-4">
+              <TabPanel value="scenarios" activeTab={activeTab} className="p-4 stagger-grid">
                 <p className="text-[11px] text-ink-3 font-body mb-3">
                   Estimation des performances selon différents scénarios de marché, pour un investissement initial de 10 000 €.
                 </p>
@@ -739,7 +748,7 @@ export default function ProductDetailPage() {
                 )}
               </TabPanel>
 
-              <TabPanel value="dates" activeTab={activeTab} className="p-4">
+              <TabPanel value="dates" activeTab={activeTab} className="p-4 stagger-grid">
                 {Array.isArray(product.observationDates) && product.observationDates.length > 0 ? (
                   <>
                     <p className="text-[11px] text-ink-3 font-body mb-3">
@@ -780,7 +789,7 @@ export default function ProductDetailPage() {
                 )}
               </TabPanel>
 
-              <TabPanel value="ai" activeTab={activeTab} className="p-4">
+              <TabPanel value="ai" activeTab={activeTab} className="p-4 stagger-grid">
                 <AiAnalysisPanel product={product} />
               </TabPanel>
             </div>

@@ -534,7 +534,7 @@ export default function ResearchPage() {
       <div className="flex gap-3">
         {/* ── Card Grid (left) ─────────────────────────────────── */}
         <div className="w-[300px] shrink-0">
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 stagger-children">
             {filteredIdeas.map((idea) => {
               const cat = CATEGORY_LABELS[idea.category];
               const isSelected = selectedIdea?.id === idea.id;

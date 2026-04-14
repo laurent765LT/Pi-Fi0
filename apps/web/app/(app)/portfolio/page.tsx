@@ -32,6 +32,8 @@ import { useReviewCommitment, useApproveCommitment, useRejectCommitment } from '
 import { useProducts } from '@/hooks/use-products';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Tooltip } from '@/components/ui/tooltip';
+import { useAnimatedCounter } from '@/hooks/use-animated-counter';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -306,41 +308,43 @@ function AiPortfolioHealth() {
             <>
               {/* Circular Score */}
               <div className="flex items-center justify-center mb-3">
-                <div className="relative w-24 h-24">
-                  {/* Background ring */}
-                  <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
-                    <circle
-                      cx="60" cy="60" r="52"
-                      fill="none"
-                      stroke="currentColor"
-                      className="text-[#3B1FA8]/10 dark:text-[#3B1FA8]/20"
-                      strokeWidth="10"
-                    />
-                    <circle
-                      cx="60" cy="60" r="52"
-                      fill="none"
-                      stroke="url(#scoreGradient)"
-                      strokeWidth="10"
-                      strokeLinecap="round"
-                      strokeDasharray={`${2 * Math.PI * 52 * 0.85} ${2 * Math.PI * 52 * 0.15}`}
-                    />
-                    <defs>
-                      <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#3B1FA8" />
-                        <stop offset="50%" stopColor="#5B3FD4" />
-                        <stop offset="100%" stopColor="#00B894" />
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="font-display text-[28px] font-bold text-ink dark:text-white leading-none tracking-tight">
-                      85
-                    </span>
-                    <span className="text-[9px] text-ink-3 dark:text-white/35 font-body font-semibold uppercase tracking-wider">
-                      / 100
-                    </span>
+                <Tooltip content="Score calculé à partir de la diversification, exposition aux barrières et rendement moyen">
+                  <div className="relative w-24 h-24">
+                    {/* Background ring */}
+                    <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
+                      <circle
+                        cx="60" cy="60" r="52"
+                        fill="none"
+                        stroke="currentColor"
+                        className="text-[#3B1FA8]/10 dark:text-[#3B1FA8]/20"
+                        strokeWidth="10"
+                      />
+                      <circle
+                        cx="60" cy="60" r="52"
+                        fill="none"
+                        stroke="url(#scoreGradient)"
+                        strokeWidth="10"
+                        strokeLinecap="round"
+                        strokeDasharray={`${2 * Math.PI * 52 * 0.85} ${2 * Math.PI * 52 * 0.15}`}
+                      />
+                      <defs>
+                        <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="#3B1FA8" />
+                          <stop offset="50%" stopColor="#5B3FD4" />
+                          <stop offset="100%" stopColor="#00B894" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="font-display text-[28px] font-bold text-ink dark:text-white leading-none tracking-tight">
+                        85
+                      </span>
+                      <span className="text-[9px] text-ink-3 dark:text-white/35 font-body font-semibold uppercase tracking-wider">
+                        / 100
+                      </span>
+                    </div>
                   </div>
-                </div>
+                </Tooltip>
               </div>
 
               {/* Mini Metrics Grid */}
@@ -510,6 +514,9 @@ export default function PortfolioPage() {
     };
   }, [commitments]);
 
+  // Animated counter for "Total Engagé" KPI
+  const animatedTotal = useAnimatedCounter(stats.total, 800, !loadingCommitments);
+
   const handleCancel = (id: string) => {
     if (window.confirm("Etes-vous sur de vouloir annuler cette marque d'interet ?")) {
       cancelMutation.mutate(id);
@@ -570,7 +577,7 @@ export default function PortfolioPage() {
         <KpiCard
           icon={<Wallet size={15} className="text-[#3B1FA8]" />}
           label="Total engage"
-          value={loadingCommitments ? '...' : formatAmount(stats.total)}
+          value={loadingCommitments ? '...' : formatAmount(animatedTotal)}
           accent="#3B1FA8"
         />
         <KpiCard
@@ -676,7 +683,7 @@ export default function PortfolioPage() {
                     <PremiumTh className="text-center">Action</PremiumTh>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="stagger-rows">
                   {commitments.map((c: any, rowIdx: number) => {
                     const status = c.status ?? 'PENDING';
                     return (

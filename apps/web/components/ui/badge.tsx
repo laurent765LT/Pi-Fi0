@@ -4,9 +4,11 @@ import * as React from 'react';
 import { cn } from '@/lib/cn';
 
 type BadgeVariant = 'violet' | 'cobalt' | 'teal' | 'gold' | 'red' | 'muted';
+type BadgeSize = 'sm' | 'md' | 'lg';
 
 interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   variant?: BadgeVariant;
+  size?: BadgeSize;
   children?: React.ReactNode;
 }
 
@@ -19,16 +21,22 @@ const variantClasses: Record<BadgeVariant, string> = {
   muted:  'bg-surface-2 text-ink-3 border border-border',
 };
 
+const sizeClasses: Record<BadgeSize, string> = {
+  sm: 'text-[8px] px-[6px] py-[2px]',
+  md: 'text-[9.5px] px-[9px] py-[3px]',
+  lg: 'text-[11px] px-[12px] py-[4px]',
+};
+
 const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
-  ({ variant = 'violet', className, children, ...props }, ref) => {
+  ({ variant = 'violet', size = 'md', className, children, ...props }, ref) => {
     return (
       <span
         ref={ref}
         className={cn(
           'inline-flex items-center justify-center',
           'rounded-sm font-body font-bold uppercase tracking-widest',
-          'text-[9.5px] leading-none',
-          'px-[9px] py-[3px]',
+          'leading-none',
+          sizeClasses[size],
           variantClasses[variant],
           className,
         )}
@@ -43,4 +51,4 @@ const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
 Badge.displayName = 'Badge';
 
 export { Badge };
-export type { BadgeProps, BadgeVariant };
+export type { BadgeProps, BadgeVariant, BadgeSize };

@@ -19,6 +19,10 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useAuthStore } from '@/stores/auth-store';
+import { MarketTicker } from '@/components/ui/market-ticker';
+import { useAnimatedCounter } from '@/hooks/use-animated-counter';
+import { Tooltip } from '@/components/ui/tooltip';
+import { Sparkline } from '@/components/ui/sparkline';
 
 // ─── Demo Data ───────────────────────────────────────────────────────────────
 
@@ -220,6 +224,7 @@ function SectionHeader({
 // ─── SVG Area Chart ──────────────────────────────────────────────────────────
 
 function AreaChart() {
+  const [hoveredPoint, setHoveredPoint] = useState<number | null>(null);
   const w = 560;
   const h = 200;
   const padL = 52;
@@ -318,18 +323,70 @@ function AreaChart() {
         className="dark:stroke-violet-light"
       />
 
-      {/* Dots */}
+      {/* Dots + Hover tooltips */}
       {points.map((p, i) => (
-        <circle
-          key={i}
-          cx={p.x}
-          cy={p.y}
-          r="3"
-          fill="white"
-          stroke="#3B1FA8"
-          strokeWidth="1.5"
-          className="dark:fill-[#1E1636] dark:stroke-violet-light"
-        />
+        <g key={i}>
+          {/* Visible dot */}
+          <circle
+            cx={p.x}
+            cy={p.y}
+            r="3"
+            fill="white"
+            stroke="#3B1FA8"
+            strokeWidth="1.5"
+            className={cn(
+              'dark:fill-[#1E1636] dark:stroke-violet-light transition-opacity duration-150',
+              hoveredPoint !== null && hoveredPoint !== i ? 'opacity-40' : 'opacity-100'
+            )}
+          />
+          {/* Invisible larger hit area for hover */}
+          <circle
+            cx={p.x}
+            cy={p.y}
+            r="12"
+            fill="transparent"
+            className="cursor-pointer"
+            onMouseEnter={() => setHoveredPoint(i)}
+            onMouseLeave={() => setHoveredPoint(null)}
+          />
+          {/* Hover tooltip */}
+          {hoveredPoint === i && (
+            <>
+              {/* Highlight ring */}
+              <circle
+                cx={p.x}
+                cy={p.y}
+                r="5"
+                fill="#3B1FA8"
+                fillOpacity="0.15"
+                stroke="#3B1FA8"
+                strokeWidth="1.5"
+                className="dark:fill-violet-light/20 dark:stroke-violet-light"
+              />
+              {/* Value label */}
+              <rect
+                x={p.x - 28}
+                y={p.y - 26}
+                width="56"
+                height="18"
+                rx="4"
+                fill="#1A0A3E"
+                fillOpacity="0.92"
+              />
+              <text
+                x={p.x}
+                y={p.y - 14}
+                textAnchor="middle"
+                fill="white"
+                fontSize="9"
+                fontFamily="'DM Mono', monospace"
+                fontWeight="600"
+              >
+                {(p.val / 1_000).toFixed(0)}k €
+              </text>
+            </>
+          )}
+        </g>
       ))}
 
       {/* X labels */}
@@ -439,6 +496,40 @@ function DonutChart() {
   );
 }
 
+// ─── Animated KPI Value ─────────────────────────────────────────────────────
+
+function AnimatedKpiValue({ value, enabled }: { value: string; enabled: boolean }) {
+  // Parse numeric part and suffix from KPI value strings like "17", "8,4M €", "43", "68%"
+  const match = value.match(/^([\d,]+(?:[.,]\d+)?)\s*(.*)/);
+  if (!match) return <>{value}</>;
+  const rawNum = match[1]!.replace(',', '.');
+  const target = parseFloat(rawNum);
+  const suffix = match[2] ?? '';
+  const hasDecimal = rawNum.includes('.');
+
+  const animated = useAnimatedCounter(target, 1200, enabled);
+
+  // Format back with French comma for decimals
+  const formatted = hasDecimal
+    ? animated.toFixed(1).replace('.', ',')
+    : String(animated);
+
+  return (
+    <>
+      {formatted}
+      {suffix ? `\u00A0${suffix}` : ''}
+    </>
+  );
+}
+
+// ─── Sparkline Demo Data ────────────────────────────────────────────────────
+
+const PRODUCT_SPARKLINE_DATA: Record<number, number[]> = {
+  1: [12, 18, 15, 22, 28, 24, 32, 35, 30, 38],
+  2: [8, 10, 14, 12, 18, 22, 19, 25, 23, 28],
+  3: [5, 9, 7, 13, 11, 16, 15, 20, 18, 22],
+};
+
 // ─── Page Component ──────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
@@ -453,6 +544,9 @@ export default function DashboardPage() {
 
   return (
     <div className={cn('transition-opacity duration-500', mounted ? 'opacity-100' : 'opacity-0')}>
+      {/* ── Market Ticker ───────────────────────────────────────── */}
+      <MarketTicker className="rounded-xl mb-4" />
+
       {/* ── Page Header ─────────────────────────────────────────── */}
       <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
         <div>
@@ -527,17 +621,19 @@ export default function DashboardPage() {
                     </span>
                     <div className="flex items-baseline gap-2 mt-0.5">
                       <span className="font-display text-xl font-extrabold text-ink dark:text-ink leading-none tabular-nums">
-                        {kpi.value}
+                        <AnimatedKpiValue value={kpi.value} enabled={mounted} />
                       </span>
-                      <span
-                        className={cn(
-                          'inline-flex items-center gap-0.5 text-[10px] font-semibold font-body tabular-nums',
-                          kpi.trendUp ? 'text-teal' : 'text-red'
-                        )}
-                      >
-                        {kpi.trendUp ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
-                        {kpi.trend}
-                      </span>
+                      <Tooltip content={kpi.trendLabel}>
+                        <span
+                          className={cn(
+                            'inline-flex items-center gap-0.5 text-[10px] font-semibold font-body tabular-nums',
+                            kpi.trendUp ? 'text-teal' : 'text-red'
+                          )}
+                        >
+                          {kpi.trendUp ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
+                          {kpi.trend}
+                        </span>
+                      </Tooltip>
                     </div>
                     <span className="text-[9px] text-ink-4 dark:text-ink-4 font-body">{kpi.trendLabel}</span>
                   </div>
@@ -787,7 +883,7 @@ export default function DashboardPage() {
                     </th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="stagger-rows">
                   {RECENT_COMMITMENTS.map((c, idx) => {
                     const status = STATUS_CONFIG[c.status] ?? {
                       label: c.status,
@@ -856,8 +952,16 @@ export default function DashboardPage() {
                     </span>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-semibold text-ink dark:text-ink font-body truncate pr-2">
+                        <span className="text-xs font-semibold text-ink dark:text-ink font-body truncate pr-2 inline-flex items-center gap-2">
                           {p.name}
+                          <Sparkline
+                            data={PRODUCT_SPARKLINE_DATA[p.rank] ?? []}
+                            width={48}
+                            height={16}
+                            color="#3B1FA8"
+                            strokeWidth={1.2}
+                            className="opacity-60 group-hover:opacity-100 transition-opacity"
+                          />
                         </span>
                         <span className="text-[10px] font-mono text-ink-3 dark:text-ink-3 shrink-0 tabular-nums">
                           {p.volume}

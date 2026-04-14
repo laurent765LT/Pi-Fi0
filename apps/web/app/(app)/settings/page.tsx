@@ -43,7 +43,7 @@ function Toggle({
       onClick={onToggle}
       className={cn(
         'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-all duration-200 ease-in-out',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B1FA8]/30 focus-visible:ring-offset-2',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B1FA8]/40 focus-visible:ring-offset-2',
         enabled
           ? 'bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] shadow-md shadow-violet/20'
           : 'bg-ink-3/15 dark:bg-ink-3/25',
@@ -78,7 +78,7 @@ function SectionCard({
   accentColor?: string;
 }) {
   return (
-    <div className="group relative bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 ring-1 ring-black/[0.03] overflow-hidden transition-all duration-200 hover:shadow-lg hover:shadow-violet/5">
+    <div className="group relative bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 ring-1 ring-black/[0.03] overflow-hidden transition-all duration-200 hover:shadow-lg hover:shadow-violet/5 hover:border-[#3B1FA8]/20 focus-within:ring-2 focus-within:ring-[#3B1FA8]/20">
       <div
         className="absolute top-0 left-0 right-0 h-[3px] rounded-b-full opacity-60 group-hover:opacity-100 transition-opacity duration-200"
         style={{ background: accentColor }}
@@ -253,6 +253,7 @@ export default function SettingsPage() {
                 onClick={() => setLanguage('fr')}
                 className={cn(
                   'px-3.5 py-1.5 rounded-lg text-[12px] font-semibold font-body transition-all duration-200',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B1FA8]/40 focus-visible:ring-offset-1',
                   language === 'fr'
                     ? 'bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] text-white shadow-md shadow-violet/20'
                     : 'text-ink-3 hover:text-ink',
@@ -264,6 +265,7 @@ export default function SettingsPage() {
                 onClick={() => setLanguage('en')}
                 className={cn(
                   'px-3.5 py-1.5 rounded-lg text-[12px] font-semibold font-body transition-all duration-200',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B1FA8]/40 focus-visible:ring-offset-1',
                   language === 'en'
                     ? 'bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] text-white shadow-md shadow-violet/20'
                     : 'text-ink-3 hover:text-ink',
@@ -293,6 +295,7 @@ export default function SettingsPage() {
                 'text-[12px] font-semibold font-body text-ink-2 flex items-center gap-1.5',
                 'hover:border-[#3B1FA8] hover:text-[#3B1FA8] hover:bg-[#3B1FA8]/3 hover:shadow-md hover:shadow-violet/10',
                 'hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B1FA8]/40 focus-visible:ring-offset-2',
               )}
             >
               Modifier
@@ -334,6 +337,7 @@ export default function SettingsPage() {
                 'h-8 px-4 rounded-xl border',
                 'text-[12px] font-semibold font-body flex items-center gap-1.5',
                 'transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B1FA8]/40 focus-visible:ring-offset-2',
                 exportSuccess
                   ? 'border-[#00B894]/20 bg-[#00B894]/8 text-[#00B894]'
                   : 'border-border/60 bg-white/80 dark:bg-white/10 backdrop-blur-sm text-ink-2 hover:border-[#3B1FA8] hover:text-[#3B1FA8] hover:bg-[#3B1FA8]/3 hover:shadow-md hover:shadow-violet/10',
@@ -374,6 +378,7 @@ export default function SettingsPage() {
                       'text-[12px] font-semibold font-body text-[#E8334A] flex items-center gap-1.5',
                       'hover:bg-[#E8334A]/5 hover:border-[#E8334A]/40 hover:shadow-md hover:shadow-[#E8334A]/10',
                       'hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8334A]/40 focus-visible:ring-offset-2',
                     )}
                   >
                     <Trash2 size={13} />

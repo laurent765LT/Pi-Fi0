@@ -51,3 +51,11 @@ export const AiChatWidget = dynamic(
     ),
   { ssr: false, loading: () => null },
 );
+
+export const CommandPalette = dynamic(
+  () =>
+    import('@/components/ui/command-palette').then(
+      (m) => m.CommandPalette,
+    ),
+  { ssr: false, loading: () => null },
+);

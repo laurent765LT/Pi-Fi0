@@ -29,6 +29,8 @@ import { ProductCard } from '@/components/products/product-card';
 import type { PayoffType } from '@/components/products/product-card';
 import { useFavorites, useToggleFavorite, useMostViewed } from '@/hooks/use-favorites';
 import { useRecommendations, useGenerateRecommendations } from '@/hooks/use-recommendations';
+import { Countdown } from '@/components/ui/countdown';
+import { Tooltip } from '@/components/ui/tooltip';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -750,7 +752,7 @@ export default function ProductsPage() {
           </div>
         ) : view === 'grid' ? (
           /* ── Grid View ─────────────────────────────────────────── */
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 stagger-children">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 stagger-children stagger-grid">
             {filtered.map((product: any) => (
               <ProductCard
                 key={product.id}
@@ -865,12 +867,14 @@ export default function ProductsPage() {
 
                         {/* SRI */}
                         <td className="px-3 py-2.5 text-center">
-                          <span
-                            className="inline-flex items-center justify-center w-5 h-5 rounded-md text-[9px] font-bold"
-                            style={{ backgroundColor: `${sriColor}15`, color: sriColor }}
-                          >
-                            {p.sri}
-                          </span>
+                          <Tooltip content="Indicateur de risque de 1 (faible) à 7 (élevé)">
+                            <span
+                              className="inline-flex items-center justify-center w-5 h-5 rounded-md text-[9px] font-bold"
+                              style={{ backgroundColor: `${sriColor}15`, color: sriColor }}
+                            >
+                              {p.sri}
+                            </span>
+                          </Tooltip>
                         </td>
 
                         {/* Maturity */}
@@ -889,6 +893,11 @@ export default function ProductsPage() {
                           >
                             {statusStyle.label}
                           </span>
+                          {p.shelfClosingDate && new Date(p.shelfClosingDate) > new Date() && (
+                            <div className="mt-0.5">
+                              <Countdown targetDate={p.shelfClosingDate} label="Clôture" className="text-[9px]" />
+                            </div>
+                          )}
                         </td>
 
                         {/* Action */}

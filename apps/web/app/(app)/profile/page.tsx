@@ -181,9 +181,9 @@ export default function ProfilePage() {
         <div className="gradient-bar h-[2px] rounded-full mt-5 opacity-60" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 stagger-children">
         {/* ── Left column: Avatar + Info Card ─────────────────── */}
-        <div className="lg:col-span-1 flex flex-col gap-6">
+        <div className="lg:col-span-1 flex flex-col gap-6 stagger-children">
           {/* Avatar Card */}
           <div className="relative bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 ring-1 ring-black/[0.03] overflow-hidden transition-all duration-200 hover:shadow-lg hover:shadow-violet/5">
             <div

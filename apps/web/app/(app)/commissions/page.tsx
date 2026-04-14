@@ -18,6 +18,7 @@ import { cn } from '@/lib/cn';
 import { useCommissionSummary } from '@/hooks/use-commissions';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Tooltip } from '@/components/ui/tooltip';
 import { exportToExcel } from '@/lib/export-utils';
 
 // ─── Demo Commission Data ────────────────────────────────────────────────────
@@ -445,7 +446,7 @@ export default function CommissionsPage() {
                 <PremiumTh className="text-right">Date versement</PremiumTh>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="stagger-rows">
               {filtered.map(c => (
                 <tr
                   key={c.id}
@@ -458,7 +459,11 @@ export default function CommissionsPage() {
                 >
                   <td className="px-3 py-2.5 font-medium text-ink dark:text-white">{c.productName}</td>
                   <td className="px-3 py-2.5 text-ink-3 dark:text-white/50">{TYPE_LABELS[c.type] ?? c.type}</td>
-                  <td className="px-3 py-2.5 text-right font-mono tabular-nums text-ink dark:text-white/80">{c.ratePct}%</td>
+                  <td className="px-3 py-2.5 text-right font-mono tabular-nums text-ink dark:text-white/80">
+                    <Tooltip content={`Taux calcule sur le nominal investi (${TYPE_LABELS[c.type] ?? c.type})`} side="top">
+                      <span className="cursor-help border-b border-dotted border-ink-3/30">{c.ratePct}%</span>
+                    </Tooltip>
+                  </td>
                   <td className="px-3 py-2.5 text-right font-mono font-semibold text-ink dark:text-white tabular-nums text-[13px] tracking-tight font-display">
                     {formatEur(c.amount)}
                   </td>

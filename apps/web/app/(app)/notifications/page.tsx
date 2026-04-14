@@ -134,8 +134,9 @@ function NotificationCard({
     <div
       className={cn(
         'group relative flex gap-3 p-3.5 rounded-xl border transition-all duration-200',
+        'focus-within:ring-2 focus-within:ring-[#3B1FA8]/20 focus-within:border-[#3B1FA8]/30',
         read
-          ? 'bg-white/50 dark:bg-white/[0.03] border-border/40 opacity-55 hover:opacity-75'
+          ? 'bg-white/50 dark:bg-white/[0.03] border-border/40 opacity-55 hover:opacity-75 hover:shadow-sm'
           : [
               'bg-white/80 dark:bg-white/5 backdrop-blur-md border-border/60',
               'shadow-card hover:shadow-card-hover',
@@ -313,12 +314,12 @@ export default function NotificationsPage() {
           </div>
         </div>
       ) : (
-        <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col gap-2.5 stagger-children">
           {/* Unread section */}
           {hasUnread && (
             <div>
               <SectionLabel accent="#3B1FA8">Non lues</SectionLabel>
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-1.5 stagger-children">
                 {notifications
                   .filter((n) => !n.read)
                   .map((n) => (
@@ -337,7 +338,7 @@ export default function NotificationsPage() {
           {notifications.some((n) => n.read) && (
             <div className={hasUnread ? 'mt-4' : ''}>
               {hasUnread && <SectionLabel accent="#7B6FA0">Lues</SectionLabel>}
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-1.5 stagger-children">
                 {notifications
                   .filter((n) => n.read)
                   .map((n) => (

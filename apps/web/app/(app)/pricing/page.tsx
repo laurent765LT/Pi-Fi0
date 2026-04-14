@@ -24,6 +24,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { Tooltip } from '@/components/ui/tooltip';
 import { usePriceProduct, useValidatePricingConfig, useProductTemplates, usePricingHistory } from '@/hooks/use-pricing';
 import { PricingAiGuide } from '@/components/pricing/pricing-ai-guide';
 import { type PricingConfig } from '@/lib/pricing-simulator';
@@ -76,10 +77,10 @@ function formatDate(iso: string) {
 // ─── Step labels ─────────────────────────────────────────────────────────────
 
 const STEPS = [
-  { label: 'Structure', icon: Sliders },
-  { label: 'Payoff', icon: Target },
-  { label: 'Marche', icon: Activity },
-  { label: 'Resultats', icon: CheckCircle2 },
+  { label: 'Structure', icon: Sliders, tooltip: 'Definissez la structure de base du produit' },
+  { label: 'Payoff', icon: Target, tooltip: 'Configurez les barrieres et coupons' },
+  { label: 'Marche', icon: Activity, tooltip: 'Parametres de marche et sous-jacent' },
+  { label: 'Resultats', icon: CheckCircle2, tooltip: 'Resultats du pricing et analyse' },
 ];
 
 // ─── Page ────────────────────────────────────────────────────────────────────
@@ -355,31 +356,32 @@ export default function PricingPage() {
                 style={{ background: 'linear-gradient(90deg, #3B1FA8, #00B894)' }}
               />
               <div className="flex items-center gap-1">
-                {STEPS.map(({ label, icon: Icon }, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setStep(i)}
-                    className={cn(
-                      'flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[10px] font-bold font-body transition-all duration-200 relative',
-                      step === i
-                        ? 'bg-gradient-to-r from-violet to-violet/85 text-white shadow-md'
-                        : step > i
-                          ? 'text-teal dark:text-teal hover:bg-teal/5'
-                          : 'text-ink-3 dark:text-white/40 hover:bg-surface-2 dark:hover:bg-white/5',
-                    )}
-                  >
-                    <span className={cn(
-                      'w-4 h-4 rounded-full text-[9px] flex items-center justify-center font-bold transition-all duration-200',
-                      step === i
-                        ? 'bg-white/25'
-                        : step > i
-                          ? 'bg-teal/15 text-teal'
-                          : 'bg-ink/5 dark:bg-white/10',
-                    )}>
-                      {step > i ? '\u2713' : i + 1}
-                    </span>
-                    <span className="hidden sm:inline">{label}</span>
-                  </button>
+                {STEPS.map(({ label, icon: Icon, tooltip }, i) => (
+                  <Tooltip key={i} content={tooltip} side="bottom">
+                    <button
+                      onClick={() => setStep(i)}
+                      className={cn(
+                        'flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[10px] font-bold font-body transition-all duration-200 relative',
+                        step === i
+                          ? 'bg-gradient-to-r from-violet to-violet/85 text-white shadow-md'
+                          : step > i
+                            ? 'text-teal dark:text-teal hover:bg-teal/5'
+                            : 'text-ink-3 dark:text-white/40 hover:bg-surface-2 dark:hover:bg-white/5',
+                      )}
+                    >
+                      <span className={cn(
+                        'w-4 h-4 rounded-full text-[9px] flex items-center justify-center font-bold transition-all duration-200',
+                        step === i
+                          ? 'bg-white/25'
+                          : step > i
+                            ? 'bg-teal/15 text-teal'
+                            : 'bg-ink/5 dark:bg-white/10',
+                      )}>
+                        {step > i ? '\u2713' : i + 1}
+                      </span>
+                      <span className="hidden sm:inline">{label}</span>
+                    </button>
+                  </Tooltip>
                 ))}
               </div>
               {/* Progress bar */}

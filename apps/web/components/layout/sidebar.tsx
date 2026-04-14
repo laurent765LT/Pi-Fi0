@@ -214,7 +214,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps = {}) {
 
       <aside
         className={cn(
-          'fixed left-0 top-0 h-screen flex flex-col overflow-hidden transition-transform duration-300 ease-in-out',
+          'fixed left-0 top-0 h-screen flex flex-col overflow-hidden transition-transform duration-300 ease-in-out bg-white/90 dark:bg-ink/90 backdrop-blur-xl border-r border-border/60',
           // Mobile: z-50 so it sits above backdrop (z-40), slide in/out via CSS media query classes
           'z-50 md:z-20',
           'sidebar-mobile-enter',
@@ -222,11 +222,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps = {}) {
           // Desktop: always visible, no transform
           'md:translate-x-0',
         )}
-        style={{
-          width: 248,
-          background: 'var(--bg-1)',
-          borderRight: '1px solid var(--border)',
-        }}
+        style={{ width: 248 }}
+        data-sidebar
       >
         {/* Left accent line */}
         <div

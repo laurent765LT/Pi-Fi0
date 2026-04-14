@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import { Users, TrendingUp, Calendar, ArrowUpDown } from 'lucide-react';
+import { cn } from '@/lib/cn';
 import {
   ENGAGEMENTS, formatMontant, formatDateShortFR,
   STATUT_ENGAGEMENT, COLLECTE_MENSUELLE,
@@ -52,8 +53,8 @@ export default function DistributeursPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-[22px] font-bold mb-1" style={{ color: '#111827' }}>Distributeurs</h1>
-        <p className="text-[14px]" style={{ color: '#9CA3AF' }}>Suivi des cabinets CGP et courtiers actifs sur vos produits</p>
+        <h1 className="text-[22px] font-display font-bold text-ink dark:text-white mb-1">Distributeurs</h1>
+        <p className="text-[14px] font-body text-ink-3">Suivi des cabinets CGP et courtiers actifs sur vos produits</p>
       </div>
 
       {/* Stats */}
@@ -63,41 +64,42 @@ export default function DistributeursPage() {
           { icon: TrendingUp, label: 'Engagements en cours', value: `${totalEngagements} engagements` },
           { icon: Calendar, label: 'Volume ce mois', value: formatMontant(volumeCeMois) },
         ].map(({ icon: Icon, label, value }) => (
-          <div key={label} className="bg-white rounded-[12px] p-5" style={{ border: '1px solid #E5E7EB', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-            <div className="w-9 h-9 rounded-[8px] flex items-center justify-center mb-3" style={{ background: '#EEF0FD' }}>
-              <Icon size={16} style={{ color: '#3B28CC' }} />
+          <div key={label} className="relative overflow-hidden group bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 shadow-sm p-5">
+            <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-violet/60 to-teal/40 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="w-9 h-9 bg-gradient-to-br from-violet/10 to-cobalt/10 rounded-lg flex items-center justify-center mb-3">
+              <Icon size={16} className="text-violet" />
             </div>
-            <span className="text-[10px] uppercase tracking-[0.15em] font-semibold block" style={{ color: '#9CA3AF' }}>{label}</span>
-            <span className="text-[20px] font-bold" style={{ color: '#111827' }}>{value}</span>
+            <span className="text-[10px] uppercase tracking-[0.15em] font-semibold block font-body text-ink-3">{label}</span>
+            <span className="text-[20px] font-display font-bold text-ink dark:text-white">{value}</span>
           </div>
         ))}
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-[12px] overflow-hidden" style={{ border: '1px solid #E5E7EB', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-        <table className="w-full text-[13px]">
+      <div className="bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 shadow-sm overflow-hidden">
+        <table className="w-full text-[13px] font-body">
           <thead>
-            <tr style={{ background: '#F9FAFB', borderBottom: '1px solid #E5E7EB' }}>
-              <th className="px-4 py-3 text-left text-[10px] uppercase tracking-[0.15em] font-semibold" style={{ color: '#9CA3AF' }}>Cabinet</th>
-              <th className="px-4 py-3 text-center text-[10px] uppercase tracking-[0.15em] font-semibold" style={{ color: '#9CA3AF' }}>Engagements</th>
-              <th className="px-4 py-3 text-right text-[10px] uppercase tracking-[0.15em] font-semibold" style={{ color: '#9CA3AF' }}>Volume total</th>
-              <th className="px-4 py-3 text-right text-[10px] uppercase tracking-[0.15em] font-semibold" style={{ color: '#9CA3AF' }}>Dernier engagement</th>
-              <th className="px-4 py-3 text-center text-[10px] uppercase tracking-[0.15em] font-semibold" style={{ color: '#9CA3AF' }}>Statut</th>
+            <tr className="bg-surface dark:bg-white/5 border-b border-border/60">
+              <th className="px-4 py-3 text-left text-[10px] uppercase tracking-[0.15em] font-semibold text-ink-3">Cabinet</th>
+              <th className="px-4 py-3 text-center text-[10px] uppercase tracking-[0.15em] font-semibold text-ink-3">Engagements</th>
+              <th className="px-4 py-3 text-right text-[10px] uppercase tracking-[0.15em] font-semibold text-ink-3">Volume total</th>
+              <th className="px-4 py-3 text-right text-[10px] uppercase tracking-[0.15em] font-semibold text-ink-3">Dernier engagement</th>
+              <th className="px-4 py-3 text-center text-[10px] uppercase tracking-[0.15em] font-semibold text-ink-3">Statut</th>
             </tr>
           </thead>
           <tbody>
             {distributeurs.map((d) => (
-              <tr key={d.nom} className="hover:bg-gray-50 transition-colors" style={{ borderBottom: '1px solid #F3F4F6' }}>
+              <tr key={d.nom} className="hover:bg-violet/[0.04] transition-colors border-b border-border/40">
                 <td className="px-4 py-3.5">
-                  <span className="font-medium" style={{ color: '#111827' }}>{d.nom}</span>
+                  <span className="font-medium text-ink dark:text-white">{d.nom}</span>
                 </td>
-                <td className="px-4 py-3.5 text-center font-mono font-semibold" style={{ color: '#4B5563' }}>
+                <td className="px-4 py-3.5 text-center font-mono font-semibold text-ink-2">
                   {d.nbEngagements}
                 </td>
-                <td className="px-4 py-3.5 text-right font-mono font-semibold" style={{ color: '#111827' }}>
+                <td className="px-4 py-3.5 text-right font-mono font-semibold text-ink dark:text-white">
                   {formatMontant(d.volumeTotal)}
                 </td>
-                <td className="px-4 py-3.5 text-right font-mono" style={{ color: '#9CA3AF' }}>
+                <td className="px-4 py-3.5 text-right font-mono text-ink-3">
                   {formatDateShortFR(d.dernierEngagement)}
                 </td>
                 <td className="px-4 py-3.5 text-center">

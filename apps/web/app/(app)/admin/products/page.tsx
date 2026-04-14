@@ -90,7 +90,7 @@ export default function AdminProductsPage() {
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex items-start justify-between gap-4 mb-3">
         <div>
-          <h1 className="font-display text-3xl font-bold text-ink">
+          <h1 className="font-display text-3xl font-bold text-ink dark:text-white">
             Produits
           </h1>
         </div>
@@ -116,7 +116,7 @@ export default function AdminProductsPage() {
 
       {/* ── Table ──────────────────────────────────────────────────────────── */}
       {isLoading ? (
-        <div className="bg-white border border-border rounded-lg overflow-hidden shadow-xs">
+        <div className="bg-white/90 dark:bg-white/5 backdrop-blur-md border border-border/60 rounded-lg overflow-hidden shadow-sm">
           <TableSkeleton />
         </div>
       ) : filtered.length === 0 ? (
@@ -134,7 +134,7 @@ export default function AdminProductsPage() {
           )}
         </Card>
       ) : (
-        <div className="bg-white border border-border rounded-lg overflow-hidden shadow-xs">
+        <div className="bg-white/90 dark:bg-white/5 backdrop-blur-md border border-border/60 rounded-lg overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-sm font-body min-w-[700px]">
               <thead>
@@ -163,7 +163,7 @@ export default function AdminProductsPage() {
                 {filtered.map((product: any) => (
                   <tr
                     key={product.id}
-                    className="border-b border-border last:border-0 hover:bg-surface transition-colors duration-150"
+                    className="border-b border-border last:border-0 hover:bg-violet/[0.04] dark:hover:bg-white/5 transition-colors duration-150"
                   >
                     {/* ISIN */}
                     <td className="px-5 py-3.5">

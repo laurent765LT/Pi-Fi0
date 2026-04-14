@@ -108,7 +108,7 @@ export default function AdminShelvesPage() {
   return (
     <main className="max-w-container mx-auto px-6 py-8">
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <h1 className="font-display text-3xl font-bold text-ink mb-3">
+      <h1 className="font-display text-3xl font-bold text-ink dark:text-white mb-3">
         Enveloppes
       </h1>
       <div className="gradient-bar h-1 rounded-full mb-8" />
@@ -119,7 +119,7 @@ export default function AdminShelvesPage() {
           <p className="font-body text-sm text-red">{error}</p>
         </Card>
       ) : (
-        <div className="bg-white border border-border rounded-lg overflow-hidden shadow-xs">
+        <div className="bg-white/90 dark:bg-white/5 backdrop-blur-md border border-border/60 rounded-lg overflow-hidden shadow-sm">
           {loading ? (
             <TableSkeleton />
           ) : shelves.length === 0 ? (
@@ -160,7 +160,7 @@ export default function AdminShelvesPage() {
                   {shelves.map((shelf: any) => (
                     <tr
                       key={shelf.id}
-                      className="border-b border-border last:border-0 hover:bg-surface transition-colors duration-150"
+                      className="border-b border-border last:border-0 hover:bg-violet/[0.04] dark:hover:bg-white/5 transition-colors duration-150"
                     >
                       {/* Product */}
                       <td className="px-5 py-4">

@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Search, ArrowUpRight, Users, Clock } from 'lucide-react';
+import { cn } from '@/lib/cn';
 import {
   PRODUITS, ENVELOPPES, formatMontant, formatDateShortFR,
   TYPE_LABELS, TYPE_COLORS, SRI_COLORS, getEnveloppe,
@@ -29,29 +30,32 @@ export default function ProduitsPage() {
 
   return (
     <div>
+      {/* Page header */}
       <div className="mb-6">
-        <h1 className="text-[22px] font-bold mb-1" style={{ color: '#111827' }}>Catalogue produits</h1>
-        <p className="text-[14px]" style={{ color: '#9CA3AF' }}>Produits structurés disponibles à la distribution</p>
+        <h1 className="text-[22px] font-bold font-display mb-1 text-ink dark:text-white">
+          Catalogue produits
+        </h1>
+        <p className="text-[14px] font-body text-ink-3 dark:text-ink-4">
+          Produits structurés disponibles à la distribution
+        </p>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-[12px] p-4 mb-6 flex items-center gap-3 flex-wrap" style={{ border: '1px solid #E5E7EB' }}>
+      <div className="bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-lg border border-border/60 p-4 mb-6 flex items-center gap-3 flex-wrap">
         <div className="relative flex-1 min-w-[200px] max-w-[300px]">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: '#9CA3AF' }} />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-ink-3 dark:text-ink-4" />
           <input
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Rechercher par nom, ISIN..."
-            className="w-full h-9 rounded-[8px] pl-9 pr-3 text-[13px]"
-            style={{ border: '1px solid #E5E7EB', color: '#111827' }}
+            className="w-full h-9 rounded-md pl-9 pr-3 text-[13px] font-body border border-border/60 bg-white dark:bg-white/5 text-ink dark:text-white placeholder:text-ink-4 focus:ring-2 focus:ring-violet/30 focus:border-violet/50 transition-all outline-none"
           />
         </div>
         <select
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value as TypeFilter)}
-          className="h-9 rounded-[8px] px-3 text-[13px] cursor-pointer"
-          style={{ border: '1px solid #E5E7EB', color: '#4B5563' }}
+          className="h-9 rounded-md px-3 text-[13px] font-body cursor-pointer border border-border/60 bg-white dark:bg-white/5 text-ink-2 dark:text-ink-4 focus:ring-2 focus:ring-violet/30 focus:border-violet/50 transition-all outline-none"
         >
           <option value="">Tous les types</option>
           {Object.entries(TYPE_LABELS).map(([k, v]) => (
@@ -59,16 +63,17 @@ export default function ProduitsPage() {
           ))}
         </select>
         <div className="flex items-center gap-1">
-          <span className="text-[12px] mr-1" style={{ color: '#9CA3AF' }}>SRI :</span>
+          <span className="text-[12px] font-body mr-1 text-ink-3 dark:text-ink-4">SRI :</span>
           {[null, 1, 2, 3, 4, 5, 6, 7].map((n) => (
             <button
               key={String(n)}
               onClick={() => setSriFilter(n)}
-              className="h-7 min-w-7 px-1.5 rounded-[6px] text-[11px] font-semibold transition-all"
-              style={{
-                background: sriFilter === n ? '#3B28CC' : '#F3F4F6',
-                color: sriFilter === n ? '#FFFFFF' : '#4B5563',
-              }}
+              className={cn(
+                'h-7 min-w-7 px-1.5 rounded-sm text-[11px] font-semibold font-body transition-all',
+                sriFilter === n
+                  ? 'bg-violet text-white shadow-sm'
+                  : 'bg-surface-2 dark:bg-white/5 text-ink-2 dark:text-ink-4 hover:bg-surface-3 dark:hover:bg-white/10'
+              )}
             >
               {n === null ? 'Tous' : n}
             </button>
@@ -76,9 +81,9 @@ export default function ProduitsPage() {
         </div>
       </div>
 
-      {/* Results */}
-      <p className="text-[12px] mb-4" style={{ color: '#9CA3AF' }}>
-        <span className="font-semibold" style={{ color: '#111827' }}>{filtered.length}</span> produit{filtered.length > 1 ? 's' : ''}
+      {/* Results count */}
+      <p className="text-[12px] font-body mb-4 text-ink-3 dark:text-ink-4">
+        <span className="font-semibold text-ink dark:text-white">{filtered.length}</span> produit{filtered.length > 1 ? 's' : ''}
       </p>
 
       {/* Grid */}
@@ -94,49 +99,60 @@ export default function ProduitsPage() {
             <Link
               key={p.id}
               href={`/assureur/produits/${p.id}`}
-              className="group flex flex-col bg-white rounded-[12px] overflow-hidden transition-all duration-200 hover:-translate-y-0.5"
-              style={{ border: '1px solid #E5E7EB', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}
+              className="group relative flex flex-col bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-lg overflow-hidden border border-border/60 shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200"
             >
+              {/* Gradient accent bar */}
+              <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-violet/60 to-teal/40 opacity-0 group-hover:opacity-100 transition-opacity" />
+
               <div className="p-5 flex flex-col gap-3 flex-1">
                 {/* Badges */}
                 <div className="flex items-center justify-between">
-                  <span className="inline-flex items-center rounded-[6px] px-2 py-0.5 text-[10px] font-semibold" style={{ background: typeStyle.bg, color: typeStyle.text }}>
+                  <span
+                    className="inline-flex items-center rounded-sm px-2 py-0.5 text-[10px] font-semibold font-body"
+                    style={{ background: typeStyle.bg, color: typeStyle.text }}
+                  >
                     {TYPE_LABELS[p.type]}
                   </span>
-                  <span className="inline-flex items-center rounded-[6px] px-2 py-0.5 text-[10px] font-bold font-mono" style={{ background: sriStyle.bg, color: sriStyle.text }}>
+                  <span
+                    className="inline-flex items-center rounded-sm px-2 py-0.5 text-[10px] font-bold font-mono"
+                    style={{ background: sriStyle.bg, color: sriStyle.text }}
+                  >
                     SRI {p.sri}
                   </span>
                 </div>
 
                 {/* Name */}
                 <div>
-                  <p className="text-[14px] font-semibold leading-snug group-hover:opacity-80 transition-opacity" style={{ color: '#111827' }}>
+                  <p className="text-[14px] font-semibold font-body leading-snug text-ink dark:text-white group-hover:opacity-80 transition-opacity">
                     {p.nom}
                   </p>
-                  <p className="text-[11px] mt-0.5" style={{ color: '#9CA3AF' }}>
+                  <p className="text-[11px] font-body mt-0.5 text-ink-3 dark:text-ink-4">
                     {p.emetteur} · {p.sousJacent}
                   </p>
                 </div>
 
                 {/* Metrics */}
-                <div className="grid grid-cols-3 gap-2 rounded-[8px] p-3" style={{ background: '#F9FAFB' }}>
+                <div className="grid grid-cols-3 gap-2 rounded-md p-3 bg-surface dark:bg-white/[0.03]">
                   <div className="flex flex-col">
-                    <span className="text-[9px] uppercase tracking-wider font-semibold" style={{ color: '#9CA3AF' }}>
+                    <span className="text-[9px] uppercase tracking-wider font-semibold font-body text-ink-3 dark:text-ink-4">
                       {p.couponPct ? 'Coupon' : 'Gain max'}
                     </span>
-                    <span className="text-[15px] font-bold" style={{ color: '#111827' }}>
-                      {p.couponPct ? `${p.couponPct}%` : p.gainMaxPct ? `${p.gainMaxPct}%` : '—'}
+                    <span className="text-[15px] font-bold font-body text-ink dark:text-white">
+                      {p.couponPct ? `${p.couponPct}%` : p.gainMaxPct ? `${p.gainMaxPct}%` : '---'}
                     </span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-[9px] uppercase tracking-wider font-semibold" style={{ color: '#9CA3AF' }}>Barrière</span>
-                    <span className="text-[15px] font-bold" style={{ color: p.barrierePct ? '#DC2626' : '#111827' }}>
-                      {p.barrierePct ? `${p.barrierePct}%` : '—'}
+                    <span className="text-[9px] uppercase tracking-wider font-semibold font-body text-ink-3 dark:text-ink-4">Barrière</span>
+                    <span className={cn(
+                      'text-[15px] font-bold font-body',
+                      p.barrierePct ? 'text-red' : 'text-ink dark:text-white'
+                    )}>
+                      {p.barrierePct ? `${p.barrierePct}%` : '---'}
                     </span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-[9px] uppercase tracking-wider font-semibold" style={{ color: '#9CA3AF' }}>Maturité</span>
-                    <span className="text-[12px] font-semibold" style={{ color: '#111827' }}>
+                    <span className="text-[9px] uppercase tracking-wider font-semibold font-body text-ink-3 dark:text-ink-4">Maturité</span>
+                    <span className="text-[12px] font-semibold font-body text-ink dark:text-white">
                       {new Date(p.maturite).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })}
                     </span>
                   </div>
@@ -145,19 +161,25 @@ export default function ProduitsPage() {
                 {/* Enveloppe progress */}
                 {env && (
                   <div>
-                    <div className="flex items-center justify-between text-[11px] mb-1">
-                      <span style={{ color: '#4B5563' }}>Enveloppe</span>
-                      <span className="font-mono" style={{ color: '#9CA3AF' }}>
+                    <div className="flex items-center justify-between text-[11px] font-body mb-1">
+                      <span className="text-ink-2 dark:text-ink-3">Enveloppe</span>
+                      <span className="font-mono text-ink-3 dark:text-ink-4">
                         {fillPct.toFixed(0)}% · {formatMontant(env.montantConfirme)}/{formatMontant(env.montantCible)}
                       </span>
                     </div>
-                    <div className="h-1.5 w-full rounded-full overflow-hidden" style={{ background: '#F3F4F6' }}>
-                      <div className="h-full rounded-full transition-all duration-700" style={{ width: `${fillPct}%`, background: '#3B28CC' }} />
+                    <div className="h-1.5 w-full rounded-full overflow-hidden bg-surface-2 dark:bg-white/10">
+                      <div
+                        className="h-full rounded-full bg-violet transition-all duration-700"
+                        style={{ width: `${fillPct}%` }}
+                      />
                     </div>
-                    <div className="flex items-center gap-3 mt-2 text-[11px]" style={{ color: '#9CA3AF' }}>
+                    <div className="flex items-center gap-3 mt-2 text-[11px] font-body text-ink-3 dark:text-ink-4">
                       <span className="flex items-center gap-1"><Users size={10} /> {env.nbInteresses} intéressés</span>
                       {daysLeft !== null && daysLeft > 0 && (
-                        <span className="flex items-center gap-1" style={{ color: daysLeft <= 30 ? '#DC2626' : '#9CA3AF' }}>
+                        <span className={cn(
+                          'flex items-center gap-1',
+                          daysLeft <= 30 ? 'text-red' : 'text-ink-3 dark:text-ink-4'
+                        )}>
                           <Clock size={10} /> J-{daysLeft}
                         </span>
                       )}
@@ -167,11 +189,11 @@ export default function ProduitsPage() {
               </div>
 
               {/* Footer */}
-              <div className="px-5 py-3 flex items-center justify-between" style={{ borderTop: '1px solid #F3F4F6', background: '#FAFAFA' }}>
-                <span className="text-[11px] font-semibold transition-opacity group-hover:opacity-80" style={{ color: '#3B28CC' }}>
+              <div className="px-5 py-3 flex items-center justify-between border-t border-border/40 bg-surface/50 dark:bg-white/[0.02]">
+                <span className="text-[11px] font-semibold font-body text-violet dark:text-violet-light transition-opacity group-hover:opacity-80">
                   Voir détails
                 </span>
-                <ArrowUpRight size={14} style={{ color: '#3B28CC', opacity: 0.5 }} />
+                <ArrowUpRight size={14} className="text-violet/50 dark:text-violet-light/50" />
               </div>
             </Link>
           );

@@ -39,17 +39,17 @@ export function AppShell({ children }: AppShellProps) {
   }
 
   return (
-    <div className="min-h-screen bg-surface">
+    <div className="min-h-screen bg-surface dark:bg-ink">
       <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />
 
       {/* Mobile top bar with hamburger menu */}
-      <div className="sticky top-0 z-30 flex items-center gap-3 px-4 h-[56px] border-b border-border/40 bg-white/80 backdrop-blur-sm md:hidden">
+      <div className="sticky top-0 z-30 flex items-center gap-3 px-4 h-[56px] border-b border-border/40 bg-white/80 dark:bg-ink/80 backdrop-blur-sm md:hidden">
         <button
           onClick={() => setSidebarOpen(true)}
           className="p-2 -ml-1 rounded-lg hover:bg-violet-p/50 transition-colors"
           aria-label="Ouvrir le menu"
         >
-          <Menu size={20} className="text-ink" />
+          <Menu size={20} className="text-ink dark:text-white" />
         </button>
         <span className="font-display font-extrabold text-[15px] leading-none tracking-tight select-none">
           <span className="text-ink">Strick</span>

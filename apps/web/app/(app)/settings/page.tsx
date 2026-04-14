@@ -183,7 +183,7 @@ export default function SettingsPage() {
           </div>
           <div>
             <h1 className="font-display text-[28px] font-bold leading-tight bg-gradient-to-r from-[#3B1FA8] via-[#1A0A3E] to-[#3B1FA8] bg-clip-text text-transparent">
-              Parametres
+              Paramètres
             </h1>
             <p className="text-sm text-ink-3 font-body mt-0.5">
               Gerez vos preferences et la securite de votre compte.

@@ -182,7 +182,7 @@ function CalendarView() {
         <div className="flex items-center gap-3 text-[10px] font-body">
           <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[#D4A017]" />Observation</span>
           <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[#3D63F5]" />Autocall</span>
-          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-ink-3" />Maturite</span>
+          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-ink-3" />Maturité</span>
         </div>
       </div>
       <div className="p-4">
@@ -546,8 +546,8 @@ export default function PortfolioPage() {
                     <PremiumTh className="text-right">Strike</PremiumTh>
                     <PremiumTh className="text-right">Dernier prix</PremiumTh>
                     <PremiumTh className="text-right">Performance</PremiumTh>
-                    <PremiumTh className="text-right">Barriere capital</PremiumTh>
-                    <PremiumTh className="text-right">Distance barriere</PremiumTh>
+                    <PremiumTh className="text-right">Barrière capital</PremiumTh>
+                    <PremiumTh className="text-right">Distance barrière</PremiumTh>
                     <PremiumTh className="text-left">ISIN</PremiumTh>
                     <PremiumTh className="text-left">Produit</PremiumTh>
                   </tr>
@@ -654,7 +654,7 @@ export default function PortfolioPage() {
                   <PremiumTh className="text-left">Produit</PremiumTh>
                   <PremiumTh className="text-left">ISIN</PremiumTh>
                   <PremiumTh className="text-left">Emetteur</PremiumTh>
-                  <PremiumTh className="text-right">Maturite</PremiumTh>
+                  <PremiumTh className="text-right">Maturité</PremiumTh>
                   <PremiumTh className="text-right">Coupon</PremiumTh>
                   <PremiumTh className="text-right">Protection</PremiumTh>
                   <PremiumTh className="text-right">Prix expiration</PremiumTh>

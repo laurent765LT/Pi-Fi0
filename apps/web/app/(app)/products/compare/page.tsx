@@ -21,15 +21,15 @@ const PAYOFF_GRADIENTS: Record<string, string> = {
 const PAYOFF_LABELS: Record<string, string> = {
   AUTOCALL_PHOENIX: 'Phoenix',
   AUTOCALL_COUPON: 'Autocall',
-  CAPITAL_PROTECTED: 'Capital Protege',
+  CAPITAL_PROTECTED: 'Capital Protégé',
   CONDITIONAL_RATE: 'Taux Cond.',
   BARRIER_NOTE: 'Barrier',
 };
 
 const STATUS_LABELS: Record<string, string> = {
   ACTIVE: 'Actif',
-  CLOSED: 'Ferme',
-  MATURED: 'Mature',
+  CLOSED: 'Fermé',
+  MATURED: 'Maturé',
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -121,7 +121,7 @@ export default function ComparePage() {
       highlight: 'none',
     },
     {
-      label: 'Emetteur',
+      label: 'Émetteur',
       getValue: (p) => p.issuerName,
       highlight: 'none',
     },
@@ -150,14 +150,14 @@ export default function ComparePage() {
       highlight: 'highest',
     },
     {
-      label: 'Barriere capital',
+      label: 'Barrière capital',
       icon: <Shield size={14} className="text-emerald-500" />,
       getValue: (p) => p.barrierCapPct != null ? `${p.barrierCapPct}%` : '--',
       getNumeric: (p) => p.barrierCapPct,
       highlight: 'highest', // Higher barrier = more protection
     },
     {
-      label: 'Barriere autocall',
+      label: 'Barrière autocall',
       getValue: (p) => p.autocallBarrierPct != null ? `${p.autocallBarrierPct}%` : '--',
       getNumeric: (p) => p.autocallBarrierPct,
       highlight: 'lowest', // Lower autocall barrier = easier to trigger
@@ -169,12 +169,12 @@ export default function ComparePage() {
       highlight: 'lowest', // Lower SRI = less risk
     },
     {
-      label: 'Maturite',
+      label: 'Maturité',
       getValue: (p) => formatDate(p.maturityDate),
       highlight: 'none',
     },
     {
-      label: 'Frais entree',
+      label: 'Frais d\'entrée',
       getValue: (p) => `${p.entryFeePct.toFixed(2)}%`,
       getNumeric: (p) => p.entryFeePct,
       highlight: 'lowest', // Lower fees = better
@@ -204,8 +204,8 @@ export default function ComparePage() {
             Comparaison de produits
           </h2>
           <p className="text-sm text-ink-3 max-w-md">
-            Selectionnez au moins 2 produits depuis le catalogue pour les comparer
-            cote a cote. Vous pouvez comparer jusqu&apos;a 3 produits.
+            Sélectionnez au moins 2 produits depuis le catalogue pour les comparer
+            côte à côte. Vous pouvez comparer jusqu&apos;à 3 produits.
           </p>
         </div>
         <Link
@@ -253,7 +253,7 @@ export default function ComparePage() {
 
       {/* Comparison table */}
       {allLoaded && (
-        <div className="overflow-x-auto rounded-2xl border border-border/60 bg-white shadow-sm">
+        <div className="overflow-x-auto rounded-2xl border border-border/60 bg-white dark:bg-white/5 shadow-sm hover:shadow-md transition-shadow duration-200">
           <table className="w-full min-w-[600px]">
             {/* Column headers — product cards */}
             <thead>
@@ -308,8 +308,8 @@ export default function ComparePage() {
                   <tr
                     key={row.label}
                     className={cn(
-                      'border-t border-border/40',
-                      rowIdx % 2 === 0 ? 'bg-white' : 'bg-surface/30',
+                      'border-t border-border/40 hover:bg-violet/[0.02] transition-colors',
+                      rowIdx % 2 === 0 ? 'bg-white dark:bg-transparent' : 'bg-surface/30 dark:bg-white/[0.02]',
                     )}
                   >
                     <td className="px-4 py-3">

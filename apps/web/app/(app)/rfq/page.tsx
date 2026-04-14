@@ -42,9 +42,9 @@ const STRUCTURE_TYPES = [
   { value: 'PHOENIX_AUTOCALL', label: 'Phoenix Autocall' },
   { value: 'MEMORY_COUPON', label: 'Memory Coupon' },
   { value: 'REVERSE_CONVERTIBLE', label: 'Reverse Convertible' },
-  { value: 'CAPITAL_PROTECTED_NOTE', label: 'Capital Protege' },
+  { value: 'CAPITAL_PROTECTED_NOTE', label: 'Capital Protégé' },
   { value: 'BARRIER_REVERSE_CONVERTIBLE', label: 'Barrier RC' },
-  { value: 'CAPPED_PARTICIPATION', label: 'Participation Cappee' },
+  { value: 'CAPPED_PARTICIPATION', label: 'Participation Cappée' },
 ];
 
 const RFQ_MODES = [
@@ -500,7 +500,7 @@ function RfqCreateTab({ onCreated }: { onCreated: (id: string) => void }) {
 
   const totalWeight = wYield + wProtection + wCost + wQuality + wSimplicity;
 
-  const steps = ['Produit', 'Contraintes', 'Emetteurs', 'Recapitulatif'];
+  const steps = ['Produit', 'Contraintes', 'Émetteurs', 'Récapitulatif'];
 
   return (
     <div>
@@ -683,7 +683,7 @@ function RfqCreateTab({ onCreated }: { onCreated: (id: string) => void }) {
                   </label>
                 </PremiumField>
                 {autocallEnabled && (
-                  <PremiumField label="Barriere autocall (%)">
+                  <PremiumField label="Barrière autocall (%)">
                     <input
                       type="number"
                       step="1"
@@ -851,7 +851,7 @@ function RfqCreateTab({ onCreated }: { onCreated: (id: string) => void }) {
         <div className="space-y-6">
           <div className="bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 ring-1 ring-black/[0.03] p-5 shadow-sm">
             <p className="font-body text-[13px] text-ink-3">
-              Selectionnez les emetteurs a solliciter. Laissez vide pour envoyer a tous.
+              Sélectionnez les émetteurs à solliciter. Laissez vide pour envoyer à tous.
             </p>
           </div>
 
@@ -1235,7 +1235,7 @@ function RfqDetailTab({ rfqId }: { rfqId: string }) {
                       )}
                       <div>
                         <div className="font-body text-[13px] font-bold text-ink">
-                          {issuer?.name ?? 'Emetteur inconnu'}
+                          {issuer?.name ?? 'Émetteur inconnu'}
                         </div>
                         <div className="font-body text-[10px] text-ink-3">
                           {issuer?.legalEntity ?? ''}

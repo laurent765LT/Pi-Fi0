@@ -90,9 +90,11 @@ function DetailRow({ label, value, className }: { label: string; value: React.Re
   );
 }
 
-function StatBox({ label, value, color }: { label: string; value: string; color?: string }) {
+function StatBox({ label, value, color, icon: Icon }: { label: string; value: string; color?: string; icon?: any }) {
   return (
-    <div className="flex flex-col items-center gap-1 py-3 px-2 rounded-lg bg-surface-2">
+    <div className="relative flex flex-col items-center gap-1.5 py-4 px-3 rounded-xl bg-white dark:bg-white/5 border border-border/60 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden group">
+      <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-violet/60 to-teal/40 opacity-0 group-hover:opacity-100 transition-opacity" />
+      {Icon && <Icon size={13} className="text-ink-3/50 mb-0.5" />}
       <span className="text-[9px] uppercase tracking-wider text-ink-3 font-semibold font-body">{label}</span>
       <span className={cn("font-display text-xl font-bold leading-none", color ?? 'text-ink')}>{value}</span>
     </div>
@@ -141,23 +143,30 @@ function ScenarioTable({ product }: { product: any }) {
   const investBase = 10_000;
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border">
+    <div className="overflow-hidden rounded-xl border border-border/60 shadow-sm">
       <table className="w-full text-sm font-body">
         <thead>
-          <tr className="bg-surface-2 border-b border-border">
-            <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-wider text-ink-3 font-semibold">Scénario</th>
-            <th className="px-4 py-2.5 text-right text-[10px] uppercase tracking-wider text-ink-3 font-semibold">Perf. %</th>
-            <th className="px-4 py-2.5 text-right text-[10px] uppercase tracking-wider text-ink-3 font-semibold">Pour 10 000 €</th>
+          <tr className="bg-gradient-to-r from-surface-2 to-surface-2/60 dark:from-white/5 dark:to-white/[0.02] border-b border-border/60">
+            <th className="px-4 py-3 text-left text-[10px] uppercase tracking-wider text-ink-3 font-semibold">Scénario</th>
+            <th className="px-4 py-3 text-right text-[10px] uppercase tracking-wider text-ink-3 font-semibold">Perf. %</th>
+            <th className="px-4 py-3 text-right text-[10px] uppercase tracking-wider text-ink-3 font-semibold">Pour 10 000 €</th>
           </tr>
         </thead>
         <tbody>
           {scenarios.map((s) => (
-            <tr key={s.name} className="border-b border-border/40 last:border-0">
-              <td className="px-4 py-2.5 font-semibold" style={{ color: s.color }}>{s.name}</td>
-              <td className="px-4 py-2.5 text-right font-mono tabular-nums font-semibold" style={{ color: s.color }}>
-                {s.pct >= 0 ? '+' : ''}{s.pct.toFixed(1)}%
+            <tr key={s.name} className="border-b border-border/30 last:border-0 hover:bg-surface-2/50 dark:hover:bg-white/[0.02] transition-colors">
+              <td className="px-4 py-3 font-semibold" style={{ color: s.color }}>
+                <span className="inline-flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: s.color }} />
+                  {s.name}
+                </span>
               </td>
-              <td className="px-4 py-2.5 text-right font-mono tabular-nums text-ink-2">
+              <td className="px-4 py-3 text-right font-mono tabular-nums font-semibold">
+                <span className="inline-flex items-center rounded-md px-2 py-0.5 text-xs" style={{ backgroundColor: s.color + '15', color: s.color }}>
+                  {s.pct >= 0 ? '+' : ''}{s.pct.toFixed(1)}%
+                </span>
+              </td>
+              <td className="px-4 py-3 text-right font-mono tabular-nums text-ink-2">
                 {formatAmount(investBase * (1 + s.pct / 100))}
               </td>
             </tr>
@@ -345,14 +354,15 @@ export default function ProductDetailPage() {
 
         {/* ── Key Metrics ─────────────────────────────────────────── */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-          <StatBox label="Gain max" value={formatPct(product.maxGainPct)} color="text-gold" />
-          <StatBox label="Barrière" value={formatPct(product.barrierCapPct)} color="text-red" />
+          <StatBox label="Gain max" value={formatPct(product.maxGainPct)} color="text-gold" icon={TrendingUp} />
+          <StatBox label="Barrière" value={formatPct(product.barrierCapPct)} color="text-red" icon={Shield} />
           <StatBox
             label={product.couponPct != null ? 'Coupon' : 'Autocall'}
             value={product.couponPct != null ? formatPct(product.couponPct) : formatPct(product.autocallBarrierPct)}
             color="text-teal"
+            icon={Sparkles}
           />
-          <StatBox label="Échéance" value={product.maturityDate ? formatDateShort(product.maturityDate) : '—'} />
+          <StatBox label="Échéance" value={product.maturityDate ? formatDateShort(product.maturityDate) : '—'} icon={Calendar} />
         </div>
 
         {/* ── Two-column layout ───────────────────────────────────── */}
@@ -360,7 +370,7 @@ export default function ProductDetailPage() {
           {/* Left: Main content (2/3) */}
           <div className="lg:col-span-2 flex flex-col gap-6">
             {/* SRI Gauge */}
-            <div className="bg-white rounded-xl border border-border/80 p-5">
+            <div className="bg-white dark:bg-white/5 rounded-xl border border-border/60 shadow-sm p-5">
               <h3 className="font-body text-xs uppercase tracking-widest text-ink-3 font-semibold mb-4">
                 Indicateur de risque (SRI)
               </h3>
@@ -368,7 +378,7 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Tabs */}
-            <div className="bg-white rounded-xl border border-border/80 overflow-hidden">
+            <div className="bg-white dark:bg-white/5 rounded-xl border border-border/60 shadow-sm overflow-hidden">
               <Tabs
                 tabs={[
                   { label: 'Caractéristiques', value: 'overview' },
@@ -479,7 +489,7 @@ export default function ProductDetailPage() {
 
             {/* Barrier Gauge */}
             {product.barrierCapPct != null && (
-              <div className="bg-white rounded-xl border border-border/80 p-5">
+              <div className="bg-white dark:bg-white/5 rounded-xl border border-border/60 shadow-sm p-5">
                 <h3 className="font-body text-xs uppercase tracking-widest text-ink-3 font-semibold mb-4">
                   Jauge barrière
                 </h3>
@@ -492,7 +502,7 @@ export default function ProductDetailPage() {
 
           {/* Right: CTA Card (1/3) */}
           <div className="flex flex-col gap-5">
-            <div className="bg-white rounded-xl border border-border/80 p-5 flex flex-col gap-4 sticky top-6">
+            <div className="bg-white dark:bg-white/5 rounded-xl border border-border/60 shadow-sm p-5 flex flex-col gap-4 sticky top-6">
               <h3 className="font-body text-xs uppercase tracking-widest text-ink-3 font-semibold">Étagère</h3>
 
               <div>
@@ -552,7 +562,7 @@ export default function ProductDetailPage() {
                 <Button
                   variant={alreadyCommitted ? 'outline' : 'primary'}
                   size="lg"
-                  className="w-full"
+                  className={cn("w-full rounded-xl", !alreadyCommitted && !isClosed && "bg-gradient-to-r from-violet to-violet/85 shadow-md shadow-violet/20 hover:shadow-lg hover:shadow-violet/30")}
                   disabled={isClosed}
                   onClick={() => setModalOpen(true)}
                 >

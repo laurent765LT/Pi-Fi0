@@ -424,7 +424,7 @@ export default function PricingPage() {
                   </div>
                   <div>
                     <h3 className="font-display text-[15px] font-bold text-ink dark:text-white">Structure du Produit</h3>
-                    <p className="text-[11px] text-ink-3 dark:text-white/40 font-body">Parametres principaux</p>
+                    <p className="text-[11px] text-ink-3 dark:text-white/40 font-body">Paramètres principaux</p>
                   </div>
                 </div>
 

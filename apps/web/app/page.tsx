@@ -5,7 +5,7 @@ import { Calculator, Sparkles, Building2, ArrowRight, ChevronDown, Zap } from 'l
 
 const metrics = [
   { value: '17', label: 'Produits actifs' },
-  { value: '5', label: 'Emetteurs' },
+  { value: '5', label: 'Émetteurs' },
   { value: '€2.1Mrd', label: 'Sous gestion' },
 ];
 
@@ -14,26 +14,26 @@ const features = [
     icon: Calculator,
     title: 'Pricing Engine',
     description:
-      'Simulez vos produits en temps reel avec des donnees de marche live. Obtenez des cotations instantanees sur autocalls, phoenix, reverse convertibles et plus.',
+      'Simulez vos produits en temps réel avec des données de marché live. Obtenez des cotations instantanées sur autocalls, phoenix, reverse convertibles et plus.',
     gradient: 'from-violet to-violet-mid',
   },
   {
     icon: Sparkles,
-    title: 'IA Integree',
+    title: 'IA Intégrée',
     description:
-      'Recommandations personnalisees, analyse de portefeuille et generation de documents KID automatisee grace a notre moteur d\'intelligence artificielle.',
+      'Recommandations personnalisées, analyse de portefeuille et génération de documents KID automatisée grâce à notre moteur d\'intelligence artificielle.',
     gradient: 'from-cobalt to-cobalt-light',
   },
   {
     icon: Building2,
-    title: 'Multi-emetteurs',
+    title: 'Multi-émetteurs',
     description:
-      'Envoyez des RFQ simultanees a 5+ emetteurs et comparez les offres en direct. BNP, Goldman Sachs, SocGen, Natixis et Barclays connectes.',
+      'Envoyez des RFQ simultanées à 5+ émetteurs et comparez les offres en direct. BNP, Goldman Sachs, SocGen, Natixis et Barclays connectés.',
     gradient: 'from-violet-mid to-cobalt-mid',
   },
 ];
 
-const issuers = ['BNP Paribas', 'Goldman Sachs', 'Societe Generale', 'Natixis', 'Barclays'];
+const issuers = ['BNP Paribas', 'Goldman Sachs', 'Société Générale', 'Natixis', 'Barclays'];
 
 export default function Home() {
   return (
@@ -63,15 +63,15 @@ export default function Home() {
             La marketplace des
             <br />
             <span className="bg-gradient-to-r from-white via-violet-pale to-cobalt-pale bg-clip-text text-transparent">
-              produits structures
+              produits structurés
             </span>
           </h1>
 
           {/* Subtitle */}
           <p className="max-w-2xl mx-auto text-lg md:text-xl text-white/70 font-body leading-relaxed mb-10">
-            Strickin&apos; connecte les CGP et assureurs aux meilleurs emetteurs
-            de produits structures. Pricing en temps reel, comparaison
-            multi-emetteurs et souscription digitalisee.
+            Strick&apos;in connecte les CGP et assureurs aux meilleurs émetteurs
+            de produits structurés. Pricing en temps réel, comparaison
+            multi-émetteurs et souscription digitalisée.
           </p>
 
           {/* CTAs */}
@@ -80,7 +80,7 @@ export default function Home() {
               href="/login"
               className="group inline-flex items-center gap-2.5 px-8 py-3.5 rounded-xl bg-white text-violet font-display font-bold text-sm tracking-wide shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-200"
             >
-              Acceder a la plateforme
+              Accéder à la plateforme
               <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </Link>
             <button
@@ -89,7 +89,7 @@ export default function Home() {
               }
               className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl border border-white/25 text-white font-display font-bold text-sm tracking-wide hover:bg-white/10 transition-all duration-200"
             >
-              Decouvrir
+              Découvrir
               <ChevronDown className="w-4 h-4 animate-float" />
             </button>
           </div>
@@ -126,13 +126,13 @@ export default function Home() {
         <div className="max-w-container mx-auto">
           {/* Section header */}
           <div className="text-center mb-16">
-            <span className="label-section">Fonctionnalites</span>
+            <span className="label-section">Fonctionnalités</span>
             <h2 className="font-display text-3xl md:text-4xl font-extrabold text-ink mt-4 mb-4">
               Tout ce qu&apos;il faut pour{' '}
               <span className="text-gradient">distribuer mieux</span>
             </h2>
             <p className="max-w-xl mx-auto text-ink-3 leading-relaxed">
-              Une plateforme pensee pour les professionnels de la gestion de patrimoine
+              Une plateforme pensée pour les professionnels de la gestion de patrimoine
               et de l&apos;assurance-vie.
             </p>
           </div>
@@ -166,7 +166,7 @@ export default function Home() {
       <section className="py-12 border-y border-border/60 bg-white">
         <div className="max-w-container mx-auto px-6">
           <p className="text-center text-[10px] uppercase tracking-[0.3em] text-ink-4 font-semibold mb-6">
-            Emetteurs connectes
+            Émetteurs connectés
           </p>
           <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
             {issuers.map((name) => (
@@ -190,13 +190,13 @@ export default function Home() {
 
         <div className="relative z-10 max-w-2xl mx-auto text-center">
           <h2 className="font-display text-3xl md:text-4xl font-extrabold text-white mb-4 leading-tight">
-            Pret a transformer
+            Prêt à transformer
             <br />
             votre distribution ?
           </h2>
           <p className="text-white/50 mb-10 leading-relaxed">
-            Rejoignez les CGP et compagnies qui utilisent deja Strickin&apos; pour
-            sourcer, pricer et souscrire leurs produits structures.
+            Rejoignez les CGP et compagnies qui utilisent déjà Strick&apos;in pour
+            sourcer, pricer et souscrire leurs produits structurés.
           </p>
           <Link
             href="/login"
@@ -211,9 +211,9 @@ export default function Home() {
       {/* ─── Footer Bar ───────────────────────────────────────────────────── */}
       <footer className="bg-ink border-t border-white/5 py-6 px-6">
         <div className="max-w-container mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <span className="font-display text-sm font-bold text-white/60">strickin&apos;</span>
+          <span className="font-display text-sm font-bold text-white/60">Strick&apos;in</span>
           <span className="text-xs text-white/30">
-            &copy; {new Date().getFullYear()} Strickin&apos;. Tous droits reserves.
+            &copy; {new Date().getFullYear()} Strick&apos;in. Tous droits réservés.
           </span>
         </div>
       </footer>

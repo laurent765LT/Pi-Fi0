@@ -160,7 +160,7 @@ export default function EventsPage() {
           </Link>
           <div>
             <h1 className="font-display text-2xl font-bold text-ink dark:text-white leading-tight">
-              Evenements
+              Événements
             </h1>
             <p className="text-sm text-ink-3 font-body mt-0.5">
               Tous les evenements a venir sur vos produits structures.

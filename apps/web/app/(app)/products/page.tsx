@@ -328,10 +328,10 @@ export default function ProductsPage() {
 
   return (
     <div className="animate-fade-in">
-      {/* ── Compact Page Header ──────────────────────────────────────── */}
-      <div className="flex items-center justify-between mb-3">
+      {/* ── Page Header ──────────────────────────────────────── */}
+      <div className="flex items-center justify-between mb-1.5">
         <div className="flex items-center gap-4">
-          <h1 className="font-display text-[22px] font-bold text-ink dark:text-surface leading-none">
+          <h1 className="font-display text-[22px] font-bold leading-none bg-gradient-to-r from-[#3B1FA8] via-[#1A0A3E] to-[#3B1FA8] bg-clip-text text-transparent dark:from-white dark:via-[#C9BCFF] dark:to-white">
             Produits structurés
           </h1>
           {/* Inline stat pills */}
@@ -430,6 +430,62 @@ export default function ProductsPage() {
           </div>
         </div>
       </div>
+
+      {/* Gradient divider */}
+      <div
+        className="h-[2px] rounded-full mb-3"
+        style={{
+          background: 'linear-gradient(90deg, #3B1FA8, #00B894 40%, #D4A017 70%, transparent)',
+        }}
+      />
+
+      {/* ── Summary Stats Bar ────────────────────────────────────────── */}
+      {!isLoading && !isError && products.length > 0 && (
+        <div className="flex items-center gap-4 mb-3 px-3.5 py-2 rounded-xl bg-white/80 dark:bg-white/[0.04] backdrop-blur-md border border-border/40 dark:border-white/8 shadow-sm">
+          {(() => {
+            const avgCoupon = products.filter((p: any) => p.couponPct != null && p.couponPct > 0).reduce((s: number, p: any) => s + p.couponPct, 0) / Math.max(1, products.filter((p: any) => p.couponPct != null && p.couponPct > 0).length);
+            const avgBarrier = products.filter((p: any) => p.barrierCapPct != null).reduce((s: number, p: any) => s + p.barrierCapPct, 0) / Math.max(1, products.filter((p: any) => p.barrierCapPct != null).length);
+            const sriDist = [0, 0, 0, 0, 0, 0, 0];
+            products.forEach((p: any) => { if (p.sri >= 1 && p.sri <= 7) sriDist[p.sri - 1]++; });
+            const activeCount = products.filter((p: any) => p.status === 'ACTIVE' || p.status === 'OPEN').length;
+
+            return (
+              <>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[9px] uppercase tracking-wider text-ink-3 dark:text-white/40 font-semibold font-body">Coupon moy.</span>
+                  <span className="font-mono text-[13px] font-bold text-[#008B6E] tabular-nums">{avgCoupon.toFixed(1)}%</span>
+                </div>
+                <div className="w-px h-4 bg-border/40 dark:bg-white/8" />
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[9px] uppercase tracking-wider text-ink-3 dark:text-white/40 font-semibold font-body">Barrière moy.</span>
+                  <span className="font-mono text-[13px] font-bold text-[#E8334A] tabular-nums">{avgBarrier.toFixed(0)}%</span>
+                </div>
+                <div className="w-px h-4 bg-border/40 dark:bg-white/8" />
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[9px] uppercase tracking-wider text-ink-3 dark:text-white/40 font-semibold font-body">Actifs</span>
+                  <span className="font-mono text-[13px] font-bold text-[#3B1FA8] dark:text-[#C9BCFF] tabular-nums">{activeCount}</span>
+                </div>
+                <div className="w-px h-4 bg-border/40 dark:bg-white/8 hidden lg:block" />
+                <div className="hidden lg:flex items-center gap-1">
+                  <span className="text-[9px] uppercase tracking-wider text-ink-3 dark:text-white/40 font-semibold font-body mr-1">SRI</span>
+                  {sriDist.map((count, i) => (
+                    <Tooltip key={i} content={`SRI ${i + 1} : ${count} produit${count > 1 ? 's' : ''}`}>
+                      <div
+                        className="h-3 rounded-sm min-w-[4px] transition-all duration-300"
+                        style={{
+                          width: `${Math.max(4, (count / products.length) * 60)}px`,
+                          backgroundColor: i <= 1 ? '#00B894' : i <= 3 ? '#D4A017' : '#E8334A',
+                          opacity: count > 0 ? 0.7 : 0.15,
+                        }}
+                      />
+                    </Tooltip>
+                  ))}
+                </div>
+              </>
+            );
+          })()}
+        </div>
+      )}
 
       {/* ── Sticky Toolbar: Tabs + Search + Filters ──────────────────── */}
       <div className={cn(

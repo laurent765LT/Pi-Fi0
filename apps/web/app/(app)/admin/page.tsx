@@ -181,7 +181,7 @@ export default function AdminDashboardPage() {
           <ShieldCheck size={20} className="text-white" />
         </div>
         <div>
-          <h1 className="font-display text-2xl font-bold text-ink dark:text-white leading-tight">
+          <h1 className="font-display text-2xl font-bold leading-tight bg-gradient-to-r from-[#3B1FA8] via-[#1A0A3E] to-[#3B1FA8] bg-clip-text text-transparent dark:from-white dark:via-[#C9BCFF] dark:to-white">
             Administration
           </h1>
           <p className="font-body text-sm text-ink-3 mt-0.5">
@@ -190,10 +190,9 @@ export default function AdminDashboardPage() {
         </div>
       </div>
       <div
-        className="h-[2px] rounded-full mb-8 mt-4"
+        className="h-[2px] rounded-full mb-6"
         style={{
-          background:
-            'linear-gradient(90deg, #3B1FA8, #00B894 50%, transparent)',
+          background: 'linear-gradient(90deg, #3B1FA8, #00B894 40%, #D4A017 70%, transparent)',
         }}
       />
 

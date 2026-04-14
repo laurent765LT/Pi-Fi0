@@ -263,7 +263,7 @@ export default function NotificationsPage() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="font-display text-[22px] font-bold text-ink dark:text-white leading-tight">
+              <h1 className="font-display text-[22px] font-bold leading-tight bg-gradient-to-r from-[#3B1FA8] via-[#1A0A3E] to-[#3B1FA8] bg-clip-text text-transparent dark:from-white dark:via-[#C9BCFF] dark:to-white">
                 Notifications
               </h1>
               {hasUnread && (

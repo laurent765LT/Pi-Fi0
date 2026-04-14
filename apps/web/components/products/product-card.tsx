@@ -97,7 +97,9 @@ export function ProductCard({ product, className, isFavorited = false, recommend
     isin,
     payoffType,
     issuerName,
+    underlyingYahoo,
     barrierCapPct,
+    couponPct,
     maxGainPct,
     sri,
     maturityDate,
@@ -267,8 +269,8 @@ export function ProductCard({ product, className, isFavorited = false, recommend
           </p>
         </div>
 
-        {/* ── Issuer row ── */}
-        <div className="flex items-center gap-2 -mt-1">
+        {/* ── Issuer + Underlying row ── */}
+        <div className="flex items-center gap-2 -mt-1 flex-wrap">
           <span
             className="w-2 h-2 rounded-full shrink-0"
             style={{ backgroundColor: payoff.dot }}
@@ -276,6 +278,14 @@ export function ProductCard({ product, className, isFavorited = false, recommend
           <p className="text-[12px] text-ink-2 dark:text-ink-3 truncate font-body">
             {issuerName}
           </p>
+          {underlyingYahoo && (
+            <>
+              <span className="text-ink-3/20 dark:text-ink-3/15">·</span>
+              <span className="text-[10px] font-mono text-ink-3/70 dark:text-ink-3/50 bg-surface-2/80 dark:bg-white/[0.04] px-1.5 py-[1px] rounded-md truncate">
+                {underlyingYahoo}
+              </span>
+            </>
+          )}
         </div>
 
         {/* ── AI Insight (when available) ── */}
@@ -289,38 +299,50 @@ export function ProductCard({ product, className, isFavorited = false, recommend
         )}
 
         {/* ── Key metrics grid ── */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-4 gap-2">
+          {/* Coupon (hero) */}
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[8px] uppercase tracking-widest text-ink-3/70 dark:text-ink-3/50 font-semibold">
+              Coupon
+            </span>
+            <span className="font-display text-[18px] font-extrabold leading-none" style={{ color: couponPct != null && couponPct > 0 ? '#008B6E' : undefined }}>
+              {couponPct != null && couponPct > 0 ? (
+                <>{couponPct.toFixed(1)}<span className="text-[12px] font-bold opacity-50">%</span></>
+              ) : (
+                <span className="text-[13px] text-ink-3/40 dark:text-ink-3/30">—</span>
+              )}
+            </span>
+          </div>
+
           {/* Gain max */}
           <div className="flex flex-col gap-0.5">
-            <span className="text-[9px] uppercase tracking-widest text-ink-3/70 dark:text-ink-3/50 font-semibold">
+            <span className="text-[8px] uppercase tracking-widest text-ink-3/70 dark:text-ink-3/50 font-semibold">
               Gain max
             </span>
             <span className="font-display text-[18px] font-extrabold text-ink dark:text-white leading-none">
               {(maxGainPct ?? 0).toFixed(0)}
-              <span className="text-[13px] font-bold text-ink-3/50 dark:text-ink-3/40">%</span>
+              <span className="text-[12px] font-bold text-ink-3/50 dark:text-ink-3/40">%</span>
             </span>
           </div>
 
           {/* Barrière */}
           <div className="flex flex-col gap-0.5">
-            <span className="text-[9px] uppercase tracking-widest text-ink-3/70 dark:text-ink-3/50 font-semibold">
+            <span className="text-[8px] uppercase tracking-widest text-ink-3/70 dark:text-ink-3/50 font-semibold">
               Barrière
             </span>
             <span className="font-display text-[18px] font-extrabold text-orange-600 dark:text-orange-400 leading-none">
               {(barrierCapPct ?? 0).toFixed(0)}
-              <span className="text-[13px] font-bold text-orange-400/60 dark:text-orange-500/50">%</span>
+              <span className="text-[12px] font-bold text-orange-400/60 dark:text-orange-500/50">%</span>
             </span>
           </div>
 
           {/* Échéance */}
           <div className="flex flex-col gap-0.5">
-            <span className="text-[9px] uppercase tracking-widest text-ink-3/70 dark:text-ink-3/50 font-semibold">
+            <span className="text-[8px] uppercase tracking-widest text-ink-3/70 dark:text-ink-3/50 font-semibold">
               Échéance
             </span>
-            <span className="font-display text-[18px] font-extrabold text-ink dark:text-white leading-none">
-              <span className="text-[13px] font-bold">
-                {formatDate(maturityDate)}
-              </span>
+            <span className="font-display text-[13px] font-bold text-ink dark:text-white leading-none mt-[3px]">
+              {formatDate(maturityDate)}
             </span>
           </div>
         </div>

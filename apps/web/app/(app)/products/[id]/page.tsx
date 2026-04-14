@@ -623,14 +623,23 @@ export default function ProductDetailPage() {
             )}
           </div>
 
-          <h1 className="font-display text-xl md:text-2xl font-bold text-ink leading-tight mb-1">
+          <h1 className="font-display text-xl md:text-2xl font-bold leading-tight mb-1 bg-gradient-to-r from-[#1A0A3E] via-[#3B1FA8] to-[#1A0A3E] bg-clip-text text-transparent dark:from-white dark:via-[#C9BCFF] dark:to-white">
             {product.name}
           </h1>
           <div className="flex items-center gap-2 text-xs text-ink-3 font-body">
             <span className="font-mono text-[11px] bg-surface-2 border border-border rounded px-1.5 py-0.5 tabular-nums">
               {product.isin}
             </span>
+            <span className="w-px h-3 bg-border/60" />
             <span>{product.issuerName}</span>
+            {product.underlyingYahoo && (
+              <>
+                <span className="w-px h-3 bg-border/60" />
+                <span className="font-mono text-[10px] text-ink-3/70 bg-violet-ghost dark:bg-violet/10 px-1.5 py-0.5 rounded-md">
+                  {product.underlyingYahoo}
+                </span>
+              </>
+            )}
           </div>
 
           {/* Compatible insurers */}
@@ -653,15 +662,15 @@ export default function ProductDetailPage() {
         </div>
 
         {/* ── Key Metrics ─────────────────────────────────────────── */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-5">
+          {product.couponPct != null && (
+            <StatBox label="Coupon" value={formatPct(product.couponPct)} color="text-teal" icon={Sparkles} />
+          )}
           <StatBox label="Gain max" value={formatPct(product.maxGainPct)} color="text-gold" icon={TrendingUp} />
           <StatBox label="Barrière" value={formatPct(product.barrierCapPct)} color="text-red" icon={Shield} />
-          <StatBox
-            label={product.couponPct != null ? 'Coupon' : 'Autocall'}
-            value={product.couponPct != null ? formatPct(product.couponPct) : formatPct(product.autocallBarrierPct)}
-            color="text-teal"
-            icon={Sparkles}
-          />
+          {product.autocallBarrierPct != null && (
+            <StatBox label="Autocall" value={formatPct(product.autocallBarrierPct)} color="text-violet" icon={Target} />
+          )}
           <StatBox label="Échéance" value={product.maturityDate ? formatDateShort(product.maturityDate) : '—'} icon={Calendar} />
         </div>
 

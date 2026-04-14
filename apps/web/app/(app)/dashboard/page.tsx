@@ -550,7 +550,7 @@ export default function DashboardPage() {
       {/* ── Page Header ─────────────────────────────────────────── */}
       <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
         <div>
-          <h1 className="font-display text-xl font-bold text-ink dark:text-ink">
+          <h1 className="font-display text-xl font-bold leading-none bg-gradient-to-r from-[#3B1FA8] via-[#1A0A3E] to-[#3B1FA8] bg-clip-text text-transparent dark:from-white dark:via-[#C9BCFF] dark:to-white">
             Bonjour, {firstName}{' '}
             <span role="img" aria-label="wave">
               👋

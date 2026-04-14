@@ -306,7 +306,7 @@ export default function PricingPage() {
             <Calculator size={17} className="text-white" />
           </div>
           <div>
-            <h1 className="font-display text-[22px] font-bold text-ink dark:text-white leading-tight tracking-tight">
+            <h1 className="font-display text-[22px] font-bold leading-tight tracking-tight bg-gradient-to-r from-[#3B1FA8] via-[#1A0A3E] to-[#3B1FA8] bg-clip-text text-transparent dark:from-white dark:via-[#C9BCFF] dark:to-white">
               Pricing Engine
             </h1>
             <p className="text-[12px] text-ink-3 dark:text-white/50 font-body mt-0.5">

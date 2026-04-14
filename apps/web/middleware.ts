@@ -39,10 +39,17 @@ export function middleware(request: NextRequest) {
 
   if (authCookie?.value) {
     try {
-      const parsed = JSON.parse(authCookie.value);
-      isAuthenticated = !!parsed?.state?.token;
+      const raw = authCookie.value;
+      let parsed: any;
+      try {
+        parsed = JSON.parse(raw);
+      } catch {
+        parsed = JSON.parse(decodeURIComponent(raw));
+      }
+      isAuthenticated = !!(parsed?.state?.token || parsed?.token);
     } catch {
-      // Cookie exists but malformed
+      // Cookie exists but malformed — check if it contains a token string
+      isAuthenticated = authCookie.value.includes('token');
     }
   }
 

@@ -19,6 +19,7 @@ export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const isAuthenticated = useAuthStore(selectIsAuthenticated);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
 
   const closeSidebar = useCallback(() => setSidebarOpen(false), []);
 
@@ -27,14 +28,24 @@ export function AppShell({ children }: AppShellProps) {
     setSidebarOpen(false);
   }, [pathname]);
 
+  // Wait one tick for zustand to rehydrate from localStorage
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.replace('/login');
-    }
-  }, [isAuthenticated, router]);
+    setHydrated(true);
+  }, []);
 
-  // While redirecting, render nothing to avoid layout flash
-  if (!isAuthenticated) {
+  useEffect(() => {
+    if (!hydrated) return;
+    // If zustand says not authenticated, double-check the cookie before redirecting
+    if (!isAuthenticated) {
+      const hasCookie = document.cookie.includes('strickin-auth') && document.cookie.includes('token');
+      if (!hasCookie) {
+        router.replace('/login');
+      }
+    }
+  }, [hydrated, isAuthenticated, router]);
+
+  // While hydrating, render nothing to avoid layout flash
+  if (!hydrated) {
     return null;
   }
 

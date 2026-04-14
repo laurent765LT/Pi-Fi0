@@ -26,6 +26,7 @@ interface AuthState {
 export const selectIsAuthenticated = (s: AuthState) =>
   s.token !== null && s.user !== null;
 
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({

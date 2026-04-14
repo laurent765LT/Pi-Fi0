@@ -106,7 +106,7 @@ export default function AdminShelvesPage() {
   }, []);
 
   return (
-    <main className="max-w-container mx-auto px-6 py-8">
+    <main className="w-full">
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <h1 className="font-display text-3xl font-bold text-ink dark:text-white mb-3">
         Enveloppes

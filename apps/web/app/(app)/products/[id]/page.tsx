@@ -474,7 +474,7 @@ function AiAnalysisPanel({ product }: { product: any }) {
 
 function PageSkeleton() {
   return (
-    <main className="mx-auto max-w-5xl px-6 py-8 animate-pulse">
+    <main className="w-full animate-pulse">
       <div className="h-3 w-28 bg-surface-2 rounded mb-4" />
       <div className="h-6 w-2/3 bg-surface-2 rounded mb-2" />
       <div className="h-3 w-1/3 bg-surface-2 rounded mb-5" />
@@ -516,7 +516,7 @@ export default function ProductDetailPage() {
 
   if (isError || !product) {
     return (
-      <main className="mx-auto max-w-5xl px-6 py-8">
+      <main className="w-full">
         <Link href="/products" className="inline-flex items-center gap-1.5 text-xs text-ink-3 font-body hover:text-violet transition-colors mb-4">
           <ArrowLeft size={13} /> Retour aux produits
         </Link>
@@ -550,7 +550,7 @@ export default function ProductDetailPage() {
 
   return (
     <>
-      <main className="mx-auto max-w-5xl px-6 py-6 animate-fade-in">
+      <main className="w-full animate-fade-in">
         {/* ── Breadcrumb ──────────────────────────────────────────── */}
         <div className="flex items-center justify-between mb-4">
           <Link href="/products" className="inline-flex items-center gap-1.5 text-xs text-ink-3 font-body hover:text-violet transition-colors">

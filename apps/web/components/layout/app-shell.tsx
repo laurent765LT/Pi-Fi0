@@ -59,7 +59,7 @@ export function AppShell({ children }: AppShellProps) {
 
       {/* Main content — offset by sidebar width on desktop, full width on mobile */}
       <main className="min-h-screen md:pl-[248px]">
-        <div className="max-w-[1200px] mx-auto px-4 py-5 md:px-8 md:py-7">
+        <div className="px-4 py-5 md:px-6 lg:px-8 xl:px-10 md:py-6">
           <ErrorBoundary>{children}</ErrorBoundary>
         </div>
       </main>

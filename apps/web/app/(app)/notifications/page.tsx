@@ -253,7 +253,7 @@ export default function NotificationsPage() {
   const hasUnread = unreadCount() > 0;
 
   return (
-    <main className="max-w-container mx-auto px-6 py-6 animate-fade-in">
+    <main className="w-full animate-fade-in">
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between gap-4 mb-1.5">
         <div className="flex items-center gap-2.5">

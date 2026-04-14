@@ -1,6 +1,6 @@
 export default function AppLoading() {
   return (
-    <div className="max-w-container mx-auto px-6 py-8 animate-pulse">
+    <div className="w-full animate-pulse">
       {/* Header skeleton */}
       <div className="h-8 w-48 bg-surface-2 rounded-lg mb-3" />
       <div className="h-1 w-24 bg-surface-2 rounded-full mb-8" />

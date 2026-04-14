@@ -193,7 +193,7 @@ export default function SettingsPage() {
         <div className="gradient-bar h-[2px] rounded-full mt-5 opacity-60" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* ── Notifications ────────────────────────────────────── */}
         <SectionCard
           icon={<Bell size={16} className="text-[#3B1FA8]" />}

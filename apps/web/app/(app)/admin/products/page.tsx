@@ -86,7 +86,7 @@ export default function AdminProductsPage() {
   });
 
   return (
-    <main className="max-w-container mx-auto px-6 py-8">
+    <main className="w-full">
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex items-start justify-between gap-4 mb-3">
         <div>

@@ -680,10 +680,12 @@ export default function DashboardPage() {
   const commitments = (commitmentsData as any[]) ?? [];
   const favorites = (favoritesData as any[]) ?? [];
 
-  const activeProducts = products.filter((p: any) => p.status === 'ACTIVE' || p.status === 'OPEN').length || 17;
-  const totalVolume = commitments.reduce((s: number, c: any) => s + (c.amount ?? 0), 0) || 8_400_000;
-  const totalCommitments = commitments.length || 43;
-  const favCount = favorites.length || 5;
+  // For newly registered users, show real (zero) values. For demo accounts, use fallbacks.
+  const useDemoFallback = !isNewRegistered;
+  const activeProducts = products.filter((p: any) => p.status === 'ACTIVE' || p.status === 'OPEN').length || (useDemoFallback ? 17 : 0);
+  const totalVolume = commitments.reduce((s: number, c: any) => s + (c.amount ?? 0), 0) || (useDemoFallback ? 8_400_000 : 0);
+  const totalCommitments = commitments.length || (useDemoFallback ? 43 : 0);
+  const favCount = favorites.length || (useDemoFallback ? 5 : 0);
 
   // Format volume for display (e.g. 8400000 -> "8,4M")
   const formattedVolume = totalVolume >= 1_000_000
@@ -936,6 +938,44 @@ export default function DashboardPage() {
           })}
         </div>
       </section>
+
+      {/* ── Getting Started (new registered users only) ──────── */}
+      {isNewRegistered && (
+        <section className="mb-5">
+          <div className="rounded-xl bg-white/80 dark:bg-white/[0.03] backdrop-blur-md border border-border/50 dark:border-border-2/40 shadow-card overflow-hidden">
+            <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-violet via-teal to-gold" />
+            <div className="p-5">
+              <h3 className="font-display text-base font-bold text-ink dark:text-white mb-1">
+                Premiers pas sur Strick&apos;in
+              </h3>
+              <p className="text-xs text-ink-3 font-body mb-4">Completez ces etapes pour profiter de toutes les fonctionnalites.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {[
+                  { label: 'Completer l\'onboarding', desc: 'Verifiez votre identite et vos certifications', href: '/onboarding', icon: Shield, done: false },
+                  { label: 'Decouvrir le catalogue', desc: '17 produits structures disponibles', href: '/products', icon: Package, done: false },
+                  { label: 'Simuler un pricing', desc: 'Testez le moteur de pricing IA', href: '/pricing', icon: Calculator, done: false },
+                  { label: 'Explorer la research', desc: 'Analyse de marche en temps reel', href: '/research', icon: Brain, done: false },
+                ].map((step) => {
+                  const Icon = step.icon;
+                  return (
+                    <Link
+                      key={step.href}
+                      href={step.href}
+                      className="group flex flex-col gap-2 p-3.5 rounded-xl border border-border/50 dark:border-white/10 bg-surface/50 dark:bg-white/[0.02] hover:border-violet/30 hover:shadow-sm transition-all duration-200"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-violet/8 dark:bg-violet/15 flex items-center justify-center">
+                        <Icon size={15} className="text-violet group-hover:scale-110 transition-transform" />
+                      </div>
+                      <p className="font-body text-xs font-semibold text-ink dark:text-white">{step.label}</p>
+                      <p className="font-body text-[10px] text-ink-3 leading-relaxed">{step.desc}</p>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── AI Market Pulse — tightly integrated ─────────────── */}
       <section className="mb-5">

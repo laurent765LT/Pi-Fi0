@@ -4,8 +4,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  LayoutDashboard, Package, ClipboardList, Users, Settings,
-  LogOut, Zap, ChevronRight, X, Bell, Building2,
+  LayoutDashboard, Package, ClipboardList, ClipboardCheck, Users, Settings,
+  LogOut, Zap, ChevronRight, X, Bell, Building2, BarChart3, MessageSquare, Shield,
 } from 'lucide-react';
 import { ASSUREUR_DEMO } from '@/lib/mock-data-assureur';
 import { cn } from '@/lib/cn';
@@ -14,7 +14,11 @@ const NAV_ITEMS = [
   { href: '/assureur/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/assureur/produits', label: 'Mes produits', icon: Package },
   { href: '/assureur/enveloppes', label: 'Enveloppes', icon: ClipboardList },
+  { href: '/assureur/engagements', label: 'Engagements', icon: ClipboardCheck },
+  { href: '/assureur/rfq', label: 'Cotations', icon: MessageSquare },
+  { href: '/assureur/regles', label: 'Regles', icon: Shield },
   { href: '/assureur/distributeurs', label: 'Distributeurs', icon: Users },
+  { href: '/assureur/analytics', label: 'Analytics', icon: BarChart3 },
 ];
 
 function DemoBanner() {

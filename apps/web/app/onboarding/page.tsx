@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Zap, CheckCircle2, XCircle, ChevronRight, ChevronLeft,
   Upload, Building2, FileText, Shield, User, Briefcase, Eye,
+  Clock, AlertCircle, File as FileIcon,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -28,6 +29,35 @@ const STEP_META: { num: StepKey; label: string; icon: React.ElementType }[] = [
 ];
 
 type StepStatus = 'active' | 'done' | 'pending';
+
+const DRAFT_KEY = 'strickin-onboarding-draft';
+
+// ─── Draft Saved Indicator ───────────────────────────────────────────────────
+
+function DraftIndicator({ visible }: { visible: boolean }) {
+  return (
+    <div
+      className={cn(
+        'flex items-center gap-1.5 text-[10px] font-body text-teal transition-all duration-500',
+        visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-1',
+      )}
+    >
+      <CheckCircle2 size={10} />
+      <span>Brouillon sauvegard&eacute;</span>
+    </div>
+  );
+}
+
+// ─── Estimated Time ──────────────────────────────────────────────────────────
+
+function EstimatedTime() {
+  return (
+    <div className="flex items-center justify-center gap-1.5 text-xs font-body text-ink-3">
+      <Clock size={12} className="text-ink-3" />
+      <span>Temps estim&eacute; : ~5 minutes</span>
+    </div>
+  );
+}
 
 // ─── Step Indicator ───────────────────────────────────────────────────────────
 
@@ -84,17 +114,29 @@ function StepIndicator({ currentStep, totalSteps = 8 }: { currentStep: StepKey; 
 
 interface Step1Props {
   onNext: (data: { firstName: string; lastName: string; phone: string }) => void;
+  onChange?: (data: { firstName: string; lastName: string; phone: string }) => void;
+  initial?: { firstName: string; lastName: string; phone: string };
 }
 
-function Step1Profile({ onNext }: Step1Props) {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [phone, setPhone] = useState('');
+function Step1Profile({ onNext, onChange, initial }: Step1Props) {
+  const [firstName, setFirstName] = useState(initial?.firstName ?? '');
+  const [lastName, setLastName] = useState(initial?.lastName ?? '');
+  const [phone, setPhone] = useState(initial?.phone ?? '');
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<{ firstName?: boolean; lastName?: boolean }>({});
+
+  // Notify parent of changes for draft saving
+  useEffect(() => {
+    onChange?.({ firstName, lastName, phone });
+  }, [firstName, lastName, phone]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!firstName.trim() || !lastName.trim()) {
+    const errors: { firstName?: boolean; lastName?: boolean } = {};
+    if (!firstName.trim()) errors.firstName = true;
+    if (!lastName.trim()) errors.lastName = true;
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
       setError('Veuillez remplir tous les champs obligatoires.');
       return;
     }
@@ -106,26 +148,28 @@ function Step1Profile({ onNext }: Step1Props) {
       <div className="text-center">
         <h2 className="font-display font-bold text-xl text-ink mb-1">Vos informations</h2>
         <p className="font-body text-sm text-ink-3">
-          Renseignez vos coordonnées pour créer votre profil.
+          Renseignez vos coordonn&eacute;es pour cr&eacute;er votre profil.
         </p>
       </div>
 
       <Input
-        label="Prénom *"
+        label="Pr&eacute;nom *"
         placeholder="Jean"
         value={firstName}
-        onChange={(e) => { setFirstName(e.target.value); setError(null); }}
+        onChange={(e) => { setFirstName(e.target.value); setError(null); setFieldErrors((p) => ({ ...p, firstName: false })); }}
         required
+        error={fieldErrors.firstName ? 'Le pr\u00e9nom est requis.' : undefined}
       />
       <Input
         label="Nom *"
         placeholder="Dupont"
         value={lastName}
-        onChange={(e) => { setLastName(e.target.value); setError(null); }}
+        onChange={(e) => { setLastName(e.target.value); setError(null); setFieldErrors((p) => ({ ...p, lastName: false })); }}
         required
+        error={fieldErrors.lastName ? 'Le nom est requis.' : undefined}
       />
       <Input
-        label="Téléphone"
+        label="T&eacute;l&eacute;phone"
         placeholder="+33 6 12 34 56 78"
         value={phone}
         onChange={(e) => setPhone(e.target.value)}
@@ -216,18 +260,32 @@ function Step2Status({ onNext, onBack }: Step2Props) {
 interface Step3Props {
   onNext: (oriasNumber: string) => void;
   onBack: () => void;
+  onChange?: (oriasNumber: string) => void;
+  initial?: string;
 }
 
-function Step3Orias({ onNext, onBack }: Step3Props) {
-  const [oriasNumber, setOriasNumber] = useState('');
+function Step3Orias({ onNext, onBack, onChange, initial }: Step3Props) {
+  const [oriasNumber, setOriasNumber] = useState(initial ?? '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [touched, setTouched] = useState(false);
+
+  // Real-time format validation
+  const formatError =
+    touched && oriasNumber.length > 0 && (oriasNumber.length !== 8 || !/^\d{8}$/.test(oriasNumber))
+      ? 'Le num\u00e9ro ORIAS doit contenir exactement 8 chiffres.'
+      : null;
+
+  useEffect(() => {
+    onChange?.(oriasNumber);
+  }, [oriasNumber]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
+    setTouched(true);
     if (oriasNumber.length !== 8 || !/^\d{8}$/.test(oriasNumber)) {
-      setError('Le numéro ORIAS doit contenir exactement 8 chiffres.');
+      setError('Le num\u00e9ro ORIAS doit contenir exactement 8 chiffres.');
       return;
     }
     setError(null);
@@ -237,7 +295,7 @@ function Step3Orias({ onNext, onBack }: Step3Props) {
       setSuccess(true);
       setTimeout(() => onNext(oriasNumber), 600);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Impossible de vérifier le numéro ORIAS.');
+      setError(err instanceof Error ? err.message : 'Impossible de v\u00e9rifier le num\u00e9ro ORIAS.');
     } finally {
       setLoading(false);
     }
@@ -246,29 +304,48 @@ function Step3Orias({ onNext, onBack }: Step3Props) {
   return (
     <form onSubmit={handleVerify} className="flex flex-col gap-4">
       <div className="text-center">
-        <h2 className="font-display font-bold text-xl text-ink mb-1">Vérification ORIAS</h2>
+        <h2 className="font-display font-bold text-xl text-ink mb-1">V&eacute;rification ORIAS</h2>
         <p className="font-body text-sm text-ink-3">
-          Renseignez votre numéro ORIAS à 8 chiffres pour valider votre inscription.
+          Renseignez votre num&eacute;ro ORIAS &agrave; 8 chiffres pour valider votre inscription.
         </p>
       </div>
 
       <Input
-        label="Numéro ORIAS"
+        label="Num&eacute;ro ORIAS"
         placeholder="12345678"
         value={oriasNumber}
-        onChange={(e) => { setOriasNumber(e.target.value.replace(/\D/g, '').slice(0, 8)); setError(null); }}
-        hint="8 chiffres, sans espaces"
-        error={error ?? undefined}
+        onChange={(e) => { setOriasNumber(e.target.value.replace(/\D/g, '').slice(0, 8)); setError(null); setTouched(true); }}
+        onBlur={() => setTouched(true)}
+        hint={!formatError && !error ? '8 chiffres, sans espaces' : undefined}
+        error={error ?? formatError ?? undefined}
         disabled={loading || success}
         maxLength={8}
         inputMode="numeric"
         pattern="\d{8}"
       />
 
+      {/* Digit count indicator */}
+      {!success && oriasNumber.length > 0 && (
+        <div className="flex items-center gap-1.5">
+          <div className="flex-1 h-1 rounded-full bg-surface-2 overflow-hidden">
+            <div
+              className={cn(
+                'h-full rounded-full transition-all duration-300',
+                oriasNumber.length === 8 ? 'bg-teal' : 'bg-violet',
+              )}
+              style={{ width: `${(oriasNumber.length / 8) * 100}%` }}
+            />
+          </div>
+          <span className={cn('text-[10px] font-mono', oriasNumber.length === 8 ? 'text-teal' : 'text-ink-3')}>
+            {oriasNumber.length}/8
+          </span>
+        </div>
+      )}
+
       {success && (
         <div className="flex items-center gap-2 px-3 py-2.5 rounded-md bg-[#D6F7EF] border border-[#A3EDD9]">
           <CheckCircle2 size={16} className="text-teal shrink-0" />
-          <span className="font-body text-sm font-medium text-[#007A63]">ORIAS validé !</span>
+          <span className="font-body text-sm font-medium text-[#007A63]">ORIAS valid&eacute; !</span>
         </div>
       )}
 
@@ -277,7 +354,7 @@ function Step3Orias({ onNext, onBack }: Step3Props) {
           <ChevronLeft size={14} /> Retour
         </Button>
         <Button type="submit" variant="primary" size="lg" className="flex-1" disabled={loading || success || oriasNumber.length !== 8}>
-          {loading ? 'Vérification…' : success ? 'Validé !' : 'Vérifier'}
+          {loading ? 'V\u00e9rification\u2026' : success ? 'Valid\u00e9 !' : 'V\u00e9rifier'}
         </Button>
       </div>
     </form>
@@ -289,22 +366,39 @@ function Step3Orias({ onNext, onBack }: Step3Props) {
 interface Step4Props {
   onNext: () => void;
   onBack: () => void;
+  onChange?: (data: { insurer: string; amount: string; policyNumber: string }) => void;
+  initial?: { insurer: string; amount: string; policyNumber: string };
 }
 
-function Step4Rcp({ onNext, onBack }: Step4Props) {
-  const [insurer, setInsurer] = useState('');
-  const [amount, setAmount] = useState('');
-  const [policyNumber, setPolicyNumber] = useState('');
+function Step4Rcp({ onNext, onBack, onChange, initial }: Step4Props) {
+  const [insurer, setInsurer] = useState(initial?.insurer ?? '');
+  const [amount, setAmount] = useState(initial?.amount ?? '');
+  const [policyNumber, setPolicyNumber] = useState(initial?.policyNumber ?? '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<{ insurer?: boolean; amount?: boolean }>({});
+
+  // Parse numeric amount for warning check
+  const amountNum = parseFloat(amount.replace(/\s/g, '').replace(',', '.'));
+  const amountTooLow = !isNaN(amountNum) && amountNum > 0 && amountNum < 500000;
+
+  useEffect(() => {
+    onChange?.({ insurer, amount, policyNumber });
+  }, [insurer, amount, policyNumber]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const amountNum = parseFloat(amount.replace(/\s/g, '').replace(',', '.'));
-    if (!insurer.trim()) { setError('Veuillez indiquer le nom de votre assureur.'); return; }
-    if (isNaN(amountNum) || amountNum <= 0) { setError('Veuillez entrer un montant de garantie valide.'); return; }
+    const errors: { insurer?: boolean; amount?: boolean } = {};
+    if (!insurer.trim()) errors.insurer = true;
+    if (isNaN(amountNum) || amountNum <= 0) errors.amount = true;
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setError(errors.insurer ? 'Veuillez indiquer le nom de votre assureur.' : 'Veuillez entrer un montant de garantie valide.');
+      return;
+    }
     setError(null);
+    setFieldErrors({});
     setLoading(true);
     try {
       await api.uploadRcp(insurer.trim(), amountNum);
@@ -322,17 +416,18 @@ function Step4Rcp({ onNext, onBack }: Step4Props) {
       <div className="text-center">
         <h2 className="font-display font-bold text-xl text-ink mb-1">Assurance RCP</h2>
         <p className="font-body text-sm text-ink-3">
-          Renseignez votre Responsabilité Civile Professionnelle.
+          Renseignez votre Responsabilit&eacute; Civile Professionnelle.
         </p>
       </div>
 
       <Input
-        label="Nom de l'assureur *"
-        placeholder="Ex. AXA, Allianz, Generali…"
+        label="Nom de l&rsquo;assureur *"
+        placeholder="Ex. AXA, Allianz, Generali\u2026"
         value={insurer}
-        onChange={(e) => { setInsurer(e.target.value); setError(null); }}
+        onChange={(e) => { setInsurer(e.target.value); setError(null); setFieldErrors((p) => ({ ...p, insurer: false })); }}
         disabled={loading || success}
         required
+        error={fieldErrors.insurer ? 'Le nom de l\u2019assureur est requis.' : undefined}
       />
       <Input
         label="N\u00b0 de police"
@@ -342,20 +437,30 @@ function Step4Rcp({ onNext, onBack }: Step4Props) {
         disabled={loading || success}
       />
       <Input
-        label="Montant de couverture (€) *"
+        label="Montant de couverture (\u20ac) *"
         placeholder="Ex. 1 500 000"
         value={amount}
-        onChange={(e) => { setAmount(e.target.value.replace(/[^\d\s,. ]/g, '')); setError(null); }}
-        hint="Montant minimum réglementaire : 500 000 €"
-        error={error ?? undefined}
+        onChange={(e) => { setAmount(e.target.value.replace(/[^\d\s,. ]/g, '')); setError(null); setFieldErrors((p) => ({ ...p, amount: false })); }}
+        hint={!fieldErrors.amount && !error ? 'Montant minimum r\u00e9glementaire : 500 000 \u20ac' : undefined}
+        error={fieldErrors.amount ? 'Le montant de garantie est requis.' : error ?? undefined}
         disabled={loading || success}
         inputMode="decimal"
       />
 
+      {/* Warning if amount is below 500k */}
+      {amountTooLow && !success && (
+        <div className="flex items-center gap-2 px-3 py-2.5 rounded-md bg-amber-50 border border-amber-200">
+          <AlertCircle size={16} className="text-amber-600 shrink-0" />
+          <span className="font-body text-xs font-medium text-amber-700">
+            Attention : le montant minimum r&eacute;glementaire est de 500 000 &euro;. Votre couverture semble insuffisante.
+          </span>
+        </div>
+      )}
+
       {success && (
         <div className="flex items-center gap-2 px-3 py-2.5 rounded-md bg-[#D6F7EF] border border-[#A3EDD9]">
           <CheckCircle2 size={16} className="text-teal shrink-0" />
-          <span className="font-body text-sm font-medium text-[#007A63]">RCP enregistrée !</span>
+          <span className="font-body text-sm font-medium text-[#007A63]">RCP enregistr&eacute;e !</span>
         </div>
       )}
 
@@ -364,7 +469,7 @@ function Step4Rcp({ onNext, onBack }: Step4Props) {
           <ChevronLeft size={14} /> Retour
         </Button>
         <Button type="submit" variant="primary" size="lg" className="flex-1" disabled={loading || success || !insurer || !amount}>
-          {loading ? 'Enregistrement…' : success ? 'Enregistré !' : 'Valider'}
+          {loading ? 'Enregistrement\u2026' : success ? 'Enregistr\u00e9 !' : 'Valider'}
         </Button>
       </div>
     </form>
@@ -529,71 +634,156 @@ const DOC_SLOTS: DocSlot[] = [
   { key: 'rib', label: 'RIB professionnel', hint: 'IBAN au nom de la société', required: false },
 ];
 
-function Step7Documents({ onNext, onBack }: Step7Props) {
-  const [uploads, setUploads] = useState<Record<string, string>>({});
+interface UploadedFile {
+  name: string;
+  size: string;
+  progress: number; // 0-100
+  done: boolean;
+}
 
-  const handleFileSelect = (key: string) => {
-    // In demo mode, simulate file selection
-    setUploads((prev) => ({ ...prev, [key]: `${key}_document.pdf` }));
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} o`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} Ko`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
+}
+
+function Step7Documents({ onNext, onBack }: Step7Props) {
+  const [uploads, setUploads] = useState<Record<string, UploadedFile>>({});
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  const handleFileSelect = (key: string, file?: File) => {
+    if (file) {
+      // Real file selected
+      const entry: UploadedFile = {
+        name: file.name,
+        size: formatFileSize(file.size),
+        progress: 0,
+        done: false,
+      };
+      setUploads((prev) => ({ ...prev, [key]: entry }));
+      // Simulate upload progress
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += Math.random() * 30 + 10;
+        if (progress >= 100) {
+          progress = 100;
+          clearInterval(interval);
+          setUploads((prev) => ({
+            ...prev,
+            [key]: { ...prev[key], progress: 100, done: true },
+          }));
+        } else {
+          setUploads((prev) => ({
+            ...prev,
+            [key]: { ...prev[key], progress: Math.min(progress, 95) },
+          }));
+        }
+      }, 300);
+    } else {
+      // Trigger hidden file input
+      fileInputRefs.current[key]?.click();
+    }
   };
 
-  const requiredDone = DOC_SLOTS.filter((d) => d.required).every((d) => uploads[d.key]);
+  const requiredDone = DOC_SLOTS.filter((d) => d.required).every((d) => uploads[d.key]?.done);
 
   return (
     <div className="flex flex-col gap-4">
       <div className="text-center">
         <h2 className="font-display font-bold text-xl text-ink mb-1">Documents</h2>
         <p className="font-body text-sm text-ink-3">
-          Téléchargez les documents nécessaires à votre dossier.
+          T&eacute;l&eacute;chargez les documents n&eacute;cessaires &agrave; votre dossier.
         </p>
       </div>
 
       <div className="flex flex-col gap-2.5">
         {DOC_SLOTS.map(({ key, label, hint, required }) => {
-          const uploaded = !!uploads[key];
+          const upload = uploads[key];
+          const uploaded = upload?.done;
+          const uploading = upload && !upload.done;
           return (
             <div
               key={key}
               className={cn(
-                'flex items-center gap-3 rounded-lg border px-4 py-3 transition-all duration-150',
+                'rounded-lg border px-4 py-3 transition-all duration-150',
                 uploaded ? 'border-teal bg-teal/5' : 'border-border bg-white',
               )}
             >
-              <div className={cn(
-                'w-8 h-8 rounded-md flex items-center justify-center shrink-0',
-                uploaded ? 'bg-teal/10' : 'bg-surface-2',
-              )}>
-                {uploaded ? (
-                  <CheckCircle2 size={16} className="text-teal" />
-                ) : (
-                  <Upload size={14} className="text-ink-3" />
-                )}
+              <div className="flex items-center gap-3">
+                <div className={cn(
+                  'w-8 h-8 rounded-md flex items-center justify-center shrink-0',
+                  uploaded ? 'bg-teal/10' : 'bg-surface-2',
+                )}>
+                  {uploaded ? (
+                    <CheckCircle2 size={16} className="text-teal" />
+                  ) : uploading ? (
+                    <div className="w-4 h-4 border-2 border-violet border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Upload size={14} className="text-ink-3" />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-body text-sm font-semibold text-ink flex items-center gap-1">
+                    {label}
+                    {required && <span className="text-red text-[10px]">*</span>}
+                  </p>
+                  {upload ? (
+                    <p className="font-body text-[10px] text-ink-3 truncate flex items-center gap-1">
+                      <FileIcon size={9} className="shrink-0" />
+                      {upload.name} ({upload.size})
+                    </p>
+                  ) : (
+                    <p className="font-body text-[10px] text-ink-3 truncate">{hint}</p>
+                  )}
+                </div>
+
+                {/* Hidden real file input */}
+                <input
+                  ref={(el) => { fileInputRefs.current[key] = el; }}
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleFileSelect(key, file);
+                    e.target.value = ''; // Reset so same file can be re-selected
+                  }}
+                />
+
+                <button
+                  type="button"
+                  onClick={() => handleFileSelect(key)}
+                  disabled={!!uploading}
+                  className={cn(
+                    'text-xs font-body font-semibold px-3 py-1.5 rounded-md transition-all duration-150',
+                    uploaded
+                      ? 'text-teal bg-teal/10 hover:bg-teal/20'
+                      : uploading
+                      ? 'text-ink-3 bg-surface-2 cursor-not-allowed'
+                      : 'text-violet bg-violet-pale hover:bg-violet-pale/80',
+                  )}
+                >
+                  {uploaded ? 'Remplacer' : uploading ? 'Envoi\u2026' : 'Charger'}
+                </button>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-body text-sm font-semibold text-ink flex items-center gap-1">
-                  {label}
-                  {required && <span className="text-red text-[10px]">*</span>}
-                </p>
-                <p className="font-body text-[10px] text-ink-3 truncate">
-                  {uploaded ? uploads[key] : hint}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => handleFileSelect(key)}
-                className={cn(
-                  'text-xs font-body font-semibold px-3 py-1.5 rounded-md transition-all duration-150',
-                  uploaded
-                    ? 'text-teal bg-teal/10 hover:bg-teal/20'
-                    : 'text-violet bg-violet-pale hover:bg-violet-pale/80',
-                )}
-              >
-                {uploaded ? 'Remplacer' : 'Charger'}
-              </button>
+
+              {/* Progress bar */}
+              {uploading && (
+                <div className="mt-2 h-1.5 rounded-full bg-surface-2 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-violet transition-all duration-300 ease-out"
+                    style={{ width: `${upload.progress}%` }}
+                  />
+                </div>
+              )}
             </div>
           );
         })}
       </div>
+
+      <p className="font-body text-[10px] text-ink-3 text-center">
+        Formats accept&eacute;s : PDF, JPG, PNG
+      </p>
 
       <div className="flex items-center gap-2 pt-1">
         <Button variant="muted" size="md" onClick={onBack}>
@@ -723,18 +913,95 @@ function Step8Confirmation({ oriasNumber, profileData, profStatus, onComplete, o
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
+// ─── Draft Types ─────────────────────────────────────────────────────────────
+
+interface OnboardingDraft {
+  step: StepKey;
+  profileData: { firstName: string; lastName: string; phone: string };
+  profStatus: ProfStatus | null;
+  oriasNumber: string;
+  rcpData: { insurer: string; amount: string; policyNumber: string };
+}
+
+function loadDraft(): OnboardingDraft | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as OnboardingDraft;
+  } catch {
+    return null;
+  }
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 export default function OnboardingPage() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
+
+  // Load draft from localStorage on mount
+  const [draftLoaded, setDraftLoaded] = useState(false);
+  const draft = useRef<OnboardingDraft | null>(null);
+
   const [step, setStep] = useState<StepKey>(1);
   const [oriasNumber, setOriasNumber] = useState('');
   const [profileData, setProfileData] = useState({ firstName: '', lastName: '', phone: '' });
   const [profStatus, setProfStatus] = useState<ProfStatus | null>(null);
+  const [rcpData, setRcpData] = useState({ insurer: '', amount: '', policyNumber: '' });
+
+  // Draft-saved indicator
+  const [showDraftSaved, setShowDraftSaved] = useState(false);
+  const draftTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Load draft on mount
+  useEffect(() => {
+    const saved = loadDraft();
+    if (saved) {
+      draft.current = saved;
+      setStep(saved.step);
+      setProfileData(saved.profileData);
+      setProfStatus(saved.profStatus);
+      setOriasNumber(saved.oriasNumber);
+      setRcpData(saved.rcpData);
+    }
+    setDraftLoaded(true);
+  }, []);
+
+  // Save draft whenever form state changes
+  const saveDraft = useCallback(() => {
+    const draftState: OnboardingDraft = {
+      step,
+      profileData,
+      profStatus,
+      oriasNumber,
+      rcpData,
+    };
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(draftState));
+    } catch {
+      // localStorage might be full or unavailable, silently ignore
+    }
+    // Flash the saved indicator
+    setShowDraftSaved(true);
+    if (draftTimerRef.current) clearTimeout(draftTimerRef.current);
+    draftTimerRef.current = setTimeout(() => setShowDraftSaved(false), 2000);
+  }, [step, profileData, profStatus, oriasNumber, rcpData]);
+
+  useEffect(() => {
+    if (!draftLoaded) return;
+    saveDraft();
+  }, [step, profileData, profStatus, oriasNumber, rcpData, draftLoaded, saveDraft]);
 
   const handleComplete = async () => {
     await api.completeOnboarding();
+    // Clear draft on successful completion
+    try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
     router.replace('/dashboard');
   };
+
+  // Wait for draft load to avoid flash of wrong step
+  if (!draftLoaded) return null;
 
   return (
     <div
@@ -774,21 +1041,41 @@ export default function OnboardingPage() {
             </div>
           </div>
 
+          {/* Estimated time + draft indicator */}
+          <div className="flex items-center justify-between">
+            <EstimatedTime />
+            <DraftIndicator visible={showDraftSaved} />
+          </div>
+
           {/* Step indicator */}
           <StepIndicator currentStep={step} />
 
           {/* Step content */}
           {step === 1 && (
-            <Step1Profile onNext={(data) => { setProfileData(data); setStep(2); }} />
+            <Step1Profile
+              initial={profileData}
+              onChange={(data) => setProfileData(data)}
+              onNext={(data) => { setProfileData(data); setStep(2); }}
+            />
           )}
           {step === 2 && (
             <Step2Status onNext={(s) => { setProfStatus(s); setStep(3); }} onBack={() => setStep(1)} />
           )}
           {step === 3 && (
-            <Step3Orias onNext={(orias) => { setOriasNumber(orias); setStep(4); }} onBack={() => setStep(2)} />
+            <Step3Orias
+              initial={oriasNumber}
+              onChange={(orias) => setOriasNumber(orias)}
+              onNext={(orias) => { setOriasNumber(orias); setStep(4); }}
+              onBack={() => setStep(2)}
+            />
           )}
           {step === 4 && (
-            <Step4Rcp onNext={() => setStep(5)} onBack={() => setStep(3)} />
+            <Step4Rcp
+              initial={rcpData}
+              onChange={(data) => setRcpData(data)}
+              onNext={() => setStep(5)}
+              onBack={() => setStep(3)}
+            />
           )}
           {step === 5 && (
             <Step5Kyc onNext={() => setStep(6)} onBack={() => setStep(4)} />
@@ -812,7 +1099,7 @@ export default function OnboardingPage() {
 
         {/* Footer */}
         <p className="text-center text-white/40 text-xs font-body mt-6">
-          Étape {step} sur 8 — Processus d&apos;intégration réglementaire
+          &Eacute;tape {step} sur 8 &mdash; Processus d&apos;int&eacute;gration r&eacute;glementaire
         </p>
       </div>
     </div>

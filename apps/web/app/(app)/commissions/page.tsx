@@ -17,6 +17,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Calendar,
+  Layers,
+  Tag,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { Badge } from '@/components/ui/badge';
@@ -173,29 +175,167 @@ function PremiumTh({ children, className }: { children: React.ReactNode; classNa
   );
 }
 
-// ─── Quarterly Bar Chart ────────────────────────────────────────────────────
+// ─── Stacked Quarterly Bar Chart ────────────────────────────────────────────
 
-function QuarterlyChart({ data }: { data: { period: string; amount: number }[] }) {
-  const max = Math.max(...data.map(d => d.amount), 1);
+const STATUS_COLORS: Record<string, string> = {
+  PAID: '#00B894',
+  PAYABLE: '#D4A017',
+  ACCRUED: '#6B7280',
+};
+
+type QuarterlyStackedData = {
+  period: string;
+  total: number;
+  segments: { status: string; amount: number; color: string }[];
+};
+
+function StackedQuarterlyChart({ data }: { data: QuarterlyStackedData[] }) {
+  const max = Math.max(...data.map(d => d.total), 1);
   return (
-    <div className="flex items-end gap-2.5 h-32">
-      {data.map((d) => (
-        <div key={d.period} className="flex-1 flex flex-col items-center gap-1 group/bar">
-          <span className="text-[9px] font-mono text-ink-3 dark:text-white/40 opacity-0 group-hover/bar:opacity-100 transition-opacity duration-200">
-            {formatEur(d.amount)}
-          </span>
-          <div
-            className={cn(
-              'w-full rounded-t-lg transition-all duration-500',
-              'bg-gradient-to-t from-[#3B1FA8] to-[#5B3FD4]',
-              'group-hover/bar:from-[#3B1FA8] group-hover/bar:to-[#7B5FE4]',
-              'group-hover/bar:shadow-md group-hover/bar:shadow-[#3B1FA8]/20',
-            )}
-            style={{ height: `${(d.amount / max) * 100}%`, minHeight: 6 }}
-          />
-          <span className="text-[9px] text-ink-3 dark:text-white/40 font-mono">{d.period}</span>
+    <div className="flex items-end gap-3 h-36">
+      {data.map((d) => {
+        const barHeight = (d.total / max) * 100;
+        return (
+          <div key={d.period} className="flex-1 flex flex-col items-center gap-1.5 group/bar">
+            <span className="text-[9px] font-mono text-ink-3 dark:text-white/40 opacity-0 group-hover/bar:opacity-100 transition-opacity duration-200 tabular-nums">
+              {formatEur(d.total)}
+            </span>
+            <div
+              className="w-full rounded-t-lg overflow-hidden flex flex-col-reverse transition-all duration-500 group-hover/bar:shadow-md group-hover/bar:shadow-[#3B1FA8]/15"
+              style={{ height: `${barHeight}%`, minHeight: 8 }}
+            >
+              {d.segments.map((seg, i) => {
+                const segPct = d.total > 0 ? (seg.amount / d.total) * 100 : 0;
+                return (
+                  <div
+                    key={seg.status}
+                    className="w-full transition-all duration-500 group-hover/bar:brightness-110"
+                    style={{
+                      height: `${segPct}%`,
+                      backgroundColor: seg.color,
+                      borderRadius: i === d.segments.length - 1 ? '0.5rem 0.5rem 0 0' : '0',
+                    }}
+                    title={`${STATUS_LABEL[seg.status]}: ${formatEur(seg.amount)}`}
+                  />
+                );
+              })}
+            </div>
+            <span className="text-[9px] text-ink-3 dark:text-white/40 font-mono">{d.period}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function StackedBarLegend() {
+  return (
+    <div className="flex items-center gap-3 mt-3">
+      {(['PAID', 'PAYABLE', 'ACCRUED'] as const).map((s) => (
+        <div key={s} className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full ring-1 ring-black/[0.04] dark:ring-white/10" style={{ backgroundColor: STATUS_COLORS[s] }} />
+          <span className="text-[10px] text-ink-3 dark:text-white/50 font-body">{STATUS_LABEL[s]}</span>
         </div>
       ))}
+    </div>
+  );
+}
+
+// ─── Product Breakdown Bar ──────────────────────────────────────────────────
+
+const PRODUCT_COLORS = ['#3B1FA8', '#00B894', '#D4A017', '#3D63F5', '#E84393', '#6C5CE7', '#00CEC9', '#FD79A8'];
+
+type ProductBreakdown = {
+  name: string;
+  total: number;
+  pct: number;
+};
+
+function ProductBreakdownChart({ products, grandTotal }: { products: ProductBreakdown[]; grandTotal: number }) {
+  if (products.length === 0) return null;
+  const maxAmount = products[0]?.total ?? 1;
+  return (
+    <div className="flex flex-col gap-2.5">
+      {products.map((p, i) => (
+        <div key={p.name} className="group/prod">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[11px] font-body font-semibold text-ink dark:text-white/80 truncate max-w-[55%]">{p.name}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-mono font-bold text-ink dark:text-white tabular-nums">{formatEur(p.total)}</span>
+              <span className="text-[9px] font-mono text-ink-3 dark:text-white/40 tabular-nums w-[38px] text-right">{p.pct.toFixed(1)}%</span>
+            </div>
+          </div>
+          <div className="w-full h-2.5 rounded-full bg-surface-2/40 dark:bg-white/5 overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-700 group-hover/prod:brightness-110"
+              style={{
+                width: `${(p.total / maxAmount) * 100}%`,
+                backgroundColor: PRODUCT_COLORS[i % PRODUCT_COLORS.length],
+                minWidth: '4px',
+              }}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── Commission Type Horizontal Stacked Bar ─────────────────────────────────
+
+const TYPE_COLORS: Record<string, string> = {
+  ENTRY_FEE: '#3B1FA8',
+  DISTRIBUTION_FEE: '#00B894',
+  MANAGEMENT_FEE: '#D4A017',
+  TRAILER_FEE: '#3D63F5',
+  STRUCTURING_FEE: '#E84393',
+};
+
+type TypeBreakdown = {
+  type: string;
+  label: string;
+  amount: number;
+  pct: number;
+  color: string;
+};
+
+function CommissionTypeBar({ types }: { types: TypeBreakdown[] }) {
+  const total = types.reduce((s, t) => s + t.amount, 0);
+  if (total === 0) return null;
+  return (
+    <div>
+      {/* Stacked horizontal bar */}
+      <div className="w-full h-6 rounded-full overflow-hidden flex shadow-inner ring-1 ring-black/[0.04] dark:ring-white/[0.06]">
+        {types.map((t, i) => (
+          <div
+            key={t.type}
+            className="h-full transition-all duration-700 hover:brightness-110 relative group/seg"
+            style={{
+              width: `${t.pct}%`,
+              backgroundColor: t.color,
+              borderRadius: i === 0 ? '9999px 0 0 9999px' : i === types.length - 1 ? '0 9999px 9999px 0' : '0',
+              minWidth: t.pct > 0 ? '4px' : '0',
+            }}
+            title={`${t.label}: ${formatEur(t.amount)} (${t.pct.toFixed(1)}%)`}
+          >
+            {t.pct >= 12 && (
+              <span className="absolute inset-0 flex items-center justify-center text-[9px] font-mono font-bold text-white/90 tabular-nums">
+                {t.pct.toFixed(0)}%
+              </span>
+            )}
+          </div>
+        ))}
+      </div>
+      {/* Legend */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3">
+        {types.map((t) => (
+          <div key={t.type} className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full ring-1 ring-black/[0.04] dark:ring-white/10" style={{ backgroundColor: t.color }} />
+            <span className="text-[10px] text-ink-3 dark:text-white/50 font-body">{t.label}</span>
+            <span className="text-[10px] font-mono font-semibold text-ink dark:text-white tabular-nums">{formatEur(t.amount)}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -415,10 +555,53 @@ export default function CommissionsPage() {
   const filteredTotal = filtered.reduce((s, c) => s + c.amount, 0);
 
   const periods = [...new Set(DEMO_COMMISSIONS.map(c => c.period))].sort();
-  const quarterlyData = periods.map(p => ({
-    period: p,
-    amount: DEMO_COMMISSIONS.filter(c => c.period === p).reduce((s, c) => s + c.amount, 0),
-  }));
+
+  // ── Stacked quarterly data (by status per period) ──
+  const stackedQuarterlyData = useMemo<QuarterlyStackedData[]>(() => {
+    return periods.map(p => {
+      const periodItems = DEMO_COMMISSIONS.filter(c => c.period === p);
+      const segments = (['PAID', 'PAYABLE', 'ACCRUED'] as const).map(status => ({
+        status,
+        amount: periodItems.filter(c => c.status === status).reduce((s, c) => s + c.amount, 0),
+        color: STATUS_COLORS[status],
+      }));
+      return {
+        period: p,
+        total: periodItems.reduce((s, c) => s + c.amount, 0),
+        segments,
+      };
+    });
+  }, []);
+
+  // ── Product breakdown ──
+  const productBreakdown = useMemo<ProductBreakdown[]>(() => {
+    const byProduct: Record<string, number> = {};
+    DEMO_COMMISSIONS.forEach(c => {
+      byProduct[c.productName] = (byProduct[c.productName] ?? 0) + c.amount;
+    });
+    const total = DEMO_COMMISSIONS.reduce((s, c) => s + c.amount, 0);
+    return Object.entries(byProduct)
+      .map(([name, amt]) => ({ name, total: amt, pct: total > 0 ? (amt / total) * 100 : 0 }))
+      .sort((a, b) => b.total - a.total);
+  }, []);
+
+  // ── Commission type breakdown ──
+  const typeBreakdown = useMemo<TypeBreakdown[]>(() => {
+    const byType: Record<string, number> = {};
+    DEMO_COMMISSIONS.forEach(c => {
+      byType[c.type] = (byType[c.type] ?? 0) + c.amount;
+    });
+    const total = DEMO_COMMISSIONS.reduce((s, c) => s + c.amount, 0);
+    return Object.entries(byType)
+      .map(([type, amt]) => ({
+        type,
+        label: TYPE_LABELS[type] ?? type,
+        amount: amt,
+        pct: total > 0 ? (amt / total) * 100 : 0,
+        color: TYPE_COLORS[type] ?? '#6B7280',
+      }))
+      .sort((a, b) => b.amount - a.amount);
+  }, []);
 
   const handleExportCSV = () => {
     const header = 'Produit,Type,Taux,Montant,Statut,Periode,Date versement\n';
@@ -518,8 +701,31 @@ export default function CommissionsPage() {
         />
       </section>
 
-      {/* ── Charts ─────────────────────────────────────────────────── */}
+      {/* ── Tendance trimestrielle (Stacked Bars) ─────────────────── */}
+      <div className={cn(
+        'relative rounded-xl border border-border/60 dark:border-white/10 p-4',
+        'bg-white/80 dark:bg-white/5 backdrop-blur-md',
+        'ring-1 ring-black/[0.04] dark:ring-white/[0.06]',
+        'shadow-card hover:shadow-card-hover transition-shadow duration-200',
+      )}>
+        <div
+          className="absolute top-0 left-0 right-0 h-[2px] rounded-t-xl opacity-40"
+          style={{ background: 'linear-gradient(90deg, #3B1FA8, #00B894 50%, #D4A017)' }}
+        />
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-6 h-6 rounded-md bg-[#3B1FA8]/8 dark:bg-[#3B1FA8]/20 flex items-center justify-center">
+            <BarChart3 size={12} className="text-[#3B1FA8] dark:text-[#C9BCFF]" />
+          </div>
+          <h3 className="font-display text-[13px] font-bold text-ink dark:text-white">Tendance trimestrielle</h3>
+          <span className="text-[10px] font-body text-ink-3 dark:text-white/40 ml-auto">Ventilation par statut</span>
+        </div>
+        <StackedQuarterlyChart data={stackedQuarterlyData} />
+        <StackedBarLegend />
+      </div>
+
+      {/* ── Repartition par produit + Type breakdown ─────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        {/* Product breakdown */}
         <div className={cn(
           'relative rounded-xl border border-border/60 dark:border-white/10 p-4',
           'bg-white/80 dark:bg-white/5 backdrop-blur-md',
@@ -532,33 +738,58 @@ export default function CommissionsPage() {
           />
           <div className="flex items-center gap-2 mb-4">
             <div className="w-6 h-6 rounded-md bg-[#3B1FA8]/8 dark:bg-[#3B1FA8]/20 flex items-center justify-center">
-              <BarChart3 size={12} className="text-[#3B1FA8] dark:text-[#C9BCFF]" />
+              <Layers size={12} className="text-[#3B1FA8] dark:text-[#C9BCFF]" />
             </div>
-            <h3 className="font-display text-[13px] font-bold text-ink dark:text-white">Evolution trimestrielle</h3>
+            <h3 className="font-display text-[13px] font-bold text-ink dark:text-white">Repartition par produit</h3>
           </div>
-          <QuarterlyChart data={quarterlyData} />
+          <ProductBreakdownChart products={productBreakdown} grandTotal={grandTotal} />
         </div>
-        <div className={cn(
-          'relative rounded-xl border border-border/60 dark:border-white/10 p-4',
-          'bg-white/80 dark:bg-white/5 backdrop-blur-md',
-          'ring-1 ring-black/[0.04] dark:ring-white/[0.06]',
-          'shadow-card hover:shadow-card-hover transition-shadow duration-200',
-        )}>
-          <div
-            className="absolute top-0 left-0 right-0 h-[2px] rounded-t-xl opacity-40"
-            style={{ background: 'linear-gradient(90deg, #00B894, #3D63F5)' }}
-          />
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-6 h-6 rounded-md bg-[#3B1FA8]/8 dark:bg-[#3B1FA8]/20 flex items-center justify-center">
-              <PieChart size={12} className="text-[#3B1FA8] dark:text-[#C9BCFF]" />
+
+        {/* Commission type donut / stacked bar + Status donut */}
+        <div className="flex flex-col gap-3">
+          {/* Commission Type bar */}
+          <div className={cn(
+            'relative rounded-xl border border-border/60 dark:border-white/10 p-4',
+            'bg-white/80 dark:bg-white/5 backdrop-blur-md',
+            'ring-1 ring-black/[0.04] dark:ring-white/[0.06]',
+            'shadow-card hover:shadow-card-hover transition-shadow duration-200',
+          )}>
+            <div
+              className="absolute top-0 left-0 right-0 h-[2px] rounded-t-xl opacity-40"
+              style={{ background: 'linear-gradient(90deg, #3B1FA8, #00B894, #D4A017, #3D63F5, #E84393)' }}
+            />
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-6 h-6 rounded-md bg-[#3B1FA8]/8 dark:bg-[#3B1FA8]/20 flex items-center justify-center">
+                <Tag size={12} className="text-[#3B1FA8] dark:text-[#C9BCFF]" />
+              </div>
+              <h3 className="font-display text-[13px] font-bold text-ink dark:text-white">Par type de commission</h3>
             </div>
-            <h3 className="font-display text-[13px] font-bold text-ink dark:text-white">Repartition par statut</h3>
+            <CommissionTypeBar types={typeBreakdown} />
           </div>
-          <DonutChart segments={[
-            { label: 'Verse', value: totalPaid, color: '#00B894' },
-            { label: 'A verser', value: totalPayable, color: '#D4A017' },
-            { label: 'Comptabilise', value: totalAccrued, color: '#3D63F5' },
-          ]} />
+
+          {/* Existing status donut */}
+          <div className={cn(
+            'relative rounded-xl border border-border/60 dark:border-white/10 p-4',
+            'bg-white/80 dark:bg-white/5 backdrop-blur-md',
+            'ring-1 ring-black/[0.04] dark:ring-white/[0.06]',
+            'shadow-card hover:shadow-card-hover transition-shadow duration-200',
+          )}>
+            <div
+              className="absolute top-0 left-0 right-0 h-[2px] rounded-t-xl opacity-40"
+              style={{ background: 'linear-gradient(90deg, #00B894, #3D63F5)' }}
+            />
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-6 h-6 rounded-md bg-[#3B1FA8]/8 dark:bg-[#3B1FA8]/20 flex items-center justify-center">
+                <PieChart size={12} className="text-[#3B1FA8] dark:text-[#C9BCFF]" />
+              </div>
+              <h3 className="font-display text-[13px] font-bold text-ink dark:text-white">Repartition par statut</h3>
+            </div>
+            <DonutChart segments={[
+              { label: 'Verse', value: totalPaid, color: '#00B894' },
+              { label: 'A verser', value: totalPayable, color: '#D4A017' },
+              { label: 'Comptabilise', value: totalAccrued, color: '#3D63F5' },
+            ]} />
+          </div>
         </div>
       </div>
 

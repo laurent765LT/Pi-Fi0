@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   FileSearch,
   Plus,
@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { ToastContainer, useToast } from '@/components/ui/toast';
+import { PageHeader } from '@/components/ui/page-header';
 import {
   useCreateRfq,
   useSendRfq,
@@ -104,45 +105,31 @@ function safeJsonParse<T = any>(value: unknown, fallback: T | null = null): T | 
 // ─── Page ───────────────────────────────────────────────────────────────────
 
 export default function RfqPage() {
+  useEffect(() => { document.title = "RFQ Screener | Strick'in"; }, []);
   const [tab, setTab] = useState<'create' | 'list' | 'detail'>('list');
   const [selectedRfqId, setSelectedRfqId] = useState<string | null>(null);
 
   return (
     <div className="animate-fade-in min-h-screen">
-      {/* ── Header ─────────────────────────────────────────────── */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center shadow-md"
-              style={{ background: 'linear-gradient(135deg, #3B1FA8 0%, #5B3FD4 100%)' }}
-            >
-              <FileSearch size={18} className="text-white" />
-            </div>
-            <div>
-              <h1 className="font-display text-[28px] font-bold leading-tight bg-gradient-to-r from-[#3B1FA8] via-[#1A0A3E] to-[#3B1FA8] bg-clip-text text-transparent">
-                RFQ Screener
-              </h1>
-              <p className="text-sm text-ink-3 font-body mt-0.5">
-                Envoyez vos demandes de cotation et comparez les offres des emetteurs
-              </p>
-            </div>
-          </div>
-
-          <button
-            onClick={() => setTab('create')}
-            className={cn(
-              'h-10 px-5 rounded-xl font-body text-[13px] font-semibold inline-flex items-center gap-2',
-              'bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] text-white shadow-md shadow-violet/20',
-              'hover:shadow-lg hover:shadow-violet/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
-            )}
-          >
-            <Plus size={16} />
-            Nouvelle RFQ
-          </button>
-        </div>
-        <div className="gradient-bar h-[2px] rounded-full mt-5 opacity-60" />
-      </div>
+      <PageHeader
+        icon={FileSearch}
+        title="RFQ Screener"
+        subtitle="Envoyez vos demandes de cotation et comparez les offres des emetteurs"
+        accentFrom="#3B1FA8"
+        accentTo="#5B3FD4"
+      >
+        <button
+          onClick={() => setTab('create')}
+          className={cn(
+            'h-10 px-5 rounded-xl font-body text-[13px] font-semibold inline-flex items-center gap-2',
+            'bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] text-white shadow-md shadow-violet/20',
+            'hover:shadow-lg hover:shadow-violet/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
+          )}
+        >
+          <Plus size={16} />
+          Nouvelle RFQ
+        </button>
+      </PageHeader>
 
       {/* ── Tabs ───────────────────────────────────────────────── */}
       <div className="flex gap-1 mb-6 bg-white/60 dark:bg-white/5 backdrop-blur-sm p-1 rounded-xl border border-border/60 w-fit">

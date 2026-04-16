@@ -13,11 +13,13 @@ import {
   ChevronRight,
   Trash2,
   Settings,
+  ExternalLink,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useNotificationsStore } from '@/stores/notifications-store';
 import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/ui/page-header';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -44,6 +46,43 @@ function formatRelativeTime(isoDate: string): string {
     day: '2-digit',
     month: 'short',
   });
+}
+
+type DateGroup = 'today' | 'yesterday' | 'thisWeek' | 'older';
+
+const DATE_GROUP_LABELS: Record<DateGroup, string> = {
+  today: "Aujourd'hui",
+  yesterday: 'Hier',
+  thisWeek: 'Cette semaine',
+  older: 'Plus ancien',
+};
+
+function getDateGroup(isoDate: string): DateGroup {
+  const now = new Date();
+  const date = new Date(isoDate);
+
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfYesterday = new Date(startOfToday.getTime() - 86_400_000);
+  // Start of week (Monday)
+  const dayOfWeek = now.getDay();
+  const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  const startOfWeek = new Date(startOfToday.getTime() - diffToMonday * 86_400_000);
+
+  if (date >= startOfToday) return 'today';
+  if (date >= startOfYesterday) return 'yesterday';
+  if (date >= startOfWeek) return 'thisWeek';
+  return 'older';
+}
+
+function groupByDate<T extends { createdAt: string }>(items: T[]): { group: DateGroup; label: string; items: T[] }[] {
+  const groups: Record<DateGroup, T[]> = { today: [], yesterday: [], thisWeek: [], older: [] };
+  items.forEach((item) => {
+    groups[getDateGroup(item.createdAt)].push(item);
+  });
+  const order: DateGroup[] = ['today', 'yesterday', 'thisWeek', 'older'];
+  return order
+    .filter((g) => groups[g].length > 0)
+    .map((g) => ({ group: g, label: DATE_GROUP_LABELS[g], items: groups[g] }));
 }
 
 // ─── Navigation mapping ──────────────────────────────────────────────────────
@@ -276,6 +315,21 @@ function NotificationCard({
           </span>
         </div>
         <p className="font-body text-[12px] text-ink-3 dark:text-white/50 leading-relaxed">{message}</p>
+        {productId && (
+          <Link
+            href={`/products/${productId}`}
+            onClick={(e) => e.stopPropagation()}
+            className={cn(
+              'inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-md text-[10px] font-semibold font-body',
+              'bg-[#3B1FA8]/8 text-[#3B1FA8] dark:bg-[#C9BCFF]/10 dark:text-[#C9BCFF]',
+              'hover:bg-[#3B1FA8]/15 dark:hover:bg-[#C9BCFF]/20',
+              'transition-colors duration-150',
+            )}
+          >
+            <ExternalLink size={9} />
+            Voir le produit
+          </Link>
+        )}
       </div>
 
       {/* Action buttons */}
@@ -419,6 +473,7 @@ function FilterPill({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function NotificationsPage() {
+  useEffect(() => { document.title = "Notifications | Strick'in"; }, []);
   const {
     notifications,
     unreadCount,
@@ -475,35 +530,25 @@ export default function NotificationsPage() {
     return notifications.filter((n) => normalizeType(n.type) === typeFilter);
   }, [notifications, typeFilter]);
 
+  const totalUnread = unreadCount();
+
+  // Group filtered notifications by date
+  const dateGroups = useMemo(() => groupByDate(filteredNotifications), [filteredNotifications]);
+
   const filteredUnread = filteredNotifications.filter((n) => !n.read);
   const filteredRead = filteredNotifications.filter((n) => n.read);
   const hasFilteredUnread = filteredUnread.length > 0;
 
   return (
     <main className="w-full animate-fade-in">
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between gap-4 mb-1.5">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#3B1FA8] to-[#1A0A3E] flex items-center justify-center shadow-sm shadow-[#3B1FA8]/20">
-            <Bell size={17} className="text-white" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="font-display text-[22px] font-bold leading-tight bg-gradient-to-r from-[#3B1FA8] via-[#1A0A3E] to-[#3B1FA8] bg-clip-text text-transparent dark:from-white dark:via-[#C9BCFF] dark:to-white">
-                Notifications
-              </h1>
-              {hasUnread && (
-                <span className="inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-gradient-to-r from-[#3B1FA8] to-[#3B1FA8]/80 text-white text-[10px] font-bold leading-none shadow-sm shadow-[#3B1FA8]/25">
-                  {unreadCount() > 99 ? '99+' : unreadCount()}
-                </span>
-              )}
-              <span className="text-[12px] text-ink-3 dark:text-white/40 font-body hidden sm:inline">
-                &mdash; Restez informe des opportunites et mises a jour.
-              </span>
-            </div>
-          </div>
-        </div>
-
+      <PageHeader
+        icon={Bell}
+        title="Notifications"
+        subtitle="Restez informe des opportunites et mises a jour."
+        accentFrom="#3B1FA8"
+        accentTo="#1A0A3E"
+        className="mb-1.5"
+      >
         {hasUnread && (
           <Button
             variant="outline"
@@ -515,7 +560,7 @@ export default function NotificationsPage() {
             Tout marquer comme lu
           </Button>
         )}
-      </div>
+      </PageHeader>
 
       {/* Preferences link */}
       <div className="mb-3">
@@ -545,7 +590,7 @@ export default function NotificationsPage() {
         <FilterPill
           active={typeFilter === 'all'}
           onClick={() => setTypeFilter('all')}
-          label="Toutes"
+          label={totalUnread > 0 ? `Toutes (${totalUnread} non lues)` : 'Toutes'}
           count={typeCounts.all}
           accent="#3B1FA8"
         />
@@ -583,7 +628,7 @@ export default function NotificationsPage() {
         />
       </div>
 
-      {/* ── Notifications list ─────────────────────────────────────────────── */}
+      {/* ── Notifications list (grouped by date) ─────────────────────────── */}
       {filteredNotifications.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 py-20 text-center bg-white/80 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 shadow-card">
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#3B1FA8]/10 to-[#00B894]/10 border border-border/40 flex items-center justify-center">
@@ -601,13 +646,14 @@ export default function NotificationsPage() {
           </div>
         </div>
       ) : (
-        <div className="flex flex-col gap-2.5 stagger-children">
-          {/* Unread section */}
-          {hasFilteredUnread && (
-            <div>
-              <SectionLabel accent="#3B1FA8">Non lues</SectionLabel>
+        <div className="flex flex-col gap-5 stagger-children">
+          {dateGroups.map(({ group, label, items }) => (
+            <div key={group}>
+              <SectionLabel accent={group === 'today' ? '#3B1FA8' : group === 'yesterday' ? '#5535C4' : '#7B6FA0'}>
+                {label}
+              </SectionLabel>
               <div className="flex flex-col gap-1.5 stagger-children">
-                {filteredUnread.map((n) => (
+                {items.map((n) => (
                   <NotificationCard
                     key={n.id}
                     {...n}
@@ -618,25 +664,7 @@ export default function NotificationsPage() {
                 ))}
               </div>
             </div>
-          )}
-
-          {/* Read section */}
-          {filteredRead.length > 0 && (
-            <div className={hasFilteredUnread ? 'mt-4' : ''}>
-              {hasFilteredUnread && <SectionLabel accent="#7B6FA0">Lues</SectionLabel>}
-              <div className="flex flex-col gap-1.5 stagger-children">
-                {filteredRead.map((n) => (
-                  <NotificationCard
-                    key={n.id}
-                    {...n}
-                    type={normalizeType(n.type)}
-                    onMarkRead={markRead}
-                    onDismiss={dismiss}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
+          ))}
         </div>
       )}
     </main>

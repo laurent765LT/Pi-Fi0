@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useLocaleStore } from '@/stores/locale-store';
+import { PageHeader } from '@/components/ui/page-header';
 
 // ---------------------------------------------------------------------------
 // Toggle Switch
@@ -321,6 +322,7 @@ const SECTION_DEFS = [
 // ---------------------------------------------------------------------------
 
 export default function SettingsPage() {
+  useEffect(() => { document.title = "Parametres | Strick'in"; }, []);
   // Notification preferences
   const [emailNotifs, setEmailNotifs] = useState(() => loadSettings().emailNotifs);
   const [pushNotifs, setPushNotifs] = useState(() => loadSettings().pushNotifs);
@@ -400,28 +402,13 @@ export default function SettingsPage() {
 
   return (
     <div className="animate-fade-in">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-1">
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center shadow-md"
-            style={{
-              background: 'linear-gradient(135deg, #3B1FA8 0%, #5B3FD4 100%)',
-            }}
-          >
-            <Settings size={18} className="text-white" />
-          </div>
-          <div>
-            <h1 className="font-display text-[28px] font-bold leading-tight bg-gradient-to-r from-[#3B1FA8] via-[#1A0A3E] to-[#3B1FA8] bg-clip-text text-transparent">
-              Paramètres
-            </h1>
-            <p className="text-sm text-ink-3 font-body mt-0.5">
-              Gerez vos preferences et la securite de votre compte.
-            </p>
-          </div>
-        </div>
-        <div className="gradient-bar h-[2px] rounded-full mt-5 opacity-60" />
-      </div>
+      <PageHeader
+        icon={Settings}
+        title="Paramètres"
+        subtitle="Gerez vos preferences et la securite de votre compte."
+        accentFrom="#3B1FA8"
+        accentTo="#5B3FD4"
+      />
 
       {/* Search Bar */}
       <div className="mb-6">

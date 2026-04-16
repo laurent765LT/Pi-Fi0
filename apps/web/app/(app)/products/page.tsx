@@ -26,6 +26,7 @@ import {
   Layers,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { PageHeader } from '@/components/ui/page-header';
 import { useFiltersStore } from '@/stores/filters-store';
 import { useProducts } from '@/hooks/use-products';
 import { ProductCard } from '@/components/products/product-card';
@@ -403,6 +404,7 @@ function Pagination({
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function ProductsPage() {
+  useEffect(() => { document.title = "Catalogue Produits | Strick'in"; }, []);
   const { payoffType, minSri, maxSri, search, status, setFilter, resetFilters } = useFiltersStore();
   const [view, setView] = useState<'grid' | 'table'>('grid');
   const [sortField, setSortField] = useState<SortField>('name');
@@ -590,117 +592,86 @@ export default function ProductsPage() {
 
   return (
     <div className="animate-fade-in">
-      {/* ── Page Header ──────────────────────────────────────── */}
-      <div className="flex items-center justify-between mb-1.5">
-        <div className="flex items-center gap-4">
-          <h1 className="font-display text-[22px] font-bold leading-none bg-gradient-to-r from-[#3B1FA8] via-[#1A0A3E] to-[#3B1FA8] bg-clip-text text-transparent dark:from-white dark:via-[#C9BCFF] dark:to-white">
-            Produits structures
-          </h1>
-          {/* Inline stat pills */}
-          {!isLoading && !isError && (
-            <div className="hidden md:flex items-center gap-1.5">
-              <span className="inline-flex items-center gap-1 h-6 px-2 rounded-md bg-surface-2/80 dark:bg-surface-3/20 text-[11px] font-mono font-semibold text-ink dark:text-surface tabular-nums">
-                {products.length}
-                <span className="text-ink-3 dark:text-ink-3 font-body font-normal">total</span>
-              </span>
-              {favoriteIds.size > 0 && (
-                <span className="inline-flex items-center gap-1 h-6 px-2 rounded-md bg-red-light/60 dark:bg-red/10 text-[11px] font-mono font-semibold text-red tabular-nums">
-                  <Heart size={9} fill="currentColor" />
-                  {favoriteIds.size}
-                </span>
-              )}
-              {recommendationMap.size > 0 && (
-                <span className="inline-flex items-center gap-1 h-6 px-2 rounded-md bg-violet-ghost dark:bg-violet/10 text-[11px] font-mono font-semibold text-violet dark:text-violet-light tabular-nums">
-                  <Sparkles size={9} />
-                  {recommendationMap.size}
-                </span>
-              )}
-            </div>
+      <PageHeader
+        icon={Layers}
+        title="Produits structures"
+        subtitle="Explorez et filtrez les produits structures disponibles."
+        accentFrom="#3B1FA8"
+        accentTo="#5B3FD4"
+        className="mb-3"
+      >
+        {/* Generate Recommendations */}
+        <button
+          onClick={() => {
+            setAiJustGenerated(false);
+            generateRecs.mutate(undefined, {
+              onSuccess: () => {
+                setAiJustGenerated(true);
+                setViewFilter('recommended');
+                // Clear the "just generated" highlight after 5s
+                setTimeout(() => setAiJustGenerated(false), 5000);
+              },
+            });
+          }}
+          disabled={generateRecs.isPending}
+          className={cn(
+            'h-8 px-3 rounded-lg border text-[11px] font-semibold font-body',
+            'flex items-center gap-1.5 transition-all duration-200',
+            generateRecs.isPending
+              ? 'bg-gradient-to-r from-violet to-cobalt-light text-white border-transparent shadow-md shadow-violet/25 animate-pulse-subtle'
+              : aiJustGenerated
+              ? 'bg-teal text-white border-teal shadow-md shadow-teal/25'
+              : 'border-violet/25 bg-violet-ghost dark:bg-violet/10 text-violet dark:text-violet-light hover:bg-violet/10 hover:border-violet/40 hover:shadow-sm',
+            'disabled:cursor-wait',
           )}
-        </div>
+        >
+          <Sparkles size={12} className={generateRecs.isPending ? 'animate-spin' : ''} />
+          {generateRecs.isPending ? 'Analyse IA...' : aiJustGenerated ? 'Pretes !' : 'Suggestions IA'}
+        </button>
 
-        <div className="flex items-center gap-1.5">
-          {/* Generate Recommendations */}
+        {/* Export */}
+        <button
+          onClick={() => exportProductsCsv(filtered)}
+          className={cn(
+            'h-8 px-3 rounded-lg border border-border/50 bg-white dark:bg-ink/40 text-ink-3 dark:text-ink-3',
+            'text-[11px] font-medium font-body',
+            'flex items-center gap-1.5 transition-all duration-200',
+            'hover:border-violet/40 hover:text-violet dark:hover:text-violet-light hover:bg-violet-ghost dark:hover:bg-violet/10 hover:shadow-sm',
+          )}
+        >
+          <Download size={12} />
+          Export
+        </button>
+
+        {/* View toggle */}
+        <div className="flex items-center h-8 rounded-lg border border-border/50 bg-white dark:bg-ink/40 overflow-hidden">
           <button
-            onClick={() => {
-              setAiJustGenerated(false);
-              generateRecs.mutate(undefined, {
-                onSuccess: () => {
-                  setAiJustGenerated(true);
-                  setViewFilter('recommended');
-                  // Clear the "just generated" highlight after 5s
-                  setTimeout(() => setAiJustGenerated(false), 5000);
-                },
-              });
-            }}
-            disabled={generateRecs.isPending}
+            onClick={() => setView('grid')}
             className={cn(
-              'h-8 px-3 rounded-lg border text-[11px] font-semibold font-body',
-              'flex items-center gap-1.5 transition-all duration-200',
-              generateRecs.isPending
-                ? 'bg-gradient-to-r from-violet to-cobalt-light text-white border-transparent shadow-md shadow-violet/25 animate-pulse-subtle'
-                : aiJustGenerated
-                ? 'bg-teal text-white border-teal shadow-md shadow-teal/25'
-                : 'border-violet/25 bg-violet-ghost dark:bg-violet/10 text-violet dark:text-violet-light hover:bg-violet/10 hover:border-violet/40 hover:shadow-sm',
-              'disabled:cursor-wait',
+              'h-full px-2.5 flex items-center justify-center transition-all duration-200',
+              view === 'grid'
+                ? 'bg-violet text-white'
+                : 'text-ink-3 hover:bg-surface-2 dark:hover:bg-surface-3/20 hover:text-ink dark:hover:text-surface',
             )}
+            title="Vue grille"
           >
-            <Sparkles size={12} className={generateRecs.isPending ? 'animate-spin' : ''} />
-            {generateRecs.isPending ? 'Analyse IA...' : aiJustGenerated ? 'Pretes !' : 'Suggestions IA'}
+            <LayoutGrid size={13} />
           </button>
-
-          {/* Export */}
+          <div className="w-px h-4 bg-border/40" />
           <button
-            onClick={() => exportProductsCsv(filtered)}
+            onClick={() => setView('table')}
             className={cn(
-              'h-8 px-3 rounded-lg border border-border/50 bg-white dark:bg-ink/40 text-ink-3 dark:text-ink-3',
-              'text-[11px] font-medium font-body',
-              'flex items-center gap-1.5 transition-all duration-200',
-              'hover:border-violet/40 hover:text-violet dark:hover:text-violet-light hover:bg-violet-ghost dark:hover:bg-violet/10 hover:shadow-sm',
+              'h-full px-2.5 flex items-center justify-center transition-all duration-200',
+              view === 'table'
+                ? 'bg-violet text-white'
+                : 'text-ink-3 hover:bg-surface-2 dark:hover:bg-surface-3/20 hover:text-ink dark:hover:text-surface',
             )}
+            title="Vue tableau"
           >
-            <Download size={12} />
-            Export
+            <List size={13} />
           </button>
-
-          {/* View toggle */}
-          <div className="flex items-center h-8 rounded-lg border border-border/50 bg-white dark:bg-ink/40 overflow-hidden">
-            <button
-              onClick={() => setView('grid')}
-              className={cn(
-                'h-full px-2.5 flex items-center justify-center transition-all duration-200',
-                view === 'grid'
-                  ? 'bg-violet text-white'
-                  : 'text-ink-3 hover:bg-surface-2 dark:hover:bg-surface-3/20 hover:text-ink dark:hover:text-surface',
-              )}
-              title="Vue grille"
-            >
-              <LayoutGrid size={13} />
-            </button>
-            <div className="w-px h-4 bg-border/40" />
-            <button
-              onClick={() => setView('table')}
-              className={cn(
-                'h-full px-2.5 flex items-center justify-center transition-all duration-200',
-                view === 'table'
-                  ? 'bg-violet text-white'
-                  : 'text-ink-3 hover:bg-surface-2 dark:hover:bg-surface-3/20 hover:text-ink dark:hover:text-surface',
-              )}
-              title="Vue tableau"
-            >
-              <List size={13} />
-            </button>
-          </div>
         </div>
-      </div>
-
-      {/* Gradient divider */}
-      <div
-        className="h-[2px] rounded-full mb-3"
-        style={{
-          background: 'linear-gradient(90deg, #3B1FA8, #00B894 40%, #D4A017 70%, transparent)',
-        }}
-      />
+      </PageHeader>
 
       {/* ── Summary Stats Bar ────────────────────────────────────────── */}
       {!isLoading && !isError && products.length > 0 && (

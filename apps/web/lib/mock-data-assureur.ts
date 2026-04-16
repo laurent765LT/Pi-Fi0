@@ -201,8 +201,8 @@ export const ENGAGEMENTS: Engagement[] = [
   { id: 'ENG-002', enveloppeId: 'ENV-001', distributeur: 'Patrimoine & Conseil', montant: 1_000_000, statut: 'CONFIRME', date: '2026-03-12' },
   { id: 'ENG-003', enveloppeId: 'ENV-001', distributeur: 'Gestion Privée SAS', montant: 300_000, statut: 'EN_ATTENTE', date: '2026-03-14' },
   { id: 'ENG-004', enveloppeId: 'ENV-001', distributeur: 'Alpha Patrimoine', montant: 750_000, statut: 'CONFIRME', date: '2026-03-15' },
-  { id: 'ENG-005', enveloppeId: 'ENV-001', distributeur: 'Rivière & Associés', montant: 400_000, statut: 'CONFIRME', date: '2026-03-08' },
-  { id: 'ENG-006', enveloppeId: 'ENV-001', distributeur: 'Finance & Héritage', montant: 850_000, statut: 'CONFIRME', date: '2026-03-05' },
+  { id: 'ENG-005', enveloppeId: 'ENV-001', distributeur: 'Riviere & Associes', montant: 400_000, statut: 'CONFIRME', date: '2026-03-08' },
+  { id: 'ENG-006', enveloppeId: 'ENV-001', distributeur: 'Finance & Heritage', montant: 850_000, statut: 'CONFIRME', date: '2026-03-05' },
   { id: 'ENG-007', enveloppeId: 'ENV-001', distributeur: 'LB Conseil Patrimoine', montant: 600_000, statut: 'EN_ATTENTE', date: '2026-03-17' },
   { id: 'ENG-008', enveloppeId: 'ENV-001', distributeur: 'Optima Finance', montant: 200_000, statut: 'CONFIRME', date: '2026-03-11' },
   { id: 'ENG-009', enveloppeId: 'ENV-002', distributeur: 'Cabinet Moreau', montant: 200_000, statut: 'CONFIRME', date: '2026-03-08' },
@@ -210,7 +210,13 @@ export const ENGAGEMENTS: Engagement[] = [
   { id: 'ENG-011', enveloppeId: 'ENV-002', distributeur: 'Patrimoine & Conseil', montant: 600_000, statut: 'CONFIRME', date: '2026-03-09' },
   { id: 'ENG-012', enveloppeId: 'ENV-003', distributeur: 'Cabinet Dupont CGP', montant: 800_000, statut: 'CONFIRME', date: '2026-02-10' },
   { id: 'ENG-013', enveloppeId: 'ENV-003', distributeur: 'Alpha Patrimoine', montant: 1_200_000, statut: 'CONFIRME', date: '2026-02-12' },
-  { id: 'ENG-014', enveloppeId: 'ENV-003', distributeur: 'Finance & Héritage', montant: 500_000, statut: 'CONFIRME', date: '2026-02-15' },
+  { id: 'ENG-014', enveloppeId: 'ENV-003', distributeur: 'Finance & Heritage', montant: 500_000, statut: 'CONFIRME', date: '2026-02-15' },
+  { id: 'ENG-015', enveloppeId: 'ENV-002', distributeur: 'Gestion Privee SAS', montant: 350_000, statut: 'CONFIRME', date: '2026-03-20' },
+  { id: 'ENG-016', enveloppeId: 'ENV-002', distributeur: 'Optima Finance', montant: 450_000, statut: 'EN_ATTENTE', date: '2026-03-22' },
+  { id: 'ENG-017', enveloppeId: 'ENV-001', distributeur: 'Selectis Patrimoine', montant: 320_000, statut: 'CONFIRME', date: '2026-03-19' },
+  { id: 'ENG-018', enveloppeId: 'ENV-002', distributeur: 'Selectis Patrimoine', montant: 180_000, statut: 'EN_ATTENTE', date: '2026-03-25' },
+  { id: 'ENG-019', enveloppeId: 'ENV-001', distributeur: 'Valoria Conseil', montant: 550_000, statut: 'CONFIRME', date: '2026-03-21' },
+  { id: 'ENG-020', enveloppeId: 'ENV-003', distributeur: 'Valoria Conseil', montant: 700_000, statut: 'CONFIRME', date: '2026-02-18' },
 ];
 
 // ─── Événements ──────────────────────────────────────────────────────────────
@@ -232,6 +238,30 @@ export const COLLECTE_MENSUELLE: CollecteMensuelle[] = [
   { mois: 'Fév', montant: 2_800_000 },
   { mois: 'Mar', montant: 3_400_000 },
 ];
+
+// ─── Distributeur metadata ──────────────────────────────────────────────────
+
+export interface DistributeurInfo {
+  nom: string;
+  cabinet: string;
+  ville: string;
+  email: string;
+}
+
+export const DISTRIBUTEURS_INFO: Record<string, DistributeurInfo> = {
+  'Cabinet Dupont CGP': { nom: 'Laurent Dupont', cabinet: 'Cabinet Dupont CGP', ville: 'Paris', email: 'l.dupont@dupont-cgp.fr' },
+  'Patrimoine & Conseil': { nom: 'Marie Lefebvre', cabinet: 'Patrimoine & Conseil', ville: 'Lyon', email: 'm.lefebvre@patconseil.fr' },
+  'Gestion Privee SAS': { nom: 'Pierre Garnier', cabinet: 'Gestion Privee SAS', ville: 'Bordeaux', email: 'p.garnier@gestionprivee.fr' },
+  'Alpha Patrimoine': { nom: 'Claire Martin', cabinet: 'Alpha Patrimoine', ville: 'Toulouse', email: 'c.martin@alpha-patrimoine.fr' },
+  'Riviere & Associes': { nom: 'Jean-Luc Riviere', cabinet: 'Riviere & Associes', ville: 'Nantes', email: 'jl.riviere@riviere-associes.fr' },
+  'Finance & Heritage': { nom: 'Sophie Bernard', cabinet: 'Finance & Heritage', ville: 'Marseille', email: 's.bernard@finance-heritage.fr' },
+  'LB Conseil Patrimoine': { nom: 'Luc Blanc', cabinet: 'LB Conseil Patrimoine', ville: 'Lille', email: 'l.blanc@lbconseil.fr' },
+  'Optima Finance': { nom: 'Thomas Rousseau', cabinet: 'Optima Finance', ville: 'Strasbourg', email: 't.rousseau@optimafinance.fr' },
+  'Cabinet Moreau': { nom: 'Anne Moreau', cabinet: 'Cabinet Moreau', ville: 'Rennes', email: 'a.moreau@cabinet-moreau.fr' },
+  'Conseil & Avenir': { nom: 'Philippe Durand', cabinet: 'Conseil & Avenir', ville: 'Nice', email: 'p.durand@conseil-avenir.fr' },
+  'Selectis Patrimoine': { nom: 'Isabelle Petit', cabinet: 'Selectis Patrimoine', ville: 'Montpellier', email: 'i.petit@selectis.fr' },
+  'Valoria Conseil': { nom: 'Nicolas Faure', cabinet: 'Valoria Conseil', ville: 'Grenoble', email: 'n.faure@valoria-conseil.fr' },
+};
 
 // ─── Assureur ────────────────────────────────────────────────────────────────
 

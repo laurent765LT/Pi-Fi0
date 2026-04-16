@@ -25,6 +25,7 @@ import {
   Inbox,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { PageHeader } from '@/components/ui/page-header';
 import { useAuthStore } from '@/stores/auth-store';
 import { useProducts } from '@/hooks/use-products';
 import { useMyCommitments } from '@/hooks/use-commitments';
@@ -690,6 +691,9 @@ export default function DashboardPage() {
     }));
   }, [products]);
 
+  // SEO: dynamic document title
+  useEffect(() => { document.title = "Dashboard | Strick'in"; }, []);
+
   // Entrance animation
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
@@ -737,61 +741,41 @@ export default function DashboardPage() {
       {/* ── Market Ticker ───────────────────────────────────────── */}
       <MarketTicker className="rounded-xl mb-4" />
 
-      {/* ── Page Header ─────────────────────────────────────────── */}
-      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
-        <div>
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="font-display text-xl font-bold leading-none bg-gradient-to-r from-[#3B1FA8] via-[#1A0A3E] to-[#3B1FA8] bg-clip-text text-transparent dark:from-white dark:via-[#C9BCFF] dark:to-white">
-              Bonjour, {firstName}{' '}
-              <span role="img" aria-label="wave">
-                👋
-              </span>
-            </h1>
-            {/* ── Date Range Indicator (Periode badge) ──── */}
-            <span
-              className={cn(
-                'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full',
-                'bg-violet-pale/60 dark:bg-violet/10',
-                'border border-violet/15 dark:border-violet-light/15',
-                'text-[10px] font-semibold font-body text-violet dark:text-violet-light',
-                'whitespace-nowrap'
-              )}
-            >
-              <CalendarDays size={11} />
-              30 derniers jours
-            </span>
-          </div>
-          <p className="text-xs text-ink-4 dark:text-ink-3 font-body mt-0.5 capitalize">{todayFormatted()}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link
-            href="/pricing"
-            className={cn(
-              'inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg',
-              'border border-border/60 dark:border-border-2/60',
-              'bg-white dark:bg-white/5 backdrop-blur-sm',
-              'text-ink-2 dark:text-ink font-body text-xs font-semibold',
-              'hover:bg-surface-2 dark:hover:bg-white/10 hover:shadow-sm',
-              'transition-all duration-200'
-            )}
-          >
-            <Calculator size={14} />
-            Pricing
-          </Link>
-          <Link
-            href="/products"
-            className={cn(
-              'inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg',
-              'bg-violet text-white font-body text-xs font-semibold',
-              'hover:bg-violet-mid shadow-sm hover:shadow-violet',
-              'transition-all duration-200'
-            )}
-          >
-            <Layers size={14} />
-            Voir les produits
-          </Link>
-        </div>
-      </header>
+      <PageHeader
+        icon={BarChart3}
+        title={`Bonjour, ${firstName}`}
+        subtitle={todayFormatted()}
+        accentFrom="#3B1FA8"
+        accentTo="#1A0A3E"
+        className="mb-5"
+      >
+        <Link
+          href="/pricing"
+          className={cn(
+            'inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg',
+            'border border-border/60 dark:border-border-2/60',
+            'bg-white dark:bg-white/5 backdrop-blur-sm',
+            'text-ink-2 dark:text-ink font-body text-xs font-semibold',
+            'hover:bg-surface-2 dark:hover:bg-white/10 hover:shadow-sm',
+            'transition-all duration-200'
+          )}
+        >
+          <Calculator size={14} />
+          Pricing
+        </Link>
+        <Link
+          href="/products"
+          className={cn(
+            'inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg',
+            'bg-violet text-white font-body text-xs font-semibold',
+            'hover:bg-violet-mid shadow-sm hover:shadow-violet',
+            'transition-all duration-200'
+          )}
+        >
+          <Layers size={14} />
+          Voir les produits
+        </Link>
+      </PageHeader>
 
       {/* ── KPI Cards — unified glass container ───────────────── */}
       <section className="mb-5">

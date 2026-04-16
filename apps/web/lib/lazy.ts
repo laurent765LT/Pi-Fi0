@@ -59,3 +59,19 @@ export const CommandPalette = dynamic(
     ),
   { ssr: false, loading: () => null },
 );
+
+export const PayoffCanvas = dynamic(
+  () =>
+    import('@/components/products/payoff-canvas').then(
+      (m) => m.PayoffCanvas,
+    ),
+  { ssr: false, loading: () => null },
+);
+
+export const BarrierGauge = dynamic(
+  () =>
+    import('@/components/products/barrier-gauge').then(
+      (m) => m.BarrierGauge,
+    ),
+  { ssr: false, loading: () => null },
+);

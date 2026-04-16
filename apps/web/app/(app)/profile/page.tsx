@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   User,
   Mail,
@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useAuthStore } from '@/stores/auth-store';
+import { PageHeader } from '@/components/ui/page-header';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -135,6 +136,7 @@ function ActivityStat({
 // ---------------------------------------------------------------------------
 
 export default function ProfilePage() {
+  useEffect(() => { document.title = "Mon Profil | Strick'in"; }, []);
   const user = useAuthStore((s) => s.user);
   const u = user as any;
 
@@ -192,28 +194,13 @@ export default function ProfilePage() {
 
   return (
     <div className="animate-fade-in">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-1">
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center shadow-md"
-            style={{
-              background: 'linear-gradient(135deg, #3B1FA8 0%, #5B3FD4 100%)',
-            }}
-          >
-            <User size={18} className="text-white" />
-          </div>
-          <div>
-            <h1 className="font-display text-[28px] font-bold leading-tight bg-gradient-to-r from-[#3B1FA8] via-[#1A0A3E] to-[#3B1FA8] bg-clip-text text-transparent">
-              Mon Profil
-            </h1>
-            <p className="text-sm text-ink-3 font-body mt-0.5">
-              Consultez et modifiez vos informations personnelles.
-            </p>
-          </div>
-        </div>
-        <div className="gradient-bar h-[2px] rounded-full mt-5 opacity-60" />
-      </div>
+      <PageHeader
+        icon={User}
+        title="Mon Profil"
+        subtitle="Consultez et modifiez vos informations personnelles."
+        accentFrom="#3B1FA8"
+        accentTo="#5B3FD4"
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 stagger-children">
         {/* ── Left column: Avatar + Info Card ─────────────────── */}

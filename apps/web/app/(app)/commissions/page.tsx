@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import {
   TrendingUp,
   Clock,
@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { Badge } from '@/components/ui/badge';
+import { PageHeader } from '@/components/ui/page-header';
 import { Tooltip } from '@/components/ui/tooltip';
 import { Dropdown, DropdownItem, DropdownSeparator } from '@/components/ui/dropdown';
 import { exportToExcel } from '@/lib/export-utils';
@@ -340,6 +341,7 @@ const PERIOD_PRESETS: { key: PeriodPreset; label: string }[] = [
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function CommissionsPage() {
+  useEffect(() => { document.title = "Commissions | Strick'in"; }, []);
   const { data: summaryData } = useCommissionSummary();
 
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
@@ -447,18 +449,14 @@ export default function CommissionsPage() {
 
   return (
     <div className="animate-fade-in space-y-4">
-      {/* ── Header ──────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-[22px] font-bold leading-tight bg-gradient-to-r from-[#3B1FA8] via-[#1A0A3E] to-[#3B1FA8] bg-clip-text text-transparent dark:from-white dark:via-[#C9BCFF] dark:to-white">
-            Commissions
-          </h1>
-          <p className="text-[12px] text-ink-3 dark:text-white/50 font-body mt-0.5">
-            Suivi et rapprochement de vos commissions
-          </p>
-        </div>
-
-        {/* Export dropdown */}
+      <PageHeader
+        icon={CircleDollarSign}
+        title="Commissions"
+        subtitle="Suivi et rapprochement de vos commissions"
+        accentFrom="#3B1FA8"
+        accentTo="#5B3FD4"
+        className="mb-4"
+      >
         <Dropdown
           align="right"
           trigger={
@@ -489,9 +487,7 @@ export default function CommissionsPage() {
             onClick={handleExportExcel}
           />
         </Dropdown>
-      </div>
-
-      <div className="h-px bg-gradient-to-r from-[#3B1FA8]/20 via-[#3B1FA8]/10 to-transparent dark:from-[#3B1FA8]/30 dark:via-[#3B1FA8]/10" />
+      </PageHeader>
 
       {/* ── KPI Cards ──────────────────────────────────────────────── */}
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">

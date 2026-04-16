@@ -13,8 +13,8 @@ import {
 import { cn } from '@/lib/cn';
 import { useProduct, useProductPayoff } from '@/hooks/use-products';
 import { useFavorites, useToggleFavorite, useTrackView } from '@/hooks/use-favorites';
-import { PayoffCanvas, buildDefaultScenarios } from '@/components/products/payoff-canvas';
-import { BarrierGauge } from '@/components/products/barrier-gauge';
+import { buildDefaultScenarios } from '@/components/products/payoff-canvas';
+import { PayoffCanvas, BarrierGauge } from '@/lib/lazy';
 import { CommitmentModal } from '@/components/commitments/commitment-modal';
 import { useMyCommitments } from '@/hooks/use-commitments';
 import { Button } from '@/components/ui/button';

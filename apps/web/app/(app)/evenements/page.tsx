@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { Calendar, Eye, DollarSign, RefreshCw, ArrowRight, ArrowLeft, Search, X, CalendarX } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { PageHeader } from '@/components/ui/page-header';
 import { useProducts } from '@/hooks/use-products';
 
 // --- Types -------------------------------------------------------------------
@@ -62,6 +63,7 @@ function isToday(iso: string): boolean {
 // --- Page --------------------------------------------------------------------
 
 export default function EventsPage() {
+  useEffect(() => { document.title = "Evenements | Strick'in"; }, []);
   const [filter, setFilter] = useState<EventFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const { data: productsData, isLoading } = useProducts({});
@@ -162,50 +164,13 @@ export default function EventsPage() {
 
   return (
     <div className="w-full animate-fade-in">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-4 mb-1.5">
-        <div className="flex items-center gap-2.5">
-          <Link
-            href="/dashboard"
-            className={cn(
-              'flex items-center justify-center w-9 h-9 rounded-xl',
-              'bg-white/80 dark:bg-white/5 backdrop-blur-md border border-border/60',
-              'text-ink-3 hover:text-[#3B1FA8] hover:border-[#3B1FA8]/30',
-              'shadow-sm hover:shadow-md',
-              'transition-all duration-200',
-            )}
-          >
-            <ArrowLeft size={15} />
-          </Link>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="font-display text-[22px] font-bold text-ink dark:text-white leading-tight">
-                Evenements
-              </h1>
-              <span
-                className={cn(
-                  'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full',
-                  'font-mono text-[12px] font-semibold',
-                  'bg-gradient-to-r from-[#3B1FA8] to-[#1A0A3E] text-white',
-                  'shadow-sm shadow-[#3B1FA8]/20',
-                )}
-              >
-                {filtered.length}
-                <span className="text-white/70 text-[10px] font-body">evt{filtered.length > 1 ? 's' : ''}</span>
-              </span>
-              <span className="text-[12px] text-ink-3 dark:text-white/40 font-body hidden sm:inline">
-                &mdash; Tous les evenements a venir sur vos produits structures.
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div
-        className="h-[2px] rounded-full mb-4 mt-3"
-        style={{
-          background: 'linear-gradient(90deg, #3B1FA8, #00B894 40%, #D4A017 70%, transparent)',
-        }}
+      <PageHeader
+        icon={Calendar}
+        title="Evenements"
+        subtitle="Tous les evenements a venir sur vos produits structures."
+        accentFrom="#3B1FA8"
+        accentTo="#1A0A3E"
+        className="mb-4"
       />
 
       {/* Search Bar */}

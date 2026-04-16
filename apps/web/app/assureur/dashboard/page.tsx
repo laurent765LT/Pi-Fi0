@@ -2,10 +2,10 @@
 
 import Link from 'next/link';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { TrendingUp, Users, Package, Clock, ArrowRight, AlertTriangle, Eye, DollarSign, Calendar } from 'lucide-react';
+import { TrendingUp, Users, Package, Clock, ArrowRight, AlertTriangle, Eye, DollarSign, Calendar, BarChart3, Layers, Percent } from 'lucide-react';
 import {
-  PRODUITS, ENVELOPPES, EVENEMENTS, COLLECTE_MENSUELLE,
-  formatMontant, formatMontantFull, formatDateFR, getProduit,
+  PRODUITS, ENVELOPPES, EVENEMENTS, COLLECTE_MENSUELLE, ENGAGEMENTS,
+  formatMontant, formatMontantFull, formatDateFR, getProduit, getEngagements,
   TYPE_LABELS, TYPE_COLORS, SRI_COLORS, STATUT_ENVELOPPE, EVENT_CONFIG,
 } from '@/lib/mock-data-assureur';
 import { cn } from '@/lib/cn';
@@ -46,6 +46,29 @@ function StatCard({ icon, label, value, sub, urgent = false }: {
         )}
       </div>
     </div>
+  );
+}
+
+// ─── Quick Action ───────────────────────────────────────────────────────────
+
+function QuickAction({ href, icon, label, description }: {
+  href: string; icon: React.ReactNode; label: string; description: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="group relative flex items-center gap-4 bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl p-4 border border-border/60 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+    >
+      <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-violet/60 to-teal/40 opacity-0 group-hover:opacity-100 transition-opacity" />
+      <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-gradient-to-br from-violet/10 to-cobalt/10 shrink-0">
+        {icon}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-[14px] font-semibold text-ink dark:text-white font-body group-hover:text-violet transition-colors">{label}</p>
+        <p className="text-[12px] text-ink-3 dark:text-white/40 font-body">{description}</p>
+      </div>
+      <ArrowRight size={16} className="text-ink-3 dark:text-white/30 group-hover:text-violet transition-colors shrink-0" />
+    </Link>
   );
 }
 
@@ -171,44 +194,72 @@ export default function AssureurDashboard() {
   const activeProducts = PRODUITS.filter((p) => p.status === 'ACTIF').length;
   const activeEnveloppes = ENVELOPPES.filter((e) => e.statut === 'OUVERT');
   const totalVolume = ENVELOPPES.reduce((s, e) => s + e.montantConfirme + e.montantAttente, 0);
-  const totalDistributeurs = new Set(ENVELOPPES.flatMap((e) => {
-    const { getEngagements } = require('@/lib/mock-data-assureur');
-    return getEngagements(e.id).map((eng: any) => eng.distributeur);
-  })).size;
+  const totalDistributeurs = new Set(ENGAGEMENTS.map((e) => e.distributeur)).size;
   const nextEvent = EVENEMENTS.find((e) => e.joursRestants > 0);
+
+  // Average fill rate across open envelopes
+  const avgFillRate = activeEnveloppes.length > 0
+    ? activeEnveloppes.reduce((sum, env) => {
+        const maxAmount = env.montantCible * (1 + env.surbookingPct / 100);
+        return sum + Math.min(100, (env.montantConfirme / maxAmount) * 100);
+      }, 0) / activeEnveloppes.length
+    : 0;
 
   return (
     <div>
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard
+          icon={<Package size={16} className="text-violet" />}
+          label="Produits actifs"
+          value={activeProducts}
+          sub={`${PRODUITS.length} au total`}
+        />
+        <StatCard
           icon={<TrendingUp size={16} className="text-violet" />}
-          label="Volume engagé"
+          label="Volume total"
           value={formatMontant(totalVolume)}
-          sub="ce mois"
+          sub="engagements cumules"
         />
         <StatCard
           icon={<Users size={16} className="text-violet" />}
-          label="Distributeurs actifs"
+          label="Distributeurs"
           value={totalDistributeurs}
+          sub={`${ENGAGEMENTS.length} engagements`}
         />
         <StatCard
-          icon={<Package size={16} className="text-violet" />}
-          label="Produits actifs"
-          value={`${activeProducts} produits`}
+          icon={<Percent size={16} className="text-cobalt" />}
+          label="Taux remplissage moy."
+          value={`${avgFillRate.toFixed(0)}%`}
+          sub={`${activeEnveloppes.length} enveloppes ouvertes`}
         />
-        <StatCard
-          icon={<Clock size={16} className="text-red" />}
-          label="Prochaine clôture"
-          value={nextEvent ? `J-${nextEvent.joursRestants}` : '—'}
-          sub={nextEvent?.produitNom}
-          urgent={nextEvent ? nextEvent.joursRestants <= 30 : false}
+      </div>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <QuickAction
+          href="/assureur/enveloppes"
+          icon={<Layers size={16} className="text-violet" />}
+          label="Voir les enveloppes"
+          description="Suivi des bookings en temps reel"
+        />
+        <QuickAction
+          href="/assureur/produits"
+          icon={<BarChart3 size={16} className="text-cobalt" />}
+          label="Mes produits"
+          description={`${activeProducts} produits en distribution`}
+        />
+        <QuickAction
+          href="/assureur/distributeurs"
+          icon={<Users size={16} className="text-teal" />}
+          label="Distributeurs"
+          description={`${totalDistributeurs} cabinets actifs`}
         />
       </div>
 
       {/* Chart + Events */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {/* Collecte Chart — glass container */}
+        {/* Collecte Chart */}
         <div className="lg:col-span-2 bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl p-5 border border-border/60 shadow-sm">
           <h3 className="text-[15px] font-bold mb-4 text-ink dark:text-white font-display">Collecte mensuelle</h3>
           <div className="h-[220px]">
@@ -229,9 +280,9 @@ export default function AssureurDashboard() {
           </div>
         </div>
 
-        {/* Events — glass container */}
+        {/* Events */}
         <div className="bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl p-5 border border-border/60 shadow-sm">
-          <h3 className="text-[15px] font-bold mb-4 text-ink dark:text-white font-display">Prochains événements</h3>
+          <h3 className="text-[15px] font-bold mb-4 text-ink dark:text-white font-display">Prochains evenements</h3>
           <div className="flex flex-col">
             {EVENEMENTS.filter((e) => e.joursRestants > 0).map((evt) => (
               <EventItem key={evt.id} evt={evt} />

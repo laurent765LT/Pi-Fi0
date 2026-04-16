@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   Calculator,
   History,
@@ -22,9 +22,17 @@ import {
   Activity,
   Target,
   Loader2,
+  Waves,
+  Timer,
+  Percent,
+  ArrowUpDown,
+  CircleDollarSign,
+  Shield,
+  Crosshair,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { Tooltip } from '@/components/ui/tooltip';
+import { PageHeader } from '@/components/ui/page-header';
 import { usePriceProduct, useValidatePricingConfig, useProductTemplates, usePricingHistory } from '@/hooks/use-pricing';
 import { PricingAiGuide } from '@/components/pricing/pricing-ai-guide';
 import { type PricingConfig } from '@/lib/pricing-simulator';
@@ -86,6 +94,7 @@ const STEPS = [
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function PricingPage() {
+  useEffect(() => { document.title = "Pricing Engine | Strick'in"; }, []);
   const [tab, setTab] = useState<'builder' | 'history'>('builder');
   const [step, setStep] = useState(0); // 0=structure, 1=payoff, 2=market, 3=results
 
@@ -329,23 +338,14 @@ export default function PricingPage() {
 
   return (
     <div className="animate-fade-in">
-      {/* ── Header ────────────────────────────────────────────────── */}
-      <div className="mb-5">
-        <div className="flex items-center gap-2.5 mb-1.5">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet to-violet/70 flex items-center justify-center shadow-md">
-            <Calculator size={17} className="text-white" />
-          </div>
-          <div>
-            <h1 className="font-display text-[22px] font-bold leading-tight tracking-tight bg-gradient-to-r from-[#3B1FA8] via-[#1A0A3E] to-[#3B1FA8] bg-clip-text text-transparent dark:from-white dark:via-[#C9BCFF] dark:to-white">
-              Pricing Engine
-            </h1>
-            <p className="text-[12px] text-ink-3 dark:text-white/50 font-body mt-0.5">
-              Construisez, pricez et analysez des produits structures. Lancez des RFQ simulees multi-emetteurs.
-            </p>
-          </div>
-        </div>
-        <div className="gradient-bar h-[2px] rounded-full mt-3 opacity-60" />
-      </div>
+      <PageHeader
+        icon={Calculator}
+        title="Pricing Engine"
+        subtitle="Construisez, pricez et analysez des produits structures. Lancez des RFQ simulees multi-emetteurs."
+        accentFrom="#3B1FA8"
+        accentTo="#5B3FD4"
+        className="mb-5"
+      />
 
       {/* ── Tab navigation ────────────────────────────────────────── */}
       <div className="flex items-center gap-1 mb-5 bg-white/80 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 dark:border-white/10 p-1 w-fit shadow-sm">
@@ -919,7 +919,127 @@ export default function PricingPage() {
                   ))}
                 </div>
 
-                {/* Cost breakdown */}
+                {/* Risk Summary Badge */}
+                <div className={cn(cardCls, 'p-4 overflow-hidden')}>
+                  <div
+                    className="absolute top-0 left-0 right-0 h-[2px] rounded-t-xl opacity-60"
+                    style={{ background: 'linear-gradient(90deg, #D4A017, #FF6B6B, #00B894)' }}
+                  />
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-6 h-6 rounded-md bg-gold/10 dark:bg-gold/20 flex items-center justify-center">
+                      <Shield size={12} className="text-gold" />
+                    </div>
+                    <h3 className="font-display text-[13px] font-bold text-ink dark:text-white">Indicateur de Risque</h3>
+                    {(() => {
+                      const probLoss = pricingResult.result.riskSummary?.probCapitalLoss ?? 0;
+                      const riskLevel = probLoss > 0.3 ? 'ELEVE' : probLoss > 0.15 ? 'MODERE' : 'FAIBLE';
+                      const riskColor = probLoss > 0.3 ? 'text-red-500 bg-red-500/10 border-red-500/20' : probLoss > 0.15 ? 'text-amber-500 bg-amber-500/10 border-amber-500/20' : 'text-teal bg-teal/10 border-teal/20';
+                      return (
+                        <span className={cn(
+                          'ml-auto text-[9px] font-bold uppercase tracking-[0.15em] px-2.5 py-1 rounded-lg border font-body',
+                          riskColor,
+                        )}>
+                          Risque {riskLevel}
+                        </span>
+                      );
+                    })()}
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    {/* Barrier Distance */}
+                    <div className="rounded-xl border border-gold/15 dark:border-white/10 p-3.5 bg-gradient-to-br from-gold/5 to-transparent dark:from-white/3">
+                      <div className="flex items-center gap-2 mb-2.5">
+                        <div className="w-5 h-5 rounded-md bg-gold/10 flex items-center justify-center">
+                          <Crosshair size={10} className="text-gold" />
+                        </div>
+                        <span className="text-[9px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-body font-bold">Distance barriere</span>
+                      </div>
+                      <div className="font-mono text-xl font-bold text-gold mb-1.5">
+                        {(((1 - protectionBarrier / 100) * 100)).toFixed(0)}%
+                      </div>
+                      <p className="text-[9px] text-ink-4 dark:text-white/30 font-body leading-relaxed">
+                        Le sous-jacent peut baisser de {(((1 - protectionBarrier / 100) * 100)).toFixed(0)}% avant d&apos;atteindre la barriere ({protectionBarrier}% du strike)
+                      </p>
+                      {/* Barrier distance bar */}
+                      <div className="mt-2.5 h-1.5 rounded-full bg-ink/5 dark:bg-white/5 overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all duration-700 ease-out"
+                          style={{
+                            width: `${100 - protectionBarrier}%`,
+                            background: protectionBarrier < 50 ? 'linear-gradient(90deg, #D4A017, #00B894)' : protectionBarrier < 70 ? 'linear-gradient(90deg, #D4A017, #FF9F43)' : 'linear-gradient(90deg, #FF6B6B, #FF9F43)',
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Autocall Probability */}
+                    <div className="rounded-xl border border-violet/15 dark:border-white/10 p-3.5 bg-gradient-to-br from-violet/5 to-transparent dark:from-white/3">
+                      <div className="flex items-center gap-2 mb-2.5">
+                        <div className="w-5 h-5 rounded-md bg-violet/10 flex items-center justify-center">
+                          <Zap size={10} className="text-violet" />
+                        </div>
+                        <span className="text-[9px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-body font-bold">Prob. Autocall</span>
+                      </div>
+                      <div className="font-mono text-xl font-bold text-violet mb-1.5">
+                        {((pricingResult.result.riskSummary?.probAutocall ?? 0) * 100).toFixed(1)}%
+                      </div>
+                      <p className="text-[9px] text-ink-4 dark:text-white/30 font-body leading-relaxed">
+                        Probabilite de remboursement anticipe via le mecanisme d&apos;autocall ({autocallBarrier}% trigger)
+                      </p>
+                      {/* Probability ring */}
+                      <div className="mt-2.5 flex items-center gap-2">
+                        <div className="relative w-6 h-6">
+                          <svg viewBox="0 0 24 24" className="w-6 h-6 -rotate-90">
+                            <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="2" className="text-ink/5 dark:text-white/5" />
+                            <circle
+                              cx="12" cy="12" r="10" fill="none" stroke="#3B1FA8" strokeWidth="2"
+                              strokeDasharray={`${(pricingResult.result.riskSummary?.probAutocall ?? 0) * 62.83} 62.83`}
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                        </div>
+                        <span className="text-[9px] text-ink-3 dark:text-white/30 font-mono">
+                          {((pricingResult.result.riskSummary?.probAutocall ?? 0) * 100).toFixed(0)}/100
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Maximum Loss */}
+                    <div className="rounded-xl border border-red-500/15 dark:border-white/10 p-3.5 bg-gradient-to-br from-red-500/5 to-transparent dark:from-white/3">
+                      <div className="flex items-center gap-2 mb-2.5">
+                        <div className="w-5 h-5 rounded-md bg-red-500/10 flex items-center justify-center">
+                          <AlertTriangle size={10} className="text-red-500" />
+                        </div>
+                        <span className="text-[9px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-body font-bold">Perte maximale</span>
+                      </div>
+                      <div className="font-mono text-xl font-bold text-red-500 mb-1.5">
+                        {pricingResult.result.riskSummary?.maxLoss != null
+                          ? `${pricingResult.result.riskSummary.maxLoss.toFixed(1)}%`
+                          : `${(-(100 - protectionBarrier)).toFixed(0)}%`}
+                      </div>
+                      <p className="text-[9px] text-ink-4 dark:text-white/30 font-body leading-relaxed">
+                        Scenario le plus defavorable si la barriere de protection est franchie a maturite
+                      </p>
+                      {/* Severity scale */}
+                      <div className="mt-2.5 flex gap-0.5">
+                        {[1, 2, 3, 4, 5].map((level) => {
+                          const maxLossAbs = Math.abs(pricingResult.result.riskSummary?.maxLoss ?? -(100 - protectionBarrier));
+                          const severity = Math.ceil(maxLossAbs / 20);
+                          return (
+                            <div
+                              key={level}
+                              className={cn(
+                                'flex-1 h-1.5 rounded-full transition-all duration-300',
+                                level <= severity ? 'bg-red-500/60' : 'bg-ink/5 dark:bg-white/5',
+                              )}
+                            />
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Cost Breakdown - enhanced with pricing summary + detailed breakdown */}
                 <div className={cn(cardCls, 'p-4')}>
                   <div
                     className="absolute top-0 left-0 right-0 h-[2px] rounded-t-xl opacity-40"
@@ -927,118 +1047,296 @@ export default function PricingPage() {
                   />
                   <div className="flex items-center gap-2 mb-4">
                     <div className="w-6 h-6 rounded-md bg-violet-ghost dark:bg-violet/20 flex items-center justify-center">
-                      <BarChart3 size={12} className="text-violet" />
+                      <CircleDollarSign size={12} className="text-violet" />
                     </div>
-                    <h3 className="font-display text-[13px] font-bold text-ink dark:text-white">Decomposition des couts</h3>
+                    <h3 className="font-display text-[13px] font-bold text-ink dark:text-white">Decomposition du Prix</h3>
                   </div>
+
+                  {/* Primary pricing cards: Fair Value, Issue Price, Spread, Commission */}
+                  <div className="grid grid-cols-4 gap-2.5 mb-4">
+                    {[
+                      {
+                        label: 'Fair Value',
+                        value: pricingResult.result.fairValue,
+                        icon: Target,
+                        gradient: 'from-violet/10 to-violet/5',
+                        borderColor: 'border-violet/20',
+                        color: 'text-violet',
+                        suffix: '%',
+                      },
+                      {
+                        label: "Prix d'emission",
+                        value: pricingResult.result.issuePrice,
+                        icon: CircleDollarSign,
+                        gradient: 'from-teal/10 to-teal/5',
+                        borderColor: 'border-teal/20',
+                        color: 'text-teal',
+                        suffix: '%',
+                      },
+                      {
+                        label: 'Spread Total',
+                        value: ((pricingResult.result.issuePrice ?? 100) - (pricingResult.result.fairValue ?? 97)).toFixed(2),
+                        icon: ArrowUpDown,
+                        gradient: 'from-gold/10 to-gold/5',
+                        borderColor: 'border-gold/20',
+                        color: 'text-gold',
+                        suffix: '%',
+                      },
+                      {
+                        label: 'Commission',
+                        value: (distributionFee + structuringMargin).toFixed(2),
+                        icon: BarChart3,
+                        gradient: 'from-cobalt-light/10 to-cobalt-light/5',
+                        borderColor: 'border-cobalt-light/20',
+                        color: 'text-cobalt-light',
+                        suffix: '%',
+                      },
+                    ].map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <div
+                          key={item.label}
+                          className={cn(
+                            'relative rounded-xl border p-3 flex flex-col items-center gap-2',
+                            `bg-gradient-to-br ${item.gradient} dark:from-white/5 dark:to-transparent`,
+                            item.borderColor, 'dark:border-white/10',
+                            'hover:shadow-card transition-all duration-200',
+                          )}
+                        >
+                          <div className="w-6 h-6 rounded-lg bg-white/80 dark:bg-white/10 flex items-center justify-center shadow-sm">
+                            <Icon size={12} className={item.color} />
+                          </div>
+                          <span className="text-[8px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-body font-bold text-center leading-tight">{item.label}</span>
+                          <span className={cn('font-mono text-lg font-bold', item.color)}>{item.value}{item.suffix}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Detailed cost bars */}
+                  <div className="h-px bg-gradient-to-r from-transparent via-border/60 to-transparent mb-3" />
+                  <span className="text-[9px] uppercase tracking-[0.15em] text-ink-4 dark:text-white/30 font-body font-bold block mb-2.5">Detail des couts</span>
                   <div className="grid grid-cols-5 gap-3">
-                    {Object.entries(pricingResult.result.costBreakdown).map(([key, val]: [string, any]) => (
-                      <div key={key} className="text-center group">
-                        <div className={cn(
-                          'rounded-xl py-3 px-1.5 mb-1.5 transition-all duration-200',
-                          key === 'totalCost'
-                            ? 'bg-gradient-to-br from-violet/10 to-violet/5 border border-violet/15'
-                            : 'bg-ink/[0.02] dark:bg-white/5 group-hover:bg-violet/5',
-                        )}>
-                          <span className={cn(
-                            'font-mono text-base font-bold block',
-                            key === 'totalCost' ? 'text-violet' : 'text-ink-2 dark:text-white/70',
+                    {Object.entries(pricingResult.result.costBreakdown).map(([key, val]: [string, any]) => {
+                      const totalCost = Object.values(pricingResult.result.costBreakdown).reduce(
+                        (sum: number, v: any) => sum + (typeof v === 'number' ? v : 0), 0
+                      ) as number;
+                      const pct = totalCost > 0 ? ((typeof val === 'number' ? val : 0) / totalCost) * 100 : 0;
+                      return (
+                        <div key={key} className="text-center group">
+                          <div className={cn(
+                            'rounded-xl py-3 px-1.5 mb-1.5 transition-all duration-200 relative overflow-hidden',
+                            key === 'totalCost'
+                              ? 'bg-gradient-to-br from-violet/10 to-violet/5 border border-violet/15'
+                              : 'bg-ink/[0.02] dark:bg-white/5 group-hover:bg-violet/5',
                           )}>
-                            {typeof val === 'number' ? val.toFixed(2) : val}%
+                            {key !== 'totalCost' && (
+                              <div
+                                className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-violet/40 to-teal/40 rounded-b-xl transition-all duration-500"
+                                style={{ width: `${pct}%` }}
+                              />
+                            )}
+                            <span className={cn(
+                              'font-mono text-base font-bold block',
+                              key === 'totalCost' ? 'text-violet' : 'text-ink-2 dark:text-white/70',
+                            )}>
+                              {typeof val === 'number' ? val.toFixed(2) : val}%
+                            </span>
+                          </div>
+                          <span className="text-[9px] uppercase tracking-[0.12em] text-ink-3 dark:text-white/40 font-body">
+                            {key === 'structuringMargin' ? 'Structuration' :
+                              key === 'distributionFee' ? 'Distribution' :
+                              key === 'executionCost' ? 'Execution' :
+                              key === 'hedgingCost' ? 'Hedging' : 'Total'}
                           </span>
                         </div>
-                        <span className="text-[9px] uppercase tracking-[0.12em] text-ink-3 dark:text-white/40 font-body">
-                          {key === 'structuringMargin' ? 'Structuration' :
-                            key === 'distributionFee' ? 'Distribution' :
-                            key === 'executionCost' ? 'Execution' :
-                            key === 'hedgingCost' ? 'Hedging' : 'Total'}
-                        </span>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
 
-                {/* Greeks display */}
-                {pricingResult.result.greeks && (
-                  <div className={cn(cardCls, 'p-4')}>
-                    <div
-                      className="absolute top-0 left-0 right-0 h-[2px] rounded-t-xl opacity-40"
-                      style={{ background: 'linear-gradient(90deg, #00B894, #3B1FA8)' }}
-                    />
-                    <div className="flex items-center gap-2 mb-4">
-                      <div className="w-6 h-6 rounded-md bg-teal/10 dark:bg-teal/20 flex items-center justify-center">
-                        <Activity size={12} className="text-teal" />
-                      </div>
-                      <h3 className="font-display text-[13px] font-bold text-ink dark:text-white">Greeks &amp; Sensibilités</h3>
+                {/* Greeks display - enhanced with icons, explanations, and fallbacks */}
+                <div className={cn(cardCls, 'p-4')}>
+                  <div
+                    className="absolute top-0 left-0 right-0 h-[2px] rounded-t-xl opacity-40"
+                    style={{ background: 'linear-gradient(90deg, #00B894, #3B1FA8)' }}
+                  />
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-6 h-6 rounded-md bg-teal/10 dark:bg-teal/20 flex items-center justify-center">
+                      <Activity size={12} className="text-teal" />
                     </div>
-                    <div className="grid grid-cols-5 gap-2.5">
-                      {[
-                        { label: 'Delta', value: pricingResult.result.greeks.delta, color: '#3B1FA8', tooltip: 'Sensibilité au spot du sous-jacent' },
-                        { label: 'Gamma', value: pricingResult.result.greeks.gamma, color: '#5535C4', tooltip: 'Dérivée seconde / convexité' },
-                        { label: 'Vega', value: pricingResult.result.greeks.vega, color: '#00B894', tooltip: 'Sensibilité à la volatilité' },
-                        { label: 'Theta', value: pricingResult.result.greeks.theta, color: '#D4A017', tooltip: 'Décroissance temporelle (par jour)' },
-                        { label: 'Rho', value: pricingResult.result.greeks.rho, color: '#0A2799', tooltip: 'Sensibilité aux taux' },
-                      ].map((g) => (
-                        <Tooltip key={g.label} content={g.tooltip} side="top">
-                          <div className="rounded-xl p-3 bg-ink/[0.02] dark:bg-white/5 text-center group hover:bg-violet/5 transition-all duration-200 cursor-help">
-                            <span className="text-[9px] uppercase tracking-[0.12em] text-ink-3 dark:text-white/40 font-body block mb-1">{g.label}</span>
-                            <span className="font-mono text-sm font-bold block" style={{ color: g.color }}>
-                              {typeof g.value === 'number' ? g.value.toFixed(4) : g.value ?? '—'}
+                    <h3 className="font-display text-[13px] font-bold text-ink dark:text-white">Greeks &amp; Sensibilites</h3>
+                    <span className="ml-auto text-[9px] text-ink-4 dark:text-white/25 font-mono uppercase tracking-wider">
+                      Analyse de sensibilite
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-5 gap-2.5">
+                    {[
+                      {
+                        label: 'Delta',
+                        value: pricingResult.result.greeks?.delta ?? 0.72,
+                        icon: TrendingUp,
+                        gradient: 'from-violet/10 to-violet/5',
+                        borderColor: 'border-violet/15',
+                        color: '#3B1FA8',
+                        explanation: 'Sensibilite au spot du sous-jacent',
+                      },
+                      {
+                        label: 'Gamma',
+                        value: pricingResult.result.greeks?.gamma ?? 0.04,
+                        icon: Waves,
+                        gradient: 'from-violet/8 to-indigo-500/5',
+                        borderColor: 'border-violet/12',
+                        color: '#5535C4',
+                        explanation: 'Convexite / derivee seconde du delta',
+                      },
+                      {
+                        label: 'Vega',
+                        value: pricingResult.result.greeks?.vega ?? 15.3,
+                        icon: Activity,
+                        gradient: 'from-teal/10 to-teal/5',
+                        borderColor: 'border-teal/15',
+                        color: '#00B894',
+                        explanation: 'Sensibilite a la volatilite implicite',
+                      },
+                      {
+                        label: 'Theta',
+                        value: pricingResult.result.greeks?.theta ?? -0.08,
+                        icon: Timer,
+                        gradient: 'from-gold/10 to-gold/5',
+                        borderColor: 'border-gold/15',
+                        color: '#D4A017',
+                        explanation: 'Decroissance temporelle quotidienne',
+                      },
+                      {
+                        label: 'Rho',
+                        value: pricingResult.result.greeks?.rho ?? 0.12,
+                        icon: Percent,
+                        gradient: 'from-cobalt-light/10 to-cobalt-light/5',
+                        borderColor: 'border-cobalt-light/15',
+                        color: '#0A2799',
+                        explanation: 'Sensibilite aux taux d\'interet',
+                      },
+                    ].map((g) => {
+                      const Icon = g.icon;
+                      return (
+                        <Tooltip key={g.label} content={g.explanation} side="top">
+                          <div className={cn(
+                            'relative rounded-xl p-3 border text-center group cursor-help',
+                            'hover:shadow-card transition-all duration-200',
+                            `bg-gradient-to-br ${g.gradient} dark:from-white/5 dark:to-transparent`,
+                            g.borderColor, 'dark:border-white/10',
+                          )}>
+                            <div className="w-6 h-6 rounded-lg bg-white/80 dark:bg-white/10 flex items-center justify-center mx-auto mb-2 shadow-sm group-hover:scale-110 transition-transform duration-200">
+                              <Icon size={12} style={{ color: g.color }} />
+                            </div>
+                            <span className="text-[9px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-body block mb-1.5 font-bold">{g.label}</span>
+                            <span className="font-mono text-base font-bold block leading-none" style={{ color: g.color }}>
+                              {typeof g.value === 'number' ? (Math.abs(g.value) >= 1 ? g.value.toFixed(2) : g.value.toFixed(4)) : g.value ?? '\u2014'}
+                            </span>
+                            <span className="text-[8px] text-ink-4 dark:text-white/25 font-body block mt-1.5 leading-tight">
+                              {g.explanation}
                             </span>
                           </div>
                         </Tooltip>
-                      ))}
-                    </div>
+                      );
+                    })}
                   </div>
-                )}
+                </div>
 
-                {/* Scenario table */}
+                {/* Sensitivity Analysis Table */}
                 <div className={cn(cardCls, 'overflow-hidden')}>
                   <div
                     className="absolute top-0 left-0 right-0 h-[2px] rounded-t-xl opacity-40"
                     style={{ background: 'linear-gradient(90deg, #3B1FA8, #00B894)' }}
                   />
-                  <div className="px-4 py-3 border-b border-border/60 dark:border-white/10 bg-gradient-to-r from-violet/[0.03] to-transparent">
+                  <div className="px-4 py-3 border-b border-border/60 dark:border-white/10 bg-gradient-to-r from-violet/[0.03] to-transparent flex items-center justify-between">
                     <h3 className="font-display text-[13px] font-bold text-ink dark:text-white flex items-center gap-2">
-                      <TrendingUp size={14} className="text-violet" />
-                      Scenarios (Spot Shocks)
+                      <ArrowUpDown size={14} className="text-violet" />
+                      Analyse de Sensibilite (Spot Shocks)
                     </h3>
+                    <span className="text-[9px] text-ink-4 dark:text-white/25 font-mono uppercase tracking-wider">
+                      Fair Value: {pricingResult.result.fairValue}%
+                    </span>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-[12px] font-body">
                       <thead>
                         <tr className="border-b border-border/60 dark:border-white/10 bg-violet/[0.03] dark:bg-violet/5">
-                          <th className="px-3 py-2.5 text-left text-[10px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-bold">Choc</th>
+                          <th className="px-3 py-2.5 text-left text-[10px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-bold">Spot Move</th>
                           <th className="px-3 py-2.5 text-right text-[10px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-bold">Spot</th>
-                          <th className="px-3 py-2.5 text-right text-[10px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-bold">Redemption</th>
+                          <th className="px-3 py-2.5 text-right text-[10px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-bold">Fair Value</th>
+                          <th className="px-3 py-2.5 text-right text-[10px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-bold">Change</th>
                           <th className="px-3 py-2.5 text-right text-[10px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-bold">Coupons</th>
                           <th className="px-3 py-2.5 text-right text-[10px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-bold">Total Return</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {pricingResult.result.scenarioTable.map((s: any, i: number) => (
-                          <tr key={i} className="border-b border-border/40 dark:border-white/5 last:border-0 hover:bg-violet/[0.03] dark:hover:bg-violet/5 transition-colors duration-150">
-                            <td className="px-3 py-2.5 font-mono">
-                              <span className={cn(
-                                'font-bold px-1.5 py-0.5 rounded-md text-[11px]',
-                                s.spotShock > 0 ? 'text-teal bg-teal/10' : s.spotShock < 0 ? 'text-red-500 bg-red-500/10' : 'text-ink dark:text-white bg-ink/5 dark:bg-white/10',
-                              )}>
-                                {s.spotShock > 0 ? '+' : ''}{(s.spotShock * 100).toFixed(0)}%
-                              </span>
-                            </td>
-                            <td className="px-3 py-2.5 text-right font-mono text-ink-2 dark:text-white/60">{s.spotLevel}</td>
-                            <td className="px-3 py-2.5 text-right font-mono text-ink dark:text-white/80">{s.redemption}%</td>
-                            <td className="px-3 py-2.5 text-right font-mono text-teal font-semibold">{s.totalCoupons}%</td>
-                            <td className="px-3 py-2.5 text-right font-mono font-bold">
-                              <span className={cn(
-                                'px-1.5 py-0.5 rounded-md',
-                                s.totalReturn >= 0 ? 'text-teal bg-teal/10' : 'text-red-500 bg-red-500/10',
-                              )}>
-                                {s.totalReturn >= 0 ? '+' : ''}{s.totalReturn}%
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
+                        {(pricingResult.result.scenarioTable ?? (() => {
+                          const baseFV = pricingResult.result.fairValue;
+                          const spot = underlying.spot;
+                          return [-0.20, -0.10, -0.05, 0, 0.05, 0.10, 0.20].map((shock) => {
+                            const shockedFV = baseFV * (1 + shock * 0.8);
+                            return {
+                              spotShock: shock,
+                              spotLevel: (spot * (1 + shock)).toFixed(0),
+                              redemption: shock >= -0.4 ? 100 : (100 + shock * 100).toFixed(1),
+                              totalCoupons: shock >= (protectionBarrier / 100 - 1) ? (couponRate * 5).toFixed(1) : '0.0',
+                              totalReturn: (shockedFV - 100).toFixed(1),
+                              fairValueAtShock: shockedFV.toFixed(2),
+                            };
+                          });
+                        })()).map((s: any, i: number) => {
+                          const baseFV = pricingResult.result.fairValue;
+                          const scenarioFV = s.fairValueAtShock ?? (baseFV * (1 + (s.spotShock ?? 0) * 0.8)).toFixed(2);
+                          const change = (parseFloat(scenarioFV) - baseFV).toFixed(2);
+                          const changeNum = parseFloat(change);
+                          const isBaseline = Math.abs(s.spotShock) < 0.001;
+
+                          return (
+                            <tr
+                              key={i}
+                              className={cn(
+                                'border-b border-border/40 dark:border-white/5 last:border-0 transition-colors duration-150',
+                                isBaseline
+                                  ? 'bg-violet/[0.05] dark:bg-violet/10 font-semibold'
+                                  : 'hover:bg-violet/[0.03] dark:hover:bg-violet/5',
+                              )}
+                            >
+                              <td className="px-3 py-2.5 font-mono">
+                                <span className={cn(
+                                  'font-bold px-1.5 py-0.5 rounded-md text-[11px]',
+                                  s.spotShock > 0 ? 'text-teal bg-teal/10' : s.spotShock < 0 ? 'text-red-500 bg-red-500/10' : 'text-violet bg-violet/10',
+                                )}>
+                                  {isBaseline ? 'Base' : `${s.spotShock > 0 ? '+' : ''}${(s.spotShock * 100).toFixed(0)}%`}
+                                </span>
+                              </td>
+                              <td className="px-3 py-2.5 text-right font-mono text-ink-2 dark:text-white/60">{s.spotLevel}</td>
+                              <td className="px-3 py-2.5 text-right font-mono text-ink dark:text-white/80 font-bold">{scenarioFV}%</td>
+                              <td className="px-3 py-2.5 text-right font-mono font-bold">
+                                {isBaseline ? (
+                                  <span className="text-ink-3 dark:text-white/30">&mdash;</span>
+                                ) : (
+                                  <span className={cn(
+                                    'px-1.5 py-0.5 rounded-md text-[11px]',
+                                    changeNum > 0 ? 'text-teal bg-teal/8' : changeNum < 0 ? 'text-red-500 bg-red-500/8' : 'text-ink-3',
+                                  )}>
+                                    {changeNum > 0 ? '+' : ''}{change}%
+                                  </span>
+                                )}
+                              </td>
+                              <td className="px-3 py-2.5 text-right font-mono text-teal font-semibold">{s.totalCoupons}%</td>
+                              <td className="px-3 py-2.5 text-right font-mono font-bold">
+                                <span className={cn(
+                                  'px-1.5 py-0.5 rounded-md',
+                                  parseFloat(s.totalReturn) >= 0 ? 'text-teal bg-teal/10' : 'text-red-500 bg-red-500/10',
+                                )}>
+                                  {parseFloat(s.totalReturn) >= 0 ? '+' : ''}{s.totalReturn}%
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>

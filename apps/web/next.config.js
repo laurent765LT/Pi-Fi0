@@ -2,6 +2,7 @@ const { withSentryConfig } = require('@sentry/nextjs');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  swcMinify: true,
   transpilePackages: ['@strickin/shared'],
   images: {
     formats: ['image/avif', 'image/webp'],

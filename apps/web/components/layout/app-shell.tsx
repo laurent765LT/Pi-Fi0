@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore, selectIsAuthenticated } from '@/stores/auth-store';
 import { Sidebar } from './sidebar';
@@ -8,17 +8,20 @@ import { CompareBar, WelcomeSlides, AiChatWidget, CommandPalette } from '@/lib/l
 import { ScrollProgress } from '@/components/ui/scroll-progress';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { useRealtimeNotifications } from '@/hooks/use-realtime-notifications';
-import { Menu, Search } from 'lucide-react';
+import { useNotificationsStore } from '@/stores/notifications-store';
+import { Menu, Search, Bell } from 'lucide-react';
+import Link from 'next/link';
 
 interface AppShellProps {
   children: React.ReactNode;
 }
 
-export function AppShell({ children }: AppShellProps) {
+export const AppShell = React.memo(function AppShell({ children }: AppShellProps) {
   useRealtimeNotifications();
   const router = useRouter();
   const pathname = usePathname();
   const isAuthenticated = useAuthStore(selectIsAuthenticated);
+  const unreadCount = useNotificationsStore((s) => s.notifications.filter((n) => !n.read).length);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [cmdPaletteOpen, setCmdPaletteOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
@@ -92,10 +95,23 @@ export function AppShell({ children }: AppShellProps) {
           <span className="text-ink">Strick</span>
           <span className="text-violet-mid">&lsquo;in</span>
         </span>
+        {/* Mobile notification bell */}
+        <Link
+          href="/notifications"
+          className="relative ml-auto p-2 rounded-lg hover:bg-violet-p/50 transition-colors"
+          aria-label="Notifications"
+        >
+          <Bell size={18} className="text-ink-3" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#E8334A] text-white text-[9px] font-bold flex items-center justify-center shadow-sm">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </Link>
         {/* Mobile search shortcut */}
         <button
           onClick={() => setCmdPaletteOpen(true)}
-          className="ml-auto p-2 rounded-lg hover:bg-violet-p/50 transition-colors"
+          className="p-2 rounded-lg hover:bg-violet-p/50 transition-colors"
           aria-label="Rechercher"
         >
           <Search size={18} className="text-ink-3" />
@@ -122,4 +138,6 @@ export function AppShell({ children }: AppShellProps) {
       <CommandPalette isOpen={cmdPaletteOpen} onClose={closeCmdPalette} />
     </div>
   );
-}
+});
+
+AppShell.displayName = 'AppShell';

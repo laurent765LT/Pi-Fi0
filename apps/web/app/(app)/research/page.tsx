@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   Search,
   Download,
@@ -10,6 +10,7 @@ import {
   FileText,
   Calendar,
   TrendingUp,
+  TrendingDown,
   Globe,
   Shield,
   Zap,
@@ -20,8 +21,22 @@ import {
   Brain,
   Sparkles,
   Activity,
+  ArrowUpRight,
+  ArrowDownRight,
+  Cpu,
+  Landmark,
+  Flame,
+  HeartPulse,
+  Gem,
+  Car,
+  Radio,
+  SlidersHorizontal,
+  ArrowUpDown,
+  Clock,
+  Leaf,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { PageHeader } from '@/components/ui/page-header';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -46,13 +61,87 @@ interface TradeIdea {
   };
 }
 
+interface MarketIndex {
+  label: string;
+  value: string;
+  changePct: number;
+  sparkline: number[];
+}
+
+interface SectorData {
+  name: string;
+  changePct: number;
+  icon: React.ReactNode;
+}
+
+type SortMode = 'date' | 'return' | 'confidence';
+type ThemeFilter = '' | 'thematic' | 'sector' | 'macro' | 'esg';
+
+// ─── Market Overview Data ────────────────────────────────────────────────────
+
+const MARKET_INDICES: MarketIndex[] = [
+  {
+    label: 'Euro Stoxx 50',
+    value: '4 892',
+    changePct: 0.8,
+    sparkline: [40, 42, 38, 44, 43, 46, 48, 45, 49, 50, 48, 52],
+  },
+  {
+    label: 'CAC 40',
+    value: '7 845',
+    changePct: 0.5,
+    sparkline: [55, 53, 56, 54, 58, 57, 59, 56, 60, 58, 61, 62],
+  },
+  {
+    label: 'VIX',
+    value: '16.2',
+    changePct: -3.1,
+    sparkline: [65, 62, 68, 60, 58, 63, 55, 52, 50, 48, 45, 42],
+  },
+  {
+    label: 'EUR/USD',
+    value: '1.082',
+    changePct: -0.2,
+    sparkline: [50, 52, 48, 51, 49, 47, 50, 48, 46, 49, 47, 45],
+  },
+];
+
+// ─── Sector Heatmap Data ────────────────────────────────────────────────────
+
+const SECTOR_DATA: SectorData[] = [
+  { name: 'Technologie', changePct: 2.1, icon: <Cpu size={14} /> },
+  { name: 'Banque', changePct: 1.5, icon: <Landmark size={14} /> },
+  { name: 'Energie', changePct: -0.8, icon: <Flame size={14} /> },
+  { name: 'Sante', changePct: 0.3, icon: <HeartPulse size={14} /> },
+  { name: 'Defense', changePct: 4.2, icon: <Shield size={14} /> },
+  { name: 'Luxe', changePct: -1.2, icon: <Gem size={14} /> },
+  { name: 'Auto', changePct: -2.1, icon: <Car size={14} /> },
+  { name: 'Telecom', changePct: 0.5, icon: <Radio size={14} /> },
+];
+
+// ─── AI Market Brief Data ───────────────────────────────────────────────────
+
+const AI_BRIEF_BULLETS = [
+  'Les marches europeens consolident pres des plus hauts annuels. L\'Euro Stoxx 50 teste la resistance des 4 900 pts avec une volatilite implicite contenue.',
+  'Secteur defense en tete (+4.2% hebdo) porte par les nouveaux engagements OTAN et le fonds souverainete europeen vote la semaine derniere.',
+  'Les spreads de credit des emetteurs majeurs (BNP, SG, Natixis) restent stables a 52 bps, validant la solidite du gisement autocall.',
+  'Attention au risque tarifaire US : les negociations commerciales sino-americaines reprennent le 22 mars. VIX pourrait rebondir temporairement.',
+];
+
+const AI_BRIEF_CONFIDENCE = 87;
+const AI_BRIEF_DATE = '15 mars 2026, 09:42';
+
+// ─── Sentiment Data ─────────────────────────────────────────────────────────
+
+const SENTIMENT = { bull: 45, neutral: 35, bear: 20 };
+
 // ─── Real Financial Data (March 2026) ─────────────────────────────────────────
 
 const TRADE_IDEAS: TradeIdea[] = [
   {
     id: '1',
-    title: 'Défense Européenne : Le Supercycle',
-    subtitle: 'Phoenix Autocall — Worst-Of',
+    title: 'Defense Europeenne : Le Supercycle',
+    subtitle: 'Phoenix Autocall -- Worst-Of',
     date: '2026-03-03',
     underlying: 'Rheinmetall / Thales',
     returnPct: 19,
@@ -61,30 +150,30 @@ const TRADE_IDEAS: TradeIdea[] = [
     aiConfidence: 91,
     aiVerdict: 'strong_buy',
     analysis: {
-      thesis: 'Les budgets de défense en Europe augmentent structurellement. Les pays de l\'OTAN visent 3-5% du PIB contre 2% précédemment. La Pologne dépasse 4.5% en 2025. Le STOXX Europe Aerospace & Defense Index a progressé de +65% en 2025. Rheinmetall a bondi de +200% depuis janvier 2025, portée par les commandes d\'armement terrestre. Thales est jugé sous-évalué par Morningstar avec un positionnement clé en cyberdéfense et avionique.',
+      thesis: 'Les budgets de defense en Europe augmentent structurellement. Les pays de l\'OTAN visent 3-5% du PIB contre 2% precedemment. La Pologne depasse 4.5% en 2025. Le STOXX Europe Aerospace & Defense Index a progresse de +65% en 2025. Rheinmetall a bondi de +200% depuis janvier 2025, portee par les commandes d\'armement terrestre. Thales est juge sous-evalue par Morningstar avec un positionnement cle en cyberdefense et avionique.',
       keyMetrics: [
         { label: 'Croissance Rheinmetall 2025', value: '+200%' },
         { label: 'STOXX A&D Index 2025', value: '+65%' },
-        { label: 'Budgets défense UE /an', value: '+6.8%' },
+        { label: 'Budgets defense UE /an', value: '+6.8%' },
         { label: 'Carnets de commandes', value: '+15%' },
       ],
       catalysts: [
-        'Plans de réarmement européens (Allemagne : €100Mrd fonds spécial)',
-        'Prolongation du conflit Ukraine — dépenses munitions record',
-        'BEI triple les financements défense à €3Mrd',
-        'M&A en accélération : +35% en H1 2025',
+        'Plans de rearmement europeens (Allemagne : \u20AC100Mrd fonds special)',
+        'Prolongation du conflit Ukraine -- depenses munitions record',
+        'BEI triple les financements defense a \u20AC3Mrd',
+        'M&A en acceleration : +35% en H1 2025',
       ],
       risks: [
-        'Cessez-le-feu Ukraine → baisse temporaire du secteur',
-        'Valorisations élevées (Rheinmetall P/E forward 39x)',
+        'Cessez-le-feu Ukraine -> baisse temporaire du secteur',
+        'Valorisations elevees (Rheinmetall P/E forward 39x)',
         'Cycles de contrats longs (10-15 ans)',
       ],
       sources: [
-        'Morningstar — European Defense Stocks Analysis 2026',
-        'Fitch Ratings — European Defense Companies',
+        'Morningstar -- European Defense Stocks Analysis 2026',
+        'Fitch Ratings -- European Defense Companies',
         'STOXX Europe Total Market Aerospace & Defense Index',
       ],
-      structureDetails: 'Autocall Phoenix Worst-Of sur panier Rheinmetall/Thales. Rappel anticipé si les deux titres sont ≥ 100% du niveau initial. Coupon mémoire 19% p.a. conditionnel si aucun titre < 60%. Barrière capitale 50% à maturité. Durée max 5 ans.',
+      structureDetails: 'Autocall Phoenix Worst-Of sur panier Rheinmetall/Thales. Rappel anticipe si les deux titres sont >= 100% du niveau initial. Coupon memoire 19% p.a. conditionnel si aucun titre < 60%. Barriere capitale 50% a maturite. Duree max 5 ans.',
     },
   },
   {
@@ -99,37 +188,37 @@ const TRADE_IDEAS: TradeIdea[] = [
     aiConfidence: 87,
     aiVerdict: 'buy',
     analysis: {
-      thesis: 'L\'industrie des semiconducteurs a généré $772Mrd de revenus en 2025 (+22.5%) et le consensus prévoit $975Mrd en 2026 (+26.3%). NVIDIA reste le leader incontesté de l\'IA avec Blackwell en ramp-up complet et Rubin prévu pour H2 2026. ASML a relevé ses prévisions : CA 2026 entre €34-39Mrd. Les dépenses en serveurs IA pourraient bondir de 45% en 2026 à $312Mrd selon Bloomberg Intelligence.',
+      thesis: 'L\'industrie des semiconducteurs a genere $772Mrd de revenus en 2025 (+22.5%) et le consensus prevoit $975Mrd en 2026 (+26.3%). NVIDIA reste le leader inconteste de l\'IA avec Blackwell en ramp-up complet et Rubin prevu pour H2 2026. ASML a releve ses previsions : CA 2026 entre \u20AC34-39Mrd. Les depenses en serveurs IA pourraient bondir de 45% en 2026 a $312Mrd selon Bloomberg Intelligence.',
       keyMetrics: [
         { label: 'NVIDIA performance 2025', value: '+39%' },
         { label: 'ASML performance 2025', value: '+54%' },
         { label: 'Revenus secteur 2026e', value: '$975Mrd' },
-        { label: 'Dépenses serveurs IA 2026', value: '$312Mrd' },
+        { label: 'Depenses serveurs IA 2026', value: '$312Mrd' },
       ],
       catalysts: [
-        'NVIDIA Blackwell ramp-up complet — Rubin en H2 2026',
-        'ASML : carnet de commandes EUV record (€7.4Mrd Q4)',
-        'Investissements hyperscalers IA en accélération',
+        'NVIDIA Blackwell ramp-up complet -- Rubin en H2 2026',
+        'ASML : carnet de commandes EUV record (\u20AC7.4Mrd Q4)',
+        'Investissements hyperscalers IA en acceleration',
         'Reshoring semi-conducteurs (CHIPS Act US + EU)',
       ],
       risks: [
-        'Volatilité élevée (NVIDIA beta 2.31)',
-        'Restrictions export Chine — impact sur revenus',
+        'Volatilite elevee (NVIDIA beta 2.31)',
+        'Restrictions export Chine -- impact sur revenus',
         'Valorisations tendues (ASML P/E forward 34x)',
       ],
       sources: [
-        'Wolfe Research — NVIDIA Top AI Pick 2026',
-        'Morgan Stanley — ASML Price Target €1,400',
-        'Bloomberg Intelligence — AI Server Spending',
-        'WSTS — Semiconductor Industry Forecast',
+        'Wolfe Research -- NVIDIA Top AI Pick 2026',
+        'Morgan Stanley -- ASML Price Target \u20AC1,400',
+        'Bloomberg Intelligence -- AI Server Spending',
+        'WSTS -- Semiconductor Industry Forecast',
       ],
-      structureDetails: 'Autocall Athena Worst-Of sur NVIDIA/ASML. Rappel anticipé dès l\'année 1 si les deux titres ≥ 100%. Gain à maturité 16% par année écoulée. Barrière capitale 50%. Protection partielle grâce à la diversification sectorielle (design + équipement).',
+      structureDetails: 'Autocall Athena Worst-Of sur NVIDIA/ASML. Rappel anticipe des l\'annee 1 si les deux titres >= 100%. Gain a maturite 16% par annee ecoulee. Barriere capitale 50%. Protection partielle grace a la diversification sectorielle (design + equipement).',
     },
   },
   {
     id: '3',
-    title: 'Or : Valeur Refuge & Capital Protégé',
-    subtitle: 'Note à Capital Protégé 90%',
+    title: 'Or : Valeur Refuge & Capital Protege',
+    subtitle: 'Note a Capital Protege 90%',
     date: '2026-02-05',
     underlying: 'iEdge Gold Shares EUR Index',
     returnPct: 12,
@@ -138,7 +227,7 @@ const TRADE_IDEAS: TradeIdea[] = [
     aiConfidence: 83,
     aiVerdict: 'buy',
     analysis: {
-      thesis: 'L\'or a atteint $5,081/oz en mars 2026. J.P. Morgan cible $6,300 fin 2026, Goldman Sachs $5,400 et Wells Fargo $6,100-6,300. Les achats des banques centrales restent record : 95% d\'entre elles prévoient d\'augmenter leurs réserves d\'or. Les ETF or ont enregistré des flux entrants massifs. L\'incertitude géopolitique et la politique tarifaire américaine soutiennent la demande.',
+      thesis: 'L\'or a atteint $5,081/oz en mars 2026. J.P. Morgan cible $6,300 fin 2026, Goldman Sachs $5,400 et Wells Fargo $6,100-6,300. Les achats des banques centrales restent record : 95% d\'entre elles prevoient d\'augmenter leurs reserves d\'or. Les ETF or ont enregistre des flux entrants massifs. L\'incertitude geopolitique et la politique tarifaire americaine soutiennent la demande.',
       keyMetrics: [
         { label: 'Prix actuel (mars 2026)', value: '$5,081/oz' },
         { label: 'Cible JPM fin 2026', value: '$6,300/oz' },
@@ -146,29 +235,29 @@ const TRADE_IDEAS: TradeIdea[] = [
         { label: 'Achats banques centrales', value: '>1,000t/an' },
       ],
       catalysts: [
-        'Banques centrales : 3ème année > 1,000 tonnes d\'achats',
-        'Tensions géopolitiques persistantes',
+        'Banques centrales : 3eme annee > 1,000 tonnes d\'achats',
+        'Tensions geopolitiques persistantes',
         'Diversification hors dollar US',
-        'Offre minière contrainte (10-20 ans pour nouvelles mines)',
+        'Offre miniere contrainte (10-20 ans pour nouvelles mines)',
       ],
       risks: [
-        'Hausse des taux réels → pression baissière',
+        'Hausse des taux reels -> pression baissiere',
         'Renforcement du dollar',
-        'Correction possible de 5-20% (scénario Citi)',
+        'Correction possible de 5-20% (scenario Citi)',
       ],
       sources: [
-        'J.P. Morgan — Gold Price Target $6,300',
-        'World Gold Council — Gold Outlook 2026',
-        'Morgan Stanley — Gold Rally Forecast',
-        'Goldman Sachs — Commodities Research',
+        'J.P. Morgan -- Gold Price Target $6,300',
+        'World Gold Council -- Gold Outlook 2026',
+        'Morgan Stanley -- Gold Rally Forecast',
+        'Goldman Sachs -- Commodities Research',
       ],
-      structureDetails: 'Note à capital protégé 90% indexée sur iEdge Gold Shares EUR PR Index. Participation à la hausse plafonnée à 121% du nominal. Durée 3 ans. Protection du capital en cas de baisse limitée à -10%.',
+      structureDetails: 'Note a capital protege 90% indexee sur iEdge Gold Shares EUR PR Index. Participation a la hausse plafonnee a 121% du nominal. Duree 3 ans. Protection du capital en cas de baisse limitee a -10%.',
     },
   },
   {
     id: '4',
     title: 'Taux EUR : Profiter du Plateau BCE',
-    subtitle: 'Coupon Conditionnel — EUR CMS 10Y',
+    subtitle: 'Coupon Conditionnel -- EUR CMS 10Y',
     date: '2026-01-20',
     underlying: 'EUR CMS 10 ans',
     returnPct: 6,
@@ -177,37 +266,37 @@ const TRADE_IDEAS: TradeIdea[] = [
     aiConfidence: 78,
     aiVerdict: 'hold',
     analysis: {
-      thesis: 'La BCE maintient ses taux à 2.15% (MRO) et 2.00% (facilité de dépôt). Le consensus Reuters prévoit des taux stables jusqu\'à mi-2026 au minimum. La courbe des taux EUR s\'est pentifiée significativement en 2025 avec une hausse de 26bp du taux 10 ans nominal OIS. L\'inflation zone euro est tombée à 1.7% en janvier 2026, sous la cible de 2%. Environnement idéal pour les produits de taux conditionnels.',
+      thesis: 'La BCE maintient ses taux a 2.15% (MRO) et 2.00% (facilite de depot). Le consensus Reuters prevoit des taux stables jusqu\'a mi-2026 au minimum. La courbe des taux EUR s\'est pentifiee significativement en 2025 avec une hausse de 26bp du taux 10 ans nominal OIS. L\'inflation zone euro est tombee a 1.7% en janvier 2026, sous la cible de 2%. Environnement ideal pour les produits de taux conditionnels.',
       keyMetrics: [
-        { label: 'Taux BCE (dépôt)', value: '2.00%' },
+        { label: 'Taux BCE (depot)', value: '2.00%' },
         { label: 'Taux BCE (MRO)', value: '2.15%' },
         { label: 'Inflation zone euro', value: '1.7%' },
         { label: 'Core inflation', value: '2.2%' },
       ],
       catalysts: [
         'BCE : taux stables attendus tout au long de 2026',
-        'Pentification de la courbe — taux longs en hausse',
+        'Pentification de la courbe -- taux longs en hausse',
         'Inflation sous la cible de 2%',
         'Primes de terme en hausse structurelle',
       ],
       risks: [
-        'Surprise inflationniste → hausse de taux inattendue',
-        'Risque budgétaire souverain (France, Italie)',
-        'Choc géopolitique affectant les marchés obligataires',
+        'Surprise inflationniste -> hausse de taux inattendue',
+        'Risque budgetaire souverain (France, Italie)',
+        'Choc geopolitique affectant les marches obligataires',
       ],
       sources: [
-        'BCE — Comptes rendus des réunions (janv-fév 2026)',
-        'Reuters — ECB Rate Poll',
-        'ECB Blog — Euro Area Yield Curve Repricing',
+        'BCE -- Comptes rendus des reunions (janv-fev 2026)',
+        'Reuters -- ECB Rate Poll',
+        'ECB Blog -- Euro Area Yield Curve Repricing',
         'Survey of Professional Forecasters Q4 2025',
       ],
-      structureDetails: 'Coupon conditionnel 6% p.a. si le taux EUR CMS 10 ans reste ≤ 3.20%. Capital intégralement protégé à maturité. Possibilité de remboursement anticipé si taux ≤ 2.40%. Durée 12 ans.',
+      structureDetails: 'Coupon conditionnel 6% p.a. si le taux EUR CMS 10 ans reste <= 3.20%. Capital integralement protege a maturite. Possibilite de remboursement anticipe si taux <= 2.40%. Duree 12 ans.',
     },
   },
   {
     id: '5',
-    title: 'Transition Verte : Le Rebond Sélectif',
-    subtitle: 'Phoenix Mémoire — Clean Energy',
+    title: 'Transition Verte : Le Rebond Selectif',
+    subtitle: 'Phoenix Memoire -- Clean Energy',
     date: '2025-12-10',
     underlying: 'Engie / RWE',
     returnPct: 14,
@@ -216,37 +305,37 @@ const TRADE_IDEAS: TradeIdea[] = [
     aiConfidence: 74,
     aiVerdict: 'cautious',
     analysis: {
-      thesis: 'Les actions d\'énergie renouvelable ont rebondi de +23 points de pourcentage en 2025. Après 9 trimestres de sorties nettes, les fonds européens clean energy ont reçu près de €900M d\'entrées au Q4 2025. La narration a évolué : sécurité énergétique, compétitivité industrielle et électrification IA dominent. RWE est identifiée comme bénéficiaire clé du mix transition + indépendance européenne.',
+      thesis: 'Les actions d\'energie renouvelable ont rebondi de +23 points de pourcentage en 2025. Apres 9 trimestres de sorties nettes, les fonds europeens clean energy ont recu pres de \u20AC900M d\'entrees au Q4 2025. La narration a evolue : securite energetique, competitivite industrielle et electrification IA dominent. RWE est identifiee comme beneficiaire cle du mix transition + independance europeenne.',
       keyMetrics: [
         { label: 'Rebond clean energy 2025', value: '+23pp' },
-        { label: 'Flux fonds Q4 2025', value: '€900M' },
-        { label: 'Croissance capacité renouvelable', value: '+15%/an' },
-        { label: 'Mécanisme CBAM UE', value: 'Actif' },
+        { label: 'Flux fonds Q4 2025', value: '\u20AC900M' },
+        { label: 'Croissance capacite renouvelable', value: '+15%/an' },
+        { label: 'Mecanisme CBAM UE', value: 'Actif' },
       ],
       catalysts: [
-        'Demande électricité IA → besoin infrastructures vertes',
-        'CBAM européen renforce la compétitivité verte',
+        'Demande electricite IA -> besoin infrastructures vertes',
+        'CBAM europeen renforce la competitivite verte',
         'RWE : sortie du charbon + build-out renouvelable massif',
-        'Directive Omnibus UE adoptée (fév. 2026)',
+        'Directive Omnibus UE adoptee (fev. 2026)',
       ],
       risks: [
-        'Taux élevés → coût de financement des projets',
-        'Retards de permitting et interconnexion réseau',
-        'Volatilité des rendements projets',
+        'Taux eleves -> cout de financement des projets',
+        'Retards de permitting et interconnexion reseau',
+        'Volatilite des rendements projets',
       ],
       sources: [
-        'Morningstar — Are Renewable Energy Stocks a Buy in 2026',
-        'LSEG — Sustainable Investment Context 2026',
-        'Franklin Templeton — ESG 2026 Outlook',
-        'World Gold Council — Energy Transition',
+        'Morningstar -- Are Renewable Energy Stocks a Buy in 2026',
+        'LSEG -- Sustainable Investment Context 2026',
+        'Franklin Templeton -- ESG 2026 Outlook',
+        'World Gold Council -- Energy Transition',
       ],
-      structureDetails: 'Phoenix à mémoire sur panier Engie/RWE. Coupon 14% p.a. avec effet mémoire si les deux titres ≥ 65% du niveau initial. Barrière capitale 50%. Rappel anticipé possible dès l\'année 2.',
+      structureDetails: 'Phoenix a memoire sur panier Engie/RWE. Coupon 14% p.a. avec effet memoire si les deux titres >= 65% du niveau initial. Barriere capitale 50%. Rappel anticipe possible des l\'annee 2.',
     },
   },
   {
     id: '6',
     title: 'Autocalls Europe : Track Record Exceptionnel',
-    subtitle: 'Phoenix Autocall — Euro Stoxx 50',
+    subtitle: 'Phoenix Autocall -- Euro Stoxx 50',
     date: '2025-11-15',
     underlying: 'Euro Stoxx 50',
     returnPct: 8,
@@ -255,37 +344,37 @@ const TRADE_IDEAS: TradeIdea[] = [
     aiConfidence: 93,
     aiVerdict: 'strong_buy',
     analysis: {
-      thesis: 'En 2025, 338 autocalls UK capital-at-risk liés au FTSE ont maturé : 100% ont rapporté capital + profit. Le rendement annualisé moyen était de 7.85%. Sur la décennie 2016-2025, plus de 2,000 maturités avec 99.7% de rendements positifs et zéro perte en capital. Le sentiment sur les produits structurés est au plus haut : 85% des professionnels sont optimistes ou très optimistes.',
+      thesis: 'En 2025, 338 autocalls UK capital-at-risk lies au FTSE ont mature : 100% ont rapporte capital + profit. Le rendement annualise moyen etait de 7.85%. Sur la decennie 2016-2025, plus de 2,000 maturites avec 99.7% de rendements positifs et zero perte en capital. Le sentiment sur les produits structures est au plus haut : 85% des professionnels sont optimistes ou tres optimistes.',
       keyMetrics: [
-        { label: 'Autocalls UK maturés 2025', value: '338 (100% +)' },
-        { label: 'Rendement moyen annualisé', value: '7.85%' },
+        { label: 'Autocalls UK matures 2025', value: '338 (100% +)' },
+        { label: 'Rendement moyen annualise', value: '7.85%' },
         { label: 'Track record 10 ans', value: '99.7% positif' },
-        { label: 'Durée de vie moyenne', value: '2.3 ans' },
+        { label: 'Duree de vie moyenne', value: '2.3 ans' },
       ],
       catalysts: [
         'Euro Stoxx 50 proche des plus hauts historiques',
-        'Momentum bénéficiaire : +13% attendu en 2026',
-        'Conditions de marché favorables au rappel anticipé',
-        'BNP Paribas innove : structure "Catapult" à upside x1.5',
+        'Momentum beneficiaire : +13% attendu en 2026',
+        'Conditions de marche favorables au rappel anticipe',
+        'BNP Paribas innove : structure "Catapult" a upside x1.5',
       ],
       risks: [
-        'Correction de marché → extension de la durée de vie',
-        'Tarifs douaniers US → volatilité accrue (VIX +40% en avril 2025)',
+        'Correction de marche -> extension de la duree de vie',
+        'Tarifs douaniers US -> volatilite accrue (VIX +40% en avril 2025)',
         'Risque de contrepartie bancaire',
       ],
       sources: [
-        'SRP — Global Market Sentiment Survey 2025/2026',
-        'IDAD — Autocall Track Record Analysis',
-        'Risk.net — BNP Paribas Structured Products House of the Year',
-        'Morgan Stanley — 2026 Market Outlook',
+        'SRP -- Global Market Sentiment Survey 2025/2026',
+        'IDAD -- Autocall Track Record Analysis',
+        'Risk.net -- BNP Paribas Structured Products House of the Year',
+        'Morgan Stanley -- 2026 Market Outlook',
       ],
-      structureDetails: 'Phoenix Autocall classique sur Euro Stoxx 50. Coupon 8% p.a. si indice ≥ 70% du niveau initial. Rappel anticipé dès l\'année 1 si indice ≥ 100%. Barrière capitale 60% de type européenne. Durée max 10 ans.',
+      structureDetails: 'Phoenix Autocall classique sur Euro Stoxx 50. Coupon 8% p.a. si indice >= 70% du niveau initial. Rappel anticipe des l\'annee 1 si indice >= 100%. Barriere capitale 60% de type europeenne. Duree max 10 ans.',
     },
   },
 ];
 
 const CATEGORY_LABELS: Record<string, { label: string; color: string }> = {
-  thematic: { label: 'Thématique', color: '#3B1FA8' },
+  thematic: { label: 'Thematique', color: '#3B1FA8' },
   sector: { label: 'Sectoriel', color: '#0A2799' },
   macro: { label: 'Macro', color: '#D4A017' },
   esg: { label: 'ESG', color: '#00B894' },
@@ -302,7 +391,7 @@ const AI_MARKET_BRIEF = {
   sentiment: 'Haussier' as const,
   sentimentScore: 72,
   lastUpdate: 'il y a 8 min',
-  summary: 'Les marchés européens consolident près des plus hauts. L\'Euro Stoxx 50 teste la résistance des 5 100 pts avec une volatilité implicite contenue à 17.8%. Les conditions sont favorables aux émissions d\'autocalls (vol implicite > vol réalisée). Les spreads de crédit des émetteurs majeurs (BNP, SG, Natixis) restent stables, validant la solidité du gisement. Attention au risque tarifaire US qui pourrait générer un pic de volatilité ponctuel.',
+  summary: 'Les marches europeens consolident pres des plus hauts. L\'Euro Stoxx 50 teste la resistance des 5 100 pts avec une volatilite implicite contenue a 17.8%. Les conditions sont favorables aux emissions d\'autocalls (vol implicite > vol realisee). Les spreads de credit des emetteurs majeurs (BNP, SG, Natixis) restent stables, validant la solidite du gisement. Attention au risque tarifaire US qui pourrait generer un pic de volatilite ponctuel.',
   keyData: [
     { label: 'Euro Stoxx 50', value: '5 042 pts', change: '+0.8%', up: true },
     { label: 'Vol. implicite 1M', value: '17.8%', change: '-1.2 pts', up: false },
@@ -323,14 +412,69 @@ function formatShortDate(iso: string) {
   return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
+/** Mini CSS sparkline rendered as inline SVG */
+function MiniSparkline({ data, color, width = 64, height = 20 }: { data: number[]; color: string; width?: number; height?: number }) {
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+  const points = data
+    .map((v, i) => {
+      const x = (i / (data.length - 1)) * width;
+      const y = height - ((v - min) / range) * height;
+      return `${x},${y}`;
+    })
+    .join(' ');
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="opacity-60">
+      <defs>
+        <linearGradient id={`spark-${color.replace('#', '')}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity={0.3} />
+          <stop offset="100%" stopColor={color} stopOpacity={0.02} />
+        </linearGradient>
+      </defs>
+      <polygon
+        points={`0,${height} ${points} ${width},${height}`}
+        fill={`url(#spark-${color.replace('#', '')})`}
+      />
+      <polyline
+        points={points}
+        fill="none"
+        stroke={color}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** Sector performance color from green to red */
+function sectorColor(pct: number): string {
+  if (pct >= 3) return '#00B894';
+  if (pct >= 1) return '#00B894cc';
+  if (pct >= 0) return '#00B89466';
+  if (pct >= -1) return '#E8334A66';
+  return '#E8334A';
+}
+
+function sectorBg(pct: number): string {
+  if (pct >= 3) return 'rgba(0,184,148,0.12)';
+  if (pct >= 1) return 'rgba(0,184,148,0.08)';
+  if (pct >= 0) return 'rgba(0,184,148,0.04)';
+  if (pct >= -1) return 'rgba(232,51,74,0.04)';
+  return 'rgba(232,51,74,0.08)';
+}
+
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function ResearchPage() {
+  useEffect(() => { document.title = "Research & Analyse | Strick'in"; }, []);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState<ThemeFilter>('');
   const [selectedIdea, setSelectedIdea] = useState<TradeIdea | null>(TRADE_IDEAS[0]!);
   const [featuredIndex, setFeaturedIndex] = useState(0);
   const [shareSuccess, setShareSuccess] = useState(false);
+  const [sortMode, setSortMode] = useState<SortMode>('date');
   const currentFeatured = TRADE_IDEAS[featuredIndex]!;
 
   const handleDownloadTxt = useCallback((idea: TradeIdea) => {
@@ -348,26 +492,26 @@ export default function ResearchPage() {
       `Confiance IA: ${idea.aiConfidence}%`,
       `Verdict IA  : ${verdict}`,
       ``,
-      `── Thèse d'investissement ──────────────`,
+      `── These d'investissement ──────────────`,
       idea.analysis.thesis,
       ``,
-      `── Métriques clés ─────────────────────`,
+      `── Metriques cles ─────────────────────`,
       ...idea.analysis.keyMetrics.map((m) => `  ${m.label}: ${m.value}`),
       ``,
       `── Catalyseurs ────────────────────────`,
-      ...idea.analysis.catalysts.map((c) => `  • ${c}`),
+      ...idea.analysis.catalysts.map((c) => `  * ${c}`),
       ``,
       `── Risques ────────────────────────────`,
-      ...idea.analysis.risks.map((r) => `  • ${r}`),
+      ...idea.analysis.risks.map((r) => `  * ${r}`),
       ``,
-      `── Structure proposée ─────────────────`,
+      `── Structure proposee ─────────────────`,
       idea.analysis.structureDetails,
       ``,
       `── Sources ────────────────────────────`,
-      ...idea.analysis.sources.map((s) => `  • ${s}`),
+      ...idea.analysis.sources.map((s) => `  * ${s}`),
       ``,
       `════════════════════════════════════════`,
-      `  Généré par Strick'in Research`,
+      `  Genere par Strick'in Research`,
       `════════════════════════════════════════`,
     ];
     const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
@@ -383,7 +527,7 @@ export default function ResearchPage() {
   }, []);
 
   const handleShare = useCallback(async (idea: TradeIdea) => {
-    const text = `\u{1F4CA} Strick'in Research - ${idea.title}\n${idea.subtitle}\nRendement: ${idea.returnPct}%\nSous-jacent: ${idea.underlying}`;
+    const text = `Strick'in Research - ${idea.title}\n${idea.subtitle}\nRendement: ${idea.returnPct}%\nSous-jacent: ${idea.underlying}`;
     if (navigator.share) {
       try {
         await navigator.share({ title: `Strick'in - ${idea.title}`, text });
@@ -397,47 +541,208 @@ export default function ResearchPage() {
     }
   }, []);
 
-  const filteredIdeas = TRADE_IDEAS.filter((idea) => {
-    const matchesSearch =
-      !searchQuery ||
-      idea.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      idea.underlying.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = !selectedCategory || idea.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const filteredAndSortedIdeas = useMemo(() => {
+    const filtered = TRADE_IDEAS.filter((idea) => {
+      const matchesSearch =
+        !searchQuery ||
+        idea.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        idea.underlying.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = !selectedCategory || idea.category === selectedCategory;
+      return matchesSearch && matchesCategory;
+    });
+
+    const sorted = [...filtered];
+    switch (sortMode) {
+      case 'date':
+        sorted.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        break;
+      case 'return':
+        sorted.sort((a, b) => b.returnPct - a.returnPct);
+        break;
+      case 'confidence':
+        sorted.sort((a, b) => b.aiConfidence - a.aiConfidence);
+        break;
+    }
+    return sorted;
+  }, [searchQuery, selectedCategory, sortMode]);
 
   return (
     <div className="animate-fade-in">
-      {/* ── Unified Header + AI Market Brief ───────────────────────── */}
+
+      {/* ================================================================== */}
+      {/* 1. MARKET OVERVIEW -- KPI Cards                                     */}
+      {/* ================================================================== */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 mb-4">
+        {MARKET_INDICES.map((idx) => {
+          const isUp = idx.changePct >= 0;
+          return (
+            <div
+              key={idx.label}
+              className="relative bg-white/80 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 ring-1 ring-black/[0.03] overflow-hidden shadow-sm hover:shadow-md hover:shadow-violet/5 hover:-translate-y-0.5 transition-all duration-300 group"
+            >
+              <div
+                className="absolute top-0 left-0 right-0 h-[2px]"
+                style={{ background: isUp ? 'linear-gradient(90deg, #00B894, #00B89466)' : 'linear-gradient(90deg, #E8334A, #E8334A66)' }}
+              />
+              <div className="p-3">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[9px] uppercase tracking-[0.15em] text-ink-3 font-bold font-body">{idx.label}</span>
+                  <div className={cn(
+                    'flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-mono font-bold',
+                    isUp ? 'bg-teal/10 text-teal' : 'bg-red/10 text-red',
+                  )}>
+                    {isUp ? <ArrowUpRight size={9} /> : <ArrowDownRight size={9} />}
+                    {isUp ? '+' : ''}{idx.changePct}%
+                  </div>
+                </div>
+                <div className="flex items-end justify-between">
+                  <span className="font-display text-xl font-bold text-ink tabular-nums">{idx.value}</span>
+                  <div className="opacity-70 group-hover:opacity-100 transition-opacity">
+                    <MiniSparkline data={idx.sparkline} color={isUp ? '#00B894' : '#E8334A'} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ================================================================== */}
+      {/* 2. MARKET SENTIMENT BAR                                             */}
+      {/* ================================================================== */}
+      <div className="relative bg-white/80 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 ring-1 ring-black/[0.03] overflow-hidden mb-4 shadow-sm px-4 py-3">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <Activity size={13} className="text-violet" />
+            <span className="text-[11px] font-bold text-ink font-body">Sentiment de marche -- Mars 2026</span>
+          </div>
+          <div className="flex items-center gap-3 text-[9px] font-body font-semibold">
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-teal" />
+              <span className="text-ink-3">Bull {SENTIMENT.bull}%</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-gold" />
+              <span className="text-ink-3">Neutre {SENTIMENT.neutral}%</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-red" />
+              <span className="text-ink-3">Bear {SENTIMENT.bear}%</span>
+            </span>
+          </div>
+        </div>
+        <div className="w-full h-3 rounded-full overflow-hidden flex bg-surface-2">
+          <div
+            className="h-full rounded-l-full transition-all duration-700"
+            style={{ width: `${SENTIMENT.bull}%`, background: 'linear-gradient(90deg, #00B894, #00B894cc)' }}
+          />
+          <div
+            className="h-full transition-all duration-700"
+            style={{ width: `${SENTIMENT.neutral}%`, background: 'linear-gradient(90deg, #D4A017cc, #D4A017)' }}
+          />
+          <div
+            className="h-full rounded-r-full transition-all duration-700"
+            style={{ width: `${SENTIMENT.bear}%`, background: 'linear-gradient(90deg, #E8334Acc, #E8334A)' }}
+          />
+        </div>
+      </div>
+
+      {/* ================================================================== */}
+      {/* 3. SECTOR HEATMAP + AI MARKET BRIEF (side by side)                  */}
+      {/* ================================================================== */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 mb-4">
+        {/* Sector Heatmap -- 3 cols */}
+        <div className="lg:col-span-3 relative bg-white/80 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 ring-1 ring-black/[0.03] overflow-hidden shadow-sm">
+          <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg, #3B1FA8, #3D63F5, #00B894)' }} />
+          <div className="p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-cobalt/10">
+                <BarChart3 size={12} className="text-cobalt" />
+              </div>
+              <h2 className="font-display text-[13px] font-bold text-ink">Heatmap Sectorielle</h2>
+              <span className="text-[9px] text-ink-3 font-body ml-auto">Performance hebdomadaire</span>
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {SECTOR_DATA.map((sector) => {
+                const isUp = sector.changePct >= 0;
+                return (
+                  <div
+                    key={sector.name}
+                    className="relative rounded-lg border border-border/30 p-2.5 flex flex-col items-center gap-1 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-default group"
+                    style={{ backgroundColor: sectorBg(sector.changePct), borderColor: `${sectorColor(sector.changePct)}30` }}
+                  >
+                    <div
+                      className="w-7 h-7 rounded-lg flex items-center justify-center transition-transform duration-200 group-hover:scale-110"
+                      style={{ backgroundColor: `${sectorColor(sector.changePct)}18`, color: sectorColor(sector.changePct) }}
+                    >
+                      {sector.icon}
+                    </div>
+                    <span className="text-[10px] font-bold text-ink font-body text-center leading-tight">{sector.name}</span>
+                    <span
+                      className="text-[12px] font-display font-bold tabular-nums"
+                      style={{ color: sectorColor(sector.changePct) }}
+                    >
+                      {isUp ? '+' : ''}{sector.changePct}%
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* AI Market Brief -- 2 cols */}
+        <div className="lg:col-span-2 relative bg-white/80 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 ring-1 ring-black/[0.03] overflow-hidden shadow-sm">
+          <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg, #3B1FA8, #5B3FD4)' }} />
+          <div className="p-4 flex flex-col h-full">
+            <div className="flex items-center gap-2 mb-3">
+              <div
+                className="w-6 h-6 rounded-lg flex items-center justify-center shadow-sm"
+                style={{ background: 'linear-gradient(135deg, #3B1FA8 0%, #5B3FD4 100%)' }}
+              >
+                <Brain size={12} className="text-white" />
+              </div>
+              <div className="flex-1">
+                <h2 className="font-display text-[13px] font-bold text-ink leading-tight">Analyse IA -- Strick&apos;in Intelligence</h2>
+              </div>
+              <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-violet/10">
+                <Sparkles size={9} className="text-violet" />
+                <span className="text-[9px] font-bold text-violet font-mono">{AI_BRIEF_CONFIDENCE}%</span>
+              </div>
+            </div>
+
+            <ul className="flex flex-col gap-2 flex-1">
+              {AI_BRIEF_BULLETS.map((bullet, i) => (
+                <li key={i} className="text-[10px] text-ink-2 font-body leading-relaxed flex items-start gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-violet/40 mt-1 shrink-0" />
+                  <span>{bullet}</span>
+                </li>
+              ))}
+            </ul>
+
+            <div className="flex items-center gap-1.5 mt-3 pt-2 border-t border-border/30">
+              <Clock size={9} className="text-ink-3" />
+              <span className="text-[9px] text-ink-3 font-body">Genere le {AI_BRIEF_DATE}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <PageHeader
+        icon={Brain}
+        title="Research & Trade Ideas"
+        subtitle={`Synthese IA du marche -- mise a jour ${AI_MARKET_BRIEF.lastUpdate}`}
+        accentFrom="#3B1FA8"
+        accentTo="#5B3FD4"
+        className="mb-4"
+      />
+
+      {/* ================================================================== */}
+      {/* 4. LIVE MARKET DATA TICKER                                          */}
+      {/* ================================================================== */}
       <div className="relative bg-white/80 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 ring-1 ring-black/[0.03] overflow-hidden mb-4 shadow-sm">
         <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg, #3B1FA8, #00B894, #D4A017)' }} />
         <div className="p-4">
-          {/* Header row */}
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2.5">
-              <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center shadow-sm"
-                style={{ background: 'linear-gradient(135deg, #3B1FA8 0%, #5B3FD4 100%)' }}
-              >
-                <Brain size={14} className="text-white" />
-              </div>
-              <div>
-                <h1 className="font-display text-lg font-bold leading-tight bg-gradient-to-r from-[#3B1FA8] via-[#1A0A3E] to-[#3B1FA8] bg-clip-text text-transparent flex items-center gap-2">
-                  Research & Trade Ideas
-                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider bg-teal/10 text-teal">
-                    <span className="w-1 h-1 rounded-full bg-teal animate-pulse" />
-                    Live
-                  </span>
-                </h1>
-                <p className="text-[10px] text-ink-3 font-body">Synthèse IA du marché — mise à jour {AI_MARKET_BRIEF.lastUpdate}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-teal/10">
-              <TrendingUp size={10} className="text-teal" />
-              <span className="text-[10px] font-bold text-teal font-body">{AI_MARKET_BRIEF.sentiment}</span>
-              <span className="text-[9px] font-mono font-bold text-teal">{AI_MARKET_BRIEF.sentimentScore}/100</span>
-            </div>
-          </div>
 
           <p className="text-[11px] text-ink-2 font-body leading-relaxed mb-3">{AI_MARKET_BRIEF.summary}</p>
 
@@ -459,7 +764,9 @@ export default function ResearchPage() {
         </div>
       </div>
 
-      {/* ── Featured Carousel ───────────────────────────────────────── */}
+      {/* ================================================================== */}
+      {/* 5. FEATURED CAROUSEL                                                */}
+      {/* ================================================================== */}
       <div className="relative bg-white/80 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 ring-1 ring-black/[0.03] overflow-hidden mb-4 shadow-sm hover:shadow-md hover:shadow-violet/5 transition-all duration-300">
         <div className="absolute top-0 left-0 right-0 h-[2px] rounded-b-full opacity-80" style={{ background: 'linear-gradient(90deg, #3B1FA8, #5B3FD4, #3D63F5)' }} />
         <div className="px-4 py-3">
@@ -522,7 +829,7 @@ export default function ResearchPage() {
                 )}
               >
                 <Share2 size={12} />
-                {shareSuccess ? 'Copié !' : 'Partager'}
+                {shareSuccess ? 'Copie !' : 'Partager'}
               </button>
             </div>
           </div>
@@ -545,8 +852,11 @@ export default function ResearchPage() {
         </div>
       </div>
 
-      {/* ── Search & Filters — inline toolbar ──────────────────────── */}
-      <div className="flex items-center gap-2 mb-4 bg-white/60 dark:bg-white/5 backdrop-blur-md rounded-lg border border-border/40 px-2.5 py-1.5 shadow-sm">
+      {/* ================================================================== */}
+      {/* 6. ENHANCED SEARCH, FILTERS & SORT TOOLBAR                          */}
+      {/* ================================================================== */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mb-4 bg-white/60 dark:bg-white/5 backdrop-blur-md rounded-lg border border-border/40 px-2.5 py-2 shadow-sm">
+        {/* Search */}
         <div className="relative flex-1 min-w-[180px] max-w-[280px]">
           <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-3 pointer-events-none" />
           <input
@@ -563,9 +873,11 @@ export default function ResearchPage() {
           />
         </div>
 
-        <div className="h-4 w-px bg-border/40" />
+        <div className="h-4 w-px bg-border/40 hidden sm:block" />
 
+        {/* Theme Filter Row */}
         <div className="flex items-center gap-1">
+          <SlidersHorizontal size={10} className="text-ink-3 mr-0.5" />
           <button
             onClick={() => setSelectedCategory('')}
             className={cn(
@@ -581,7 +893,7 @@ export default function ResearchPage() {
           {Object.entries(CATEGORY_LABELS).map(([key, { label, color }]) => (
             <button
               key={key}
-              onClick={() => setSelectedCategory(selectedCategory === key ? '' : key)}
+              onClick={() => setSelectedCategory(selectedCategory === key ? '' : key as ThemeFilter)}
               className={cn(
                 'px-2.5 py-1 rounded-lg text-[10px] font-semibold font-body transition-all duration-200',
                 'hover:scale-[1.03] active:scale-[0.97]',
@@ -599,14 +911,42 @@ export default function ResearchPage() {
             </button>
           ))}
         </div>
+
+        <div className="h-4 w-px bg-border/40 hidden sm:block" />
+
+        {/* Sort */}
+        <div className="flex items-center gap-1">
+          <ArrowUpDown size={10} className="text-ink-3 mr-0.5" />
+          {([
+            { key: 'date' as const, label: 'Par date' },
+            { key: 'return' as const, label: 'Par rendement' },
+            { key: 'confidence' as const, label: 'Par confiance IA' },
+          ]).map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setSortMode(key)}
+              className={cn(
+                'px-2 py-1 rounded-lg text-[10px] font-semibold font-body transition-all duration-200',
+                'hover:scale-[1.03] active:scale-[0.97]',
+                sortMode === key
+                  ? 'bg-ink/8 text-ink border border-border/60'
+                  : 'text-ink-3 hover:text-ink hover:bg-surface-2/60',
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* ── Content: Grid + Preview ─────────────────────────────────── */}
+      {/* ================================================================== */}
+      {/* 7. CONTENT: Card Grid + Preview Panel                               */}
+      {/* ================================================================== */}
       <div className="flex gap-3">
         {/* ── Card Grid (left) ─────────────────────────────────── */}
         <div className="w-[300px] shrink-0">
           <div className="flex flex-col gap-2 stagger-children">
-            {filteredIdeas.map((idea) => {
+            {filteredAndSortedIdeas.map((idea) => {
               const cat = CATEGORY_LABELS[idea.category];
               const isSelected = selectedIdea?.id === idea.id;
               return (
@@ -659,6 +999,13 @@ export default function ResearchPage() {
                 </button>
               );
             })}
+
+            {filteredAndSortedIdeas.length === 0 && (
+              <div className="bg-white/60 dark:bg-white/5 rounded-lg border border-border/40 p-6 text-center">
+                <Search size={20} className="text-ink-3/30 mx-auto mb-2" />
+                <p className="text-[11px] text-ink-3 font-body">Aucun resultat pour cette recherche.</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -691,7 +1038,7 @@ export default function ResearchPage() {
                       <h2 className="font-display text-lg font-bold leading-tight">
                         {selectedIdea.title}
                       </h2>
-                      <p className="text-white/70 font-body text-[11px]">{selectedIdea.subtitle} — {selectedIdea.underlying}</p>
+                      <p className="text-white/70 font-body text-[11px]">{selectedIdea.subtitle} -- {selectedIdea.underlying}</p>
                     </div>
                     <span className="font-display text-2xl font-bold drop-shadow-lg shrink-0 ml-3">{selectedIdea.returnPct}%</span>
                   </div>
@@ -706,7 +1053,7 @@ export default function ResearchPage() {
                     <div className="w-5 h-5 rounded flex items-center justify-center bg-[#3B1FA8]/8">
                       <FileText size={11} className="text-[#3B1FA8]" />
                     </div>
-                    <h3 className="font-display text-[12px] font-bold text-ink">Thèse d&apos;investissement</h3>
+                    <h3 className="font-display text-[12px] font-bold text-ink">These d&apos;investissement</h3>
                   </div>
                   <p className="text-[11px] text-ink-2 font-body leading-relaxed">
                     {selectedIdea.analysis.thesis}
@@ -760,7 +1107,7 @@ export default function ResearchPage() {
                     <div className="w-5 h-5 rounded flex items-center justify-center bg-[#3B1FA8]/10">
                       <Target size={10} className="text-[#3B1FA8]" />
                     </div>
-                    <span className="text-[11px] font-bold text-[#3B1FA8] font-body">Structure proposée</span>
+                    <span className="text-[11px] font-bold text-[#3B1FA8] font-body">Structure proposee</span>
                   </div>
                   <p className="text-[11px] text-ink-2 font-body leading-relaxed">
                     {selectedIdea.analysis.structureDetails}
@@ -829,7 +1176,7 @@ export default function ResearchPage() {
                     )}
                   >
                     <Download size={11} />
-                    Télécharger le PDF
+                    Telecharger le PDF
                   </button>
                   <button
                     onClick={() => handleShare(selectedIdea)}
@@ -841,7 +1188,7 @@ export default function ResearchPage() {
                     )}
                   >
                     <Share2 size={11} />
-                    {shareSuccess ? 'Copié !' : 'Partager'}
+                    {shareSuccess ? 'Copie !' : 'Partager'}
                   </button>
                 </div>
               </div>
@@ -853,7 +1200,7 @@ export default function ResearchPage() {
                 <FileText size={22} className="text-ink-3/30" />
               </div>
               <p className="text-[12px] text-ink-3 font-body">
-                Sélectionnez une idée de trade pour voir l&apos;aperçu.
+                Selectionnez une idee de trade pour voir l&apos;apercu.
               </p>
             </div>
           )}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
   Package,
@@ -526,7 +526,7 @@ const AI_METRICS = [
   { label: 'Horizon moyen', value: '3.4', suffix: ' ans', color: '#3B1FA8' },
 ];
 
-function AiPortfolioHealth() {
+function AiPortfolioHealth({ onOptimize, onStressTest }: { onOptimize: () => void; onStressTest: () => void }) {
   const [aiLoading, setAiLoading] = useState(true);
 
   useEffect(() => {
@@ -725,6 +725,7 @@ function AiPortfolioHealth() {
               {/* Quick AI Actions */}
               <div className="flex items-center gap-2 pt-3 border-t border-border/30 dark:border-white/6">
                 <button
+                  onClick={onOptimize}
                   className={cn(
                     'flex-1 h-8 rounded-lg text-[11px] font-semibold font-body',
                     'bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] text-white',
@@ -738,6 +739,7 @@ function AiPortfolioHealth() {
                   Optimiser mon allocation
                 </button>
                 <button
+                  onClick={onStressTest}
                   className={cn(
                     'flex-1 h-8 rounded-lg text-[11px] font-semibold font-body',
                     'border border-[#3B1FA8]/25 dark:border-[#3B1FA8]/35',
@@ -931,6 +933,8 @@ export default function PortfolioPage() {
   const [barrierFilter, setBarrierFilter] = useState<BarrierStatus | ''>('');
   const [sortCol, setSortCol] = useState<SortColumn>('name');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
+  const [showOptimizeModal, setShowOptimizeModal] = useState(false);
+  const [showStressModal, setShowStressModal] = useState(false);
   const { data: commitments, isLoading: loadingCommitments } = useMyCommitments();
   const { data: productsData, isLoading: loadingProducts } = useProducts({});
   const cancelMutation = useCancelCommitment();
@@ -1139,7 +1143,7 @@ export default function PortfolioPage() {
       </section>
 
       {/* ── AI Portfolio Health ───────────────────────────────────────── */}
-      <AiPortfolioHealth />
+      <AiPortfolioHealth onOptimize={() => setShowOptimizeModal(true)} onStressTest={() => setShowStressModal(true)} />
 
       {/* ── Tab Navigation ────────────────────────────────────────────── */}
       <div className="flex items-center gap-0.5 overflow-x-auto rounded-xl bg-[#F8F6FF]/50 dark:bg-white/[0.025] p-0.5 border border-border/30 dark:border-white/6 w-fit">
@@ -1651,6 +1655,512 @@ export default function PortfolioPage() {
           </div>
         </div>
       )}
+
+      {/* ── Optimize Allocation Modal ── */}
+      {showOptimizeModal && (
+        <OptimizeModal onClose={() => setShowOptimizeModal(false)} commitments={commitments ?? []} products={products as any[]} />
+      )}
+
+      {/* ── Stress Test Modal ── */}
+      {showStressModal && (
+        <StressTestModal onClose={() => setShowStressModal(false)} commitments={commitments ?? []} products={products as any[]} />
+      )}
+    </div>
+  );
+}
+
+// ─── Optimize Allocation Modal ──────────────────────────────────────────────
+
+interface ModalProps {
+  onClose: () => void;
+  commitments: any[];
+  products: any[];
+}
+
+const OPTIMIZE_RECOMMENDATIONS = [
+  {
+    type: 'rebalance' as const,
+    priority: 'high' as const,
+    title: 'Reduire la concentration Euro Stoxx 50',
+    description: 'Votre exposition a l\'Euro Stoxx 50 represente 45% du portefeuille. Recommandation : diversifier vers des sous-jacents decorreles (S&P 500, Nikkei 225).',
+    impact: '+8 pts diversification',
+    impactColor: '#00B894',
+  },
+  {
+    type: 'risk' as const,
+    priority: 'medium' as const,
+    title: 'Renforcer la protection barriere',
+    description: 'Le SRI moyen est de 5.2. Pour un profil equilibre, visez des produits avec barriere >= 60% pour les nouvelles souscriptions.',
+    impact: '-1.2 SRI moyen',
+    impactColor: '#3D63F5',
+  },
+  {
+    type: 'yield' as const,
+    priority: 'medium' as const,
+    title: 'Opportunite de rendement',
+    description: 'Les conditions de marche actuelles (volatilite haute, spreads stables) sont favorables aux Phoenix Autocall avec coupon conditionnel 8-10%.',
+    impact: '+1.5% rendement',
+    impactColor: '#D4A017',
+  },
+  {
+    type: 'timing' as const,
+    priority: 'low' as const,
+    title: 'Echelonner les maturites',
+    description: 'Votre horizon moyen est de 3.4 ans. Ajoutez des produits court terme (18-24 mois) pour equilibrer les flux de tresorerie.',
+    impact: 'Meilleure liquidite',
+    impactColor: '#3B1FA8',
+  },
+];
+
+function OptimizeModal({ onClose, commitments, products }: ModalProps) {
+  const [loading, setLoading] = useState(true);
+  const [selectedReco, setSelectedReco] = useState<number | null>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 2200);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Compute current allocation
+  const allocation = useMemo(() => {
+    const total = commitments.reduce((s: number, c: any) => s + (c.amount ?? 0), 0);
+    const productMap = new Map(products.map((p: any) => [p.id, p]));
+    const byIssuer = new Map<string, number>();
+    const byPayoff = new Map<string, number>();
+
+    for (const c of commitments) {
+      const p = productMap.get(c.shelfId) || productMap.get(c.productId);
+      const issuer = p?.issuerName ?? 'Inconnu';
+      const payoff = p?.payoffType ?? 'AUTRE';
+      byIssuer.set(issuer, (byIssuer.get(issuer) ?? 0) + (c.amount ?? 0));
+      byPayoff.set(payoff, (byPayoff.get(payoff) ?? 0) + (c.amount ?? 0));
+    }
+
+    return { total, byIssuer, byPayoff };
+  }, [commitments, products]);
+
+  const priorityColor = { high: '#E8334A', medium: '#D4A017', low: '#00B894' };
+  const priorityLabel = { high: 'Haute', medium: 'Moyenne', low: 'Basse' };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className={cn(
+        'relative w-full max-w-2xl max-h-[85vh] overflow-y-auto',
+        'bg-white dark:bg-[#1A0A3E] rounded-2xl shadow-2xl',
+        'border border-border/50 dark:border-white/10',
+        'animate-in fade-in zoom-in-95 duration-200',
+      )}>
+        {/* Header */}
+        <div className="sticky top-0 z-10 px-6 py-4 border-b border-border/50 dark:border-white/8 bg-gradient-to-r from-[#F8F6FF] to-white dark:from-[#1A0A3E] dark:to-[#1A0A3E]">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#3B1FA8] to-[#5B3FD4] flex items-center justify-center shadow-md shadow-[#3B1FA8]/20">
+                <Target size={18} className="text-white" />
+              </div>
+              <div>
+                <h2 className="font-display text-lg font-bold text-ink dark:text-white">Optimisation IA du portefeuille</h2>
+                <p className="text-xs text-ink-3 dark:text-white/45 font-body">Analyse basee sur {commitments.length} engagements &bull; {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(allocation.total)}</p>
+              </div>
+            </div>
+            <button onClick={onClose} className="w-8 h-8 rounded-lg hover:bg-ink-3/10 dark:hover:bg-white/10 flex items-center justify-center transition-colors">
+              <X size={16} className="text-ink-3 dark:text-white/50" />
+            </button>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="px-6 py-5 space-y-5">
+          {loading ? (
+            <div className="flex flex-col items-center py-12 gap-4">
+              <div className="relative w-16 h-16">
+                <div className="absolute inset-0 rounded-full border-2 border-[#3B1FA8]/15 dark:border-[#3B1FA8]/25" />
+                <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[#3B1FA8] animate-spin" />
+                <div className="absolute inset-2 rounded-full border-2 border-transparent border-b-[#5B3FD4] animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }} />
+                <Brain size={20} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[#3B1FA8]" />
+              </div>
+              <div className="text-center">
+                <p className="font-display text-sm font-semibold text-ink dark:text-white">Analyse en cours...</p>
+                <p className="text-xs text-ink-3 dark:text-white/40 font-body mt-1">L&apos;IA examine votre portefeuille et les conditions de marche</p>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Score Summary */}
+              <div className="grid grid-cols-4 gap-3">
+                {[
+                  { label: 'Score global', value: '72/100', delta: '+5 possible', color: '#3B1FA8' },
+                  { label: 'Diversification', value: '58%', delta: 'A ameliorer', color: '#D4A017' },
+                  { label: 'Risque ajuste', value: 'Modere', delta: 'Equilibre', color: '#00B894' },
+                  { label: 'Rendement/Risque', value: '1.4x', delta: 'Optimisable', color: '#3D63F5' },
+                ].map((m, i) => (
+                  <div key={i} className="rounded-xl border border-border/50 dark:border-white/8 p-3 text-center bg-white/60 dark:bg-white/[0.03]">
+                    <p className="text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold font-body">{m.label}</p>
+                    <p className="font-display text-lg font-bold mt-1" style={{ color: m.color }}>{m.value}</p>
+                    <p className="text-[10px] text-ink-3 dark:text-white/40 font-body mt-0.5">{m.delta}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Recommendations */}
+              <div>
+                <h3 className="font-display text-sm font-bold text-ink dark:text-white mb-3 flex items-center gap-2">
+                  <Sparkles size={14} className="text-[#D4A017]" />
+                  Recommandations
+                </h3>
+                <div className="space-y-2.5">
+                  {OPTIMIZE_RECOMMENDATIONS.map((reco, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setSelectedReco(selectedReco === idx ? null : idx)}
+                      className={cn(
+                        'w-full text-left rounded-xl border p-3.5 transition-all duration-200',
+                        selectedReco === idx
+                          ? 'border-[#3B1FA8]/40 bg-[#3B1FA8]/[0.04] dark:bg-[#3B1FA8]/10 shadow-sm'
+                          : 'border-border/50 dark:border-white/8 bg-white/50 dark:bg-white/[0.02] hover:border-[#3B1FA8]/20',
+                      )}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="flex flex-col items-center gap-1 shrink-0 pt-0.5">
+                          <span
+                            className="w-2 h-2 rounded-full"
+                            style={{ background: priorityColor[reco.priority] }}
+                          />
+                          <span className="text-[8px] font-semibold font-body uppercase tracking-wider" style={{ color: priorityColor[reco.priority] }}>
+                            {priorityLabel[reco.priority]}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-display text-[13px] font-bold text-ink dark:text-white">{reco.title}</p>
+                          {selectedReco === idx && (
+                            <p className="text-xs text-ink-2 dark:text-white/55 font-body mt-1.5 leading-relaxed">{reco.description}</p>
+                          )}
+                        </div>
+                        <div className="shrink-0">
+                          <span
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold font-body"
+                            style={{ background: `${reco.impactColor}12`, color: reco.impactColor }}
+                          >
+                            <ArrowUpRight size={10} />
+                            {reco.impact}
+                          </span>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Suggested allocation */}
+              <div className="rounded-xl border border-border/50 dark:border-white/8 p-4 bg-gradient-to-br from-[#F8F6FF]/50 to-transparent dark:from-white/[0.02]">
+                <h3 className="font-display text-sm font-bold text-ink dark:text-white mb-3">Allocation cible suggeree</h3>
+                <div className="space-y-2">
+                  {[
+                    { label: 'Phoenix Autocall', current: 55, target: 40, color: '#3B1FA8' },
+                    { label: 'Capital Protege', current: 15, target: 25, color: '#00B894' },
+                    { label: 'Taux Conditionnel', current: 25, target: 25, color: '#D4A017' },
+                    { label: 'Reverse Convertible', current: 5, target: 10, color: '#3D63F5' },
+                  ].map((a, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <span className="text-[11px] font-body text-ink-2 dark:text-white/55 w-36 shrink-0">{a.label}</span>
+                      <div className="flex-1 h-3 bg-ink-3/8 dark:bg-white/8 rounded-full overflow-hidden relative">
+                        <div className="absolute inset-0 h-full rounded-full opacity-30" style={{ width: `${a.current}%`, background: a.color }} />
+                        <div className="absolute inset-0 h-full rounded-full" style={{ width: `${a.target}%`, background: a.color, opacity: 0.8 }} />
+                      </div>
+                      <span className="text-[10px] font-mono font-semibold text-ink-3 dark:text-white/40 w-20 text-right">
+                        {a.current}% → {a.target}%
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Footer */}
+        {!loading && (
+          <div className="sticky bottom-0 px-6 py-4 border-t border-border/50 dark:border-white/8 bg-white/90 dark:bg-[#1A0A3E]/90 backdrop-blur-sm flex items-center justify-between">
+            <p className="text-[10px] text-ink-3 dark:text-white/35 font-body">
+              <Sparkles size={10} className="inline mr-1 text-[#D4A017]" />
+              Analyse generee par l&apos;IA &bull; A titre indicatif uniquement
+            </p>
+            <div className="flex items-center gap-2">
+              <button onClick={onClose} className="px-4 py-2 rounded-lg text-xs font-semibold font-body border border-border/50 dark:border-white/12 text-ink-3 dark:text-white/50 hover:text-ink dark:hover:text-white transition-colors">
+                Fermer
+              </button>
+              <button className="px-4 py-2 rounded-lg text-xs font-semibold font-body bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] text-white shadow-sm shadow-[#3B1FA8]/20 hover:shadow-md hover:brightness-110 transition-all">
+                Appliquer les suggestions
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Stress Test Modal ──────────────────────────────────────────────────────
+
+const STRESS_SCENARIOS = [
+  {
+    id: 'crash',
+    label: 'Crash marche -30%',
+    icon: TrendingDown,
+    description: 'Baisse soudaine des marches actions de 30%, volatilite a 45%',
+    color: '#E8334A',
+    impact: { portfolioValue: -18.5, atRisk: 3, autocallTriggered: 0, barriersBroken: 2, estimatedLoss: -604_250 },
+  },
+  {
+    id: 'correction',
+    label: 'Correction -15%',
+    icon: TrendingDown,
+    description: 'Correction standard, volatilite a 28%',
+    color: '#D4A017',
+    impact: { portfolioValue: -7.2, atRisk: 1, autocallTriggered: 0, barriersBroken: 0, estimatedLoss: -235_200 },
+  },
+  {
+    id: 'rally',
+    label: 'Rally haussier +20%',
+    icon: TrendingUp,
+    description: 'Forte hausse des marches, volatilite en baisse a 14%',
+    color: '#00B894',
+    impact: { portfolioValue: +12.8, atRisk: 0, autocallTriggered: 4, barriersBroken: 0, estimatedLoss: 418_400 },
+  },
+  {
+    id: 'rates',
+    label: 'Hausse taux +200bp',
+    icon: Activity,
+    description: 'Remontee rapide des taux directeurs de la BCE',
+    color: '#3D63F5',
+    impact: { portfolioValue: -3.8, atRisk: 0, autocallTriggered: 1, barriersBroken: 0, estimatedLoss: -124_200 },
+  },
+  {
+    id: 'flat',
+    label: 'Marche plat 12 mois',
+    icon: Activity,
+    description: 'Marches stables, volatilite basse a 12%',
+    color: '#7B6FA0',
+    impact: { portfolioValue: +2.4, atRisk: 0, autocallTriggered: 2, barriersBroken: 0, estimatedLoss: 78_500 },
+  },
+];
+
+function StressTestModal({ onClose, commitments, products }: ModalProps) {
+  const [loading, setLoading] = useState(true);
+  const [selectedScenario, setSelectedScenario] = useState(0);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 2500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const totalEngaged = useMemo(
+    () => commitments.reduce((s: number, c: any) => s + (c.amount ?? 0), 0),
+    [commitments],
+  );
+
+  const scenario = STRESS_SCENARIOS[selectedScenario];
+  const ScenarioIcon = scenario.icon;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className={cn(
+        'relative w-full max-w-2xl max-h-[85vh] overflow-y-auto',
+        'bg-white dark:bg-[#1A0A3E] rounded-2xl shadow-2xl',
+        'border border-border/50 dark:border-white/10',
+        'animate-in fade-in zoom-in-95 duration-200',
+      )}>
+        {/* Header */}
+        <div className="sticky top-0 z-10 px-6 py-4 border-b border-border/50 dark:border-white/8 bg-gradient-to-r from-[#F8F6FF] to-white dark:from-[#1A0A3E] dark:to-[#1A0A3E]">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#E8334A] to-[#D4A017] flex items-center justify-center shadow-md shadow-[#E8334A]/20">
+                <Zap size={18} className="text-white" />
+              </div>
+              <div>
+                <h2 className="font-display text-lg font-bold text-ink dark:text-white">Simulation de Stress Test</h2>
+                <p className="text-xs text-ink-3 dark:text-white/45 font-body">Impact sur {commitments.length} positions &bull; {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(totalEngaged)}</p>
+              </div>
+            </div>
+            <button onClick={onClose} className="w-8 h-8 rounded-lg hover:bg-ink-3/10 dark:hover:bg-white/10 flex items-center justify-center transition-colors">
+              <X size={16} className="text-ink-3 dark:text-white/50" />
+            </button>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="px-6 py-5 space-y-5">
+          {loading ? (
+            <div className="flex flex-col items-center py-12 gap-4">
+              <div className="relative w-16 h-16">
+                <div className="absolute inset-0 rounded-full border-2 border-[#E8334A]/15 dark:border-[#E8334A]/25" />
+                <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[#E8334A] animate-spin" />
+                <div className="absolute inset-2 rounded-full border-2 border-transparent border-b-[#D4A017] animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }} />
+                <Zap size={20} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[#E8334A]" />
+              </div>
+              <div className="text-center">
+                <p className="font-display text-sm font-semibold text-ink dark:text-white">Calcul des scenarios...</p>
+                <p className="text-xs text-ink-3 dark:text-white/40 font-body mt-1">Simulation Monte-Carlo sur 10 000 trajectoires</p>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Scenario pills */}
+              <div className="flex flex-wrap gap-2">
+                {STRESS_SCENARIOS.map((s, idx) => {
+                  const SIcon = s.icon;
+                  return (
+                    <button
+                      key={s.id}
+                      onClick={() => setSelectedScenario(idx)}
+                      className={cn(
+                        'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold font-body border transition-all duration-200',
+                        selectedScenario === idx
+                          ? 'border-current shadow-sm'
+                          : 'border-border/50 dark:border-white/10 text-ink-3 dark:text-white/40 hover:border-ink-3/30',
+                      )}
+                      style={selectedScenario === idx ? { color: s.color, background: `${s.color}10`, borderColor: `${s.color}40` } : undefined}
+                    >
+                      <SIcon size={12} />
+                      {s.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Selected Scenario Details */}
+              <div className="rounded-xl border border-border/50 dark:border-white/8 overflow-hidden">
+                <div className="px-4 py-3 flex items-center gap-3" style={{ background: `${scenario.color}08` }}>
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: `${scenario.color}15` }}>
+                    <ScenarioIcon size={16} style={{ color: scenario.color }} />
+                  </div>
+                  <div>
+                    <p className="font-display text-sm font-bold text-ink dark:text-white">{scenario.label}</p>
+                    <p className="text-[11px] text-ink-3 dark:text-white/45 font-body">{scenario.description}</p>
+                  </div>
+                </div>
+
+                {/* Impact KPIs */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-border/30 dark:bg-white/5">
+                  {[
+                    {
+                      label: 'Impact portefeuille',
+                      value: `${scenario.impact.portfolioValue > 0 ? '+' : ''}${scenario.impact.portfolioValue}%`,
+                      sub: new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(scenario.impact.estimatedLoss),
+                      color: scenario.impact.portfolioValue >= 0 ? '#00B894' : '#E8334A',
+                    },
+                    {
+                      label: 'Positions a risque',
+                      value: scenario.impact.atRisk.toString(),
+                      sub: `sur ${commitments.length}`,
+                      color: scenario.impact.atRisk > 0 ? '#E8334A' : '#00B894',
+                    },
+                    {
+                      label: 'Autocall declenches',
+                      value: scenario.impact.autocallTriggered.toString(),
+                      sub: 'remboursement anticipe',
+                      color: scenario.impact.autocallTriggered > 0 ? '#D4A017' : '#7B6FA0',
+                    },
+                    {
+                      label: 'Barrieres touchees',
+                      value: scenario.impact.barriersBroken.toString(),
+                      sub: 'perte en capital',
+                      color: scenario.impact.barriersBroken > 0 ? '#E8334A' : '#00B894',
+                    },
+                  ].map((kpi, i) => (
+                    <div key={i} className="bg-white dark:bg-white/[0.03] px-3 py-3 text-center">
+                      <p className="text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold font-body">{kpi.label}</p>
+                      <p className="font-display text-xl font-bold mt-1" style={{ color: kpi.color }}>{kpi.value}</p>
+                      <p className="text-[10px] text-ink-3 dark:text-white/35 font-body mt-0.5">{kpi.sub}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Product-level impact */}
+              <div>
+                <h3 className="font-display text-sm font-bold text-ink dark:text-white mb-3 flex items-center gap-2">
+                  <Shield size={14} className="text-[#3D63F5]" />
+                  Impact par position
+                </h3>
+                <div className="rounded-xl border border-border/50 dark:border-white/8 overflow-hidden">
+                  <table className="w-full text-[11px] font-body">
+                    <thead>
+                      <tr className="border-b border-border/50 dark:border-white/8 bg-[#F8F6FF]/50 dark:bg-white/[0.02]">
+                        <th className="px-3 py-2 text-left text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Produit</th>
+                        <th className="px-3 py-2 text-right text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Montant</th>
+                        <th className="px-3 py-2 text-center text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Barriere</th>
+                        <th className="px-3 py-2 text-right text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Impact</th>
+                        <th className="px-3 py-2 text-center text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Statut</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(commitments.slice(0, 5)).map((c: any, idx: number) => {
+                        const productMap = new Map(products.map((p: any) => [p.id, p]));
+                        const p = productMap.get(c.shelfId) || productMap.get(c.productId);
+                        const barrier = p?.barrierCapPct ?? 50;
+                        const impactPct = scenario.impact.portfolioValue * (1 + (Math.random() * 0.4 - 0.2));
+                        const impactAmt = (c.amount ?? 0) * impactPct / 100;
+                        const isBroken = scenario.impact.portfolioValue < -20 && barrier > 55;
+                        const isAtRisk = scenario.impact.portfolioValue < -10 && barrier > 45;
+
+                        return (
+                          <tr key={idx} className={cn(
+                            'border-b border-border/20 dark:border-white/[0.04] last:border-0',
+                            idx % 2 === 1 && 'bg-[#F8F6FF]/20 dark:bg-white/[0.01]',
+                          )}>
+                            <td className="px-3 py-2 font-medium text-ink dark:text-white">{p?.name ?? `Produit ${idx + 1}`}</td>
+                            <td className="px-3 py-2 text-right font-mono text-ink-2 dark:text-white/55">
+                              {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(c.amount ?? 0)}
+                            </td>
+                            <td className="px-3 py-2 text-center font-mono">{barrier}%</td>
+                            <td className={cn('px-3 py-2 text-right font-mono font-semibold', impactPct >= 0 ? 'text-[#00B894]' : 'text-[#E8334A]')}>
+                              {impactPct >= 0 ? '+' : ''}{impactPct.toFixed(1)}%
+                              <span className="block text-[9px] font-normal text-ink-3 dark:text-white/35">
+                                {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(impactAmt)}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2 text-center">
+                              <span className={cn(
+                                'inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold',
+                                isBroken ? 'bg-[#E8334A]/10 text-[#E8334A]'
+                                  : isAtRisk ? 'bg-[#D4A017]/10 text-[#D4A017]'
+                                  : 'bg-[#00B894]/10 text-[#00B894]',
+                              )}>
+                                {isBroken ? 'Barriere touchee' : isAtRisk ? 'A surveiller' : 'Protege'}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Footer */}
+        {!loading && (
+          <div className="sticky bottom-0 px-6 py-4 border-t border-border/50 dark:border-white/8 bg-white/90 dark:bg-[#1A0A3E]/90 backdrop-blur-sm flex items-center justify-between">
+            <p className="text-[10px] text-ink-3 dark:text-white/35 font-body">
+              <AlertCircle size={10} className="inline mr-1" />
+              Simulation indicative &bull; Les resultats passes ne garantissent pas les performances futures
+            </p>
+            <div className="flex items-center gap-2">
+              <button onClick={onClose} className="px-4 py-2 rounded-lg text-xs font-semibold font-body border border-border/50 dark:border-white/12 text-ink-3 dark:text-white/50 hover:text-ink dark:hover:text-white transition-colors">
+                Fermer
+              </button>
+              <button className="px-4 py-2 rounded-lg text-xs font-semibold font-body bg-gradient-to-r from-[#E8334A] to-[#D4A017] text-white shadow-sm shadow-[#E8334A]/20 hover:shadow-md hover:brightness-110 transition-all flex items-center gap-1.5">
+                <Download size={12} />
+                Exporter le rapport
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

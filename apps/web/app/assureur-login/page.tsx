@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Zap, Lock, ArrowRight, Building2 } from 'lucide-react';
 
 export default function AssureurLoginPage() {
@@ -101,15 +102,30 @@ export default function AssureurLoginPage() {
             >
               Utiliser le compte démo
             </button>
+
+            <Link
+              href="/assureur-register"
+              className="w-full h-10 rounded-xl font-body font-semibold text-[13px] flex items-center justify-center border border-border/60 text-ink-3 hover:bg-ink/5 transition-all duration-200 mt-1"
+            >
+              Créer un compte assureur
+            </Link>
           </form>
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-center gap-2 mt-6">
-          <Lock size={12} className="text-white/40" />
-          <p className="text-[11px] text-white/40 font-body">
-            Connexion sécurisée · MIF2/DDA conforme
-          </p>
+        <div className="flex flex-col items-center gap-3 mt-6">
+          <div className="flex items-center justify-center gap-2">
+            <Lock size={12} className="text-white/40" />
+            <p className="text-[11px] text-white/40 font-body">
+              Connexion sécurisée · MIF2/DDA conforme
+            </p>
+          </div>
+          <Link
+            href="/login"
+            className="text-[11px] font-body font-medium text-white/50 hover:text-white/80 transition-colors underline underline-offset-2"
+          >
+            Vous êtes CGP ?
+          </Link>
         </div>
       </div>
     </div>

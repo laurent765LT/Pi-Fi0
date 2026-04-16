@@ -5,7 +5,7 @@ import type { LucideIcon } from 'lucide-react';
 
 interface PageHeaderProps {
   icon: LucideIcon;
-  title: string;
+  title: React.ReactNode;
   subtitle?: string;
   accentFrom?: string;
   accentTo?: string;

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Zap, Eye, EyeOff, Loader2, ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -280,7 +281,25 @@ export default function LoginPage() {
                   'Se connecter'
                 )}
               </Button>
+              {/* Forgot password link */}
+              <button
+                type="button"
+                onClick={() => alert('Un email de réinitialisation a été envoyé')}
+                className="text-[12px] font-body font-medium text-violet hover:text-violet-mid transition-colors text-center -mt-1"
+              >
+                Mot de passe oublié ?
+              </button>
             </form>
+
+            {/* Create account link */}
+            <div className="flex flex-col items-center gap-2 -mt-2">
+              <Link
+                href="/register"
+                className="w-full h-10 rounded-xl font-body font-semibold text-[13px] flex items-center justify-center border border-border/60 text-violet hover:bg-violet/5 transition-all duration-200"
+              >
+                Créer un compte
+              </Link>
+            </div>
 
             {/* ---- Demo credentials collapsible ---- */}
             <div className="border-t border-border pt-4 -mt-2">
@@ -340,6 +359,12 @@ export default function LoginPage() {
             <p className="text-center text-white/35 text-[11px] font-body">
               Accès réservé aux partenaires institutionnels agréés
             </p>
+            <Link
+              href="/assureur-login"
+              className="text-[11px] font-body font-medium text-white/50 hover:text-white/80 transition-colors underline underline-offset-2"
+            >
+              Vous êtes assureur ?
+            </Link>
           </div>
         </div>
       </div>

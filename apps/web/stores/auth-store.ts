@@ -18,6 +18,7 @@ interface AuthState {
   isDemo: boolean;
 
   login: (email: string, password: string) => Promise<void>;
+  register: (userData: { email: string; firstName: string; lastName: string; role: string; orgId: string; company?: string }) => Promise<void>;
   logout: () => void;
   hydrate: () => void;
 }
@@ -36,7 +37,27 @@ export const useAuthStore = create<AuthState>()(
       isDemo: false,
 
       login: async (email: string, password: string) => {
-        // Check demo credentials FIRST (instant, no network)
+        // Check registered users from localStorage FIRST
+        try {
+          const registered = JSON.parse(localStorage.getItem('strickin-registered-users') ?? '[]');
+          const regUser = registered.find((u: any) => u.email === email);
+          if (regUser) {
+            const token = 'demo-token-registered-' + Date.now();
+            api.setToken(token);
+            const { password: _pw, ...userWithoutPassword } = regUser;
+            const userData = {
+              user: userWithoutPassword,
+              token,
+              refreshToken: 'demo-refresh',
+              isDemo: true,
+            };
+            set(userData);
+            document.cookie = `strickin-auth=${encodeURIComponent(JSON.stringify({ state: userData }))};path=/;max-age=${60 * 60 * 24 * 7};SameSite=Lax`;
+            return;
+          }
+        } catch {}
+
+        // Check demo credentials (instant, no network)
         const demoUser = DEMO_USERS[email.toLowerCase()];
         if (demoUser && demoUser.password === password) {
           const fakeToken = 'demo-token-' + Date.now();
@@ -73,6 +94,26 @@ export const useAuthStore = create<AuthState>()(
         }
 
         throw new Error('Identifiants incorrects. Veuillez réessayer.');
+      },
+
+      register: async (userData: { email: string; firstName: string; lastName: string; role: string; orgId: string; company?: string }) => {
+        const id = 'user-' + Date.now();
+        const token = 'demo-token-registered-' + Date.now();
+        const user: User = { id, ...userData };
+
+        // Store in registered users list
+        try {
+          const existing = JSON.parse(localStorage.getItem('strickin-registered-users') ?? '[]');
+          existing.push({ ...user, password: 'registered' });
+          localStorage.setItem('strickin-registered-users', JSON.stringify(existing));
+        } catch {}
+
+        set({ user, token, refreshToken: 'demo-refresh', isDemo: true });
+        api.setToken(token);
+
+        // Set auth cookie
+        const cookieVal = JSON.stringify({ state: { user, token, refreshToken: 'demo-refresh', isDemo: true } });
+        document.cookie = `strickin-auth=${encodeURIComponent(cookieVal)};path=/;max-age=${60 * 60 * 24 * 7};SameSite=Lax`;
       },
 
       logout: () => {

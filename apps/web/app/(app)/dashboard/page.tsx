@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { PageHeader } from '@/components/ui/page-header';
+import { Badge } from '@/components/ui/badge';
 import { useAuthStore } from '@/stores/auth-store';
 import { useProducts } from '@/hooks/use-products';
 import { useMyCommitments } from '@/hooks/use-commitments';
@@ -172,14 +173,6 @@ const SENTIMENT_CONFIG = {
   bearish: { label: 'Baissier', dotClass: 'bg-red', textClass: 'text-red' },
   neutral: { label: 'Neutre', dotClass: 'bg-gold', textClass: 'text-gold' },
 };
-
-// ─── Quick Actions ──────────────────────────────────────────────────────────
-
-const QUICK_ACTIONS = [
-  { label: 'Nouveau produit', href: '/admin/products', icon: Package, accentFrom: 'from-violet', accentTo: 'to-violet-mid' },
-  { label: 'Pricer', href: '/pricing', icon: Calculator, accentFrom: 'from-teal', accentTo: 'to-teal' },
-  { label: 'Voir le catalogue', href: '/products', icon: Search, accentFrom: 'from-cobalt-light', accentTo: 'to-cobalt-light' },
-];
 
 // ─── Empty State Component ──────────────────────────────────────────────────
 
@@ -639,7 +632,44 @@ const PRODUCT_SPARKLINE_DATA: Record<number, number[]> = {
 
 export default function DashboardPage() {
   const user = useAuthStore((s) => s.user);
+  const token = useAuthStore((s) => s.token);
   const firstName = (user as any)?.firstName ?? 'Utilisateur';
+  const userRole = (user as any)?.role ?? 'VIEWER';
+  const isNewRegistered = typeof token === 'string' && token.startsWith('demo-token-registered-');
+  const isAdmin = userRole === 'SUPER_ADMIN' || userRole === 'ORG_ADMIN';
+
+  // Role-based subtitle
+  const roleSubtitle = (() => {
+    switch (userRole) {
+      case 'SUPER_ADMIN': return 'Administration plateforme';
+      case 'ORG_ADMIN': return 'Administration plateforme';
+      case 'MANAGER': return 'Votre espace manager';
+      default: return 'Votre tableau de bord CGP';
+    }
+  })();
+
+  // Role badge config
+  const roleBadge = (() => {
+    switch (userRole) {
+      case 'SUPER_ADMIN': return { label: 'Admin', variant: 'red' as const };
+      case 'ORG_ADMIN': return { label: 'Admin', variant: 'gold' as const };
+      case 'MANAGER': return { label: 'Manager', variant: 'cobalt' as const };
+      default: return { label: 'CGP', variant: 'violet' as const };
+    }
+  })();
+
+  // Role-based quick actions
+  const quickActions = isAdmin
+    ? [
+        { label: 'Administration', href: '/admin', icon: Shield, accentFrom: 'from-red', accentTo: 'to-red' },
+        { label: 'Gerer les produits', href: '/admin/products', icon: Package, accentFrom: 'from-violet', accentTo: 'to-violet-mid' },
+        { label: 'Voir les stats', href: '/commissions', icon: BarChart3, accentFrom: 'from-teal', accentTo: 'to-teal' },
+      ]
+    : [
+        { label: 'Voir le catalogue', href: '/products', icon: Search, accentFrom: 'from-cobalt-light', accentTo: 'to-cobalt-light' },
+        { label: 'Mes engagements', href: '/portfolio', icon: Briefcase, accentFrom: 'from-teal', accentTo: 'to-teal' },
+        { label: 'Pricing engine', href: '/pricing', icon: Calculator, accentFrom: 'from-violet', accentTo: 'to-violet-mid' },
+      ];
 
   // ── Live data from API hooks (with demo fallbacks) ──
   const { data: productsData } = useProducts();
@@ -741,10 +771,46 @@ export default function DashboardPage() {
       {/* ── Market Ticker ───────────────────────────────────────── */}
       <MarketTicker className="rounded-xl mb-4" />
 
+      {/* ── Welcome banner for new registered users ──────── */}
+      {isNewRegistered && (
+        <div className="mb-4 relative rounded-xl bg-gradient-to-r from-violet-pale/60 to-teal-light/40 dark:from-violet/10 dark:to-teal/10 border border-violet/20 dark:border-violet/30 p-4 flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-violet/10 dark:bg-violet/20 flex items-center justify-center shrink-0">
+            <Sparkles size={18} className="text-violet dark:text-violet-light" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-body text-sm font-semibold text-ink dark:text-white">
+              Bienvenue sur Strick&apos;in !
+            </p>
+            <p className="font-body text-xs text-ink-3 dark:text-white/60 mt-0.5">
+              Completez votre onboarding pour acceder a toutes les fonctionnalites.
+            </p>
+          </div>
+          <Link
+            href="/onboarding"
+            className={cn(
+              'inline-flex items-center gap-1.5 px-4 py-2 rounded-lg shrink-0',
+              'bg-violet text-white font-body text-xs font-semibold',
+              'hover:bg-violet-mid shadow-sm hover:shadow-violet',
+              'transition-all duration-200'
+            )}
+          >
+            Commencer
+            <ArrowRight size={14} />
+          </Link>
+        </div>
+      )}
+
       <PageHeader
         icon={BarChart3}
-        title={`Bonjour, ${firstName}`}
-        subtitle={todayFormatted()}
+        title={
+          <span className="inline-flex items-center gap-2.5">
+            {`Bonjour, ${firstName}`}
+            <Badge variant={roleBadge.variant} size="sm">
+              {roleBadge.label}
+            </Badge>
+          </span>
+        }
+        subtitle={`${roleSubtitle} — ${todayFormatted()}`}
         accentFrom="#3B1FA8"
         accentTo="#1A0A3E"
         className="mb-5"
@@ -844,7 +910,7 @@ export default function DashboardPage() {
       {/* ── Quick Actions Bar ───────────────────────────────────── */}
       <section className="mb-5">
         <div className="flex items-center gap-2 flex-wrap">
-          {QUICK_ACTIONS.map((action) => {
+          {quickActions.map((action) => {
             const Icon = action.icon;
             return (
               <Link

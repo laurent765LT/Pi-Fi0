@@ -5,8 +5,9 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { TrendingUp, Users, Package, Clock, ArrowRight, AlertTriangle, Eye, DollarSign, Calendar, BarChart3, Layers, Percent } from 'lucide-react';
 import {
   PRODUITS, ENVELOPPES, EVENEMENTS, COLLECTE_MENSUELLE, ENGAGEMENTS,
-  formatMontant, formatMontantFull, formatDateFR, getProduit, getEngagements,
-  TYPE_LABELS, TYPE_COLORS, SRI_COLORS, STATUT_ENVELOPPE, EVENT_CONFIG,
+  formatMontant, formatMontantFull, formatDateFR, formatDateShortFR, getProduit, getEngagements,
+  TYPE_LABELS, TYPE_COLORS, SRI_COLORS, STATUT_ENVELOPPE, STATUT_ENGAGEMENT, EVENT_CONFIG,
+  ASSUREUR_DEMO,
 } from '@/lib/mock-data-assureur';
 import { cn } from '@/lib/cn';
 
@@ -205,8 +206,42 @@ export default function AssureurDashboard() {
       }, 0) / activeEnveloppes.length
     : 0;
 
+  // Quick stats for engagement statuses
+  const pendingCount = ENGAGEMENTS.filter((e) => e.statut === 'EN_ATTENTE').length;
+  const reviewCount = ENGAGEMENTS.filter((e) => e.statut === 'LISTE_ATTENTE').length;
+  const now = new Date();
+  const thisMonthTotal = ENGAGEMENTS
+    .filter((e) => {
+      const d = new Date(e.date);
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    })
+    .reduce((sum, e) => sum + e.montant, 0);
+
+  // Last 5 engagements sorted by date desc
+  const recentEngagements = [...ENGAGEMENTS]
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 5)
+    .map((eng) => {
+      const env = ENVELOPPES.find((e) => e.id === eng.enveloppeId);
+      const produit = env ? getProduit(env.produitId) : undefined;
+      return { ...eng, produitNom: produit?.nom ?? '—' };
+    });
+
+  // Extract first name from ASSUREUR_DEMO contact
+  const firstName = ASSUREUR_DEMO.contact.split(' ')[0];
+
   return (
     <div>
+      {/* Personalized Greeting */}
+      <div className="mb-8">
+        <h1 className="text-[26px] font-bold font-display text-ink dark:text-white">
+          Bonjour {firstName}
+        </h1>
+        <p className="text-[14px] font-body text-ink-3 dark:text-white/50 mt-1">
+          Espace Assureur — {ASSUREUR_DEMO.nom}
+        </p>
+      </div>
+
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard
@@ -235,6 +270,37 @@ export default function AssureurDashboard() {
         />
       </div>
 
+      {/* Quick Stats Row */}
+      <div className="grid grid-cols-3 gap-4 mb-8">
+        <div className="flex items-center gap-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl px-5 py-4 border border-amber-200/60 dark:border-amber-700/30">
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-amber-100 dark:bg-amber-800/30">
+            <Clock size={16} className="text-amber-600" />
+          </div>
+          <div>
+            <span className="text-[22px] font-bold font-display text-amber-700 dark:text-amber-400">{pendingCount}</span>
+            <p className="text-[11px] uppercase tracking-[0.12em] font-semibold text-amber-600/70 dark:text-amber-500/60 font-body">Engagements en attente</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl px-5 py-4 border border-blue-200/60 dark:border-blue-700/30">
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-blue-100 dark:bg-blue-800/30">
+            <Eye size={16} className="text-blue-600" />
+          </div>
+          <div>
+            <span className="text-[22px] font-bold font-display text-blue-700 dark:text-blue-400">{reviewCount}</span>
+            <p className="text-[11px] uppercase tracking-[0.12em] font-semibold text-blue-600/70 dark:text-blue-500/60 font-body">A valider</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl px-5 py-4 border border-emerald-200/60 dark:border-emerald-700/30">
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-emerald-100 dark:bg-emerald-800/30">
+            <DollarSign size={16} className="text-emerald-600" />
+          </div>
+          <div>
+            <span className="text-[22px] font-bold font-display text-emerald-700 dark:text-emerald-400">{formatMontant(thisMonthTotal)}</span>
+            <p className="text-[11px] uppercase tracking-[0.12em] font-semibold text-emerald-600/70 dark:text-emerald-500/60 font-body">Ce mois</p>
+          </div>
+        </div>
+      </div>
+
       {/* Quick Actions */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <QuickAction
@@ -255,6 +321,53 @@ export default function AssureurDashboard() {
           label="Distributeurs"
           description={`${totalDistributeurs} cabinets actifs`}
         />
+      </div>
+
+      {/* Derniers engagements */}
+      <div className="bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 shadow-sm mb-8 overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border/40">
+          <h3 className="text-[15px] font-bold text-ink dark:text-white font-display">Derniers engagements</h3>
+          <Link
+            href="/assureur/enveloppes"
+            className="text-[12px] font-semibold flex items-center gap-1 hover:opacity-80 transition-opacity text-violet font-body"
+          >
+            Tout voir <ArrowRight size={12} />
+          </Link>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-[13px] font-body">
+            <thead>
+              <tr className="border-b border-border/40 bg-surface/50 dark:bg-white/[0.02]">
+                <th className="text-left px-5 py-2.5 text-[11px] uppercase tracking-[0.12em] font-semibold text-ink-3 dark:text-white/40">CGP</th>
+                <th className="text-left px-5 py-2.5 text-[11px] uppercase tracking-[0.12em] font-semibold text-ink-3 dark:text-white/40">Produit</th>
+                <th className="text-right px-5 py-2.5 text-[11px] uppercase tracking-[0.12em] font-semibold text-ink-3 dark:text-white/40">Montant</th>
+                <th className="text-left px-5 py-2.5 text-[11px] uppercase tracking-[0.12em] font-semibold text-ink-3 dark:text-white/40">Date</th>
+                <th className="text-left px-5 py-2.5 text-[11px] uppercase tracking-[0.12em] font-semibold text-ink-3 dark:text-white/40">Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recentEngagements.map((eng) => {
+                const statutStyle = STATUT_ENGAGEMENT[eng.statut];
+                return (
+                  <tr key={eng.id} className="border-b border-border/20 last:border-0 hover:bg-violet/[0.03] dark:hover:bg-white/[0.03] transition-colors">
+                    <td className="px-5 py-3 font-medium text-ink dark:text-white">{eng.distributeur}</td>
+                    <td className="px-5 py-3 text-ink-2 dark:text-white/70">{eng.produitNom}</td>
+                    <td className="px-5 py-3 text-right font-mono font-semibold text-ink dark:text-white">{formatMontant(eng.montant)}</td>
+                    <td className="px-5 py-3 text-ink-3 dark:text-white/50">{formatDateShortFR(eng.date)}</td>
+                    <td className="px-5 py-3">
+                      <span
+                        className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
+                        style={{ background: statutStyle.bg, color: statutStyle.text }}
+                      >
+                        {statutStyle.label}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Chart + Events */}

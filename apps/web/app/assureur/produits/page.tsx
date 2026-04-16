@@ -10,10 +10,12 @@ import {
 } from '@/lib/mock-data-assureur';
 
 type TypeFilter = '' | 'AUTOCALL_PHOENIX' | 'AUTOCALL_COUPON' | 'CAPITAL_PROTEGE' | 'TAUX_CONDITIONNEL';
+type StatusFilter = '' | 'ACTIF' | 'FERME';
 
 export default function ProduitsPage() {
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('');
   const [sriFilter, setSriFilter] = useState<number | null>(null);
 
   const filtered = useMemo(() => {
@@ -23,10 +25,11 @@ export default function ProduitsPage() {
         if (!p.nom.toLowerCase().includes(q) && !p.isin.toLowerCase().includes(q)) return false;
       }
       if (typeFilter && p.type !== typeFilter) return false;
+      if (statusFilter && p.status !== statusFilter) return false;
       if (sriFilter !== null && p.sri !== sriFilter) return false;
       return true;
     });
-  }, [search, typeFilter, sriFilter]);
+  }, [search, typeFilter, statusFilter, sriFilter]);
 
   return (
     <div>
@@ -62,6 +65,31 @@ export default function ProduitsPage() {
             <option key={k} value={k}>{v}</option>
           ))}
         </select>
+        {/* Status filter pills */}
+        <div className="flex items-center gap-1">
+          {([
+            { value: '' as StatusFilter, label: 'Tous' },
+            { value: 'ACTIF' as StatusFilter, label: 'Actif' },
+            { value: 'FERME' as StatusFilter, label: 'Ferme' },
+          ]).map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => setStatusFilter(opt.value)}
+              className={cn(
+                'h-8 px-3 rounded-full text-[12px] font-semibold font-body transition-all',
+                statusFilter === opt.value
+                  ? opt.value === 'ACTIF'
+                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400'
+                    : opt.value === 'FERME'
+                      ? 'bg-gray-200 text-gray-700 dark:bg-gray-700/40 dark:text-gray-300'
+                      : 'bg-violet text-white shadow-sm'
+                  : 'bg-surface-2 dark:bg-white/5 text-ink-2 dark:text-ink-4 hover:bg-surface-3 dark:hover:bg-white/10'
+              )}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
         <div className="flex items-center gap-1">
           <span className="text-[12px] font-body mr-1 text-ink-3 dark:text-ink-4">SRI :</span>
           {[null, 1, 2, 3, 4, 5, 6, 7].map((n) => (
@@ -123,11 +151,21 @@ export default function ProduitsPage() {
 
                 {/* Name */}
                 <div>
-                  <p className="text-[14px] font-semibold font-body leading-snug text-ink dark:text-white group-hover:opacity-80 transition-opacity">
-                    {p.nom}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-[14px] font-semibold font-body leading-snug text-ink dark:text-white group-hover:opacity-80 transition-opacity">
+                      {p.nom}
+                    </p>
+                    <span className={cn(
+                      'inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold font-body shrink-0',
+                      p.status === 'ACTIF'
+                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400'
+                        : 'bg-gray-100 text-gray-500 dark:bg-gray-700/40 dark:text-gray-400'
+                    )}>
+                      {p.status === 'ACTIF' ? 'Actif' : 'Ferme'}
+                    </span>
+                  </div>
                   <p className="text-[11px] font-body mt-0.5 text-ink-3 dark:text-ink-4">
-                    {p.emetteur} · {p.sousJacent}
+                    {p.isin} · {p.emetteur}
                   </p>
                 </div>
 

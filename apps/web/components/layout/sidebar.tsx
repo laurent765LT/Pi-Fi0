@@ -24,6 +24,7 @@ import {
   ChevronUp,
   X,
   Radio,
+  Brain,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useAuthStore } from '@/stores/auth-store';
@@ -42,6 +43,7 @@ const mainNav = [
   { href: '/products', label: 'Produits', icon: Package, shortcut: '\u2318P' },
   { href: '/evenements', label: '\u00c9v\u00e9nements', icon: Calendar, shortcut: '\u2318E' },
   { href: '/portfolio', label: 'Portfolio', icon: Briefcase, shortcut: '\u2318O' },
+  { href: '/portfolio/agent', label: 'Agent IA', icon: Brain },
   { href: '/commissions', label: 'Commissions', icon: Wallet, shortcut: '\u2318K' },
 ];
 

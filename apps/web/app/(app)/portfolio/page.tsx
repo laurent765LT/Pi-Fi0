@@ -1302,6 +1302,20 @@ export default function PortfolioPage() {
           <Download size={12} />
           Exporter
         </button>
+        <Link
+          href="/portfolio/agent"
+          className={cn(
+            'h-8 px-3.5 rounded-lg border',
+            'bg-gradient-to-r from-teal to-[#00D4AA] border-teal/30',
+            'text-white text-[11px] font-semibold font-body flex items-center gap-1.5',
+            'shadow-sm shadow-teal/15 hover:shadow-md hover:shadow-teal/25',
+            'hover:brightness-110 active:brightness-95',
+            'transition-all duration-150',
+          )}
+        >
+          <Brain size={12} />
+          Agent IA
+        </Link>
       </PageHeader>
 
       {/* ── KPI Cards ──────────────────────────────────────────────── */}

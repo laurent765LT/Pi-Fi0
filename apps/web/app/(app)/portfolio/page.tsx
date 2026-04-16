@@ -1543,7 +1543,7 @@ export default function PortfolioPage() {
 
               {/* Desktop Table */}
               <div className="hidden md:block overflow-x-auto">
-                <table className="w-full text-[12px] font-body">
+                <table className="w-full text-[12px] font-body" aria-label="Tableau du portfolio">
                   <thead>
                     <tr className="border-b border-border/50 dark:border-white/8 bg-gradient-to-r from-[#F8F6FF]/50 to-[#F0ECFF]/20 dark:from-white/[0.015] dark:to-transparent">
                       <PremiumTh className="text-left" sortable sortKey="name" activeSort={sortCol} activeSortDir={sortDir} onSort={handleSort}>Produit</PremiumTh>
@@ -1889,7 +1889,7 @@ export default function PortfolioPage() {
 
           <div className="bg-white/90 dark:bg-white/[0.04] backdrop-blur-sm rounded-xl border border-border/50 dark:border-white/8 ring-1 ring-black/[0.03] dark:ring-white/[0.04] overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
-              <table className="w-full text-[12px] font-body">
+              <table className="w-full text-[12px] font-body" aria-label="Exposition par sous-jacent">
                 <thead>
                   <tr className="border-b border-border/50 dark:border-white/8 bg-gradient-to-r from-[#F8F6FF]/50 to-[#F0ECFF]/20 dark:from-white/[0.015] dark:to-transparent">
                     <PremiumTh className="text-left">Sous-jacent</PremiumTh>
@@ -1999,7 +1999,7 @@ export default function PortfolioPage() {
             </button>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-[12px] font-body">
+            <table className="w-full text-[12px] font-body" aria-label="Historique des transactions">
               <thead>
                 <tr className="border-b border-border/50 dark:border-white/8 bg-gradient-to-r from-[#F8F6FF]/50 to-[#F0ECFF]/20 dark:from-white/[0.015] dark:to-transparent">
                   <PremiumTh className="text-left">Produit</PremiumTh>
@@ -2545,7 +2545,7 @@ function StressTestModal({ onClose, commitments, products }: ModalProps) {
                       </h3>
                     </div>
                     <div className="overflow-x-auto">
-                      <table className="w-full text-[11px] font-body">
+                      <table className="w-full text-[11px] font-body" aria-label="Comparaison des scenarios">
                         <thead>
                           <tr className="border-b border-border/50 dark:border-white/8">
                             <th className="px-3 py-2.5 text-left text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Scenario</th>
@@ -2625,7 +2625,7 @@ function StressTestModal({ onClose, commitments, products }: ModalProps) {
                       Impact par position — comparaison
                     </h3>
                     <div className="rounded-xl border border-border/50 dark:border-white/8 overflow-hidden overflow-x-auto">
-                      <table className="w-full text-[11px] font-body">
+                      <table className="w-full text-[11px] font-body" aria-label="Impact par position">
                         <thead>
                           <tr className="border-b border-border/50 dark:border-white/8 bg-[#F8F6FF]/50 dark:bg-white/[0.02]">
                             <th className="px-3 py-2 text-left text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold sticky left-0 bg-[#F8F6FF]/90 dark:bg-[#1A0A3E]">Produit</th>
@@ -2726,7 +2726,7 @@ function StressTestModal({ onClose, commitments, products }: ModalProps) {
                             Impact par position
                           </h3>
                           <div className="rounded-xl border border-border/50 dark:border-white/8 overflow-hidden">
-                            <table className="w-full text-[11px] font-body">
+                            <table className="w-full text-[11px] font-body" aria-label="Detail impact par position">
                               <thead>
                                 <tr className="border-b border-border/50 dark:border-white/8 bg-[#F8F6FF]/50 dark:bg-white/[0.02]">
                                   <th className="px-3 py-2 text-left text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Produit</th>

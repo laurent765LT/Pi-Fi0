@@ -75,14 +75,14 @@ function TableSkeleton() {
       {Array.from({ length: 5 }).map((_, i) => (
         <div
           key={i}
-          className="flex items-center gap-4 px-5 py-3.5 border-b border-border last:border-0"
+          className="flex items-center gap-4 px-5 py-3.5 border-b border-border dark:border-white/10 last:border-0"
         >
-          <div className="h-3 w-28 bg-surface-2 rounded font-mono" />
-          <div className="h-3 flex-1 bg-surface-2 rounded" />
-          <div className="h-5 w-20 bg-surface-2 rounded" />
-          <div className="h-5 w-8 bg-surface-2 rounded" />
-          <div className="h-5 w-16 bg-surface-2 rounded" />
-          <div className="h-7 w-20 bg-surface-2 rounded" />
+          <div className="h-3 w-28 bg-surface-2 dark:bg-white/10 rounded font-mono" />
+          <div className="h-3 flex-1 bg-surface-2 dark:bg-white/10 rounded" />
+          <div className="h-5 w-20 bg-surface-2 dark:bg-white/10 rounded" />
+          <div className="h-5 w-8 bg-surface-2 dark:bg-white/10 rounded" />
+          <div className="h-5 w-16 bg-surface-2 dark:bg-white/10 rounded" />
+          <div className="h-7 w-20 bg-surface-2 dark:bg-white/10 rounded" />
         </div>
       ))}
     </div>
@@ -112,7 +112,7 @@ function SortHeader({
       className={cn(
         'px-5 py-3 text-xs uppercase tracking-widest font-semibold cursor-pointer select-none group',
         'transition-colors duration-150 hover:text-violet',
-        active ? 'text-violet' : 'text-ink-3',
+        active ? 'text-violet dark:text-[#C9BCFF]' : 'text-ink-3 dark:text-white/50',
         align === 'center' && 'text-center',
         align === 'right' && 'text-right',
       )}
@@ -122,9 +122,9 @@ function SortHeader({
         {label}
         {active ? (
           sortDir === 'asc' ? (
-            <ArrowUp size={11} className="text-violet" />
+            <ArrowUp size={11} className="text-violet dark:text-[#C9BCFF]" />
           ) : (
-            <ArrowDown size={11} className="text-violet" />
+            <ArrowDown size={11} className="text-violet dark:text-[#C9BCFF]" />
           )
         ) : (
           <ArrowUpDown size={11} className="opacity-0 group-hover:opacity-60 transition-opacity" />
@@ -144,14 +144,14 @@ function IsinCell({ isin }: { isin: string }) {
     setTimeout(() => setCopied(false), 2000);
   };
   return (
-    <span className="inline-flex items-center gap-1.5 font-mono text-xs font-medium text-ink bg-surface-2 px-2 py-0.5 rounded-xs border border-border group/isin">
+    <span className="inline-flex items-center gap-1.5 font-mono text-xs font-medium text-ink dark:text-white bg-surface-2 dark:bg-white/10 px-2 py-0.5 rounded-xs border border-border dark:border-white/10 group/isin">
       {isin}
       <button
         onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleCopy(); }}
         className="opacity-0 group-hover/isin:opacity-100 transition-opacity p-0.5 rounded hover:bg-violet/10"
         title="Copier l'ISIN"
       >
-        {copied ? <Check size={10} className="text-teal" /> : <Copy size={10} className="text-ink-3" />}
+        {copied ? <Check size={10} className="text-teal" /> : <Copy size={10} className="text-ink-3 dark:text-white/50" />}
       </button>
     </span>
   );
@@ -184,7 +184,7 @@ function StatusFilter({
       <span
         className={cn(
           'inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full text-[9px] font-bold',
-          active ? 'bg-white/25 text-white' : 'bg-surface-2 text-ink-3',
+          active ? 'bg-white/25 text-white' : 'bg-surface-2 dark:bg-white/10 text-ink-3 dark:text-white/50',
         )}
       >
         {count}
@@ -276,7 +276,7 @@ export default function AdminProductsPage() {
             <h1 className="font-display text-2xl font-bold leading-tight bg-gradient-to-r from-[#3B1FA8] via-[#1A0A3E] to-[#3B1FA8] bg-clip-text text-transparent dark:from-white dark:via-[#C9BCFF] dark:to-white">
               Gestion des produits
             </h1>
-            <p className="font-body text-sm text-ink-3 mt-0.5">
+            <p className="font-body text-sm text-ink-3 dark:text-white/50 mt-0.5">
               {products.length} produit{products.length !== 1 ? 's' : ''} au catalogue
             </p>
           </div>
@@ -305,12 +305,12 @@ export default function AdminProductsPage() {
             placeholder="Rechercher par nom, ISIN, émetteur…"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            className="w-full rounded-lg bg-white/80 dark:bg-white/5 border border-border/60 font-body text-sm text-ink pl-9 pr-8 h-9 placeholder:text-ink-3 focus:outline-none focus:ring-2 focus:ring-violet/30 focus:border-violet/40 transition-all duration-200"
+            className="w-full rounded-lg bg-white/80 dark:bg-white/5 border border-border/60 dark:border-white/10 font-body text-sm text-ink dark:text-white pl-9 pr-8 h-9 placeholder:text-ink-3 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-violet/30 focus:border-violet/40 transition-all duration-200"
           />
           {search && (
             <button
               onClick={() => { setSearch(''); setPage(1); }}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-ink/5 text-ink-3 hover:text-ink transition-colors"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-ink/5 text-ink-3 dark:text-white/50 hover:text-ink dark:hover:text-white transition-colors"
             >
               <X size={13} />
             </button>
@@ -398,16 +398,16 @@ export default function AdminProductsPage() {
         <div className="bg-white/90 dark:bg-white/5 backdrop-blur-md border border-border/60 rounded-xl overflow-hidden shadow-card">
           {/* Desktop table */}
           <div className="overflow-x-auto hidden md:block">
-            <table className="w-full text-sm font-body min-w-[800px]">
+            <table className="w-full text-sm font-body min-w-[800px]" aria-label="Tableau des produits">
               <thead>
-                <tr className="border-b border-border bg-surface-2/50">
+                <tr className="border-b border-border dark:border-white/10 bg-surface-2/50 dark:bg-white/[0.03]">
                   <SortHeader label="ISIN" col="isin" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
                   <SortHeader label="Nom" col="name" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
                   <SortHeader label="Type" col="payoffType" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} align="center" />
                   <SortHeader label="Coupon" col="couponPct" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} align="center" />
                   <SortHeader label="SRI" col="sri" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} align="center" />
                   <SortHeader label="Statut" col="status" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} align="center" />
-                  <th className="px-5 py-3 text-center text-xs uppercase tracking-widest text-ink-3 font-semibold">
+                  <th className="px-5 py-3 text-center text-xs uppercase tracking-widest text-ink-3 dark:text-white/50 font-semibold">
                     Actions
                   </th>
                 </tr>
@@ -416,7 +416,7 @@ export default function AdminProductsPage() {
                 {paginated.map((product: any) => (
                   <tr
                     key={product.id}
-                    className="border-b border-border/60 last:border-0 hover:bg-violet/[0.04] dark:hover:bg-white/5 transition-colors duration-150 group"
+                    className="border-b border-border/60 dark:border-white/5 last:border-0 hover:bg-violet/[0.04] dark:hover:bg-white/5 transition-colors duration-150 group"
                   >
                     <td className="px-5 py-3.5">
                       <IsinCell isin={product.isin ?? '—'} />
@@ -425,12 +425,12 @@ export default function AdminProductsPage() {
                       <div className="flex flex-col gap-0.5">
                         <Link
                           href={`/products/${product.id}`}
-                          className="font-medium text-ink leading-snug truncate max-w-[240px] hover:text-violet transition-colors"
+                          className="font-medium text-ink dark:text-white leading-snug truncate max-w-[240px] hover:text-violet transition-colors"
                         >
                           {product.name ?? '—'}
                         </Link>
                         {product.issuerName && (
-                          <span className="text-xs text-ink-3">{product.issuerName}</span>
+                          <span className="text-xs text-ink-3 dark:text-white/50">{product.issuerName}</span>
                         )}
                       </div>
                     </td>
@@ -445,7 +445,7 @@ export default function AdminProductsPage() {
                           {product.couponPct.toFixed(1)}%
                         </span>
                       ) : (
-                        <span className="text-ink-3 text-xs">—</span>
+                        <span className="text-ink-3 dark:text-white/40 text-xs">—</span>
                       )}
                     </td>
                     <td className="px-5 py-3.5 text-center">
@@ -458,7 +458,7 @@ export default function AdminProductsPage() {
                           {product.sri}
                         </span>
                       ) : (
-                        <span className="text-ink-3 text-xs">—</span>
+                        <span className="text-ink-3 dark:text-white/40 text-xs">—</span>
                       )}
                     </td>
                     <td className="px-5 py-3.5 text-center">
@@ -516,19 +516,19 @@ export default function AdminProductsPage() {
           </div>
 
           {/* Mobile cards */}
-          <div className="md:hidden divide-y divide-border/60">
+          <div className="md:hidden divide-y divide-border/60 dark:divide-white/5">
             {paginated.map((product: any) => (
-              <div key={product.id} className="p-4 hover:bg-violet/[0.02] transition-colors">
+              <div key={product.id} className="p-4 hover:bg-violet/[0.02] dark:hover:bg-white/5 transition-colors">
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <div className="min-w-0">
                     <Link
                       href={`/products/${product.id}`}
-                      className="font-body text-sm font-semibold text-ink hover:text-violet transition-colors block truncate"
+                      className="font-body text-sm font-semibold text-ink dark:text-white hover:text-violet transition-colors block truncate"
                     >
                       {product.name ?? '—'}
                     </Link>
                     {product.issuerName && (
-                      <p className="text-xs text-ink-3 mt-0.5">{product.issuerName}</p>
+                      <p className="text-xs text-ink-3 dark:text-white/50 mt-0.5">{product.issuerName}</p>
                     )}
                   </div>
                   <Badge variant={STATUS_VARIANT[product.status] ?? 'muted'} className="shrink-0">
@@ -536,7 +536,7 @@ export default function AdminProductsPage() {
                   </Badge>
                 </div>
                 <div className="flex items-center gap-3 flex-wrap">
-                  <span className="font-mono text-[10px] text-ink-3 bg-surface-2 px-1.5 py-0.5 rounded border border-border">
+                  <span className="font-mono text-[10px] text-ink-3 dark:text-white/50 bg-surface-2 dark:bg-white/10 px-1.5 py-0.5 rounded border border-border dark:border-white/10">
                     {product.isin ?? '—'}
                   </span>
                   <Badge variant={PAYOFF_VARIANT[product.payoffType] ?? 'muted'}>
@@ -573,8 +573,8 @@ export default function AdminProductsPage() {
           </div>
 
           {/* Pagination footer */}
-          <div className="px-5 py-3 border-t border-border/60 bg-surface-2/30 flex items-center justify-between gap-4">
-            <span className="font-body text-xs text-ink-3">
+          <div className="px-5 py-3 border-t border-border/60 dark:border-white/10 bg-surface-2/30 dark:bg-white/[0.03] flex items-center justify-between gap-4">
+            <span className="font-body text-xs text-ink-3 dark:text-white/50">
               <span className="font-mono">{(page - 1) * perPage + 1}</span>–<span className="font-mono">{Math.min(page * perPage, processed.length)}</span> sur{' '}
               <span className="font-mono font-semibold">{processed.length}</span> produit{processed.length !== 1 ? 's' : ''}
               {search ? ` pour «\u00A0${search}\u00A0»` : ''}

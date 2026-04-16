@@ -239,16 +239,16 @@ function TableSkeleton() {
       {Array.from({ length: 5 }).map((_, i) => (
         <div
           key={i}
-          className="flex items-center gap-4 px-5 py-3.5 border-b border-border last:border-0"
+          className="flex items-center gap-4 px-5 py-3.5 border-b border-border dark:border-white/10 last:border-0"
         >
-          <div className="h-8 w-8 bg-surface-2 rounded-full" />
-          <div className="h-3 flex-1 bg-surface-2 rounded" />
-          <div className="h-3 w-32 bg-surface-2 rounded" />
-          <div className="h-5 w-16 bg-surface-2 rounded" />
-          <div className="h-5 w-16 bg-surface-2 rounded" />
-          <div className="h-3 w-24 bg-surface-2 rounded" />
-          <div className="h-3 w-20 bg-surface-2 rounded" />
-          <div className="h-7 w-20 bg-surface-2 rounded" />
+          <div className="h-8 w-8 bg-surface-2 dark:bg-white/10 rounded-full" />
+          <div className="h-3 flex-1 bg-surface-2 dark:bg-white/10 rounded" />
+          <div className="h-3 w-32 bg-surface-2 dark:bg-white/10 rounded" />
+          <div className="h-5 w-16 bg-surface-2 dark:bg-white/10 rounded" />
+          <div className="h-5 w-16 bg-surface-2 dark:bg-white/10 rounded" />
+          <div className="h-3 w-24 bg-surface-2 dark:bg-white/10 rounded" />
+          <div className="h-3 w-20 bg-surface-2 dark:bg-white/10 rounded" />
+          <div className="h-7 w-20 bg-surface-2 dark:bg-white/10 rounded" />
         </div>
       ))}
     </div>
@@ -278,7 +278,7 @@ function SortHeader({
       className={cn(
         'px-5 py-3 text-xs uppercase tracking-widest font-semibold cursor-pointer select-none group',
         'transition-colors duration-150 hover:text-violet',
-        active ? 'text-violet' : 'text-ink-3',
+        active ? 'text-violet dark:text-[#C9BCFF]' : 'text-ink-3 dark:text-white/50',
         align === 'center' && 'text-center',
         align === 'right' && 'text-right',
       )}
@@ -288,9 +288,9 @@ function SortHeader({
         {label}
         {active ? (
           sortDir === 'asc' ? (
-            <ArrowUp size={11} className="text-violet" />
+            <ArrowUp size={11} className="text-violet dark:text-[#C9BCFF]" />
           ) : (
-            <ArrowDown size={11} className="text-violet" />
+            <ArrowDown size={11} className="text-violet dark:text-[#C9BCFF]" />
           )
         ) : (
           <ArrowUpDown size={11} className="opacity-0 group-hover:opacity-60 transition-opacity" />
@@ -327,7 +327,7 @@ function RoleFilterPill({
       <span
         className={cn(
           'inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full text-[9px] font-bold',
-          active ? 'bg-white/25 text-white' : 'bg-surface-2 text-ink-3',
+          active ? 'bg-white/25 text-white' : 'bg-surface-2 dark:bg-white/10 text-ink-3 dark:text-white/50',
         )}
       >
         {count}
@@ -341,7 +341,7 @@ function RoleFilterPill({
 function UserAvatar({ firstName, lastName }: { firstName: string; lastName: string }) {
   const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
   return (
-    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#3B1FA8]/20 to-[#1E3A5F]/20 border border-border/60 flex items-center justify-center shrink-0">
+    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#3B1FA8]/20 to-[#1E3A5F]/20 border border-border/60 dark:border-white/10 flex items-center justify-center shrink-0">
       <span className="font-display text-[10px] font-bold text-violet">{initials}</span>
     </div>
   );
@@ -478,7 +478,7 @@ export default function AdminUsersPage() {
             <h1 className="font-display text-2xl font-bold leading-tight bg-gradient-to-r from-[#3B1FA8] via-[#1A0A3E] to-[#3B1FA8] bg-clip-text text-transparent dark:from-white dark:via-[#C9BCFF] dark:to-white">
               Gestion des utilisateurs
             </h1>
-            <p className="font-body text-sm text-ink-3 mt-0.5">
+            <p className="font-body text-sm text-ink-3 dark:text-white/50 mt-0.5">
               {users.length} utilisateur{users.length !== 1 ? 's' : ''} enregistre{users.length !== 1 ? 's' : ''}
             </p>
           </div>
@@ -507,12 +507,12 @@ export default function AdminUsersPage() {
             placeholder="Rechercher par nom, email..."
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            className="w-full rounded-lg bg-white/80 dark:bg-white/5 border border-border/60 font-body text-sm text-ink pl-9 pr-8 h-9 placeholder:text-ink-3 focus:outline-none focus:ring-2 focus:ring-violet/30 focus:border-violet/40 transition-all duration-200"
+            className="w-full rounded-lg bg-white/80 dark:bg-white/5 border border-border/60 dark:border-white/10 font-body text-sm text-ink dark:text-white pl-9 pr-8 h-9 placeholder:text-ink-3 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-violet/30 focus:border-violet/40 transition-all duration-200"
           />
           {search && (
             <button
               onClick={() => { setSearch(''); setPage(1); }}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-ink/5 text-ink-3 hover:text-ink transition-colors"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-ink/5 text-ink-3 dark:text-white/50 hover:text-ink dark:hover:text-white transition-colors"
             >
               <X size={13} />
             </button>
@@ -595,16 +595,16 @@ export default function AdminUsersPage() {
         <div className="bg-white/90 dark:bg-white/5 backdrop-blur-md border border-border/60 rounded-xl overflow-hidden shadow-card">
           {/* Desktop table */}
           <div className="overflow-x-auto hidden md:block">
-            <table className="w-full text-sm font-body min-w-[900px]">
+            <table className="w-full text-sm font-body min-w-[900px]" aria-label="Tableau des utilisateurs">
               <thead>
-                <tr className="border-b border-border bg-surface-2/50">
+                <tr className="border-b border-border dark:border-white/10 bg-surface-2/50 dark:bg-white/[0.03]">
                   <SortHeader label="Nom" col="lastName" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
                   <SortHeader label="Email" col="email" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
                   <SortHeader label="Role" col="role" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} align="center" />
                   <SortHeader label="Statut" col="status" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} align="center" />
                   <SortHeader label="Societe" col="company" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
                   <SortHeader label="Derniere connexion" col="lastLogin" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
-                  <th className="px-5 py-3 text-center text-xs uppercase tracking-widest text-ink-3 font-semibold">
+                  <th className="px-5 py-3 text-center text-xs uppercase tracking-widest text-ink-3 dark:text-white/50 font-semibold">
                     Actions
                   </th>
                 </tr>
@@ -615,17 +615,17 @@ export default function AdminUsersPage() {
                   return (
                     <tr
                       key={user.id}
-                      className="border-b border-border/60 last:border-0 hover:bg-violet/[0.04] dark:hover:bg-white/5 transition-colors duration-150 group"
+                      className="border-b border-border/60 dark:border-white/5 last:border-0 hover:bg-violet/[0.04] dark:hover:bg-white/5 transition-colors duration-150 group"
                     >
                       {/* Name + avatar */}
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-3">
                           <UserAvatar firstName={user.firstName} lastName={user.lastName} />
                           <div className="flex flex-col gap-0.5 min-w-0">
-                            <span className="font-medium text-ink leading-snug truncate max-w-[200px]">
+                            <span className="font-medium text-ink dark:text-white leading-snug truncate max-w-[200px]">
                               {user.lastName} {user.firstName}
                             </span>
-                            <span className="text-[10px] text-ink-3 font-body">
+                            <span className="text-[10px] text-ink-3 dark:text-white/40 font-body">
                               Depuis {formatDate(user.createdAt)}
                             </span>
                           </div>
@@ -633,7 +633,7 @@ export default function AdminUsersPage() {
                       </td>
                       {/* Email */}
                       <td className="px-5 py-3.5">
-                        <span className="text-ink-3 text-xs font-body truncate max-w-[220px] block">
+                        <span className="text-ink-3 dark:text-white/50 text-xs font-body truncate max-w-[220px] block">
                           {user.email}
                         </span>
                       </td>
@@ -651,11 +651,11 @@ export default function AdminUsersPage() {
                       </td>
                       {/* Company */}
                       <td className="px-5 py-3.5">
-                        <span className="font-body text-xs text-ink">{user.company}</span>
+                        <span className="font-body text-xs text-ink dark:text-white">{user.company}</span>
                       </td>
                       {/* Last login */}
                       <td className="px-5 py-3.5">
-                        <span className="font-body text-xs text-ink-3">
+                        <span className="font-body text-xs text-ink-3 dark:text-white/40">
                           {formatDateTime(user.lastLogin)}
                         </span>
                       </td>
@@ -696,19 +696,19 @@ export default function AdminUsersPage() {
           </div>
 
           {/* Mobile cards */}
-          <div className="md:hidden divide-y divide-border/60">
+          <div className="md:hidden divide-y divide-border/60 dark:divide-white/5">
             {paginated.map((user) => {
               const status = getStatus(user);
               return (
-                <div key={user.id} className="p-4 hover:bg-violet/[0.02] transition-colors">
+                <div key={user.id} className="p-4 hover:bg-violet/[0.02] dark:hover:bg-white/5 transition-colors">
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div className="flex items-center gap-2.5 min-w-0">
                       <UserAvatar firstName={user.firstName} lastName={user.lastName} />
                       <div className="min-w-0">
-                        <span className="font-body text-sm font-semibold text-ink block truncate">
+                        <span className="font-body text-sm font-semibold text-ink dark:text-white block truncate">
                           {user.lastName} {user.firstName}
                         </span>
-                        <span className="text-xs text-ink-3 block truncate">{user.email}</span>
+                        <span className="text-xs text-ink-3 dark:text-white/50 block truncate">{user.email}</span>
                       </div>
                     </div>
                     <Badge variant={STATUS_VARIANT[status]} className="shrink-0">
@@ -719,8 +719,8 @@ export default function AdminUsersPage() {
                     <Badge variant={ROLE_VARIANT[user.role]}>
                       {ROLE_LABELS[user.role]}
                     </Badge>
-                    <span className="font-body text-[10px] text-ink-3">{user.company}</span>
-                    <span className="font-body text-[10px] text-ink-3">
+                    <span className="font-body text-[10px] text-ink-3 dark:text-white/40">{user.company}</span>
+                    <span className="font-body text-[10px] text-ink-3 dark:text-white/40">
                       {formatDateTime(user.lastLogin)}
                     </span>
                   </div>
@@ -756,8 +756,8 @@ export default function AdminUsersPage() {
           </div>
 
           {/* Pagination footer */}
-          <div className="px-5 py-3 border-t border-border/60 bg-surface-2/30 flex items-center justify-between gap-4">
-            <span className="font-body text-xs text-ink-3">
+          <div className="px-5 py-3 border-t border-border/60 dark:border-white/10 bg-surface-2/30 dark:bg-white/[0.03] flex items-center justify-between gap-4">
+            <span className="font-body text-xs text-ink-3 dark:text-white/50">
               <span className="font-mono">{(page - 1) * perPage + 1}</span>
               {'\u2013'}
               <span className="font-mono">{Math.min(page * perPage, processed.length)}</span> sur{' '}

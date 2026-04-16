@@ -100,7 +100,7 @@ function FieldLabel({
   return (
     <label
       htmlFor={htmlFor}
-      className="font-body text-xs font-bold uppercase tracking-wide text-ink-2 flex items-center gap-1"
+      className="font-body text-xs font-bold uppercase tracking-wide text-ink-2 dark:text-white/80 flex items-center gap-1"
     >
       {children}
       {required && <span className="text-[#E8334A]">*</span>}
@@ -116,28 +116,28 @@ function EditSkeleton() {
   return (
     <main className="w-full animate-fade-in">
       <div className="inline-flex items-center gap-1.5 mb-4">
-        <div className="w-20 h-4 rounded bg-surface-2 animate-pulse" />
+        <div className="w-20 h-4 rounded bg-surface-2 dark:bg-white/10 animate-pulse" />
       </div>
       <div className="flex items-center gap-3 mb-2">
-        <div className="w-10 h-10 rounded-xl bg-surface-2 animate-pulse" />
+        <div className="w-10 h-10 rounded-xl bg-surface-2 dark:bg-white/10 animate-pulse" />
         <div>
-          <div className="w-56 h-7 rounded bg-surface-2 animate-pulse" />
-          <div className="w-40 h-4 rounded bg-surface-2 animate-pulse mt-1.5" />
+          <div className="w-56 h-7 rounded bg-surface-2 dark:bg-white/10 animate-pulse" />
+          <div className="w-40 h-4 rounded bg-surface-2 dark:bg-white/10 animate-pulse mt-1.5" />
         </div>
       </div>
-      <div className="h-[2px] rounded-full mb-8 bg-surface-2 animate-pulse" />
+      <div className="h-[2px] rounded-full mb-8 bg-surface-2 dark:bg-white/10 animate-pulse" />
       <div className="space-y-6">
         {[1, 2, 3].map((i) => (
           <div
             key={i}
             className="bg-white/90 dark:bg-white/5 border border-border/60 rounded-xl p-6"
           >
-            <div className="w-48 h-5 rounded bg-surface-2 animate-pulse mb-5" />
+            <div className="w-48 h-5 rounded bg-surface-2 dark:bg-white/10 animate-pulse mb-5" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {[1, 2, 3, 4].map((j) => (
                 <div key={j}>
-                  <div className="w-24 h-3 rounded bg-surface-2 animate-pulse mb-2" />
-                  <div className="w-full h-9 rounded-md bg-surface-2 animate-pulse" />
+                  <div className="w-24 h-3 rounded bg-surface-2 dark:bg-white/10 animate-pulse mb-2" />
+                  <div className="w-full h-9 rounded-md bg-surface-2 dark:bg-white/10 animate-pulse" />
                 </div>
               ))}
             </div>
@@ -157,7 +157,7 @@ function ProductNotFound() {
     <main className="w-full animate-fade-in">
       <Link
         href="/admin/products"
-        className="inline-flex items-center gap-1.5 font-body text-xs font-semibold text-ink-3 hover:text-[#3B1FA8] transition-colors mb-4"
+        className="inline-flex items-center gap-1.5 font-body text-xs font-semibold text-ink-3 dark:text-white/50 hover:text-[#3B1FA8] dark:hover:text-[#C9BCFF] transition-colors mb-4"
       >
         <ChevronLeft size={14} />
         Retour aux produits
@@ -170,7 +170,7 @@ function ProductNotFound() {
         <h1 className="font-display text-xl font-bold text-ink dark:text-white mb-2">
           Produit introuvable
         </h1>
-        <p className="font-body text-sm text-ink-3 mb-6 text-center max-w-md">
+        <p className="font-body text-sm text-ink-3 dark:text-white/50 mb-6 text-center max-w-md">
           Le produit demande n&apos;existe pas ou a ete supprime.
           Verifiez l&apos;identifiant et reessayez.
         </p>
@@ -308,7 +308,7 @@ export default function AdminEditProductPage({
       {/* -- Back link --------------------------------------------------- */}
       <Link
         href="/admin/products"
-        className="inline-flex items-center gap-1.5 font-body text-xs font-semibold text-ink-3 hover:text-[#3B1FA8] transition-colors mb-4"
+        className="inline-flex items-center gap-1.5 font-body text-xs font-semibold text-ink-3 dark:text-white/50 hover:text-[#3B1FA8] dark:hover:text-[#C9BCFF] transition-colors mb-4"
       >
         <ChevronLeft size={14} />
         Retour aux produits
@@ -324,11 +324,11 @@ export default function AdminEditProductPage({
             Modifier {product.name}
           </h1>
           <div className="flex items-center gap-2 mt-0.5">
-            <p className="font-body text-sm text-ink-3">
+            <p className="font-body text-sm text-ink-3 dark:text-white/50">
               Modifier les informations du produit
             </p>
             {product.isin && (
-              <span className="font-mono text-xs font-medium bg-surface-2 px-2 py-0.5 rounded border border-border text-ink-3">
+              <span className="font-mono text-xs font-medium bg-surface-2 dark:bg-white/10 px-2 py-0.5 rounded border border-border dark:border-white/10 text-ink-3 dark:text-white/50">
                 {product.isin}
               </span>
             )}
@@ -349,12 +349,12 @@ export default function AdminEditProductPage({
         {/* Card 1: Informations generales                                */}
         {/* ============================================================= */}
         <div className="bg-white/90 dark:bg-white/5 backdrop-blur-md border border-border/60 rounded-xl overflow-hidden shadow-card">
-          <div className="px-6 py-4 border-b border-border/60 bg-surface-2/30">
+          <div className="px-6 py-4 border-b border-border/60 dark:border-white/10 bg-surface-2/30 dark:bg-white/[0.03]">
             <h2 className="font-display text-base font-bold text-ink dark:text-white flex items-center gap-2">
               <Info size={16} className="text-[#3B1FA8]" />
               Informations generales
             </h2>
-            <p className="font-body text-xs text-ink-3 mt-1">
+            <p className="font-body text-xs text-ink-3 dark:text-white/50 mt-1">
               Identite et classification du produit structure.
             </p>
           </div>
@@ -460,12 +460,12 @@ export default function AdminEditProductPage({
         {/* Card 2: Parametres financiers                                 */}
         {/* ============================================================= */}
         <div className="bg-white/90 dark:bg-white/5 backdrop-blur-md border border-border/60 rounded-xl overflow-hidden shadow-card">
-          <div className="px-6 py-4 border-b border-border/60 bg-surface-2/30">
+          <div className="px-6 py-4 border-b border-border/60 dark:border-white/10 bg-surface-2/30 dark:bg-white/[0.03]">
             <h2 className="font-display text-base font-bold text-ink dark:text-white flex items-center gap-2">
               <Percent size={16} className="text-[#00B894]" />
               Parametres financiers
             </h2>
-            <p className="font-body text-xs text-ink-3 mt-1">
+            <p className="font-body text-xs text-ink-3 dark:text-white/50 mt-1">
               Coupon, barrieres et maturite du produit.
             </p>
           </div>
@@ -552,12 +552,12 @@ export default function AdminEditProductPage({
         {/* Card 3: Statut & Gestion                                      */}
         {/* ============================================================= */}
         <div className="bg-white/90 dark:bg-white/5 backdrop-blur-md border border-border/60 rounded-xl overflow-hidden shadow-card">
-          <div className="px-6 py-4 border-b border-border/60 bg-surface-2/30">
+          <div className="px-6 py-4 border-b border-border/60 dark:border-white/10 bg-surface-2/30 dark:bg-white/[0.03]">
             <h2 className="font-display text-base font-bold text-ink dark:text-white flex items-center gap-2">
               <Settings2 size={16} className="text-[#D4A017]" />
               Statut & Gestion
             </h2>
-            <p className="font-body text-xs text-ink-3 mt-1">
+            <p className="font-body text-xs text-ink-3 dark:text-white/50 mt-1">
               Cycle de vie du produit.
             </p>
           </div>

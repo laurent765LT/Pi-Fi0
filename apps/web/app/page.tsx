@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Calculator, Sparkles, Building2, ArrowRight, ChevronDown, Zap, Shield, BarChart3, Globe } from 'lucide-react';
+import { Calculator, Sparkles, Building2, ArrowRight, ChevronDown, Zap, Shield, BarChart3, Globe, UserPlus, Search, TrendingUp, Quote, Lock, Server, CheckCircle, Mail, Linkedin } from 'lucide-react';
 
 // ─── Animated counter hook (inline for landing — no auth-gated imports) ──────
 function useCounter(target: number, duration = 1800, enabled = true) {
@@ -138,7 +138,7 @@ export default function Home() {
             >
               {/* CTA shimmer effect */}
               <span className="absolute inset-0 -translate-x-full animate-[shimmer_3s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-violet/10 to-transparent" />
-              <span className="relative">Accéder à la plateforme</span>
+              <span className="relative">Demander une d&eacute;mo</span>
               <ArrowRight className="relative w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </Link>
             <button
@@ -188,16 +188,86 @@ export default function Home() {
       {/* ─── Social Proof ──────────────────────────────────────────────────── */}
       <IssuersSection />
 
+      {/* ─── How It Works ─────────────────────────────────────────────────── */}
+      <HowItWorksSection />
+
+      {/* ─── Testimonials ─────────────────────────────────────────────────── */}
+      <TestimonialsSection />
+
+      {/* ─── Compliance / Trust ────────────────────────────────────────────── */}
+      <ComplianceSection />
+
       {/* ─── CTA Footer ───────────────────────────────────────────────────── */}
       <CtaSection />
 
-      {/* ─── Footer Bar ────────────────────────────────────────────────────── */}
-      <footer className="bg-ink border-t border-white/5 py-6 px-6">
-        <div className="max-w-container mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <span className="font-display text-sm font-bold text-white/60">Strick&apos;in</span>
-          <span className="text-xs text-white/30">
-            &copy; {new Date().getFullYear()} Strick&apos;in. Tous droits réservés.
-          </span>
+      {/* ─── Enhanced Footer ──────────────────────────────────────────────── */}
+      <footer className="bg-ink border-t border-white/5 pt-16 pb-8 px-6">
+        <div className="max-w-container mx-auto">
+          {/* Footer columns */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-14">
+            {/* Produit */}
+            <div>
+              <h4 className="font-display text-sm font-bold text-white mb-4">Produit</h4>
+              <ul className="space-y-2.5">
+                {['Catalogue', 'Pricing', 'RFQ', 'Research'].map((item) => (
+                  <li key={item}>
+                    <a href="#" className="text-sm text-white/40 hover:text-white/80 transition-colors duration-200">{item}</a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            {/* Entreprise */}
+            <div>
+              <h4 className="font-display text-sm font-bold text-white mb-4">Entreprise</h4>
+              <ul className="space-y-2.5">
+                {['A propos', 'Blog', 'Carrieres'].map((item) => (
+                  <li key={item}>
+                    <a href="#" className="text-sm text-white/40 hover:text-white/80 transition-colors duration-200">{item}</a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            {/* Legal */}
+            <div>
+              <h4 className="font-display text-sm font-bold text-white mb-4">Legal</h4>
+              <ul className="space-y-2.5">
+                {['CGU', 'Politique de confidentialite', 'Mentions legales'].map((item) => (
+                  <li key={item}>
+                    <a href="#" className="text-sm text-white/40 hover:text-white/80 transition-colors duration-200">{item}</a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            {/* Contact */}
+            <div>
+              <h4 className="font-display text-sm font-bold text-white mb-4">Contact</h4>
+              <ul className="space-y-2.5">
+                <li>
+                  <a href="mailto:contact@strickin.com" className="inline-flex items-center gap-2 text-sm text-white/40 hover:text-white/80 transition-colors duration-200">
+                    <Mail className="w-3.5 h-3.5" />
+                    contact@strickin.com
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="inline-flex items-center gap-2 text-sm text-white/40 hover:text-white/80 transition-colors duration-200">
+                    <Linkedin className="w-3.5 h-3.5" />
+                    LinkedIn
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Bottom bar */}
+          <div className="border-t border-white/5 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <span className="font-display text-sm font-bold text-white/60">Strick&apos;in</span>
+            <span className="text-xs text-white/30">
+              &copy; {new Date().getFullYear()} Strick&apos;in. Tous droits r&eacute;serv&eacute;s.
+            </span>
+            <span className="text-xs text-white/30">
+              Fait avec passion &agrave; Paris
+            </span>
+          </div>
         </div>
       </footer>
     </div>
@@ -328,17 +398,220 @@ function CtaSection() {
           votre distribution ?
         </h2>
         <p className="text-white/50 mb-10 leading-relaxed">
-          Rejoignez les CGP et compagnies qui utilisent déjà Strick&apos;in pour
-          sourcer, pricer et souscrire leurs produits structurés.
+          Rejoignez les CGP et compagnies qui utilisent d&eacute;j&agrave; Strick&apos;in pour
+          sourcer, pricer et souscrire leurs produits structur&eacute;s.
         </p>
         <Link
           href="/login"
           className="group relative inline-flex items-center gap-2.5 px-8 py-3.5 rounded-xl bg-white text-violet font-display font-bold text-sm tracking-wide shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-200 overflow-hidden"
         >
           <span className="absolute inset-0 -translate-x-full animate-[shimmer_3s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-violet/10 to-transparent" />
-          <span className="relative">Commencer maintenant</span>
+          <span className="relative">Essai gratuit 30 jours</span>
           <ArrowRight className="relative w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
         </Link>
+      </div>
+    </section>
+  );
+}
+
+// ─── How It Works Section ─────────────────────────────────────────────────
+
+const howItWorksSteps = [
+  {
+    num: 1,
+    icon: UserPlus,
+    title: 'Connectez-vous',
+    description:
+      'Creez votre compte CGP et completez votre onboarding reglementaire en quelques minutes.',
+  },
+  {
+    num: 2,
+    icon: Search,
+    title: 'Sourcez les produits',
+    description:
+      'Parcourez le catalogue, comparez les produits et envoyez des RFQ a 5+ emetteurs simultanement.',
+  },
+  {
+    num: 3,
+    icon: TrendingUp,
+    title: 'Distribuez',
+    description:
+      'Suivez vos engagements, commissions et portfolio en temps reel depuis un tableau de bord unique.',
+  },
+];
+
+function HowItWorksSection() {
+  const { ref, visible } = useScrollReveal<HTMLElement>();
+  return (
+    <section ref={ref} className="py-24 md:py-32 px-6 bg-white">
+      <div className="max-w-container mx-auto">
+        <div className={`text-center mb-16 transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+          <span className="label-section">Processus</span>
+          <h2 className="font-display text-3xl md:text-4xl font-extrabold text-ink mt-4 mb-4">
+            Comment &ccedil;a{' '}
+            <span className="text-gradient">marche</span>
+          </h2>
+          <p className="max-w-xl mx-auto text-ink-3 leading-relaxed">
+            Trois &eacute;tapes simples pour commencer &agrave; distribuer des produits structur&eacute;s.
+          </p>
+        </div>
+
+        <div className="relative grid md:grid-cols-3 gap-8 md:gap-12">
+          {/* Connecting dotted lines (desktop only) */}
+          <div className="hidden md:block absolute top-16 left-[calc(33.33%_-_16px)] right-[calc(33.33%_-_16px)] h-0 border-t-2 border-dashed border-violet/20 pointer-events-none" />
+
+          {howItWorksSteps.map((step, i) => (
+            <div
+              key={step.num}
+              className={`relative flex flex-col items-center text-center transition-all duration-600 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+              style={{ transitionDelay: `${200 + i * 200}ms` }}
+            >
+              {/* Numbered circle */}
+              <div className="relative z-10 w-14 h-14 rounded-full bg-gradient-to-br from-violet to-cobalt flex items-center justify-center shadow-lg shadow-violet/20 mb-6">
+                <span className="font-display text-lg font-extrabold text-white">{step.num}</span>
+              </div>
+
+              {/* Card */}
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-border/50 shadow-card w-full">
+                <div className="w-10 h-10 rounded-xl bg-violet/[0.08] flex items-center justify-center mx-auto mb-4">
+                  <step.icon className="w-5 h-5 text-violet" strokeWidth={2} />
+                </div>
+                <h3 className="font-display text-lg font-bold text-ink mb-2">{step.title}</h3>
+                <p className="text-sm text-ink-3 leading-relaxed">{step.description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Testimonials Section ─────────────────────────────────────────────────
+
+const testimonials = [
+  {
+    quote:
+      "Strick'in a divise par 3 le temps que je passe a sourcer des produits structures. L'interface est claire et les RFQ multi-emetteurs sont un game changer.",
+    name: 'Thomas R.',
+    role: 'CGP independant',
+    company: 'Paris',
+  },
+  {
+    quote:
+      "La plateforme nous donne une visibilite inegalee sur le comportement des distributeurs et le remplissage de nos enveloppes.",
+    name: 'Sophie M.',
+    role: 'Directrice distribution',
+    company: 'Generali',
+  },
+  {
+    quote:
+      "Le pricing engine et les recommandations IA m'aident a trouver les meilleurs produits pour mes clients en quelques clics.",
+    name: 'Marc D.',
+    role: 'Associe',
+    company: 'Cabinet Patrimoine & Conseil',
+  },
+];
+
+function TestimonialsSection() {
+  const { ref, visible } = useScrollReveal<HTMLElement>();
+  return (
+    <section ref={ref} className="py-24 md:py-32 px-6 bg-gradient-to-b from-white to-violet/[0.02]">
+      <div className="max-w-container mx-auto">
+        <div className={`text-center mb-16 transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+          <span className="label-section">T&eacute;moignages</span>
+          <h2 className="font-display text-3xl md:text-4xl font-extrabold text-ink mt-4 mb-4">
+            Ce que disent{' '}
+            <span className="text-gradient">nos utilisateurs</span>
+          </h2>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6">
+          {testimonials.map((t, i) => (
+            <div
+              key={t.name}
+              className={`relative bg-white rounded-2xl p-8 shadow-card border border-border/50 border-l-4 border-l-violet transition-all duration-600 hover:-translate-y-1 hover:shadow-card-hover ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+              style={{ transitionDelay: `${200 + i * 150}ms` }}
+            >
+              <Quote className="w-8 h-8 text-violet/20 mb-4" />
+              <p className="text-sm text-ink-3 leading-relaxed italic mb-6">
+                &ldquo;{t.quote}&rdquo;
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet to-cobalt flex items-center justify-center">
+                  <span className="font-display text-xs font-bold text-white">
+                    {t.name.split(' ').map((n) => n[0]).join('')}
+                  </span>
+                </div>
+                <div>
+                  <p className="font-display text-sm font-bold text-ink">{t.name}</p>
+                  <p className="text-xs text-ink-3">{t.role}, {t.company}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Compliance / Trust Section ───────────────────────────────────────────
+
+const trustBadges = [
+  {
+    icon: Shield,
+    title: 'MIF II / DDA',
+    description: 'Conforme aux directives europeennes sur la distribution.',
+  },
+  {
+    icon: Lock,
+    title: 'RGPD',
+    description: 'Protection des donnees personnelles garantie.',
+  },
+  {
+    icon: Server,
+    title: 'Donnees chiffrees',
+    description: 'Chiffrement AES-256 au repos et TLS 1.3 en transit.',
+  },
+  {
+    icon: CheckCircle,
+    title: 'Heberge en Europe',
+    description: 'Infrastructure cloud souveraine localisee en France.',
+  },
+];
+
+function ComplianceSection() {
+  const { ref, visible } = useScrollReveal<HTMLElement>();
+  return (
+    <section ref={ref} className="py-24 md:py-28 px-6 bg-gradient-to-r from-violet/[0.03] via-cobalt/[0.02] to-violet/[0.03]">
+      <div className="max-w-container mx-auto">
+        <div className={`text-center mb-14 transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+          <span className="label-section">Confiance</span>
+          <h2 className="font-display text-3xl md:text-4xl font-extrabold text-ink mt-4 mb-4">
+            S&eacute;curit&eacute; &amp;{' '}
+            <span className="text-gradient">Conformit&eacute;</span>
+          </h2>
+          <p className="max-w-xl mx-auto text-ink-3 leading-relaxed">
+            Vos donn&eacute;es et celles de vos clients sont prot&eacute;g&eacute;es par les standards les plus exigeants.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          {trustBadges.map((badge, i) => (
+            <div
+              key={badge.title}
+              className={`flex flex-col items-center text-center bg-white rounded-2xl p-6 shadow-card border border-border/50 transition-all duration-600 hover:-translate-y-1 hover:shadow-card-hover ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+              style={{ transitionDelay: `${i * 100}ms` }}
+            >
+              <div className="w-12 h-12 rounded-xl bg-violet/[0.08] flex items-center justify-center mb-4">
+                <badge.icon className="w-6 h-6 text-violet" strokeWidth={1.8} />
+              </div>
+              <h3 className="font-display text-sm font-bold text-ink mb-1.5">{badge.title}</h3>
+              <p className="text-xs text-ink-3 leading-relaxed">{badge.description}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );

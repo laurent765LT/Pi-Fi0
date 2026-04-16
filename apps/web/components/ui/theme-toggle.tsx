@@ -26,6 +26,7 @@ export function ThemeToggle() {
         dark:bg-white/5 dark:text-ink-3 dark:hover:bg-white/10
         transition-all duration-200 select-none"
       title={`Theme: ${labels[theme]}`}
+      aria-label={`Changer le theme, actuellement ${labels[theme]}`}
     >
       <Icon size={12} strokeWidth={2} className="transition-transform duration-200" />
       <span className="uppercase tracking-wider">{labels[theme]}</span>

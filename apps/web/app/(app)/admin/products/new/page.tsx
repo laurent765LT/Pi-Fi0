@@ -203,7 +203,7 @@ function StepIndicator({
                     'font-body text-xs font-semibold uppercase tracking-wide whitespace-nowrap hidden sm:block transition-colors duration-200',
                     isActive && 'text-[#3B1FA8] dark:text-[#C9BCFF]',
                     isCompleted && 'text-[#00B894]',
-                    !isCompleted && !isActive && 'text-ink-3',
+                    !isCompleted && !isActive && 'text-ink-3 dark:text-white/40',
                     isClickable && 'group-hover:text-[#3B1FA8]',
                   )}
                 >
@@ -248,7 +248,7 @@ function FieldLabel({
   return (
     <label
       htmlFor={htmlFor}
-      className="font-body text-xs font-bold uppercase tracking-wide text-ink-2 flex items-center gap-1"
+      className="font-body text-xs font-bold uppercase tracking-wide text-ink-2 dark:text-white/80 flex items-center gap-1"
     >
       {children}
       {required && <span className="text-[#E8334A]">*</span>}
@@ -270,17 +270,17 @@ function SummaryRow({
   accent?: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between py-2.5 border-b border-border/40 last:border-0">
-      <span className="font-body text-xs font-semibold uppercase tracking-wide text-ink-3">
+    <div className="flex items-center justify-between py-2.5 border-b border-border/40 dark:border-white/10 last:border-0">
+      <span className="font-body text-xs font-semibold uppercase tracking-wide text-ink-3 dark:text-white/50">
         {label}
       </span>
       <span
         className={cn(
           'font-body text-sm font-medium text-right',
-          accent ? 'font-mono font-bold text-[#008B6E]' : 'text-ink',
+          accent ? 'font-mono font-bold text-[#008B6E]' : 'text-ink dark:text-white',
         )}
       >
-        {value || <span className="text-ink-3 italic">Non renseigne</span>}
+        {value || <span className="text-ink-3 dark:text-white/40 italic">Non renseigne</span>}
       </span>
     </div>
   );
@@ -416,7 +416,7 @@ export default function AdminNewProductPage() {
       {/* ── Back link ──────────────────────────────────────────────────────── */}
       <Link
         href="/admin/products"
-        className="inline-flex items-center gap-1.5 font-body text-xs font-semibold text-ink-3 hover:text-[#3B1FA8] transition-colors mb-4"
+        className="inline-flex items-center gap-1.5 font-body text-xs font-semibold text-ink-3 dark:text-white/50 hover:text-[#3B1FA8] dark:hover:text-[#C9BCFF] transition-colors mb-4"
       >
         <ChevronLeft size={14} />
         Retour aux produits
@@ -431,7 +431,7 @@ export default function AdminNewProductPage() {
           <h1 className="font-display text-2xl font-bold leading-tight bg-gradient-to-r from-[#3B1FA8] via-[#1A0A3E] to-[#3B1FA8] bg-clip-text text-transparent dark:from-white dark:via-[#C9BCFF] dark:to-white">
             Nouveau produit
           </h1>
-          <p className="font-body text-sm text-ink-3 mt-0.5">
+          <p className="font-body text-sm text-ink-3 dark:text-white/50 mt-0.5">
             Creer un nouveau produit structure pour la distribution
           </p>
         </div>
@@ -452,7 +452,7 @@ export default function AdminNewProductPage() {
       {/* ── Form card ──────────────────────────────────────────────────────── */}
       <div className="bg-white/90 dark:bg-white/5 backdrop-blur-md border border-border/60 rounded-xl overflow-hidden shadow-card">
         {/* Card header with step title */}
-        <div className="px-6 py-4 border-b border-border/60 bg-surface-2/30">
+        <div className="px-6 py-4 border-b border-border/60 dark:border-white/10 bg-surface-2/30 dark:bg-white/[0.03]">
           <h2 className="font-display text-base font-bold text-ink dark:text-white flex items-center gap-2">
             {step === 1 && (
               <>
@@ -479,7 +479,7 @@ export default function AdminNewProductPage() {
               </>
             )}
           </h2>
-          <p className="font-body text-xs text-ink-3 mt-1">
+          <p className="font-body text-xs text-ink-3 dark:text-white/50 mt-1">
             {step === 1 && 'Renseignez les informations de base du produit structure.'}
             {step === 2 && 'Definissez les parametres financiers du produit.'}
             {step === 3 && "Configurez l'enveloppe de distribution."}
@@ -719,7 +719,7 @@ export default function AdminNewProductPage() {
                           'relative flex items-center gap-2.5 p-3 rounded-lg border transition-all duration-200',
                           checked
                             ? 'bg-[#3B1FA8]/5 border-[#3B1FA8]/30 dark:bg-[#3B1FA8]/10'
-                            : 'bg-white dark:bg-white/5 border-border/60 hover:border-[#3B1FA8]/20',
+                            : 'bg-white dark:bg-white/5 border-border/60 dark:border-white/10 hover:border-[#3B1FA8]/20',
                         )}
                       >
                         <Checkbox
@@ -729,7 +729,7 @@ export default function AdminNewProductPage() {
                         <span
                           className={cn(
                             'font-body text-sm font-medium',
-                            checked ? 'text-[#3B1FA8]' : 'text-ink',
+                            checked ? 'text-[#3B1FA8] dark:text-[#C9BCFF]' : 'text-ink dark:text-white',
                           )}
                         >
                           {opt.label}
@@ -763,7 +763,7 @@ export default function AdminNewProductPage() {
                   label="ISIN"
                   value={
                     form.isin ? (
-                      <span className="font-mono text-xs font-medium bg-surface-2 px-2 py-0.5 rounded border border-border">
+                      <span className="font-mono text-xs font-medium bg-surface-2 dark:bg-white/10 px-2 py-0.5 rounded border border-border dark:border-white/10 dark:text-white">
                         {form.isin}
                       </span>
                     ) : null
@@ -869,7 +869,7 @@ export default function AdminNewProductPage() {
                   </div>
                   <div>
                     <div className="py-2.5">
-                      <span className="font-body text-xs font-semibold uppercase tracking-wide text-ink-3 block mb-2">
+                      <span className="font-body text-xs font-semibold uppercase tracking-wide text-ink-3 dark:text-white/50 block mb-2">
                         Assureurs compatibles
                       </span>
                       <div className="flex flex-wrap gap-1.5">
@@ -898,7 +898,7 @@ export default function AdminNewProductPage() {
         </div>
 
         {/* ── Footer navigation ────────────────────────────────────────────── */}
-        <div className="px-6 py-4 border-t border-border/60 bg-surface-2/30 flex items-center justify-between gap-4">
+        <div className="px-6 py-4 border-t border-border/60 dark:border-white/10 bg-surface-2/30 dark:bg-white/[0.03] flex items-center justify-between gap-4">
           <div>
             {step > 1 && (
               <Button variant="outline" size="md" onClick={goPrev}>
@@ -908,7 +908,7 @@ export default function AdminNewProductPage() {
             )}
           </div>
           <div className="flex items-center gap-2">
-            <span className="font-body text-xs text-ink-3 mr-2 hidden sm:block">
+            <span className="font-body text-xs text-ink-3 dark:text-white/50 mr-2 hidden sm:block">
               Etape {step} sur {STEPS.length}
             </span>
             {step < 4 ? (

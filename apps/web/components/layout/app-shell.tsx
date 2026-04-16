@@ -83,7 +83,7 @@ export const AppShell = React.memo(function AppShell({ children }: AppShellProps
       <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />
 
       {/* Mobile top bar with hamburger menu */}
-      <div className="sticky top-0 z-30 flex items-center gap-3 px-4 h-[56px] border-b border-border/40 bg-white/80 dark:bg-ink/80 backdrop-blur-sm md:hidden">
+      <header role="banner" className="sticky top-0 z-30 flex items-center gap-3 px-4 h-[56px] border-b border-border/40 bg-white/80 dark:bg-ink/80 backdrop-blur-sm md:hidden">
         <button
           onClick={() => setSidebarOpen(true)}
           className="p-2 -ml-1 rounded-lg hover:bg-violet-p/50 transition-colors"
@@ -116,7 +116,7 @@ export const AppShell = React.memo(function AppShell({ children }: AppShellProps
         >
           <Search size={18} className="text-ink-3" />
         </button>
-      </div>
+      </header>
 
       {/* Main content — offset by sidebar width on desktop, full width on mobile */}
       <main id="main-content" className="min-h-screen md:pl-[248px]" role="main">

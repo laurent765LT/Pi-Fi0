@@ -136,24 +136,24 @@ export function CommitmentModal({
             <CheckCircle2 size={28} className="text-teal" />
           </div>
           <div className="text-center">
-            <p className="font-display font-bold text-ink text-base mb-1">
+            <p className="font-display font-bold text-ink dark:text-white text-base mb-1">
               Marque d&apos;intérêt enregistrée
             </p>
-            <p className="text-sm text-ink-3 font-body">
+            <p className="text-sm text-ink-3 dark:text-white/60 font-body">
               Votre marque d&apos;intérêt de{' '}
-              <span className="font-semibold text-ink">
+              <span className="font-semibold text-ink dark:text-white">
                 {formatAmount(effectiveAmount!)}
               </span>{' '}
               en{' '}
-              <span className="font-semibold text-ink">
+              <span className="font-semibold text-ink dark:text-white">
                 {CONTRACT_TYPES.find((c) => c.value === contractType)?.label}
               </span>{' '}
               via{' '}
-              <span className="font-semibold text-ink">{insurerEnvelope}</span>{' '}
+              <span className="font-semibold text-ink dark:text-white">{insurerEnvelope}</span>{' '}
               pour{' '}
-              <span className="font-semibold text-ink">{clientCount} client{clientCount > 1 ? 's' : ''}</span>{' '}
+              <span className="font-semibold text-ink dark:text-white">{clientCount} client{clientCount > 1 ? 's' : ''}</span>{' '}
               sur{' '}
-              <span className="font-semibold text-ink">{productName}</span> a
+              <span className="font-semibold text-ink dark:text-white">{productName}</span> a
               bien été transmise.
             </p>
           </div>
@@ -169,8 +169,8 @@ export function CommitmentModal({
             <div className="rounded-md bg-gold-light border border-gold/30 px-3 py-2.5 flex items-start gap-2">
               <AlertTriangle size={14} className="text-gold shrink-0 mt-0.5" />
               <div>
-                <p className="text-xs font-semibold text-ink font-body">Intérêt déjà enregistré</p>
-                <p className="text-[11px] text-ink-3 font-body mt-0.5">
+                <p className="text-xs font-semibold text-ink dark:text-white font-body">Intérêt déjà enregistré</p>
+                <p className="text-[11px] text-ink-3 dark:text-white/50 font-body mt-0.5">
                   Vous avez déjà une marque d&apos;intérêt sur ce produit. Vous pouvez en ajouter une nouvelle si nécessaire.
                 </p>
               </div>
@@ -178,21 +178,21 @@ export function CommitmentModal({
           )}
 
           {/* Product name */}
-          <div className="rounded-md bg-surface-2 px-3 py-2">
-            <p className="text-xs text-ink-3 font-body uppercase tracking-widest mb-0.5">
+          <div className="rounded-md bg-surface-2 dark:bg-white/5 px-3 py-2">
+            <p className="text-xs text-ink-3 dark:text-white/50 font-body uppercase tracking-widest mb-0.5">
               Produit
             </p>
-            <p className="text-sm font-semibold text-ink font-body line-clamp-2">
+            <p className="text-sm font-semibold text-ink dark:text-white font-body line-clamp-2">
               {productName}
             </p>
             {productIsin && (
-              <p className="text-[10px] font-mono text-ink-3 mt-0.5">{productIsin}</p>
+              <p className="text-[10px] font-mono text-ink-3 dark:text-white/40 mt-0.5">{productIsin}</p>
             )}
           </div>
 
           {/* Contract type selection */}
           <div>
-            <p className="text-xs text-ink-3 font-body uppercase tracking-widest mb-2">
+            <p className="text-xs text-ink-3 dark:text-white/50 font-body uppercase tracking-widest mb-2">
               Type de contrat
             </p>
             <div className="grid grid-cols-3 gap-2">
@@ -208,13 +208,13 @@ export function CommitmentModal({
                       'text-center transition-all duration-150',
                       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet focus-visible:ring-offset-1',
                       isSelected
-                        ? 'border-violet bg-violet-pale text-violet'
-                        : 'border-border bg-white text-ink-2 hover:border-violet/50 hover:bg-violet-pale/50',
+                        ? 'border-violet bg-violet-pale dark:bg-violet/10 text-violet dark:text-[#C9BCFF]'
+                        : 'border-border dark:border-white/10 bg-white dark:bg-white/5 text-ink-2 dark:text-white/80 hover:border-violet/50 hover:bg-violet-pale/50',
                     )}
                     aria-pressed={isSelected}
                   >
                     <span className="text-sm font-semibold font-body">{label}</span>
-                    <span className="text-[10px] font-body text-ink-3 mt-0.5">{description}</span>
+                    <span className="text-[10px] font-body text-ink-3 dark:text-white/40 mt-0.5">{description}</span>
                   </button>
                 );
               })}
@@ -223,14 +223,14 @@ export function CommitmentModal({
 
           {/* Insurer envelope */}
           <div>
-            <p className="text-xs text-ink-3 font-body uppercase tracking-widest mb-2">
+            <p className="text-xs text-ink-3 dark:text-white/50 font-body uppercase tracking-widest mb-2">
               Assureur enveloppe
             </p>
             <select
               value={insurerEnvelope}
               onChange={(e) => setInsurerEnvelope(e.target.value)}
               className={cn(
-                'w-full h-9 rounded-md border border-border bg-white px-3 text-sm font-body text-ink',
+                'w-full h-9 rounded-md border border-border dark:border-white/10 bg-white dark:bg-white/5 px-3 text-sm font-body text-ink dark:text-white',
                 'transition-all duration-150 cursor-pointer',
                 'focus:outline-none focus:ring-2 focus:ring-violet/30 focus:border-violet',
                 "appearance-none bg-[url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"6\" fill=\"none\"><path d=\"M1 1l4 4 4-4\" stroke=\"%237B6FA0\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>')] bg-no-repeat bg-[right_10px_center]",
@@ -244,25 +244,25 @@ export function CommitmentModal({
 
           {/* Client count */}
           <div>
-            <p className="text-xs text-ink-3 font-body uppercase tracking-widest mb-2">
+            <p className="text-xs text-ink-3 dark:text-white/50 font-body uppercase tracking-widest mb-2">
               Nombre de clients concernés
             </p>
             <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => setClientCount(Math.max(1, clientCount - 1))}
-                className="w-9 h-9 rounded-md border border-border bg-white flex items-center justify-center text-ink-3 hover:border-violet hover:text-violet transition-all"
+                className="w-9 h-9 rounded-md border border-border dark:border-white/10 bg-white dark:bg-white/5 flex items-center justify-center text-ink-3 dark:text-white/50 hover:border-violet hover:text-violet transition-all"
               >
                 <Minus size={14} />
               </button>
-              <div className="flex items-center gap-1.5 px-4 py-1.5 rounded-md bg-surface-2 border border-border min-w-[80px] justify-center">
-                <Users size={13} className="text-ink-3" />
-                <span className="font-display text-lg font-bold text-ink tabular-nums">{clientCount}</span>
+              <div className="flex items-center gap-1.5 px-4 py-1.5 rounded-md bg-surface-2 dark:bg-white/5 border border-border dark:border-white/10 min-w-[80px] justify-center">
+                <Users size={13} className="text-ink-3 dark:text-white/50" />
+                <span className="font-display text-lg font-bold text-ink dark:text-white tabular-nums">{clientCount}</span>
               </div>
               <button
                 type="button"
                 onClick={() => setClientCount(clientCount + 1)}
-                className="w-9 h-9 rounded-md border border-border bg-white flex items-center justify-center text-ink-3 hover:border-violet hover:text-violet transition-all"
+                className="w-9 h-9 rounded-md border border-border dark:border-white/10 bg-white dark:bg-white/5 flex items-center justify-center text-ink-3 dark:text-white/50 hover:border-violet hover:text-violet transition-all"
               >
                 <Plus size={14} />
               </button>
@@ -271,7 +271,7 @@ export function CommitmentModal({
 
           {/* Amount selection */}
           <div>
-            <p className="text-xs text-ink-3 font-body uppercase tracking-widest mb-2">
+            <p className="text-xs text-ink-3 dark:text-white/50 font-body uppercase tracking-widest mb-2">
               Montant indicatif
             </p>
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
@@ -288,7 +288,7 @@ export function CommitmentModal({
                       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet focus-visible:ring-offset-1',
                       isSelected
                         ? 'border-violet bg-violet text-white shadow-violet'
-                        : 'border-border bg-white text-ink-2 hover:border-violet/50 hover:text-violet hover:bg-violet-pale',
+                        : 'border-border dark:border-white/10 bg-white dark:bg-white/5 text-ink-2 dark:text-white/80 hover:border-violet/50 hover:text-violet hover:bg-violet-pale',
                     )}
                     aria-pressed={isSelected}
                     aria-label={`Sélectionner ${formatAmount(value)}`}
@@ -324,10 +324,10 @@ export function CommitmentModal({
                     setSelectedAmount(null);
                   }}
                   className={cn(
-                    'w-full h-8 rounded-md border px-3 pr-8 text-sm font-body text-ink',
+                    'w-full h-8 rounded-md border px-3 pr-8 text-sm font-body text-ink dark:text-white',
                     'placeholder:text-ink-3/60 transition-colors duration-150',
                     'focus:outline-none focus:ring-2 focus:ring-violet focus:border-violet',
-                    useCustom ? 'border-violet bg-violet-pale/30' : 'border-border bg-white',
+                    useCustom ? 'border-violet bg-violet-pale/30 dark:bg-violet/10' : 'border-border dark:border-white/10 bg-white dark:bg-white/5',
                   )}
                 />
                 <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-ink-3 font-body">€</span>
@@ -357,7 +357,7 @@ export function CommitmentModal({
               'flex items-start gap-3 rounded-md border px-3 py-3 cursor-pointer transition-all duration-150',
               kidAcknowledged
                 ? 'border-teal bg-teal/5'
-                : 'border-border bg-surface-2 hover:border-violet/40',
+                : 'border-border dark:border-white/10 bg-surface-2 dark:bg-white/5 hover:border-violet/40',
             )}
           >
             <input
@@ -367,11 +367,11 @@ export function CommitmentModal({
               className="mt-0.5 h-4 w-4 rounded border-border text-violet focus:ring-violet accent-violet"
             />
             <div className="flex-1">
-              <p className="text-xs font-semibold text-ink font-body flex items-center gap-1.5">
+              <p className="text-xs font-semibold text-ink dark:text-white font-body flex items-center gap-1.5">
                 <FileText size={12} className="text-violet shrink-0" />
                 Document d&apos;Informations Clés (KID)
               </p>
-              <p className="text-[11px] text-ink-3 font-body mt-0.5 leading-relaxed">
+              <p className="text-[11px] text-ink-3 dark:text-white/50 font-body mt-0.5 leading-relaxed">
                 Je confirme avoir lu et compris le KID de ce produit structuré, ainsi que
                 les risques associés à cet investissement.
               </p>
@@ -386,9 +386,9 @@ export function CommitmentModal({
           )}
 
           {/* Disclaimer */}
-          <div className="rounded-md border border-border bg-surface-2 px-3 py-2.5 text-[11px] text-ink-3 font-body leading-relaxed">
+          <div className="rounded-md border border-border dark:border-white/10 bg-surface-2 dark:bg-white/5 px-3 py-2.5 text-[11px] text-ink-3 dark:text-white/50 font-body leading-relaxed">
             <div className="flex items-start gap-2">
-              <Shield size={12} className="text-ink-3 shrink-0 mt-0.5" />
+              <Shield size={12} className="text-ink-3 dark:text-white/40 shrink-0 mt-0.5" />
               <p>
                 Cette marque d&apos;intérêt ne constitue pas un engagement ferme de
                 souscription. Elle sera transmise à nos équipes pour traitement. La

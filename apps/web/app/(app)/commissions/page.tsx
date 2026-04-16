@@ -666,7 +666,7 @@ export default function CommissionsPage() {
           style={{ background: 'linear-gradient(90deg, #3B1FA8, #00B894 50%, transparent)' }}
         />
         <div className="overflow-x-auto">
-          <table className="w-full text-[12px] font-body">
+          <table className="w-full text-[12px] font-body" aria-label="Tableau des commissions">
             <thead>
               <tr className="border-b border-border/60 dark:border-white/10 bg-gradient-to-r from-[#F8F6FF]/60 to-[#F0ECFF]/30 dark:from-white/[0.02] dark:to-transparent">
                 <SortableTh column="productName" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} className="text-left">Produit</SortableTh>
@@ -724,8 +724,8 @@ export default function CommissionsPage() {
               className={cn(
                 'h-7 px-2.5 rounded-lg text-[11px] font-body font-semibold flex items-center gap-1 transition-all duration-200',
                 page === 1
-                  ? 'text-ink-3/30 cursor-not-allowed'
-                  : 'text-ink-3 hover:text-[#3B1FA8] hover:bg-[#3B1FA8]/5',
+                  ? 'text-ink-3/30 dark:text-white/20 cursor-not-allowed'
+                  : 'text-ink-3 dark:text-white/50 hover:text-[#3B1FA8] dark:hover:text-[#C9BCFF] hover:bg-[#3B1FA8]/5',
               )}
             >
               <ChevronLeft size={12} />
@@ -741,8 +741,8 @@ export default function CommissionsPage() {
               className={cn(
                 'h-7 px-2.5 rounded-lg text-[11px] font-body font-semibold flex items-center gap-1 transition-all duration-200',
                 page === totalPages
-                  ? 'text-ink-3/30 cursor-not-allowed'
-                  : 'text-ink-3 hover:text-[#3B1FA8] hover:bg-[#3B1FA8]/5',
+                  ? 'text-ink-3/30 dark:text-white/20 cursor-not-allowed'
+                  : 'text-ink-3 dark:text-white/50 hover:text-[#3B1FA8] dark:hover:text-[#C9BCFF] hover:bg-[#3B1FA8]/5',
               )}
             >
               Suivant
@@ -770,8 +770,8 @@ export default function CommissionsPage() {
             className={cn(
               'h-8 px-3 rounded-xl text-[11px] font-body font-semibold flex items-center gap-1 border transition-all duration-200',
               page === 1
-                ? 'text-ink-3/30 border-border/20 cursor-not-allowed'
-                : 'text-ink-3 border-border/40 hover:text-[#3B1FA8] hover:border-[#3B1FA8]/40',
+                ? 'text-ink-3/30 dark:text-white/20 border-border/20 dark:border-white/5 cursor-not-allowed'
+                : 'text-ink-3 dark:text-white/50 border-border/40 dark:border-white/10 hover:text-[#3B1FA8] dark:hover:text-[#C9BCFF] hover:border-[#3B1FA8]/40',
             )}
           >
             <ChevronLeft size={12} />
@@ -788,8 +788,8 @@ export default function CommissionsPage() {
             className={cn(
               'h-8 px-3 rounded-xl text-[11px] font-body font-semibold flex items-center gap-1 border transition-all duration-200',
               page === totalPages
-                ? 'text-ink-3/30 border-border/20 cursor-not-allowed'
-                : 'text-ink-3 border-border/40 hover:text-[#3B1FA8] hover:border-[#3B1FA8]/40',
+                ? 'text-ink-3/30 dark:text-white/20 border-border/20 dark:border-white/5 cursor-not-allowed'
+                : 'text-ink-3 dark:text-white/50 border-border/40 dark:border-white/10 hover:text-[#3B1FA8] dark:hover:text-[#C9BCFF] hover:border-[#3B1FA8]/40',
             )}
           >
             Suivant

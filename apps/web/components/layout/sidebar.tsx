@@ -124,6 +124,7 @@ function NavLink({
   const inner = (
     <Link
       href={href}
+      aria-current={isActive ? 'page' : undefined}
       className={cn(
         'group/navlink relative flex items-center gap-3 h-[38px] rounded-lg font-body text-[13px] font-medium',
         'transition-all duration-200 ease-out',
@@ -364,10 +365,13 @@ export function Sidebar({ isOpen, onClose }: SidebarProps = {}) {
       </div>
 
       {/* -- Navigation ------------------------------------------- */}
-      <nav className={cn(
-        'flex-1 py-5 flex flex-col gap-0.5 overflow-y-auto',
-        collapsed ? 'px-1.5' : 'px-3',
-      )}>
+      <nav
+        aria-label="Navigation principale"
+        className={cn(
+          'flex-1 py-5 flex flex-col gap-0.5 overflow-y-auto',
+          collapsed ? 'px-1.5' : 'px-3',
+        )}
+      >
         {/* Main section */}
         <SectionLabel collapsed={collapsed}>Navigation</SectionLabel>
 

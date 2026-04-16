@@ -1715,11 +1715,21 @@ const OPTIMIZE_RECOMMENDATIONS = [
 function OptimizeModal({ onClose, commitments, products }: ModalProps) {
   const [loading, setLoading] = useState(true);
   const [selectedReco, setSelectedReco] = useState<number | null>(null);
+  const [applying, setApplying] = useState(false);
+  const [applied, setApplied] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 2200);
     return () => clearTimeout(timer);
   }, []);
+
+  const handleApply = () => {
+    setApplying(true);
+    setTimeout(() => {
+      setApplying(false);
+      setApplied(true);
+    }, 2000);
+  };
 
   // Compute current allocation
   const allocation = useMemo(() => {
@@ -1801,6 +1811,32 @@ function OptimizeModal({ onClose, commitments, products }: ModalProps) {
                   </div>
                 ))}
               </div>
+
+              {/* Applied success banner */}
+              {applied && (
+                <div className="rounded-xl border border-[#00B894]/30 bg-[#00B894]/[0.06] p-4 flex items-start gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className="w-8 h-8 rounded-lg bg-[#00B894]/15 flex items-center justify-center shrink-0">
+                    <CheckCircle2 size={16} className="text-[#00B894]" />
+                  </div>
+                  <div>
+                    <p className="font-display text-sm font-bold text-[#00B894]">Suggestions appliquees avec succes</p>
+                    <p className="text-xs text-ink-2 dark:text-white/55 font-body mt-1 leading-relaxed">
+                      Les recommandations ont ete enregistrees. Votre score de diversification passera de <strong>58%</strong> a <strong>72%</strong> une fois les operations realisees.
+                      Un plan d&apos;action detaille a ete ajoute a votre espace &laquo;&nbsp;Actions recommandees&nbsp;&raquo;.
+                    </p>
+                    <div className="flex items-center gap-2 mt-2.5">
+                      <Link href="/products" className="text-[11px] font-semibold font-body text-[#3B1FA8] hover:underline flex items-center gap-1">
+                        <ExternalLink size={10} />
+                        Voir les produits suggeres
+                      </Link>
+                      <span className="text-ink-3/30">|</span>
+                      <Link href="/notifications" className="text-[11px] font-semibold font-body text-[#3B1FA8] hover:underline flex items-center gap-1">
+                        Voir les notifications
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Recommendations */}
               <div>
@@ -1889,8 +1925,30 @@ function OptimizeModal({ onClose, commitments, products }: ModalProps) {
               <button onClick={onClose} className="px-4 py-2 rounded-lg text-xs font-semibold font-body border border-border/50 dark:border-white/12 text-ink-3 dark:text-white/50 hover:text-ink dark:hover:text-white transition-colors">
                 Fermer
               </button>
-              <button className="px-4 py-2 rounded-lg text-xs font-semibold font-body bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] text-white shadow-sm shadow-[#3B1FA8]/20 hover:shadow-md hover:brightness-110 transition-all">
-                Appliquer les suggestions
+              <button
+                onClick={applied ? onClose : handleApply}
+                disabled={applying}
+                className={cn(
+                  'px-4 py-2 rounded-lg text-xs font-semibold font-body shadow-sm transition-all flex items-center gap-1.5',
+                  applied
+                    ? 'bg-gradient-to-r from-[#00B894] to-[#008B6E] text-white shadow-[#00B894]/20'
+                    : 'bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] text-white shadow-[#3B1FA8]/20 hover:shadow-md hover:brightness-110',
+                  applying && 'opacity-80 cursor-wait',
+                )}
+              >
+                {applying ? (
+                  <>
+                    <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Application en cours...
+                  </>
+                ) : applied ? (
+                  <>
+                    <CheckCircle2 size={12} />
+                    Suggestions appliquees !
+                  </>
+                ) : (
+                  'Appliquer les suggestions'
+                )}
               </button>
             </div>
           </div>
@@ -1947,7 +2005,8 @@ const STRESS_SCENARIOS = [
 
 function StressTestModal({ onClose, commitments, products }: ModalProps) {
   const [loading, setLoading] = useState(true);
-  const [selectedScenario, setSelectedScenario] = useState(0);
+  const [selectedScenarios, setSelectedScenarios] = useState<Set<number>>(new Set([0]));
+  const [exported, setExported] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 2500);
@@ -1959,17 +2018,52 @@ function StressTestModal({ onClose, commitments, products }: ModalProps) {
     [commitments],
   );
 
-  const scenario = STRESS_SCENARIOS[selectedScenario];
-  const ScenarioIcon = scenario.icon;
+  const toggleScenario = (idx: number) => {
+    setSelectedScenarios(prev => {
+      const next = new Set(prev);
+      if (next.has(idx)) {
+        if (next.size > 1) next.delete(idx); // keep at least 1
+      } else {
+        next.add(idx);
+      }
+      return next;
+    });
+  };
+
+  const selectedList = STRESS_SCENARIOS.filter((_, i) => selectedScenarios.has(i));
+  const isMulti = selectedList.length > 1;
+
+  // Deterministic per-position impact (seeded, not random)
+  const positionImpacts = useMemo(() => {
+    const productMap = new Map(products.map((p: any) => [p.id, p]));
+    return commitments.slice(0, 6).map((c: any, idx: number) => {
+      const p = productMap.get(c.shelfId) || productMap.get(c.productId);
+      const barrier = p?.barrierCapPct ?? 50;
+      const name = p?.name ?? `Produit ${idx + 1}`;
+      const amount = c.amount ?? 0;
+      // Seed: use idx to get consistent variation per position
+      const variation = [0.92, 1.08, 0.97, 1.15, 0.88, 1.03][idx % 6];
+      return { name, amount, barrier, variation };
+    });
+  }, [commitments, products]);
+
+  const handleExport = () => {
+    setExported(true);
+    setTimeout(() => setExported(false), 3000);
+  };
+
+  const fmtCurrency = (v: number) =>
+    new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div className={cn(
-        'relative w-full max-w-2xl max-h-[85vh] overflow-y-auto',
+        'relative w-full max-h-[85vh] overflow-y-auto',
         'bg-white dark:bg-[#1A0A3E] rounded-2xl shadow-2xl',
         'border border-border/50 dark:border-white/10',
         'animate-in fade-in zoom-in-95 duration-200',
+        isMulti ? 'max-w-4xl' : 'max-w-2xl',
       )}>
         {/* Header */}
         <div className="sticky top-0 z-10 px-6 py-4 border-b border-border/50 dark:border-white/8 bg-gradient-to-r from-[#F8F6FF] to-white dark:from-[#1A0A3E] dark:to-[#1A0A3E]">
@@ -1980,7 +2074,9 @@ function StressTestModal({ onClose, commitments, products }: ModalProps) {
               </div>
               <div>
                 <h2 className="font-display text-lg font-bold text-ink dark:text-white">Simulation de Stress Test</h2>
-                <p className="text-xs text-ink-3 dark:text-white/45 font-body">Impact sur {commitments.length} positions &bull; {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(totalEngaged)}</p>
+                <p className="text-xs text-ink-3 dark:text-white/45 font-body">
+                  {selectedList.length} scenario{selectedList.length > 1 ? 's' : ''} &bull; {commitments.length} positions &bull; {fmtCurrency(totalEngaged)}
+                </p>
               </div>
             </div>
             <button onClick={onClose} className="w-8 h-8 rounded-lg hover:bg-ink-3/10 dark:hover:bg-white/10 flex items-center justify-center transition-colors">
@@ -2006,138 +2102,283 @@ function StressTestModal({ onClose, commitments, products }: ModalProps) {
             </div>
           ) : (
             <>
-              {/* Scenario pills */}
-              <div className="flex flex-wrap gap-2">
-                {STRESS_SCENARIOS.map((s, idx) => {
-                  const SIcon = s.icon;
-                  return (
-                    <button
-                      key={s.id}
-                      onClick={() => setSelectedScenario(idx)}
-                      className={cn(
-                        'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold font-body border transition-all duration-200',
-                        selectedScenario === idx
-                          ? 'border-current shadow-sm'
-                          : 'border-border/50 dark:border-white/10 text-ink-3 dark:text-white/40 hover:border-ink-3/30',
-                      )}
-                      style={selectedScenario === idx ? { color: s.color, background: `${s.color}10`, borderColor: `${s.color}40` } : undefined}
-                    >
-                      <SIcon size={12} />
-                      {s.label}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Selected Scenario Details */}
-              <div className="rounded-xl border border-border/50 dark:border-white/8 overflow-hidden">
-                <div className="px-4 py-3 flex items-center gap-3" style={{ background: `${scenario.color}08` }}>
-                  <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: `${scenario.color}15` }}>
-                    <ScenarioIcon size={16} style={{ color: scenario.color }} />
-                  </div>
-                  <div>
-                    <p className="font-display text-sm font-bold text-ink dark:text-white">{scenario.label}</p>
-                    <p className="text-[11px] text-ink-3 dark:text-white/45 font-body">{scenario.description}</p>
-                  </div>
-                </div>
-
-                {/* Impact KPIs */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-border/30 dark:bg-white/5">
-                  {[
-                    {
-                      label: 'Impact portefeuille',
-                      value: `${scenario.impact.portfolioValue > 0 ? '+' : ''}${scenario.impact.portfolioValue}%`,
-                      sub: new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(scenario.impact.estimatedLoss),
-                      color: scenario.impact.portfolioValue >= 0 ? '#00B894' : '#E8334A',
-                    },
-                    {
-                      label: 'Positions a risque',
-                      value: scenario.impact.atRisk.toString(),
-                      sub: `sur ${commitments.length}`,
-                      color: scenario.impact.atRisk > 0 ? '#E8334A' : '#00B894',
-                    },
-                    {
-                      label: 'Autocall declenches',
-                      value: scenario.impact.autocallTriggered.toString(),
-                      sub: 'remboursement anticipe',
-                      color: scenario.impact.autocallTriggered > 0 ? '#D4A017' : '#7B6FA0',
-                    },
-                    {
-                      label: 'Barrieres touchees',
-                      value: scenario.impact.barriersBroken.toString(),
-                      sub: 'perte en capital',
-                      color: scenario.impact.barriersBroken > 0 ? '#E8334A' : '#00B894',
-                    },
-                  ].map((kpi, i) => (
-                    <div key={i} className="bg-white dark:bg-white/[0.03] px-3 py-3 text-center">
-                      <p className="text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold font-body">{kpi.label}</p>
-                      <p className="font-display text-xl font-bold mt-1" style={{ color: kpi.color }}>{kpi.value}</p>
-                      <p className="text-[10px] text-ink-3 dark:text-white/35 font-body mt-0.5">{kpi.sub}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Product-level impact */}
+              {/* Scenario selector — multi-select */}
               <div>
-                <h3 className="font-display text-sm font-bold text-ink dark:text-white mb-3 flex items-center gap-2">
-                  <Shield size={14} className="text-[#3D63F5]" />
-                  Impact par position
-                </h3>
-                <div className="rounded-xl border border-border/50 dark:border-white/8 overflow-hidden">
-                  <table className="w-full text-[11px] font-body">
-                    <thead>
-                      <tr className="border-b border-border/50 dark:border-white/8 bg-[#F8F6FF]/50 dark:bg-white/[0.02]">
-                        <th className="px-3 py-2 text-left text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Produit</th>
-                        <th className="px-3 py-2 text-right text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Montant</th>
-                        <th className="px-3 py-2 text-center text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Barriere</th>
-                        <th className="px-3 py-2 text-right text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Impact</th>
-                        <th className="px-3 py-2 text-center text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Statut</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {(commitments.slice(0, 5)).map((c: any, idx: number) => {
-                        const productMap = new Map(products.map((p: any) => [p.id, p]));
-                        const p = productMap.get(c.shelfId) || productMap.get(c.productId);
-                        const barrier = p?.barrierCapPct ?? 50;
-                        const impactPct = scenario.impact.portfolioValue * (1 + (Math.random() * 0.4 - 0.2));
-                        const impactAmt = (c.amount ?? 0) * impactPct / 100;
-                        const isBroken = scenario.impact.portfolioValue < -20 && barrier > 55;
-                        const isAtRisk = scenario.impact.portfolioValue < -10 && barrier > 45;
-
-                        return (
-                          <tr key={idx} className={cn(
-                            'border-b border-border/20 dark:border-white/[0.04] last:border-0',
-                            idx % 2 === 1 && 'bg-[#F8F6FF]/20 dark:bg-white/[0.01]',
-                          )}>
-                            <td className="px-3 py-2 font-medium text-ink dark:text-white">{p?.name ?? `Produit ${idx + 1}`}</td>
-                            <td className="px-3 py-2 text-right font-mono text-ink-2 dark:text-white/55">
-                              {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(c.amount ?? 0)}
-                            </td>
-                            <td className="px-3 py-2 text-center font-mono">{barrier}%</td>
-                            <td className={cn('px-3 py-2 text-right font-mono font-semibold', impactPct >= 0 ? 'text-[#00B894]' : 'text-[#E8334A]')}>
-                              {impactPct >= 0 ? '+' : ''}{impactPct.toFixed(1)}%
-                              <span className="block text-[9px] font-normal text-ink-3 dark:text-white/35">
-                                {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(impactAmt)}
-                              </span>
-                            </td>
-                            <td className="px-3 py-2 text-center">
-                              <span className={cn(
-                                'inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold',
-                                isBroken ? 'bg-[#E8334A]/10 text-[#E8334A]'
-                                  : isAtRisk ? 'bg-[#D4A017]/10 text-[#D4A017]'
-                                  : 'bg-[#00B894]/10 text-[#00B894]',
-                              )}>
-                                {isBroken ? 'Barriere touchee' : isAtRisk ? 'A surveiller' : 'Protege'}
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                <p className="text-[10px] text-ink-3 dark:text-white/40 font-body font-semibold uppercase tracking-widest mb-2">
+                  Selectionnez un ou plusieurs scenarios pour comparer
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {STRESS_SCENARIOS.map((s, idx) => {
+                    const SIcon = s.icon;
+                    const isActive = selectedScenarios.has(idx);
+                    return (
+                      <button
+                        key={s.id}
+                        onClick={() => toggleScenario(idx)}
+                        className={cn(
+                          'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold font-body border transition-all duration-200',
+                          isActive
+                            ? 'border-current shadow-sm ring-1'
+                            : 'border-border/50 dark:border-white/10 text-ink-3 dark:text-white/40 hover:border-ink-3/30',
+                        )}
+                        style={isActive ? { color: s.color, background: `${s.color}10`, borderColor: `${s.color}40`, boxShadow: `0 0 0 1px ${s.color}30` } : undefined}
+                      >
+                        <SIcon size={12} />
+                        {s.label}
+                        {isActive && (
+                          <span className="ml-0.5 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px]" style={{ background: `${s.color}25` }}>
+                            ✓
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
+
+              {/* Comparison table when multiple scenarios selected */}
+              {isMulti ? (
+                <>
+                  {/* Side-by-side KPI comparison */}
+                  <div className="rounded-xl border border-border/50 dark:border-white/8 overflow-hidden">
+                    <div className="px-4 py-2.5 bg-gradient-to-r from-[#F8F6FF]/60 to-transparent dark:from-white/[0.02] border-b border-border/30 dark:border-white/5">
+                      <h3 className="font-display text-sm font-bold text-ink dark:text-white flex items-center gap-2">
+                        <BarChart3 size={14} className="text-[#3B1FA8]" />
+                        Comparaison des scenarios
+                      </h3>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-[11px] font-body">
+                        <thead>
+                          <tr className="border-b border-border/50 dark:border-white/8">
+                            <th className="px-3 py-2.5 text-left text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Scenario</th>
+                            <th className="px-3 py-2.5 text-right text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Impact</th>
+                            <th className="px-3 py-2.5 text-right text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">P&amp;L estime</th>
+                            <th className="px-3 py-2.5 text-center text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Positions a risque</th>
+                            <th className="px-3 py-2.5 text-center text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Autocalls</th>
+                            <th className="px-3 py-2.5 text-center text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Barrieres</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {selectedList.map((s, idx) => {
+                            const SIcon = s.icon;
+                            // Find best/worst for highlighting
+                            const isBest = s.impact.portfolioValue === Math.max(...selectedList.map(x => x.impact.portfolioValue));
+                            const isWorst = s.impact.portfolioValue === Math.min(...selectedList.map(x => x.impact.portfolioValue));
+                            return (
+                              <tr
+                                key={s.id}
+                                className={cn(
+                                  'border-b border-border/20 dark:border-white/[0.04] last:border-0 transition-colors',
+                                  isBest && 'bg-[#00B894]/[0.04]',
+                                  isWorst && selectedList.length > 1 && 'bg-[#E8334A]/[0.03]',
+                                )}
+                              >
+                                <td className="px-3 py-2.5">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 rounded-md flex items-center justify-center shrink-0" style={{ background: `${s.color}15` }}>
+                                      <SIcon size={11} style={{ color: s.color }} />
+                                    </div>
+                                    <div>
+                                      <span className="font-semibold text-ink dark:text-white text-[11px]">{s.label}</span>
+                                      {isBest && <span className="ml-1.5 text-[8px] font-bold px-1.5 py-0.5 rounded bg-[#00B894]/10 text-[#00B894]">MEILLEUR</span>}
+                                      {isWorst && selectedList.length > 1 && !isBest && <span className="ml-1.5 text-[8px] font-bold px-1.5 py-0.5 rounded bg-[#E8334A]/10 text-[#E8334A]">PIRE</span>}
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-3 py-2.5 text-right">
+                                  <span className={cn('font-display text-base font-bold', s.impact.portfolioValue >= 0 ? 'text-[#00B894]' : 'text-[#E8334A]')}>
+                                    {s.impact.portfolioValue > 0 ? '+' : ''}{s.impact.portfolioValue}%
+                                  </span>
+                                </td>
+                                <td className={cn('px-3 py-2.5 text-right font-mono font-semibold text-[12px]', s.impact.estimatedLoss >= 0 ? 'text-[#00B894]' : 'text-[#E8334A]')}>
+                                  {fmtCurrency(s.impact.estimatedLoss)}
+                                </td>
+                                <td className="px-3 py-2.5 text-center">
+                                  <span className={cn(
+                                    'inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold',
+                                    s.impact.atRisk > 0 ? 'bg-[#E8334A]/8 text-[#E8334A]' : 'bg-[#00B894]/8 text-[#00B894]',
+                                  )}>
+                                    {s.impact.atRisk} / {commitments.length}
+                                  </span>
+                                </td>
+                                <td className="px-3 py-2.5 text-center font-mono font-semibold" style={{ color: s.impact.autocallTriggered > 0 ? '#D4A017' : '#7B6FA0' }}>
+                                  {s.impact.autocallTriggered}
+                                </td>
+                                <td className="px-3 py-2.5 text-center">
+                                  <span className={cn(
+                                    'inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold',
+                                    s.impact.barriersBroken > 0 ? 'bg-[#E8334A]/8 text-[#E8334A]' : 'bg-[#00B894]/8 text-[#00B894]',
+                                  )}>
+                                    {s.impact.barriersBroken}
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Per-position multi-scenario impact */}
+                  <div>
+                    <h3 className="font-display text-sm font-bold text-ink dark:text-white mb-3 flex items-center gap-2">
+                      <Shield size={14} className="text-[#3D63F5]" />
+                      Impact par position — comparaison
+                    </h3>
+                    <div className="rounded-xl border border-border/50 dark:border-white/8 overflow-hidden overflow-x-auto">
+                      <table className="w-full text-[11px] font-body">
+                        <thead>
+                          <tr className="border-b border-border/50 dark:border-white/8 bg-[#F8F6FF]/50 dark:bg-white/[0.02]">
+                            <th className="px-3 py-2 text-left text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold sticky left-0 bg-[#F8F6FF]/90 dark:bg-[#1A0A3E]">Produit</th>
+                            <th className="px-3 py-2 text-right text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Montant</th>
+                            {selectedList.map(s => (
+                              <th key={s.id} className="px-3 py-2 text-center text-[9px] uppercase tracking-widest font-semibold" style={{ color: s.color }}>
+                                {s.label.replace('Crash marche ', '').replace('Rally haussier ', '+').replace('Correction ', '').replace('Hausse taux ', '').replace('Marche plat ', '')}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {positionImpacts.map((pos, idx) => (
+                            <tr key={idx} className={cn(
+                              'border-b border-border/20 dark:border-white/[0.04] last:border-0',
+                              idx % 2 === 1 && 'bg-[#F8F6FF]/20 dark:bg-white/[0.01]',
+                            )}>
+                              <td className="px-3 py-2 font-medium text-ink dark:text-white sticky left-0 bg-white dark:bg-[#1A0A3E]">{pos.name}</td>
+                              <td className="px-3 py-2 text-right font-mono text-ink-2 dark:text-white/55">{fmtCurrency(pos.amount)}</td>
+                              {selectedList.map(s => {
+                                const pct = s.impact.portfolioValue * pos.variation;
+                                const amt = pos.amount * pct / 100;
+                                return (
+                                  <td key={s.id} className="px-3 py-2 text-center">
+                                    <span className={cn('font-mono font-semibold', pct >= 0 ? 'text-[#00B894]' : 'text-[#E8334A]')}>
+                                      {pct >= 0 ? '+' : ''}{pct.toFixed(1)}%
+                                    </span>
+                                    <span className="block text-[9px] font-normal text-ink-3 dark:text-white/35">{fmtCurrency(amt)}</span>
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Single scenario detail view */}
+                  {selectedList.map(scenario => {
+                    const ScIcon = scenario.icon;
+                    return (
+                      <div key={scenario.id} className="space-y-5">
+                        <div className="rounded-xl border border-border/50 dark:border-white/8 overflow-hidden">
+                          <div className="px-4 py-3 flex items-center gap-3" style={{ background: `${scenario.color}08` }}>
+                            <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: `${scenario.color}15` }}>
+                              <ScIcon size={16} style={{ color: scenario.color }} />
+                            </div>
+                            <div>
+                              <p className="font-display text-sm font-bold text-ink dark:text-white">{scenario.label}</p>
+                              <p className="text-[11px] text-ink-3 dark:text-white/45 font-body">{scenario.description}</p>
+                            </div>
+                          </div>
+
+                          {/* Impact KPIs */}
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-border/30 dark:bg-white/5">
+                            {[
+                              {
+                                label: 'Impact portefeuille',
+                                value: `${scenario.impact.portfolioValue > 0 ? '+' : ''}${scenario.impact.portfolioValue}%`,
+                                sub: fmtCurrency(scenario.impact.estimatedLoss),
+                                color: scenario.impact.portfolioValue >= 0 ? '#00B894' : '#E8334A',
+                              },
+                              {
+                                label: 'Positions a risque',
+                                value: scenario.impact.atRisk.toString(),
+                                sub: `sur ${commitments.length}`,
+                                color: scenario.impact.atRisk > 0 ? '#E8334A' : '#00B894',
+                              },
+                              {
+                                label: 'Autocall declenches',
+                                value: scenario.impact.autocallTriggered.toString(),
+                                sub: 'remboursement anticipe',
+                                color: scenario.impact.autocallTriggered > 0 ? '#D4A017' : '#7B6FA0',
+                              },
+                              {
+                                label: 'Barrieres touchees',
+                                value: scenario.impact.barriersBroken.toString(),
+                                sub: 'perte en capital',
+                                color: scenario.impact.barriersBroken > 0 ? '#E8334A' : '#00B894',
+                              },
+                            ].map((kpi, i) => (
+                              <div key={i} className="bg-white dark:bg-white/[0.03] px-3 py-3 text-center">
+                                <p className="text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold font-body">{kpi.label}</p>
+                                <p className="font-display text-xl font-bold mt-1" style={{ color: kpi.color }}>{kpi.value}</p>
+                                <p className="text-[10px] text-ink-3 dark:text-white/35 font-body mt-0.5">{kpi.sub}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Product-level impact */}
+                        <div>
+                          <h3 className="font-display text-sm font-bold text-ink dark:text-white mb-3 flex items-center gap-2">
+                            <Shield size={14} className="text-[#3D63F5]" />
+                            Impact par position
+                          </h3>
+                          <div className="rounded-xl border border-border/50 dark:border-white/8 overflow-hidden">
+                            <table className="w-full text-[11px] font-body">
+                              <thead>
+                                <tr className="border-b border-border/50 dark:border-white/8 bg-[#F8F6FF]/50 dark:bg-white/[0.02]">
+                                  <th className="px-3 py-2 text-left text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Produit</th>
+                                  <th className="px-3 py-2 text-right text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Montant</th>
+                                  <th className="px-3 py-2 text-center text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Barriere</th>
+                                  <th className="px-3 py-2 text-right text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Impact</th>
+                                  <th className="px-3 py-2 text-center text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Statut</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {positionImpacts.map((pos, idx) => {
+                                  const pct = scenario.impact.portfolioValue * pos.variation;
+                                  const amt = pos.amount * pct / 100;
+                                  const isBroken = scenario.impact.portfolioValue < -20 && pos.barrier > 55;
+                                  const isAtRisk = scenario.impact.portfolioValue < -10 && pos.barrier > 45;
+                                  return (
+                                    <tr key={idx} className={cn(
+                                      'border-b border-border/20 dark:border-white/[0.04] last:border-0',
+                                      idx % 2 === 1 && 'bg-[#F8F6FF]/20 dark:bg-white/[0.01]',
+                                    )}>
+                                      <td className="px-3 py-2 font-medium text-ink dark:text-white">{pos.name}</td>
+                                      <td className="px-3 py-2 text-right font-mono text-ink-2 dark:text-white/55">{fmtCurrency(pos.amount)}</td>
+                                      <td className="px-3 py-2 text-center font-mono">{pos.barrier}%</td>
+                                      <td className={cn('px-3 py-2 text-right font-mono font-semibold', pct >= 0 ? 'text-[#00B894]' : 'text-[#E8334A]')}>
+                                        {pct >= 0 ? '+' : ''}{pct.toFixed(1)}%
+                                        <span className="block text-[9px] font-normal text-ink-3 dark:text-white/35">{fmtCurrency(amt)}</span>
+                                      </td>
+                                      <td className="px-3 py-2 text-center">
+                                        <span className={cn(
+                                          'inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold',
+                                          isBroken ? 'bg-[#E8334A]/10 text-[#E8334A]'
+                                            : isAtRisk ? 'bg-[#D4A017]/10 text-[#D4A017]'
+                                            : 'bg-[#00B894]/10 text-[#00B894]',
+                                        )}>
+                                          {isBroken ? 'Barriere touchee' : isAtRisk ? 'A surveiller' : 'Protege'}
+                                        </span>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </>
+              )}
             </>
           )}
         </div>
@@ -2153,9 +2394,26 @@ function StressTestModal({ onClose, commitments, products }: ModalProps) {
               <button onClick={onClose} className="px-4 py-2 rounded-lg text-xs font-semibold font-body border border-border/50 dark:border-white/12 text-ink-3 dark:text-white/50 hover:text-ink dark:hover:text-white transition-colors">
                 Fermer
               </button>
-              <button className="px-4 py-2 rounded-lg text-xs font-semibold font-body bg-gradient-to-r from-[#E8334A] to-[#D4A017] text-white shadow-sm shadow-[#E8334A]/20 hover:shadow-md hover:brightness-110 transition-all flex items-center gap-1.5">
-                <Download size={12} />
-                Exporter le rapport
+              <button
+                onClick={handleExport}
+                className={cn(
+                  'px-4 py-2 rounded-lg text-xs font-semibold font-body text-white shadow-sm transition-all flex items-center gap-1.5',
+                  exported
+                    ? 'bg-gradient-to-r from-[#00B894] to-[#008B6E] shadow-[#00B894]/20'
+                    : 'bg-gradient-to-r from-[#E8334A] to-[#D4A017] shadow-[#E8334A]/20 hover:shadow-md hover:brightness-110',
+                )}
+              >
+                {exported ? (
+                  <>
+                    <CheckCircle2 size={12} />
+                    Rapport exporte !
+                  </>
+                ) : (
+                  <>
+                    <Download size={12} />
+                    Exporter le rapport
+                  </>
+                )}
               </button>
             </div>
           </div>

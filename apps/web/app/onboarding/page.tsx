@@ -63,49 +63,51 @@ function EstimatedTime() {
 
 function StepIndicator({ currentStep, totalSteps = 8 }: { currentStep: StepKey; totalSteps?: number }) {
   return (
-    <div className="flex items-center justify-center gap-0">
-      {STEP_META.slice(0, totalSteps).map(({ num, label, icon: Icon }, i) => {
-        const status: StepStatus =
-          currentStep > num ? 'done' : currentStep === num ? 'active' : 'pending';
-        return (
-          <div key={num} className="flex items-center">
-            <div className="flex flex-col items-center gap-1">
-              <div
-                className={cn(
-                  'w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300',
-                  status === 'done'
-                    ? 'bg-teal text-white'
-                    : status === 'active'
-                    ? 'bg-violet text-white shadow-violet'
-                    : 'bg-white border-2 border-border text-ink-3',
-                )}
-              >
-                {status === 'done' ? (
-                  <CheckCircle2 size={14} strokeWidth={2.5} />
-                ) : (
-                  <Icon size={12} strokeWidth={2} />
-                )}
+    <div className="overflow-x-auto px-4">
+      <div className="flex items-center justify-center gap-0 min-w-0">
+        {STEP_META.slice(0, totalSteps).map(({ num, label, icon: Icon }, i) => {
+          const status: StepStatus =
+            currentStep > num ? 'done' : currentStep === num ? 'active' : 'pending';
+          return (
+            <div key={num} className="flex items-center">
+              <div className="flex flex-col items-center gap-1">
+                <div
+                  className={cn(
+                    'w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300 shrink-0',
+                    status === 'done'
+                      ? 'bg-teal text-white'
+                      : status === 'active'
+                      ? 'bg-violet text-white shadow-violet'
+                      : 'bg-white border-2 border-border text-ink-3',
+                  )}
+                >
+                  {status === 'done' ? (
+                    <CheckCircle2 size={14} strokeWidth={2.5} />
+                  ) : (
+                    <Icon size={12} strokeWidth={2} />
+                  )}
+                </div>
+                <span
+                  className={cn(
+                    'text-[8px] font-body font-semibold uppercase tracking-wider whitespace-nowrap hidden sm:block',
+                    status === 'active' ? 'text-violet' : status === 'done' ? 'text-teal' : 'text-ink-3',
+                  )}
+                >
+                  {label}
+                </span>
               </div>
-              <span
-                className={cn(
-                  'text-[8px] font-body font-semibold uppercase tracking-wider whitespace-nowrap',
-                  status === 'active' ? 'text-violet' : status === 'done' ? 'text-teal' : 'text-ink-3',
-                )}
-              >
-                {label}
-              </span>
+              {i < totalSteps - 1 && (
+                <div
+                  className={cn(
+                    'h-px w-4 sm:w-6 mx-0.5 sm:mx-1 sm:mt-[-16px] transition-colors duration-300',
+                    currentStep > num ? 'bg-teal' : 'bg-border',
+                  )}
+                />
+              )}
             </div>
-            {i < totalSteps - 1 && (
-              <div
-                className={cn(
-                  'h-px w-6 mx-1 mt-[-16px] transition-colors duration-300',
-                  currentStep > num ? 'bg-teal' : 'bg-border',
-                )}
-              />
-            )}
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -144,7 +146,7 @@ function Step1Profile({ onNext, onChange, initial }: Step1Props) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
       <div className="text-center">
         <h2 className="font-display font-bold text-xl text-ink mb-1">Vos informations</h2>
         <p className="font-body text-sm text-ink-3">
@@ -157,7 +159,6 @@ function Step1Profile({ onNext, onChange, initial }: Step1Props) {
         placeholder="Jean"
         value={firstName}
         onChange={(e) => { setFirstName(e.target.value); setError(null); setFieldErrors((p) => ({ ...p, firstName: false })); }}
-        required
         error={fieldErrors.firstName ? 'Le pr\u00e9nom est requis.' : undefined}
       />
       <Input
@@ -165,7 +166,6 @@ function Step1Profile({ onNext, onChange, initial }: Step1Props) {
         placeholder="Dupont"
         value={lastName}
         onChange={(e) => { setLastName(e.target.value); setError(null); setFieldErrors((p) => ({ ...p, lastName: false })); }}
-        required
         error={fieldErrors.lastName ? 'Le nom est requis.' : undefined}
       />
       <Input
@@ -302,7 +302,7 @@ function Step3Orias({ onNext, onBack, onChange, initial }: Step3Props) {
   };
 
   return (
-    <form onSubmit={handleVerify} className="flex flex-col gap-4">
+    <form onSubmit={handleVerify} noValidate className="flex flex-col gap-4">
       <div className="text-center">
         <h2 className="font-display font-bold text-xl text-ink mb-1">V&eacute;rification ORIAS</h2>
         <p className="font-body text-sm text-ink-3">
@@ -412,7 +412,7 @@ function Step4Rcp({ onNext, onBack, onChange, initial }: Step4Props) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
       <div className="text-center">
         <h2 className="font-display font-bold text-xl text-ink mb-1">Assurance RCP</h2>
         <p className="font-body text-sm text-ink-3">
@@ -426,7 +426,6 @@ function Step4Rcp({ onNext, onBack, onChange, initial }: Step4Props) {
         value={insurer}
         onChange={(e) => { setInsurer(e.target.value); setError(null); setFieldErrors((p) => ({ ...p, insurer: false })); }}
         disabled={loading || success}
-        required
         error={fieldErrors.insurer ? 'Le nom de l\u2019assureur est requis.' : undefined}
       />
       <Input
@@ -494,7 +493,7 @@ function Step5Kyc({ onNext, onBack }: Step5Props) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
       <div className="text-center">
         <h2 className="font-display font-bold text-xl text-ink mb-1">Identité (KYC)</h2>
         <p className="font-body text-sm text-ink-3">
@@ -507,7 +506,6 @@ function Step5Kyc({ onNext, onBack }: Step5Props) {
         type="date"
         value={birthDate}
         onChange={(e) => setBirthDate(e.target.value)}
-        required
       />
 
       <div className="flex flex-col gap-1">
@@ -570,7 +568,7 @@ function Step6Company({ onNext, onBack }: Step6Props) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
       <div className="text-center">
         <h2 className="font-display font-bold text-xl text-ink mb-1">Société</h2>
         <p className="font-body text-sm text-ink-3">
@@ -583,7 +581,6 @@ function Step6Company({ onNext, onBack }: Step6Props) {
         placeholder="Ex. Cabinet Dupont Patrimoine"
         value={companyName}
         onChange={(e) => setCompanyName(e.target.value)}
-        required
       />
       <Input
         label="SIREN"
@@ -1021,9 +1018,9 @@ export default function OnboardingPage() {
         aria-hidden="true"
       />
 
-      <div className="relative w-full max-w-md">
+      <div className="relative w-full max-w-md mx-4 sm:mx-auto">
         {/* Card */}
-        <div className="bg-white rounded-xl shadow-lg px-7 py-8 flex flex-col gap-6">
+        <div className="bg-white rounded-xl shadow-lg px-4 sm:px-7 py-6 sm:py-8 flex flex-col gap-6">
           {/* Header */}
           <div className="flex flex-col items-center gap-2.5 text-center">
             <div className="w-9 h-9 rounded-md bg-violet flex items-center justify-center shadow-violet">

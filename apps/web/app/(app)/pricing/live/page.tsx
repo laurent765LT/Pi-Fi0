@@ -210,7 +210,7 @@ function QuoteCard({
           </div>
 
           {/* Metrics grid */}
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="space-y-0.5">
               <span className="text-[9px] uppercase tracking-[0.15em] text-ink-3 font-body block">
                 Prix

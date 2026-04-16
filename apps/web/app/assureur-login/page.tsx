@@ -58,7 +58,7 @@ export default function AssureurLoginPage() {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleLogin} className="flex flex-col gap-4">
+          <form onSubmit={handleLogin} noValidate className="flex flex-col gap-4">
             <div>
               <label className="block text-[11px] font-semibold uppercase tracking-wider mb-1.5 text-ink-3 font-body">Email</label>
               <input

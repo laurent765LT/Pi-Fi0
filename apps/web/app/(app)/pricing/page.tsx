@@ -894,7 +894,7 @@ export default function PricingPage() {
                 )}
 
                 {/* Key metrics */}
-                <div className="grid grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {[
                     { label: 'Rendement attendu', value: `${pricingResult.result.expectedReturn}%`, icon: <TrendingUp size={14} className="text-teal" />, gradient: 'from-teal/10 to-teal/5', borderColor: 'border-teal/15' },
                     { label: 'Prob. Autocall', value: `${(pricingResult.result.riskSummary.probAutocall * 100).toFixed(1)}%`, icon: <Zap size={14} className="text-violet" />, gradient: 'from-violet/10 to-violet/5', borderColor: 'border-violet/15' },
@@ -1053,7 +1053,7 @@ export default function PricingPage() {
                   </div>
 
                   {/* Primary pricing cards: Fair Value, Issue Price, Spread, Commission */}
-                  <div className="grid grid-cols-4 gap-2.5 mb-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-4">
                     {[
                       {
                         label: 'Fair Value',
@@ -1116,7 +1116,7 @@ export default function PricingPage() {
                   {/* Detailed cost bars */}
                   <div className="h-px bg-gradient-to-r from-transparent via-border/60 to-transparent mb-3" />
                   <span className="text-[9px] uppercase tracking-[0.15em] text-ink-4 dark:text-white/30 font-body font-bold block mb-2.5">Detail des couts</span>
-                  <div className="grid grid-cols-5 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                     {Object.entries(pricingResult.result.costBreakdown).map(([key, val]: [string, any]) => {
                       const totalCost = Object.values(pricingResult.result.costBreakdown).reduce(
                         (sum: number, v: any) => sum + (typeof v === 'number' ? v : 0), 0
@@ -1170,7 +1170,7 @@ export default function PricingPage() {
                       Analyse de sensibilite
                     </span>
                   </div>
-                  <div className="grid grid-cols-5 gap-2.5">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
                     {[
                       {
                         label: 'Delta',

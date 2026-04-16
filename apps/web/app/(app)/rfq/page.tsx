@@ -785,7 +785,7 @@ function RfqCreateTab({ onCreated }: { onCreated: (id: string) => void }) {
                 Le total doit etre 100%
               </p>
             )}
-            <div className="grid grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
               {[
                 { label: 'Rendement', val: wYield, set: setWYield },
                 { label: 'Protection', val: wProtection, set: setWProtection },
@@ -1156,7 +1156,7 @@ function RfqDetailTab({ rfqId }: { rfqId: string }) {
           </div>
 
           {/* RFQ summary grid */}
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <SummaryCell label="Structure" value={STRUCTURE_TYPES.find((s) => s.value === config?.structureType)?.label ?? '—'} />
             <SummaryCell label="Sous-jacent" value={config?.underlying?.name ?? '—'} />
             <SummaryCell label="Nominal" value={config?.nominal ? fmtCcy(config.nominal, config.currency) : '—'} />
@@ -1253,7 +1253,7 @@ function RfqDetailTab({ rfqId }: { rfqId: string }) {
                   </div>
 
                   {/* Metrics grid */}
-                  <div className="grid grid-cols-5 gap-3 mt-5 pt-5 border-t border-border/40">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mt-5 pt-5 border-t border-border/40">
                     <MetricCell
                       label="Prix"
                       value={result?.fairValue != null ? fmtPct(result.fairValue / 100, 2) : '—'}

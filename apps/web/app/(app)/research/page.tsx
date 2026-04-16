@@ -662,7 +662,7 @@ export default function ResearchPage() {
               <h2 className="font-display text-[13px] font-bold text-ink">Heatmap Sectorielle</h2>
               <span className="text-[9px] text-ink-3 font-body ml-auto">Performance hebdomadaire</span>
             </div>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {SECTOR_DATA.map((sector) => {
                 const isUp = sector.changePct >= 0;
                 return (
@@ -944,7 +944,7 @@ export default function ResearchPage() {
       {/* ================================================================== */}
       <div className="flex gap-3">
         {/* ── Card Grid (left) ─────────────────────────────────── */}
-        <div className="w-[300px] shrink-0">
+        <div className="hidden lg:block w-[300px] shrink-0">
           <div className="flex flex-col gap-2 stagger-children">
             {filteredAndSortedIdeas.map((idea) => {
               const cat = CATEGORY_LABELS[idea.category];

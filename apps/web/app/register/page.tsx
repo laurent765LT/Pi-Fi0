@@ -530,7 +530,6 @@ export default function RegisterPage() {
                         value={form.firstName}
                         onChange={(e) => updateField('firstName', e.target.value)}
                         error={fieldError('firstName')}
-                        required
                         className={cn(
                           fieldError('firstName') && 'border-red focus:ring-red',
                         )}
@@ -548,7 +547,6 @@ export default function RegisterPage() {
                         value={form.lastName}
                         onChange={(e) => updateField('lastName', e.target.value)}
                         error={fieldError('lastName')}
-                        required
                         className={cn(
                           fieldError('lastName') && 'border-red focus:ring-red',
                         )}
@@ -565,7 +563,6 @@ export default function RegisterPage() {
                       onChange={(e) => updateField('email', e.target.value)}
                       error={fieldError('email')}
                       autoComplete="email"
-                      required
                     />
                     <Mail
                       size={14}
@@ -584,7 +581,6 @@ export default function RegisterPage() {
                       onChange={(e) => updateField('password', e.target.value)}
                       error={fieldError('password')}
                       autoComplete="new-password"
-                      required
                     />
                     <button
                       type="button"
@@ -635,7 +631,6 @@ export default function RegisterPage() {
                       onChange={(e) => updateField('confirmPassword', e.target.value)}
                       error={fieldError('confirmPassword')}
                       autoComplete="new-password"
-                      required
                     />
                     <button
                       type="button"
@@ -671,7 +666,6 @@ export default function RegisterPage() {
                       value={form.company}
                       onChange={(e) => updateField('company', e.target.value)}
                       error={fieldError('company')}
-                      required
                     />
                     <Building2
                       size={14}

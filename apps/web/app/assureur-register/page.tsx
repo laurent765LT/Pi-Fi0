@@ -473,7 +473,6 @@ export default function AssureurRegisterPage() {
                       value={form.firstName}
                       onChange={(e) => set('firstName', e.target.value)}
                       error={errors.firstName}
-                      required
                       disabled={loading}
                     />
                     <Input
@@ -482,7 +481,6 @@ export default function AssureurRegisterPage() {
                       value={form.lastName}
                       onChange={(e) => set('lastName', e.target.value)}
                       error={errors.lastName}
-                      required
                       disabled={loading}
                     />
                   </div>
@@ -495,7 +493,6 @@ export default function AssureurRegisterPage() {
                     onChange={(e) => set('email', e.target.value)}
                     error={errors.email}
                     autoComplete="email"
-                    required
                     disabled={loading}
                   />
 
@@ -509,7 +506,6 @@ export default function AssureurRegisterPage() {
                       onChange={(e) => set('password', e.target.value)}
                       error={errors.password}
                       autoComplete="new-password"
-                      required
                       disabled={loading}
                     />
                     <button
@@ -554,7 +550,6 @@ export default function AssureurRegisterPage() {
                       onChange={(e) => set('confirmPassword', e.target.value)}
                       error={errors.confirmPassword}
                       autoComplete="new-password"
-                      required
                       disabled={loading}
                     />
                     <button
@@ -594,7 +589,6 @@ export default function AssureurRegisterPage() {
                       onFocus={() => setShowSuggestions(true)}
                       onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                       error={errors.companyName}
-                      required
                       disabled={loading}
                     />
                     {showSuggestions && form.companyName.length === 0 && (

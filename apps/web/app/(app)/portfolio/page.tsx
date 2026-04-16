@@ -403,7 +403,7 @@ function CalendarView({ products }: { products: any[] }) {
         </div>
       </div>
       <div className="p-4">
-        <div className="grid grid-cols-7 gap-0">
+        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-0">
           {dayNames.map((d) => (
             <div key={d} className="text-center text-[9px] text-ink-3 dark:text-white/35 font-bold uppercase tracking-wider py-2">{d}</div>
           ))}
@@ -2194,7 +2194,7 @@ function OptimizeModal({ onClose, commitments, products }: ModalProps) {
           ) : (
             <>
               {/* Score Summary */}
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
                   { label: 'Score global', value: '72/100', delta: '+5 possible', color: '#3B1FA8' },
                   { label: 'Diversification', value: '58%', delta: 'A ameliorer', color: '#D4A017' },

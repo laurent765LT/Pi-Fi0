@@ -300,18 +300,23 @@ export function CommitmentModal({
             </div>
 
             {/* Custom amount */}
-            <div className="mt-2.5 flex items-center gap-2">
-              <button
-                type="button"
-                onClick={enableCustom}
-                className={cn(
-                  'text-xs font-body font-semibold transition-colors',
-                  useCustom ? 'text-violet' : 'text-ink-3 hover:text-violet',
-                )}
-              >
-                Montant libre :
-              </button>
-              <div className="relative flex-1">
+            <div className="mt-2.5">
+              <div className="flex items-center gap-2 mb-1.5">
+                <button
+                  type="button"
+                  onClick={enableCustom}
+                  className={cn(
+                    'text-xs font-body font-semibold transition-colors',
+                    useCustom ? 'text-violet' : 'text-ink-3 hover:text-violet',
+                  )}
+                >
+                  Montant libre :
+                </button>
+                <span className="text-[10px] text-ink-3 font-body ml-auto">
+                  Montant minimum : 1 000 &euro;
+                </span>
+              </div>
+              <div className="relative">
                 <input
                   type="text"
                   inputMode="numeric"

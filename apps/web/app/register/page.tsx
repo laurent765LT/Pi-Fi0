@@ -597,6 +597,9 @@ export default function RegisterPage() {
                         <Eye size={16} strokeWidth={1.8} />
                       )}
                     </button>
+                    <p className="text-[10px] text-ink-3 font-body mt-1">
+                      Min. 8 caracteres, 1 majuscule, 1 chiffre
+                    </p>
                   </div>
 
                   {/* Password strength */}

@@ -209,9 +209,14 @@ export default function Home() {
             <div>
               <h4 className="font-display text-sm font-bold text-white mb-4">Produit</h4>
               <ul className="space-y-2.5">
-                {['Catalogue', 'Pricing', 'RFQ', 'Research'].map((item) => (
-                  <li key={item}>
-                    <a href="#" className="text-sm text-white/40 hover:text-white/80 transition-colors duration-200">{item}</a>
+                {[
+                  { label: 'Catalogue', href: '/login' },
+                  { label: 'Pricing', href: '/login' },
+                  { label: 'RFQ', href: '/login' },
+                  { label: 'Research', href: '/login' },
+                ].map((item) => (
+                  <li key={item.label}>
+                    <Link href={item.href} className="text-sm text-white/40 hover:text-white/80 transition-colors duration-200">{item.label}</Link>
                   </li>
                 ))}
               </ul>
@@ -231,7 +236,7 @@ export default function Home() {
             <div>
               <h4 className="font-display text-sm font-bold text-white mb-4">Legal</h4>
               <ul className="space-y-2.5">
-                {['CGU', 'Politique de confidentialite', 'Mentions legales'].map((item) => (
+                {['CGU', 'Confidentialite', 'Mentions legales'].map((item) => (
                   <li key={item}>
                     <a href="#" className="text-sm text-white/40 hover:text-white/80 transition-colors duration-200">{item}</a>
                   </li>
@@ -249,7 +254,7 @@ export default function Home() {
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="inline-flex items-center gap-2 text-sm text-white/40 hover:text-white/80 transition-colors duration-200">
+                  <a href="https://www.linkedin.com/company/strickin" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-white/40 hover:text-white/80 transition-colors duration-200">
                     <Linkedin className="w-3.5 h-3.5" />
                     LinkedIn
                   </a>

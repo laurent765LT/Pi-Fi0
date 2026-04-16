@@ -1,23 +1,50 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Zap, Lock, ArrowRight, Building2 } from 'lucide-react';
+import { Zap, Lock, ArrowRight, Building2, Eye, EyeOff, Loader2, ChevronDown } from 'lucide-react';
+import { useAuthStore } from '@/stores/auth-store';
+
+const DEMO_ASSUREUR = {
+  email: 'cardif@demo.com',
+  password: 'Strickin2025!',
+};
 
 export default function AssureurLoginPage() {
   const router = useRouter();
+  const login = useAuthStore((s) => s.login);
 
-  function handleLogin(e: React.FormEvent) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showDemo, setShowDemo] = useState(false);
+
+  async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-    // Set auth cookie for middleware
-    const userData = {
-      user: { id: 'demo-assureur-001', email: 'cardif@demo.com', firstName: 'Delphine', lastName: 'Martin', role: 'ORG_ADMIN', orgId: 'org-insurer' },
-      token: 'demo-token-assureur-' + Date.now(),
-      refreshToken: 'demo-refresh',
-      isDemo: true,
-    };
-    document.cookie = `strickin-auth=${encodeURIComponent(JSON.stringify({ state: userData }))};path=/;max-age=${60 * 60 * 24 * 7};SameSite=Lax`;
-    router.push('/assureur/dashboard');
+    setError(null);
+    setLoading(true);
+
+    try {
+      await login(email, password);
+      router.replace('/assureur/dashboard');
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Identifiants incorrects. Veuillez réessayer.';
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function fillDemo() {
+    setEmail(DEMO_ASSUREUR.email);
+    setPassword(DEMO_ASSUREUR.password);
+    setError(null);
   }
 
   return (
@@ -63,44 +90,66 @@ export default function AssureurLoginPage() {
               <label className="block text-[11px] font-semibold uppercase tracking-wider mb-1.5 text-ink-3 font-body">Email</label>
               <input
                 type="email"
-                defaultValue="cardif@demo.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="vous@exemple.fr"
                 className="w-full h-11 rounded-xl px-4 text-[14px] font-body border border-border/60 bg-white dark:bg-white/5 text-ink dark:text-white focus:ring-2 focus:ring-violet/30 focus:border-violet/50 transition-all outline-none"
-                readOnly
+                autoComplete="email"
+                disabled={loading}
               />
             </div>
-            <div>
+            <div className="relative">
               <label className="block text-[11px] font-semibold uppercase tracking-wider mb-1.5 text-ink-3 font-body">Mot de passe</label>
               <input
-                type="password"
-                defaultValue="demo2026"
-                className="w-full h-11 rounded-xl px-4 text-[14px] font-body border border-border/60 bg-white dark:bg-white/5 text-ink dark:text-white focus:ring-2 focus:ring-violet/30 focus:border-violet/50 transition-all outline-none"
-                readOnly
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full h-11 rounded-xl px-4 pr-11 text-[14px] font-body border border-border/60 bg-white dark:bg-white/5 text-ink dark:text-white focus:ring-2 focus:ring-violet/30 focus:border-violet/50 transition-all outline-none"
+                autoComplete="current-password"
+                disabled={loading}
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-[34px] text-ink-3 hover:text-ink transition-colors"
+                tabIndex={-1}
+                aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+              >
+                {showPassword ? (
+                  <EyeOff size={18} strokeWidth={1.8} />
+                ) : (
+                  <Eye size={18} strokeWidth={1.8} />
+                )}
+              </button>
             </div>
+
+            {/* Error message */}
+            {error && (
+              <p
+                role="alert"
+                className="font-body text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2"
+              >
+                {error}
+              </p>
+            )}
 
             <button
               type="submit"
-              className="w-full h-12 rounded-xl text-white font-display font-bold text-[14px] flex items-center justify-center gap-2 mt-2 bg-gradient-to-r from-violet to-[#0A2799] shadow-lg shadow-violet/25 hover:shadow-xl hover:shadow-violet/30 hover:scale-[1.01] transition-all duration-200"
+              disabled={loading || !email || !password}
+              className="w-full h-12 rounded-xl text-white font-display font-bold text-[14px] flex items-center justify-center gap-2 mt-2 bg-gradient-to-r from-violet to-[#0A2799] shadow-lg shadow-violet/25 hover:shadow-xl hover:shadow-violet/30 hover:scale-[1.01] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
-              Se connecter
-              <ArrowRight size={16} />
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                const userData = {
-                  user: { id: 'demo-assureur-001', email: 'cardif@demo.com', firstName: 'Delphine', lastName: 'Martin', role: 'ORG_ADMIN', orgId: 'org-insurer' },
-                  token: 'demo-token-assureur-' + Date.now(),
-                  refreshToken: 'demo-refresh',
-                  isDemo: true,
-                };
-                document.cookie = `strickin-auth=${encodeURIComponent(JSON.stringify({ state: userData }))};path=/;max-age=${60 * 60 * 24 * 7};SameSite=Lax`;
-                router.push('/assureur/dashboard');
-              }}
-              className="w-full h-11 rounded-xl font-body font-semibold text-[14px] flex items-center justify-center gap-2 border border-border/60 text-violet hover:bg-violet/5 transition-all duration-200"
-            >
-              Utiliser le compte démo
+              {loading ? (
+                <span className="inline-flex items-center gap-2">
+                  <Loader2 size={18} className="animate-spin" />
+                  Connexion en cours...
+                </span>
+              ) : (
+                <>
+                  Se connecter
+                  <ArrowRight size={16} />
+                </>
+              )}
             </button>
 
             <Link
@@ -110,6 +159,45 @@ export default function AssureurLoginPage() {
               Créer un compte assureur
             </Link>
           </form>
+
+          {/* ---- Demo credentials collapsible ---- */}
+          <div className="border-t border-border pt-4 mt-4">
+            <button
+              type="button"
+              onClick={() => setShowDemo(!showDemo)}
+              className="w-full flex items-center justify-between text-[11px] font-medium font-body text-ink-3 hover:text-ink-2 transition-colors"
+            >
+              <span>Compte démo</span>
+              <ChevronDown
+                size={16}
+                className={`transition-transform duration-200 ${showDemo ? 'rotate-180' : ''}`}
+              />
+            </button>
+
+            <div
+              className="overflow-hidden transition-all duration-300 ease-out"
+              style={{
+                maxHeight: showDemo ? '120px' : '0',
+                opacity: showDemo ? 1 : 0,
+              }}
+            >
+              <div className="flex flex-col gap-1.5 mt-3">
+                <button
+                  type="button"
+                  onClick={fillDemo}
+                  className="group flex items-center justify-between px-3 py-1.5 rounded-lg text-left text-[11px] font-body bg-ink/[0.03] hover:bg-ink/[0.06] border border-transparent hover:border-border/60 transition-all duration-150"
+                >
+                  <div>
+                    <span className="font-semibold text-ink">Assureur</span>
+                    <span className="text-ink-2 ml-2">{DEMO_ASSUREUR.email}</span>
+                  </div>
+                  <span className="text-violet opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-semibold uppercase tracking-wider">
+                    Remplir
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Footer */}

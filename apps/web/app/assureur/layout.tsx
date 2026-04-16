@@ -139,12 +139,12 @@ export default function AssureurLayout({ children }: { children: React.ReactNode
               {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
             </p>
           </div>
-          <button className="relative p-2.5 rounded-xl transition-all duration-200 hover:bg-violet/[0.06] group">
+          <Link href="/notifications" className="relative p-2.5 rounded-xl transition-all duration-200 hover:bg-violet/[0.06] group">
             <Bell size={18} className="text-ink-2 group-hover:text-violet transition-colors" />
             <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center text-white bg-red-500 shadow-sm">
               3
             </span>
-          </button>
+          </Link>
         </div>
 
         <div className="max-w-[1200px] mx-auto px-8 py-7">{children}</div>

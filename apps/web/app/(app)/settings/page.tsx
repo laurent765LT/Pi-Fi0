@@ -563,6 +563,10 @@ export default function SettingsPage() {
               description="Modifiez votre mot de passe actuel."
             >
               <button
+                onClick={() => {
+                  const msg = 'Pour modifier votre mot de passe, un email de reinitialisation vous sera envoye a votre adresse email.';
+                  window.alert(msg);
+                }}
                 className={cn(
                   'h-8 px-4 rounded-xl border border-border/60 bg-white/80 dark:bg-white/10 backdrop-blur-sm',
                   'text-[12px] font-semibold font-body text-ink-2 flex items-center gap-1.5',

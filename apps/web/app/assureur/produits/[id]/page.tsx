@@ -366,6 +366,16 @@ export default function ProduitDetailPage() {
               {['KID (PRIIPS)', 'Fiche produit'].map((doc) => (
                 <button
                   key={doc}
+                  onClick={() => {
+                    const content = `${produit.nom}\nISIN: ${produit.isin}\nEmetteur: ${produit.emetteur}\nType: ${TYPE_LABELS[produit.type] ?? produit.type}\nSRI: ${produit.sri}/7\nCoupon: ${produit.couponPct ?? '-'}%\nBarriere: ${produit.barrierePct ?? '-'}%\nMaturite: ${produit.maturite}\nFrais: ${produit.fraisEntree}%\n\nDocument: ${doc}`;
+                    const blob = new Blob([content], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${produit.nom.replace(/\s+/g, '_')}_${doc.replace(/[\s()]/g, '')}.txt`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  }}
                   className="flex items-center gap-2 px-3 py-2 rounded-md w-full text-left border border-border/60 transition-all duration-200 hover:bg-surface-2 dark:hover:bg-white/5 hover:shadow-xs"
                 >
                   <FileText size={14} className="text-ink-3 dark:text-ink-4" />

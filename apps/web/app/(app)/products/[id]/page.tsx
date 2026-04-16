@@ -1207,7 +1207,15 @@ ${description ? `
                 ].map(({ label, sub, icon: Icon }) => {
                   const isRecent = product.createdAt && (Date.now() - new Date(product.createdAt).getTime()) < 7 * 24 * 60 * 60 * 1000;
                   return (
-                    <button key={label} className="flex items-center gap-2 px-2.5 py-2 rounded-md border border-border/80 bg-surface-2 hover:border-violet/40 hover:bg-violet-pale text-ink-3 hover:text-violet transition-all duration-150 w-full text-left">
+                    <button
+                      key={label}
+                      onClick={() => {
+                        if (typeof handleExportPdf === 'function') {
+                          handleExportPdf();
+                        }
+                      }}
+                      className="flex items-center gap-2 px-2.5 py-2 rounded-md border border-border/80 bg-surface-2 hover:border-violet/40 hover:bg-violet-pale text-ink-3 hover:text-violet transition-all duration-150 w-full text-left"
+                    >
                       <Icon size={14} />
                       <div className="flex-1">
                         <p className="text-xs font-semibold font-body flex items-center gap-1.5">

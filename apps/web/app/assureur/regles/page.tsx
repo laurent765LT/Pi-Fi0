@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { Shield, Info, Save, Check, X, AlertTriangle } from 'lucide-react';
+import { Shield, Info, Save, Check, X, AlertTriangle, Sparkles, TrendingUp, Zap, Plus, BarChart3 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Badge } from '@/components/ui/badge';
 import { ToastContainer, useToast } from '@/components/ui/toast';
@@ -367,6 +367,34 @@ export default function ReglesEligibilitePage() {
         </p>
       </div>
 
+      {/* Rules Health Score */}
+      <div className="mb-6 bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-lg border border-border/60 shadow-card p-5">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet/10 to-cobalt/10 flex items-center justify-center">
+            <BarChart3 size={16} className="text-violet" />
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center justify-between">
+              <h3 className="text-[13px] font-semibold font-body text-ink dark:text-white">
+                Score de couverture : <span className="text-violet">{Math.round((eligibleCount / PRODUITS.length) * 100)}%</span>
+              </h3>
+              <span className="text-[11px] font-semibold font-body text-violet">
+                {eligibleCount}/{PRODUITS.length} produits
+              </span>
+            </div>
+          </div>
+        </div>
+        <div className="w-full h-2 rounded-full bg-surface-2 dark:bg-white/10 overflow-hidden mb-2">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-violet to-cobalt transition-all duration-500 ease-out"
+            style={{ width: `${Math.round((eligibleCount / PRODUITS.length) * 100)}%` }}
+          />
+        </div>
+        <p className="text-[11px] font-body text-ink-3 dark:text-ink-4 leading-relaxed">
+          Vos regles couvrent {Math.round((eligibleCount / PRODUITS.length) * 100)}% des produits du catalogue. L&apos;IA recommande d&apos;elargir vos criteres pour maximiser la distribution.
+        </p>
+      </div>
+
       {/* Rules editor grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8">
         {/* Card 1: Types de payoff */}
@@ -535,6 +563,98 @@ export default function ReglesEligibilitePage() {
           <Save size={14} />
           Enregistrer les regles
         </button>
+      </div>
+
+      {/* AI Optimization Card */}
+      <div className="mb-8 bg-gradient-to-br from-violet/[0.04] via-white/90 to-cobalt/[0.04] dark:from-violet/[0.08] dark:via-white/5 dark:to-cobalt/[0.08] backdrop-blur-md rounded-lg border border-violet/15 shadow-card overflow-hidden">
+        <div className="px-5 py-3 border-b border-violet/10 bg-violet/[0.03] dark:bg-violet/[0.06] flex items-center gap-3">
+          <Sparkles size={16} className="text-violet" />
+          <h3 className="text-[13px] font-semibold font-body text-ink dark:text-white">
+            Optimisation IA
+          </h3>
+          <span className="inline-flex items-center rounded-md px-2 py-0.5 text-[9px] font-bold font-body uppercase tracking-wider bg-violet/10 text-violet border border-violet/20">
+            Beta
+          </span>
+        </div>
+        <div className="p-5 flex flex-col gap-4">
+          {/* Suggestion 1: Augmenter SRI max */}
+          <div className="flex items-start gap-4 p-4 rounded-lg bg-white/70 dark:bg-white/[0.03] border border-border/40 hover:border-violet/20 transition-all duration-200 group">
+            <div className="w-9 h-9 rounded-lg bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center shrink-0 mt-0.5">
+              <TrendingUp size={16} className="text-amber-600 dark:text-amber-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-semibold font-body text-ink dark:text-white mb-1">
+                Augmenter le SRI max a 6
+              </p>
+              <p className="text-[11px] font-body text-ink-3 dark:text-ink-4 leading-relaxed">
+                2 produits populaires actuellement exclus deviendraient eligibles
+              </p>
+              <span className="inline-flex items-center gap-1 mt-2 text-[10px] font-semibold font-body text-emerald-600 dark:text-emerald-400">
+                <TrendingUp size={10} />
+                +340k&#8364; de volume potentiel
+              </span>
+            </div>
+            <button
+              onClick={() => setRules((prev) => ({ ...prev, sriMax: 6 }))}
+              className="shrink-0 inline-flex items-center gap-1.5 h-8 px-4 rounded-lg text-[11px] font-semibold font-body bg-violet/10 text-violet border border-violet/20 hover:bg-violet hover:text-white hover:border-violet transition-all duration-200"
+            >
+              <Zap size={12} />
+              Appliquer
+            </button>
+          </div>
+
+          {/* Suggestion 2: Baisser barriere minimale */}
+          <div className="flex items-start gap-4 p-4 rounded-lg bg-white/70 dark:bg-white/[0.03] border border-border/40 hover:border-violet/20 transition-all duration-200 group">
+            <div className="w-9 h-9 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0 mt-0.5">
+              <BarChart3 size={16} className="text-blue-600 dark:text-blue-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-semibold font-body text-ink dark:text-white mb-1">
+                Baisser la barriere minimale a 45%
+              </p>
+              <p className="text-[11px] font-body text-ink-3 dark:text-ink-4 leading-relaxed">
+                Permet d&apos;inclure les Barrier Notes a forte demande CGP
+              </p>
+              <span className="inline-flex items-center gap-1 mt-2 text-[10px] font-semibold font-body text-emerald-600 dark:text-emerald-400">
+                <TrendingUp size={10} />
+                +1 produit eligible
+              </span>
+            </div>
+            <button
+              onClick={() => setRules((prev) => ({ ...prev, barriereMin: 45 }))}
+              className="shrink-0 inline-flex items-center gap-1.5 h-8 px-4 rounded-lg text-[11px] font-semibold font-body bg-violet/10 text-violet border border-violet/20 hover:bg-violet hover:text-white hover:border-violet transition-all duration-200"
+            >
+              <Zap size={12} />
+              Appliquer
+            </button>
+          </div>
+
+          {/* Suggestion 3: Ajouter Barclays */}
+          <div className="flex items-start gap-4 p-4 rounded-lg bg-white/70 dark:bg-white/[0.03] border border-border/40 hover:border-violet/20 transition-all duration-200 group">
+            <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center shrink-0 mt-0.5">
+              <Plus size={16} className="text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-semibold font-body text-ink dark:text-white mb-1">
+                Ajouter Barclays aux emetteurs autorises
+              </p>
+              <p className="text-[11px] font-body text-ink-3 dark:text-ink-4 leading-relaxed">
+                Barclays propose des coupons competitifs sur les Autocall
+              </p>
+              <span className="inline-flex items-center gap-1 mt-2 text-[10px] font-semibold font-body text-emerald-600 dark:text-emerald-400">
+                <TrendingUp size={10} />
+                +2 produits potentiels
+              </span>
+            </div>
+            <button
+              onClick={() => setRules((prev) => ({ ...prev, emetteurs: { ...prev.emetteurs, Barclays: true } }))}
+              className="shrink-0 inline-flex items-center gap-1.5 h-8 px-4 rounded-lg text-[11px] font-semibold font-body bg-violet/10 text-violet border border-violet/20 hover:bg-violet hover:text-white hover:border-violet transition-all duration-200"
+            >
+              <Zap size={12} />
+              Appliquer
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Eligible products section */}

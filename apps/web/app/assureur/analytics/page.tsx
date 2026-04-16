@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { BarChart3, TrendingUp, Users, Target, Banknote, Award } from 'lucide-react';
+import { BarChart3, TrendingUp, Users, Target, Banknote, Award, Brain, AlertTriangle, Star } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/cn';
@@ -439,6 +439,240 @@ export default function AnalyticsPage() {
             </span>
           </div>
         </Section>
+      </div>
+
+      {/* ─── Predictions IA ─────────────────────────────────────────────── */}
+      <div className="mt-10 rounded-2xl p-[2px] bg-gradient-to-r from-violet via-cobalt to-teal">
+        <div className="rounded-[14px] bg-white dark:bg-ink p-6 space-y-8">
+          {/* Section header */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br from-violet to-cobalt text-white">
+              <Brain size={20} />
+            </div>
+            <div>
+              <h2 className="text-[18px] font-bold font-display text-ink dark:text-white">
+                Predictions IA
+              </h2>
+              <p className="text-[12px] text-ink-3 dark:text-white/40 font-body">
+                Analyse predictive et alertes intelligentes
+              </p>
+            </div>
+          </div>
+
+          {/* 1. Forecast Card */}
+          <div className="bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-border/40 flex items-center gap-2">
+              <Brain size={15} className="text-violet" />
+              <h3 className="text-[15px] font-bold text-ink dark:text-white font-display">
+                Previsions du trimestre suivant
+              </h3>
+            </div>
+            <div className="p-5 space-y-4">
+              {/* Forecast metrics */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {[
+                  { label: 'Volume attendu Q2 2026', value: '4.2M EUR', trend: '+18% vs Q1' },
+                  { label: 'Nombre de CGPs actifs prevu', value: '45', trend: '+12' },
+                  { label: 'Taux de conversion estime', value: '72%', trend: '+4pts' },
+                ].map((item) => (
+                  <div
+                    key={item.label}
+                    className="rounded-lg border border-border/40 p-4 flex flex-col gap-2 bg-gradient-to-br from-white to-surface-1 dark:from-white/5 dark:to-white/[0.02]"
+                  >
+                    <span className="text-[11px] uppercase tracking-[0.12em] font-semibold text-ink-3 dark:text-white/40 font-body">
+                      {item.label}
+                    </span>
+                    <div className="flex items-end gap-2">
+                      <span className="text-[22px] font-bold font-display text-ink dark:text-white">
+                        {item.value}
+                      </span>
+                      <Badge variant="teal" size="md">
+                        {item.trend}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Mini bar chart Q4 -> Q1 -> Q2(prevision) */}
+              <div className="mt-2">
+                <span className="text-[11px] uppercase tracking-[0.12em] font-semibold text-ink-3 dark:text-white/40 font-body mb-3 block">
+                  Evolution trimestrielle
+                </span>
+                <div className="flex items-end gap-4 h-[120px]">
+                  {[
+                    { label: 'Q4 2025', value: 2.8, max: 4.2, forecast: false },
+                    { label: 'Q1 2026', value: 3.6, max: 4.2, forecast: false },
+                    { label: 'Q2 2026', value: 4.2, max: 4.2, forecast: true },
+                  ].map((q) => {
+                    const barH = (q.value / q.max) * 100;
+                    return (
+                      <div key={q.label} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end">
+                        <span className="text-[11px] font-semibold text-ink-3 dark:text-white/40 font-body">
+                          {q.value}M
+                        </span>
+                        <div
+                          className={cn(
+                            'w-full max-w-[56px] rounded-t-md transition-all duration-500',
+                            q.forecast
+                              ? 'border-2 border-dashed border-violet bg-violet/10'
+                              : 'bg-gradient-to-t from-violet to-cobalt',
+                          )}
+                          style={{ height: `${barH * 0.9}px` }}
+                        />
+                        <span className={cn(
+                          'text-[11px] font-medium font-body',
+                          q.forecast
+                            ? 'text-violet font-semibold'
+                            : 'text-ink-3 dark:text-white/50',
+                        )}>
+                          {q.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border/40">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-3 h-3 rounded-sm bg-gradient-to-r from-violet to-cobalt" />
+                    <span className="text-[11px] text-ink-3 dark:text-white/50 font-body">Realise</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-3 h-3 rounded-sm border-2 border-dashed border-violet bg-violet/10" />
+                    <span className="text-[11px] text-ink-3 dark:text-white/50 font-body">Prevision IA</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 2. AI Risk Alerts */}
+          <div className="bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-border/40 flex items-center gap-2">
+              <AlertTriangle size={15} className="text-red" />
+              <h3 className="text-[15px] font-bold text-ink dark:text-white font-display">
+                Alertes IA
+              </h3>
+            </div>
+            <div className="p-5 flex flex-col gap-3">
+              {/* HAUTE */}
+              <div className="rounded-lg border-l-4 border-l-red border border-border/40 p-4 bg-[#FDE8EB]/30 dark:bg-red/5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <Badge variant="red" size="sm">HAUTE</Badge>
+                      <span className="text-[11px] text-ink-3 dark:text-white/40 font-body">Remplissage enveloppe</span>
+                    </div>
+                    <p className="text-[13px] font-medium text-ink dark:text-white font-body">
+                      Enveloppe M Rendement 13 a 92% de remplissage — cloture dans 5 jours
+                    </p>
+                  </div>
+                  <button className="text-[11px] font-semibold text-red hover:text-red/80 font-body whitespace-nowrap transition-colors">
+                    Voir details &rarr;
+                  </button>
+                </div>
+              </div>
+
+              {/* MOYENNE */}
+              <div className="rounded-lg border-l-4 border-l-[#9B7210] border border-border/40 p-4 bg-[#FDF3D6]/30 dark:bg-[#9B7210]/5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <Badge variant="gold" size="sm">MOYENNE</Badge>
+                      <span className="text-[11px] text-ink-3 dark:text-white/40 font-body">Engagement CGP</span>
+                    </div>
+                    <p className="text-[13px] font-medium text-ink dark:text-white font-body">
+                      2 CGPs n&apos;ont pas confirme leurs engagements depuis 7 jours
+                    </p>
+                  </div>
+                  <button className="text-[11px] font-semibold text-[#9B7210] hover:text-[#9B7210]/80 font-body whitespace-nowrap transition-colors">
+                    Relancer &rarr;
+                  </button>
+                </div>
+              </div>
+
+              {/* INFO */}
+              <div className="rounded-lg border-l-4 border-l-cobalt border border-border/40 p-4 bg-cobalt-pale/30 dark:bg-cobalt/5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <Badge variant="cobalt" size="sm">INFO</Badge>
+                      <span className="text-[11px] text-ink-3 dark:text-white/40 font-body">Opportunite marche</span>
+                    </div>
+                    <p className="text-[13px] font-medium text-ink dark:text-white font-body">
+                      Nouveau produit Capital Protege avec forte demande detectee sur le marche
+                    </p>
+                  </div>
+                  <button className="text-[11px] font-semibold text-cobalt hover:text-cobalt/80 font-body whitespace-nowrap transition-colors">
+                    Explorer &rarr;
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 3. AI Scoring Summary */}
+          <div className="bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-border/40 flex items-center gap-2">
+              <Star size={15} className="text-violet" />
+              <h3 className="text-[15px] font-bold text-ink dark:text-white font-display">
+                Score de performance IA
+              </h3>
+            </div>
+            <div className="p-5 space-y-5">
+              {/* Global score */}
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet to-cobalt flex items-center justify-center">
+                  <span className="text-[24px] font-bold font-display text-white">84</span>
+                </div>
+                <div>
+                  <span className="text-[13px] font-medium text-ink dark:text-white font-body">
+                    Score global
+                  </span>
+                  <div className="text-[11px] text-ink-3 dark:text-white/40 font-body">
+                    sur 100 — Excellent
+                  </div>
+                  <div className="w-[200px] h-2 rounded-full overflow-hidden bg-surface-2 dark:bg-white/10 mt-1.5">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-violet to-cobalt transition-all duration-700 ease-out"
+                      style={{ width: '84%' }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Breakdown */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {[
+                  { label: 'Reactivite', score: 92, color: 'from-teal to-teal' },
+                  { label: 'Competitivite prix', score: 78, color: 'from-cobalt to-cobalt' },
+                  { label: 'Couverture produits', score: 85, color: 'from-violet to-violet' },
+                  { label: 'Satisfaction CGP', score: 81, color: 'from-violet to-cobalt' },
+                ].map((item) => (
+                  <div key={item.label} className="flex flex-col gap-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[12px] font-medium text-ink dark:text-white font-body">
+                        {item.label}
+                      </span>
+                      <span className="text-[12px] font-mono font-bold text-ink dark:text-white">
+                        {item.score}/100
+                      </span>
+                    </div>
+                    <div className="h-2.5 w-full rounded-full overflow-hidden bg-surface-2 dark:bg-white/10">
+                      <div
+                        className={cn(
+                          'h-full rounded-full bg-gradient-to-r transition-all duration-700 ease-out',
+                          item.color,
+                        )}
+                        style={{ width: `${item.score}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

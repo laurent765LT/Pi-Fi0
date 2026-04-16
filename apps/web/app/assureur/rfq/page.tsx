@@ -4,7 +4,7 @@ import { useState } from 'react';
 import {
   MessageSquare, Inbox, Clock, CheckCircle2,
   Building2, Calendar, Target, Shield, Timer,
-  ChevronDown, ChevronUp, Send, Check,
+  ChevronDown, ChevronUp, Send, Check, Brain,
 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Badge } from '@/components/ui/badge';
@@ -125,23 +125,89 @@ function formatDateFR(iso: string): string {
 }
 
 // ---------------------------------------------------------------------------
+// AI helpers — deterministic pseudo-suggestions based on RFQ data
+// ---------------------------------------------------------------------------
+
+function hashString(str: string): number {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = ((h << 5) - h + str.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h);
+}
+
+function getAiSuggestion(rfq: RfqEntry) {
+  const h = hashString(rfq.id + rfq.cgpName);
+  const coupon = (7 + (h % 40) / 10).toFixed(1);        // 7.0 – 10.9
+  const price = (99 + (h % 15) / 10).toFixed(1);         // 99.0 – 100.4
+  const confidence = 70 + (h % 25);                       // 70 – 94
+  return { coupon, price, confidence };
+}
+
+function getAiCgpProfile(cgpName: string) {
+  const h = hashString(cgpName);
+  const volumes = ['250k', '500k', '750k', '1M', '1.5M'];
+  const types = ['Habitue', 'Regulier', 'Nouveau', 'Fidele', 'Occasionnel'];
+  const volume = volumes[h % volumes.length];
+  const profil = types[h % types.length];
+  const conversion = 55 + (h % 40);                       // 55 – 94
+  return { profil, volume, conversion };
+}
+
+// ---------------------------------------------------------------------------
 // Inline quote form
 // ---------------------------------------------------------------------------
 
 interface QuoteFormProps {
+  rfq: RfqEntry;
   onSubmit: (coupon: string, price: string, comment: string) => void;
   onCancel: () => void;
 }
 
-function QuoteForm({ onSubmit, onCancel }: QuoteFormProps) {
+function QuoteForm({ rfq, onSubmit, onCancel }: QuoteFormProps) {
   const [coupon, setCoupon] = useState('');
   const [price, setPrice] = useState('');
   const [comment, setComment] = useState('');
 
   const canSubmit = coupon.trim() !== '' && price.trim() !== '';
+  const aiSugg = getAiSuggestion(rfq);
 
   return (
     <div className="mt-4 p-4 rounded-lg border border-violet/20 bg-violet/[0.03]">
+      {/* AI Suggestion Box */}
+      <div className="mb-4 p-3 rounded-lg border-l-[3px] border-l-teal bg-teal/[0.05] border border-teal/15">
+        <div className="flex items-center gap-1.5 mb-2">
+          <Brain size={13} className="text-teal" />
+          <span className="text-[11px] font-display font-bold text-teal uppercase tracking-wide">
+            Suggestion IA
+          </span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[12px] font-body">
+          <div>
+            <span className="text-ink-3">Coupon recommande : </span>
+            <strong className="text-ink dark:text-white">{aiSugg.coupon}%</strong>
+            <span className="text-ink-4 text-[10px] ml-1">(conditions de marche)</span>
+          </div>
+          <div>
+            <span className="text-ink-3">Prix d&apos;emission suggere : </span>
+            <strong className="text-ink dark:text-white">{aiSugg.price}%</strong>
+          </div>
+          <div>
+            <span className="text-ink-3">Confiance : </span>
+            <strong className={cn(
+              aiSugg.confidence >= 80 ? 'text-[#059669]' : aiSugg.confidence >= 65 ? 'text-[#D97706]' : 'text-[#DC2626]',
+            )}>{aiSugg.confidence}%</strong>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => { setCoupon(aiSugg.coupon); setPrice(aiSugg.price); }}
+          className="mt-2 text-[11px] font-semibold font-body text-teal hover:text-teal/80 transition-colors underline underline-offset-2"
+        >
+          Appliquer la suggestion
+        </button>
+      </div>
+
       <h4 className="text-[12px] font-display font-bold text-ink dark:text-white mb-3">
         Soumettre une cotation
       </h4>
@@ -236,6 +302,7 @@ interface RfqCardProps {
 
 function RfqCard({ rfq, isExpanded, onToggle, onQuote }: RfqCardProps) {
   const statusCfg = STATUS_CONFIG[rfq.status];
+  const aiProfile = getAiCgpProfile(rfq.cgpName);
 
   return (
     <div className="relative overflow-hidden group bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 shadow-sm">
@@ -277,6 +344,28 @@ function RfqCard({ rfq, isExpanded, onToggle, onQuote }: RfqCardProps) {
               <Badge variant="violet" size="sm">
                 {TYPE_LABELS[rfq.type]}
               </Badge>
+            </div>
+
+            {/* AI Analysis Badge */}
+            <div className="flex items-center gap-3 mt-2.5 flex-wrap">
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-violet/[0.06] border border-violet/10">
+                <Brain size={10} className="text-violet" />
+                <span className="text-[10px] font-body text-ink-2 dark:text-white/60">
+                  Profil CGP : <strong className="text-ink dark:text-white">{aiProfile.profil}</strong>, volume moyen <strong className="text-ink dark:text-white">{aiProfile.volume}&euro;</strong>
+                </span>
+              </div>
+              <div className={cn(
+                'flex items-center gap-1.5 px-2 py-1 rounded-md border',
+                aiProfile.conversion >= 75
+                  ? 'bg-[#D1FAE5]/50 border-[#059669]/15 text-[#059669]'
+                  : aiProfile.conversion >= 60
+                  ? 'bg-[#FEF3C7]/50 border-[#D97706]/15 text-[#D97706]'
+                  : 'bg-[#FEE2E2]/50 border-[#DC2626]/15 text-[#DC2626]',
+              )}>
+                <span className="text-[10px] font-body font-semibold">
+                  Probabilite de conversion : {aiProfile.conversion}%
+                </span>
+              </div>
             </div>
           </div>
 
@@ -358,7 +447,7 @@ function RfqCard({ rfq, isExpanded, onToggle, onQuote }: RfqCardProps) {
 
         {/* Inline form */}
         {rfq.status === 'PENDING' && isExpanded && (
-          <QuoteForm onSubmit={onQuote} onCancel={onToggle} />
+          <QuoteForm rfq={rfq} onSubmit={onQuote} onCancel={onToggle} />
         )}
       </div>
     </div>

@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { ASSUREUR_DEMO } from '@/lib/mock-data-assureur';
 import { cn } from '@/lib/cn';
+import { AiChatWidget } from '@/lib/lazy';
 
 const NAV_ITEMS = [
   { href: '/assureur/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -152,6 +153,7 @@ export default function AssureurLayout({ children }: { children: React.ReactNode
         </div>
 
         <div className="max-w-[1200px] mx-auto px-8 py-7">{children}</div>
+        <AiChatWidget />
       </main>
     </div>
   );

@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import {
   ClipboardCheck, Search, ArrowUpDown, Check, X,
-  TrendingUp, Clock, CheckCircle2, Euro,
+  TrendingUp, Clock, CheckCircle2, Euro, Brain, Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { PageHeader } from '@/components/ui/page-header';
@@ -37,6 +37,28 @@ function resolveProductName(enveloppeId: string): string {
   if (!env) return '—';
   const produit = PRODUITS.find((p) => p.id === env.produitId);
   return produit?.nom ?? '—';
+}
+
+// ─── AI CGP Scoring ─────────────────────────────────────────────────────────
+
+function hashCgpName(name: string): number {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) {
+    h = ((h << 5) - h + name.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h);
+}
+
+function getCgpScore(distributeur: string): number {
+  const h = hashCgpName(distributeur);
+  // Deterministic score 45–98 based on name hash
+  return 45 + (h % 54);
+}
+
+function getCgpScoreConfig(score: number): { label: string; bg: string; text: string } {
+  if (score > 80) return { label: 'Excellent', bg: '#D1FAE5', text: '#059669' };
+  if (score >= 60) return { label: 'Bon', bg: '#FEF3C7', text: '#D97706' };
+  return { label: 'Nouveau', bg: '#F3F4F6', text: '#6B7280' };
 }
 
 // ─── Reject Modal ───────────────────────────────────────────────────────────
@@ -273,6 +295,47 @@ export default function EngagementsPage() {
   const confirmedCount = allWithStatut.filter((e) => e.effectiveStatut === 'CONFIRME').length;
   const totalVolume = allWithStatut.reduce((s, e) => s + e.montant, 0);
 
+  // ── AI Recommendation — top pending engagements by CGP score ──
+  const aiRecommendations = useMemo(() => {
+    const pending = allWithStatut.filter(
+      (e) => e.effectiveStatut === 'EN_ATTENTE' || e.effectiveStatut === 'LISTE_ATTENTE',
+    );
+    // Group by distributeur, sum montant, get score
+    const byDistrib = new Map<string, { total: number; score: number; ids: string[] }>();
+    pending.forEach((e) => {
+      const existing = byDistrib.get(e.distributeur);
+      const score = getCgpScore(e.distributeur);
+      if (existing) {
+        existing.total += e.montant;
+        existing.ids.push(e.id);
+      } else {
+        byDistrib.set(e.distributeur, { total: e.montant, score, ids: [e.id] });
+      }
+    });
+    return Array.from(byDistrib.entries())
+      .map(([name, data]) => ({ name, ...data }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 2);
+  }, [allWithStatut]);
+
+  const aiRecoVolume = useMemo(
+    () => aiRecommendations.reduce((s, r) => s + r.total, 0),
+    [aiRecommendations],
+  );
+
+  const handleValidateAiRecommendations = useCallback(() => {
+    const ids = aiRecommendations.flatMap((r) => r.ids);
+    setStatusOverrides((prev) => {
+      const next = { ...prev };
+      ids.forEach((id) => { next[id] = 'CONFIRME'; });
+      return next;
+    });
+    success(
+      `${ids.length} engagement(s) valide(s) sur recommandation IA`,
+      { title: 'Validation IA appliquee' },
+    );
+  }, [aiRecommendations, success]);
+
   // ── Tab config ──
   const tabs: { key: TabKey; label: string; count?: number }[] = [
     { key: 'en_attente', label: 'En attente', count: pendingCount },
@@ -354,6 +417,40 @@ export default function EngagementsPage() {
         ))}
       </div>
 
+      {/* ── AI Recommendation Banner ── */}
+      {aiRecommendations.length > 0 && (
+        <div className="mb-6 p-4 rounded-xl border-l-[3px] border-l-teal bg-teal/[0.04] border border-teal/15 flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex items-start gap-2.5 flex-1 min-w-0">
+            <div className="w-8 h-8 rounded-lg bg-teal/10 flex items-center justify-center shrink-0 mt-0.5">
+              <Sparkles size={14} className="text-teal" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[12px] font-display font-bold text-ink dark:text-white mb-0.5">
+                Recommandation IA
+              </p>
+              <p className="text-[12px] font-body text-ink-2 dark:text-white/60">
+                L&apos;IA recommande de valider en priorite les {aiRecommendations.length} engagements de{' '}
+                {aiRecommendations.map((r, i) => (
+                  <span key={r.name}>
+                    <strong className="text-ink dark:text-white">{r.name}</strong>
+                    <span className="text-teal font-semibold"> (score {r.score})</span>
+                    {i < aiRecommendations.length - 1 ? ' et ' : ''}
+                  </span>
+                ))}
+                {' '}&mdash; volume total <strong className="text-ink dark:text-white">{formatMontant(aiRecoVolume)}</strong>
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleValidateAiRecommendations}
+            className="shrink-0 h-8 px-4 rounded-lg text-[12px] font-semibold font-body text-white bg-teal hover:bg-teal/90 shadow-sm shadow-teal/20 transition-all flex items-center gap-1.5"
+          >
+            <Check size={12} />
+            Valider ces engagements
+          </button>
+        </div>
+      )}
+
       {/* ── Tabs + Search ── */}
       <div className="bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-lg border border-border/60 p-4 mb-6 flex flex-col sm:flex-row sm:items-center gap-3">
         {/* Tabs */}
@@ -405,6 +502,9 @@ export default function EngagementsPage() {
           <thead>
             <tr className="bg-surface dark:bg-white/5 border-b border-border/60">
               <th className="px-4 py-3 text-left text-[10px] uppercase tracking-[0.15em] font-semibold text-ink-3">CGP</th>
+              <th className="px-4 py-3 text-center text-[10px] uppercase tracking-[0.15em] font-semibold text-ink-3">
+                <span className="inline-flex items-center gap-1"><Brain size={10} /> Score IA</span>
+              </th>
               <th className="px-4 py-3 text-left text-[10px] uppercase tracking-[0.15em] font-semibold text-ink-3">Produit</th>
               <th className="px-4 py-3 text-right">
                 <SortHeader label="Montant" sortId="montant" />
@@ -423,7 +523,7 @@ export default function EngagementsPage() {
           <tbody>
             {engagements.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-12 text-center text-ink-3 dark:text-white/40 text-[13px]">
+                <td colSpan={7} className="px-4 py-12 text-center text-ink-3 dark:text-white/40 text-[13px]">
                   Aucun engagement ne correspond aux filtres selectionnes.
                 </td>
               </tr>
@@ -432,6 +532,8 @@ export default function EngagementsPage() {
               const statut = eng.effectiveStatut;
               const cfg = STATUT_CONFIG[statut];
               const rejectedReason = rejectReasons[eng.id];
+              const cgpScore = getCgpScore(eng.distributeur);
+              const scoreCfg = getCgpScoreConfig(cgpScore);
 
               return (
                 <tr
@@ -442,6 +544,18 @@ export default function EngagementsPage() {
                   <td className="px-4 py-3.5">
                     <p className="font-medium text-ink dark:text-white">{eng.distributeur}</p>
                     <p className="text-[11px] text-ink-3 font-mono">{eng.id}</p>
+                  </td>
+
+                  {/* Score IA */}
+                  <td className="px-4 py-3.5 text-center">
+                    <span
+                      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold"
+                      style={{ background: scoreCfg.bg, color: scoreCfg.text }}
+                    >
+                      {cgpScore}
+                      <span className="font-semibold">&middot;</span>
+                      {scoreCfg.label}
+                    </span>
                   </td>
 
                   {/* Produit */}

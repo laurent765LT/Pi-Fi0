@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { TrendingUp, Users, Package, Clock, ArrowRight, AlertTriangle, Eye, DollarSign, Calendar, BarChart3, Layers, Percent } from 'lucide-react';
+import { TrendingUp, Users, Package, Clock, ArrowRight, AlertTriangle, Eye, DollarSign, Calendar, BarChart3, Layers, Percent, Brain, Sparkles, Star, ChevronRight, Zap, ShieldAlert, Target } from 'lucide-react';
 import {
   PRODUITS, ENVELOPPES, EVENEMENTS, COLLECTE_MENSUELLE, ENGAGEMENTS,
   formatMontant, formatMontantFull, formatDateFR, formatDateShortFR, getProduit, getEngagements,
@@ -321,6 +321,258 @@ export default function AssureurDashboard() {
           label="Distributeurs"
           description={`${totalDistributeurs} cabinets actifs`}
         />
+      </div>
+
+      {/* ─── Intelligence IA ──────────────────────────────────────────────── */}
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-gradient-to-br from-violet to-teal">
+            <Brain size={16} className="text-white" />
+          </div>
+          <h2 className="text-[18px] font-bold font-display text-ink dark:text-white">Intelligence IA</h2>
+          <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-violet to-teal text-white">
+            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+            Live
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+          {/* ── AI Market Pulse ───────────────────────────────────────────── */}
+          <div className="group relative overflow-hidden bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 shadow-sm hover:shadow-md transition-all duration-200">
+            <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-violet/80 via-teal/60 to-gold/40" />
+            <div className="p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-gradient-to-br from-violet/15 to-teal/10">
+                    <Brain size={16} className="text-violet" />
+                  </div>
+                  <div>
+                    <h3 className="text-[14px] font-bold text-ink dark:text-white font-display">Analyse IA Marche</h3>
+                    <span className="text-[10px] text-ink-3 dark:text-white/40 font-body">Mis a jour il y a 2h</span>
+                  </div>
+                </div>
+                <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Live
+                </span>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                {/* Insight 1 */}
+                <div className="rounded-lg bg-violet/[0.04] dark:bg-violet/[0.08] border border-violet/10 p-3">
+                  <div className="flex items-start gap-2.5">
+                    <TrendingUp size={14} className="text-violet mt-0.5 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12px] font-medium text-ink dark:text-white/90 font-body leading-relaxed">
+                        Demande en hausse sur les Autocall Phoenix (+23% vs Q4)
+                      </p>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 font-body">
+                          <TrendingUp size={10} /> Haussier
+                        </span>
+                        <span className="text-[10px] font-mono font-semibold text-violet/80 dark:text-violet-light/80">89% confiance</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Insight 2 */}
+                <div className="rounded-lg bg-amber-50/60 dark:bg-amber-900/10 border border-amber-200/40 dark:border-amber-700/20 p-3">
+                  <div className="flex items-start gap-2.5">
+                    <ShieldAlert size={14} className="text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12px] font-medium text-ink dark:text-white/90 font-body leading-relaxed">
+                        Barrieres a 60% tres demandees — ajuster vos regles d&apos;eligibilite
+                      </p>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 font-body">
+                          <Zap size={10} /> Action
+                        </span>
+                        <span className="text-[10px] font-mono font-semibold text-violet/80 dark:text-violet-light/80">85% confiance</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Insight 3 */}
+                <div className="rounded-lg bg-violet/[0.04] dark:bg-violet/[0.08] border border-violet/10 p-3">
+                  <div className="flex items-start gap-2.5">
+                    <TrendingUp size={14} className="text-teal mt-0.5 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12px] font-medium text-ink dark:text-white/90 font-body leading-relaxed">
+                        Volume CGP en acceleration sur les maturites courtes (3-5 ans)
+                      </p>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 font-body">
+                          <TrendingUp size={10} /> Haussier
+                        </span>
+                        <span className="text-[10px] font-mono font-semibold text-violet/80 dark:text-violet-light/80">78% confiance</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── AI Recommendations ────────────────────────────────────────── */}
+          <div className="group relative overflow-hidden bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 shadow-sm hover:shadow-md transition-all duration-200">
+            <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-teal/60 via-violet/60 to-gold/40" />
+            <div className="p-5">
+              <div className="flex items-center gap-2.5 mb-4">
+                <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-gradient-to-br from-teal/15 to-violet/10">
+                  <Sparkles size={16} className="text-teal" />
+                </div>
+                <h3 className="text-[14px] font-bold text-ink dark:text-white font-display">Recommandations IA</h3>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                {/* Recommendation 1 */}
+                <div className="rounded-lg bg-violet/[0.04] dark:bg-violet/[0.08] border border-violet/10 p-3">
+                  <div className="flex items-start gap-2.5">
+                    <Target size={14} className="text-violet mt-0.5 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12px] font-medium text-ink dark:text-white/90 font-body leading-relaxed">
+                        Ouvrir une nouvelle enveloppe Autocall Phoenix — forte demande detectee
+                      </p>
+                      <div className="flex items-center justify-between mt-2">
+                        <span className="text-[10px] font-mono font-semibold text-violet/80 dark:text-violet-light/80">92% confiance</span>
+                        <Link
+                          href="/assureur/enveloppes"
+                          className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-semibold bg-gradient-to-r from-violet to-cobalt text-white hover:opacity-90 transition-opacity font-body"
+                        >
+                          Creer l&apos;enveloppe <ChevronRight size={12} />
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Recommendation 2 */}
+                <div className="rounded-lg bg-red-50/60 dark:bg-red-900/10 border border-red-200/40 dark:border-red-700/20 p-3">
+                  <div className="flex items-start gap-2.5">
+                    <AlertTriangle size={14} className="text-red mt-0.5 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12px] font-medium text-ink dark:text-white/90 font-body leading-relaxed">
+                        3 engagements en attente depuis &gt;48h — risque de perte de CGPs
+                      </p>
+                      <div className="flex items-center justify-between mt-2">
+                        <span className="text-[10px] font-mono font-semibold text-red/80">Urgent</span>
+                        <Link
+                          href="/assureur/engagements"
+                          className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-semibold bg-gradient-to-r from-red to-orange-500 text-white hover:opacity-90 transition-opacity font-body"
+                        >
+                          Voir les engagements <ChevronRight size={12} />
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Recommendation 3 */}
+                <div className="rounded-lg bg-amber-50/60 dark:bg-amber-900/10 border border-amber-200/40 dark:border-amber-700/20 p-3">
+                  <div className="flex items-start gap-2.5">
+                    <ShieldAlert size={14} className="text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12px] font-medium text-ink dark:text-white/90 font-body leading-relaxed">
+                        Vos regles SRI max=5 excluent 2 produits populaires — envisagez SRI 6
+                      </p>
+                      <div className="flex items-center justify-between mt-2">
+                        <span className="text-[10px] font-mono font-semibold text-violet/80 dark:text-violet-light/80">76% confiance</span>
+                        <Link
+                          href="/assureur/regles"
+                          className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-semibold bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:opacity-90 transition-opacity font-body"
+                        >
+                          Ajuster les regles <ChevronRight size={12} />
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── AI Distributor Score ──────────────────────────────────────── */}
+          <div className="group relative overflow-hidden bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 shadow-sm hover:shadow-md transition-all duration-200">
+            <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-gold/60 via-violet/40 to-teal/40" />
+            <div className="p-5">
+              <div className="flex items-center gap-2.5 mb-4">
+                <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-gradient-to-br from-amber-100 to-violet/10 dark:from-amber-900/30 dark:to-violet/10">
+                  <Star size={16} className="text-amber-600 dark:text-amber-400" />
+                </div>
+                <div>
+                  <h3 className="text-[14px] font-bold text-ink dark:text-white font-display">Score IA Distributeurs</h3>
+                  <span className="text-[10px] text-ink-3 dark:text-white/40 font-body">Top 3 CGPs ce mois</span>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                {/* CGP 1 - Jean Dupont */}
+                <div className="rounded-lg bg-gradient-to-r from-violet/[0.06] to-teal/[0.04] dark:from-violet/[0.12] dark:to-teal/[0.06] border border-violet/10 p-3">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet to-teal flex items-center justify-center text-[11px] font-bold text-white font-display">
+                        JD
+                      </div>
+                      <span className="text-[13px] font-semibold text-ink dark:text-white font-body">Jean Dupont</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[18px] font-bold font-display bg-gradient-to-r from-violet to-teal bg-clip-text text-transparent">94</span>
+                      <span className="text-[9px] font-semibold uppercase tracking-wider text-ink-3 dark:text-white/40 font-body">/100</span>
+                    </div>
+                  </div>
+                  <div className="h-1.5 w-full rounded-full overflow-hidden bg-surface-2 dark:bg-white/10 mb-1.5">
+                    <div className="h-full rounded-full bg-gradient-to-r from-violet to-teal" style={{ width: '94%' }} />
+                  </div>
+                  <p className="text-[10px] text-ink-3 dark:text-white/50 font-body">Volume croissant, diversifie, fidele</p>
+                </div>
+
+                {/* CGP 2 - Marie Laurent */}
+                <div className="rounded-lg bg-gradient-to-r from-cobalt/[0.05] to-violet/[0.03] dark:from-cobalt/[0.10] dark:to-violet/[0.06] border border-cobalt/10 p-3">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-cobalt to-violet flex items-center justify-center text-[11px] font-bold text-white font-display">
+                        ML
+                      </div>
+                      <span className="text-[13px] font-semibold text-ink dark:text-white font-body">Marie Laurent</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[18px] font-bold font-display bg-gradient-to-r from-cobalt to-violet bg-clip-text text-transparent">87</span>
+                      <span className="text-[9px] font-semibold uppercase tracking-wider text-ink-3 dark:text-white/40 font-body">/100</span>
+                    </div>
+                  </div>
+                  <div className="h-1.5 w-full rounded-full overflow-hidden bg-surface-2 dark:bg-white/10 mb-1.5">
+                    <div className="h-full rounded-full bg-gradient-to-r from-cobalt to-violet" style={{ width: '87%' }} />
+                  </div>
+                  <p className="text-[10px] text-ink-3 dark:text-white/50 font-body">Nouveau CGP prometteur, bon profil</p>
+                </div>
+
+                {/* CGP 3 - Pierre Martin */}
+                <div className="rounded-lg bg-surface/60 dark:bg-white/[0.04] border border-border/40 p-3">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-ink-3/60 to-ink-3/40 dark:from-white/30 dark:to-white/20 flex items-center justify-center text-[11px] font-bold text-white font-display">
+                        PM
+                      </div>
+                      <span className="text-[13px] font-semibold text-ink dark:text-white font-body">Pierre Martin</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[18px] font-bold font-display text-ink-2 dark:text-white/60">72</span>
+                      <span className="text-[9px] font-semibold uppercase tracking-wider text-ink-3 dark:text-white/40 font-body">/100</span>
+                    </div>
+                  </div>
+                  <div className="h-1.5 w-full rounded-full overflow-hidden bg-surface-2 dark:bg-white/10 mb-1.5">
+                    <div className="h-full rounded-full bg-ink-3/40 dark:bg-white/30" style={{ width: '72%' }} />
+                  </div>
+                  <p className="text-[10px] text-ink-3 dark:text-white/50 font-body">Actif mais concentre sur un seul produit</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
 
       {/* Derniers engagements */}

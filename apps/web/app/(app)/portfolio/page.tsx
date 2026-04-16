@@ -38,6 +38,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip } from '@/components/ui/tooltip';
 import { useAnimatedCounter } from '@/hooks/use-animated-counter';
+import { ToastContainer, useToast } from '@/components/ui/toast';
 import { exportToExcel } from '@/lib/export-utils';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -929,6 +930,8 @@ function AllocationChart({ products, commitments }: { products: any[]; commitmen
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function PortfolioPage() {
+  const { toasts, success: toastSuccess, error: toastError, dismiss: dismissToast } = useToast();
+  const [statusOverrides, setStatusOverrides] = useState<Record<string, string>>({});
   const [activeTab, setActiveTab] = useState<PortfolioTab>('products');
   const [barrierFilter, setBarrierFilter] = useState<BarrierStatus | ''>('');
   const [sortCol, setSortCol] = useState<SortColumn>('name');
@@ -968,22 +971,46 @@ export default function PortfolioPage() {
 
   const handleCancel = (id: string) => {
     if (window.confirm("Etes-vous sur de vouloir annuler cette marque d'interet ?")) {
-      cancelMutation.mutate(id);
+      cancelMutation.mutate(id, {
+        onSuccess: () => {
+          setStatusOverrides((prev) => ({ ...prev, [id]: 'CANCELLED' }));
+          toastSuccess('Engagement annule avec succes.');
+        },
+        onError: () => toastError("Erreur lors de l'annulation."),
+      });
     }
   };
 
   const handleReview = (id: string) => {
-    reviewMutation.mutate(id);
+    reviewMutation.mutate(id, {
+      onSuccess: () => {
+        setStatusOverrides((prev) => ({ ...prev, [id]: 'REVIEW' }));
+        toastSuccess('Engagement passe en revue.');
+      },
+      onError: () => toastError('Erreur lors du changement de statut.'),
+    });
   };
 
   const handleApprove = (id: string) => {
-    approveMutation.mutate(id);
+    approveMutation.mutate(id, {
+      onSuccess: () => {
+        setStatusOverrides((prev) => ({ ...prev, [id]: 'CONFIRMED' }));
+        toastSuccess('Engagement approuve.');
+      },
+      onError: () => toastError("Erreur lors de l'approbation."),
+    });
   };
 
   const handleReject = (id: string) => {
     const reason = window.prompt('Raison du rejet :');
     if (reason && reason.trim()) {
-      rejectMutation.mutate({ id, reason: reason.trim() });
+      rejectMutation.mutate({ id, reason: reason.trim() }, {
+        onSuccess: () => {
+          setStatusOverrides((prev) => ({ ...prev, [id]: 'CANCELLED' }));
+          toastSuccess('Engagement rejete.');
+        },
+        onError: () => toastError('Erreur lors du rejet.'),
+      });
     }
   };
 
@@ -1281,7 +1308,7 @@ export default function PortfolioPage() {
               {/* Mobile Card Layout */}
               <div className="md:hidden space-y-2.5 p-3">
                 {sortedCommitments.map((c: any) => {
-                  const status = c.status ?? 'PENDING';
+                  const status = statusOverrides[c.id] ?? c.status ?? 'PENDING';
                   const product = productMap.get(c.shelfId) || productMap.get(c.productId);
 
                   return (
@@ -1370,7 +1397,7 @@ export default function PortfolioPage() {
                   </thead>
                   <tbody className="stagger-rows">
                     {sortedCommitments.map((c: any, rowIdx: number) => {
-                      const status = c.status ?? 'PENDING';
+                      const status = statusOverrides[c.id] ?? c.status ?? 'PENDING';
                       const product = productMap.get(c.shelfId) || productMap.get(c.productId);
 
                       return (
@@ -1733,6 +1760,8 @@ export default function PortfolioPage() {
       {showStressModal && (
         <StressTestModal onClose={() => setShowStressModal(false)} commitments={commitments ?? []} products={products as any[]} />
       )}
+
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </div>
   );
 }

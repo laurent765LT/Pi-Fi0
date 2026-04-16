@@ -347,12 +347,12 @@ export default function ProduitDetailPage() {
                 </div>
               )}
 
-              <button
-                onClick={() => alert('Fonctionnalité disponible en production')}
+              <Link
+                href="/assureur/enveloppes"
                 className="w-full h-10 rounded-lg bg-violet hover:bg-violet-dark text-white font-semibold font-body text-[13px] flex items-center justify-center gap-2 transition-all duration-200 hover:shadow-violet active:scale-[0.98]"
               >
                 Gérer l&apos;enveloppe
-              </button>
+              </Link>
             </div>
           )}
 

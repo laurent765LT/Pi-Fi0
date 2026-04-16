@@ -48,7 +48,8 @@ function formatRelativeTime(isoDate: string): string {
 
 // ─── Navigation mapping ──────────────────────────────────────────────────────
 
-function getNotificationLink(type: string): string | null {
+function getNotificationLink(type: string, productId?: string): string | null {
+  if (productId) return `/products/${productId}`;
   switch (type) {
     case 'info':
       return '/products';
@@ -194,6 +195,7 @@ interface NotificationCardProps {
   type: NotificationType;
   read: boolean;
   createdAt: string;
+  productId?: string;
   onMarkRead: (id: string) => void;
   onDismiss: (id: string) => void;
 }
@@ -205,12 +207,13 @@ function NotificationCard({
   type,
   read,
   createdAt,
+  productId,
   onMarkRead,
   onDismiss,
 }: NotificationCardProps) {
   const config = TYPE_CONFIG[type] ?? TYPE_CONFIG.info;
   const Icon = config.icon;
-  const link = getNotificationLink(type);
+  const link = getNotificationLink(type, productId);
 
   const autoReadRef = useAutoMarkRead(id, read, onMarkRead);
 
@@ -422,6 +425,7 @@ export default function NotificationsPage() {
     markRead,
     markAllRead,
     dismiss,
+    addNotification,
   } = useNotificationsStore();
 
   const initDemo = useNotificationsStore((s) => s.initDemoNotifications);
@@ -434,6 +438,21 @@ export default function NotificationsPage() {
     if (notifications.length === 0) {
       initDemo();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Simulated real-time notification after 30s on the page
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      addNotification({
+        type: 'closing',
+        title: 'Rappel: Cloture imminente',
+        message: 'M Ambition 10 ferme dans 3 jours. N\'oubliez pas de finaliser vos engagements.',
+        productId: 'prod-010',
+        productName: 'M Ambition 10',
+      });
+    }, 30000);
+    return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

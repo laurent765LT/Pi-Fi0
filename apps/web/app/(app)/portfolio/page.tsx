@@ -1059,6 +1059,70 @@ export default function PortfolioPage() {
     exportToExcel(rows, `portfolio-export-${new Date().toISOString().slice(0, 10)}`, 'Portfolio');
   };
 
+  // Export Underlyings tab to CSV
+  const handleExportUnderlyings = () => {
+    if (!products || (products as any[]).length === 0) return;
+    const headers = ['Sous-jacent', 'Strike', 'Performance (%)', 'Barriere capital (%)', 'Distance barriere (%)', 'ISIN', 'Produit', 'SRI'];
+    const csvRows = (products as any[]).slice(0, 15).map((p: any) => {
+      const barrierPct = p.barrierCapPct ?? 60;
+      let hash = 0;
+      for (let i = 0; i < (p.id?.length ?? 0); i++) hash = ((hash << 5) - hash + p.id.charCodeAt(i)) | 0;
+      const simulatedPerf = ((Math.abs(hash) % 40) - 10);
+      const distance = 100 + simulatedPerf - barrierPct;
+      return [
+        p.underlyingYahoo ?? p.underlyingName ?? '--',
+        '100.00',
+        simulatedPerf.toFixed(1),
+        p.barrierCapPct != null ? p.barrierCapPct.toFixed(1) : '--',
+        p.barrierCapPct != null ? distance.toFixed(1) : '--',
+        p.isin ?? '--',
+        p.name ?? '--',
+        p.sri != null ? String(p.sri) : '--',
+      ];
+    });
+    const bom = '\uFEFF';
+    const csvContent = bom + [headers, ...csvRows].map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(';')).join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `strickin-sous-jacents-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // Export Expired tab to CSV
+  const handleExportExpired = () => {
+    const expiredData = [
+      { name: 'Phoenix Autocall SX5E 2023', isin: 'FR0014007A95', issuer: 'SG Issuer', maturity: '15 mars 2024', coupon: '8.5%', protection: '60%', result: 'Rappele' },
+      { name: 'Athena BNP Euro Rendement', isin: 'FR0014008B12', issuer: 'BNP Paribas', maturity: '22 jan. 2024', coupon: '7.2%', protection: '50%', result: 'Maturite' },
+    ];
+    if (expiredData.length === 0) return;
+    const headers = ['Produit', 'ISIN', 'Emetteur', 'Maturite', 'Coupon', 'Protection', 'Resultat'];
+    const csvRows = expiredData.map(p => [
+      p.name,
+      p.isin,
+      p.issuer,
+      p.maturity,
+      p.coupon,
+      p.protection,
+      p.result,
+    ]);
+    const bom = '\uFEFF';
+    const csvContent = bom + [headers, ...csvRows].map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(';')).join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `strickin-positions-expirees-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="animate-fade-in space-y-4">
       {/* ── Header ─────────────────────────────────────────────────── */}
@@ -1484,7 +1548,9 @@ export default function PortfolioPage() {
                 {f.label}
               </button>
             ))}
-            <button className={cn(
+            <button
+              onClick={handleExportUnderlyings}
+              className={cn(
               'ml-auto h-7 px-2.5 rounded-lg border border-border/50 dark:border-white/12 bg-white/70 dark:bg-white/[0.04] backdrop-blur-sm text-ink-3 dark:text-white/45',
               'text-[10px] font-medium font-body flex items-center gap-1',
               'hover:text-[#3B1FA8] dark:hover:text-[#C9BCFF] hover:border-[#3B1FA8]/35 transition-all duration-150',
@@ -1594,7 +1660,9 @@ export default function PortfolioPage() {
               </div>
               Produits expires
             </h2>
-            <button className={cn(
+            <button
+              onClick={handleExportExpired}
+              className={cn(
               'h-7 px-2.5 rounded-lg border border-border/50 dark:border-white/12 bg-white/70 dark:bg-white/[0.04] text-ink-3 dark:text-white/45',
               'text-[10px] font-medium font-body flex items-center gap-1',
               'hover:text-[#3B1FA8] dark:hover:text-[#C9BCFF] hover:border-[#3B1FA8]/35 transition-all duration-150',

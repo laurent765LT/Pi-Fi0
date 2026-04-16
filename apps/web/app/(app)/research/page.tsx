@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
   Search,
   Download,
@@ -330,7 +330,72 @@ export default function ResearchPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedIdea, setSelectedIdea] = useState<TradeIdea | null>(TRADE_IDEAS[0]!);
   const [featuredIndex, setFeaturedIndex] = useState(0);
+  const [shareSuccess, setShareSuccess] = useState(false);
   const currentFeatured = TRADE_IDEAS[featuredIndex]!;
+
+  const handleDownloadTxt = useCallback((idea: TradeIdea) => {
+    const verdict = AI_VERDICT_CONFIG[idea.aiVerdict]?.label ?? idea.aiVerdict;
+    const lines = [
+      `════════════════════════════════════════`,
+      `  STRICK'IN RESEARCH`,
+      `════════════════════════════════════════`,
+      ``,
+      `Titre       : ${idea.title}`,
+      `Sous-titre  : ${idea.subtitle}`,
+      `Date        : ${formatDate(idea.date)}`,
+      `Sous-jacent : ${idea.underlying}`,
+      `Rendement   : ${idea.returnPct}%`,
+      `Confiance IA: ${idea.aiConfidence}%`,
+      `Verdict IA  : ${verdict}`,
+      ``,
+      `── Thèse d'investissement ──────────────`,
+      idea.analysis.thesis,
+      ``,
+      `── Métriques clés ─────────────────────`,
+      ...idea.analysis.keyMetrics.map((m) => `  ${m.label}: ${m.value}`),
+      ``,
+      `── Catalyseurs ────────────────────────`,
+      ...idea.analysis.catalysts.map((c) => `  • ${c}`),
+      ``,
+      `── Risques ────────────────────────────`,
+      ...idea.analysis.risks.map((r) => `  • ${r}`),
+      ``,
+      `── Structure proposée ─────────────────`,
+      idea.analysis.structureDetails,
+      ``,
+      `── Sources ────────────────────────────`,
+      ...idea.analysis.sources.map((s) => `  • ${s}`),
+      ``,
+      `════════════════════════════════════════`,
+      `  Généré par Strick'in Research`,
+      `════════════════════════════════════════`,
+    ];
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+    const slug = idea.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `strickin-research-${slug}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, []);
+
+  const handleShare = useCallback(async (idea: TradeIdea) => {
+    const text = `\u{1F4CA} Strick'in Research - ${idea.title}\n${idea.subtitle}\nRendement: ${idea.returnPct}%\nSous-jacent: ${idea.underlying}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: `Strick'in - ${idea.title}`, text });
+      } catch {
+        /* user cancelled share dialog */
+      }
+    } else if (navigator.clipboard) {
+      await navigator.clipboard.writeText(text);
+      setShareSuccess(true);
+      setTimeout(() => setShareSuccess(false), 2000);
+    }
+  }, []);
 
   const filteredIdeas = TRADE_IDEAS.filter((idea) => {
     const matchesSearch =
@@ -439,19 +504,25 @@ export default function ResearchPage() {
             </button>
 
             <div className="shrink-0 flex items-center gap-2 border-l border-border/40 pl-4">
-              <button className={cn(
-                'flex items-center gap-1.5 text-[11px] text-ink-3 font-body font-medium',
-                'hover:text-[#3B1FA8] hover:translate-x-0.5 transition-all duration-200',
-              )}>
+              <button
+                onClick={() => handleDownloadTxt(currentFeatured)}
+                className={cn(
+                  'flex items-center gap-1.5 text-[11px] text-ink-3 font-body font-medium',
+                  'hover:text-[#3B1FA8] hover:translate-x-0.5 transition-all duration-200',
+                )}
+              >
                 <Download size={12} />
                 PDF
               </button>
-              <button className={cn(
-                'flex items-center gap-1.5 text-[11px] text-ink-3 font-body font-medium',
-                'hover:text-[#3B1FA8] hover:translate-x-0.5 transition-all duration-200',
-              )}>
+              <button
+                onClick={() => handleShare(currentFeatured)}
+                className={cn(
+                  'flex items-center gap-1.5 text-[11px] text-ink-3 font-body font-medium',
+                  'hover:text-[#3B1FA8] hover:translate-x-0.5 transition-all duration-200',
+                )}
+              >
                 <Share2 size={12} />
-                Partager
+                {shareSuccess ? 'Copié !' : 'Partager'}
               </button>
             </div>
           </div>
@@ -749,22 +820,28 @@ export default function ResearchPage() {
 
                 {/* Actions */}
                 <div className="flex items-center gap-2 pt-1">
-                  <button className={cn(
-                    'h-8 px-4 rounded-lg font-body text-[11px] font-semibold inline-flex items-center gap-1.5',
-                    'bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] text-white shadow-sm shadow-violet/20',
-                    'hover:shadow-md hover:shadow-violet/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
-                  )}>
+                  <button
+                    onClick={() => handleDownloadTxt(selectedIdea)}
+                    className={cn(
+                      'h-8 px-4 rounded-lg font-body text-[11px] font-semibold inline-flex items-center gap-1.5',
+                      'bg-gradient-to-r from-[#3B1FA8] to-[#5B3FD4] text-white shadow-sm shadow-violet/20',
+                      'hover:shadow-md hover:shadow-violet/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
+                    )}
+                  >
                     <Download size={11} />
                     Télécharger le PDF
                   </button>
-                  <button className={cn(
-                    'h-8 px-4 rounded-lg border border-border/60 bg-white/80 dark:bg-white/10 backdrop-blur-sm',
-                    'font-body text-[11px] font-semibold text-ink-2 inline-flex items-center gap-1.5',
-                    'hover:border-violet hover:text-violet hover:bg-violet-ghost hover:shadow-sm hover:shadow-violet/10',
-                    'hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
-                  )}>
+                  <button
+                    onClick={() => handleShare(selectedIdea)}
+                    className={cn(
+                      'h-8 px-4 rounded-lg border border-border/60 bg-white/80 dark:bg-white/10 backdrop-blur-sm',
+                      'font-body text-[11px] font-semibold text-ink-2 inline-flex items-center gap-1.5',
+                      'hover:border-violet hover:text-violet hover:bg-violet-ghost hover:shadow-sm hover:shadow-violet/10',
+                      'hover:scale-[1.02] active:scale-[0.98] transition-all duration-200',
+                    )}
+                  >
                     <Share2 size={11} />
-                    Partager
+                    {shareSuccess ? 'Copié !' : 'Partager'}
                   </button>
                 </div>
               </div>

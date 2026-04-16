@@ -25,6 +25,7 @@ import {
   Copy,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { ToastContainer, useToast } from '@/components/ui/toast';
 import {
   useCreateRfq,
   useSendRfq,
@@ -93,6 +94,11 @@ function fmtPct(v: number, digits = 2) {
 
 function fmtCcy(v: number, ccy = 'EUR') {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: ccy, maximumFractionDigits: 0 }).format(v);
+}
+
+function safeJsonParse<T = any>(value: unknown, fallback: T | null = null): T | null {
+  if (typeof value !== 'string') return value as T;
+  try { return JSON.parse(value); } catch { return fallback; }
 }
 
 // ─── Page ───────────────────────────────────────────────────────────────────
@@ -262,7 +268,7 @@ function RfqListTab({ onView }: { onView: (id: string) => void }) {
           {rfqs.map((rfq: any) => {
             const st = STATUS_STYLES[rfq.status] ?? STATUS_STYLES.DRAFT;
             const StIcon = st.icon;
-            const config = typeof rfq.productConfig === 'string' ? JSON.parse(rfq.productConfig) : rfq.productConfig;
+            const config = safeJsonParse(rfq.productConfig);
             const structLabel = STRUCTURE_TYPES.find((s) => s.value === config?.structureType)?.label ?? config?.structureType ?? '—';
             const quoteCount = rfq._count?.quotes ?? rfq.quotes?.length ?? 0;
 
@@ -388,7 +394,7 @@ function RfqCreateTab({ onCreated }: { onCreated: (id: string) => void }) {
 
   // Load template
   const loadTemplate = (tpl: any) => {
-    const config = typeof tpl.config === 'string' ? JSON.parse(tpl.config) : tpl.config;
+    const config = safeJsonParse(tpl.config);
     setStructureType(tpl.structureType ?? config?.structureType ?? 'PHOENIX_AUTOCALL');
     setProductName(tpl.name ?? '');
     if (config?.currency) setCurrency(config.currency);
@@ -1073,9 +1079,10 @@ function RfqDetailTab({ rfqId }: { rfqId: string }) {
   const { data: rfqData, isLoading, refetch } = useRfq(rfqId);
   const sendRfq = useSendRfq();
   const selectQuote = useSelectQuote();
+  const { toasts, error: toastError, dismiss } = useToast();
 
   const rfq: any = (rfqData as any)?.data ?? rfqData;
-  const config = rfq ? (typeof rfq.productConfig === 'string' ? JSON.parse(rfq.productConfig) : rfq.productConfig) : null;
+  const config = rfq ? safeJsonParse(rfq.productConfig) : null;
   const quotes: any[] = rfq?.quotes ?? [];
 
   if (isLoading || !rfq) {
@@ -1098,16 +1105,16 @@ function RfqDetailTab({ rfqId }: { rfqId: string }) {
   const handleSend = async () => {
     try {
       await sendRfq.mutateAsync(rfqId);
-    } catch {
-      // handled by react-query
+    } catch (err) {
+      toastError(err instanceof Error ? err.message : "Erreur lors de l'envoi de la RFQ");
     }
   };
 
   const handleSelect = async (quoteId: string) => {
     try {
       await selectQuote.mutateAsync({ rfqId, quoteId });
-    } catch {
-      // handled by react-query
+    } catch (err) {
+      toastError(err instanceof Error ? err.message : 'Erreur lors de la selection de la cotation');
     }
   };
 
@@ -1190,7 +1197,7 @@ function RfqDetailTab({ rfqId }: { rfqId: string }) {
 
           <div className="grid grid-cols-1 gap-4">
             {sortedQuotes.map((q: any, idx: number) => {
-              const result = typeof q.pricingResult === 'string' ? JSON.parse(q.pricingResult) : q.pricingResult;
+              const result = safeJsonParse(q.pricingResult);
               const issuer = q.issuer ?? q.issuerProfile;
               const isWinner = idx === 0;
               const isSelected = q.status === 'ACCEPTED';
@@ -1287,7 +1294,7 @@ function RfqDetailTab({ rfqId }: { rfqId: string }) {
                   {/* Score breakdown */}
                   {q.scoreBreakdown && (
                     <div className="mt-3 flex items-center gap-3 flex-wrap">
-                      {Object.entries(typeof q.scoreBreakdown === 'string' ? JSON.parse(q.scoreBreakdown) : q.scoreBreakdown).map(
+                      {Object.entries(safeJsonParse(q.scoreBreakdown, {}) ?? {}).map(
                         ([key, val]) => (
                           <div key={key} className="flex items-center gap-1 text-[10px] font-body text-ink-3 bg-surface-2/40 px-2 py-0.5 rounded-md">
                             <span className="capitalize">{key}:</span>
@@ -1363,6 +1370,8 @@ function RfqDetailTab({ rfqId }: { rfqId: string }) {
           </div>
         </div>
       )}
+
+      <ToastContainer toasts={toasts} onDismiss={dismiss} />
     </div>
   );
 }

@@ -92,9 +92,8 @@ export default function AssureurLayout({ children }: { children: React.ReactNode
             Systeme
           </span>
           <Link
-            href="#"
+            href="/settings"
             className="flex items-center gap-3 px-3 h-[38px] rounded-xl text-[13px] font-medium font-body text-ink-2 dark:text-white/60 hover:bg-violet/[0.06] hover:text-violet transition-all duration-200"
-            onClick={(e) => { e.preventDefault(); alert('Fonctionnalite disponible en production'); }}
           >
             <Settings size={16} className="text-ink-3" />
             <span>Parametres</span>

@@ -132,6 +132,7 @@ export default function PricingPage() {
   // Result
   const [pricingResult, setPricingResult] = useState<any>(null);
   const [validationErrors, setValidationErrors] = useState<any[]>([]);
+  const [pricingError, setPricingError] = useState<string | null>(null);
 
   // ── Build config ──────────────────────────────────────────────────────────
   const underlying = UNDERLYINGS[selectedUnderlying]!;
@@ -210,19 +211,24 @@ export default function PricingPage() {
 
   // ── Launch pricing ────────────────────────────────────────────────────────
   const handlePrice = async () => {
-    const config = buildConfig();
-    const valResult = await validateConfig.mutateAsync(config);
-    setValidationErrors(valResult.errors);
+    setPricingError(null);
+    try {
+      const config = buildConfig();
+      const valResult = await validateConfig.mutateAsync(config);
+      setValidationErrors(valResult.errors ?? []);
 
-    if (!valResult.valid) {
+      if (!valResult.valid) {
+        // Stay on current step so the user can see and fix validation errors
+        return;
+      }
+
+      const result = await priceProduct.mutateAsync({ config, saveRun: true });
+      setPricingResult(result);
+      setValidationErrors(result.validation ?? []);
       setStep(3);
-      return;
+    } catch (err: any) {
+      setPricingError(err?.message ?? 'Une erreur est survenue lors du pricing. Veuillez reessayer.');
     }
-
-    const result = await priceProduct.mutateAsync({ config, saveRun: true });
-    setPricingResult(result);
-    setValidationErrors(result.validation);
-    setStep(3);
   };
 
   // ── Load template ─────────────────────────────────────────────────────────
@@ -857,6 +863,17 @@ export default function PricingPage() {
                       ))}
                     </div>
                   )}
+                  {pricingError && (
+                    <div className="w-full max-w-md bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl p-4 mt-3 animate-fade-in">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-5 h-5 rounded-md bg-red-100 dark:bg-red-500/20 flex items-center justify-center">
+                          <AlertTriangle size={12} className="text-red-500" />
+                        </div>
+                        <span className="text-[12px] font-bold text-red-700 dark:text-red-400">Erreur de pricing</span>
+                      </div>
+                      <p className="text-[11px] text-red-600 dark:text-red-400/80 font-body ml-7">{pricingError}</p>
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (
@@ -1080,22 +1097,22 @@ export default function PricingPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {historyData.runs.map((r: any) => (
-                    <tr key={r.id} className="border-b border-border/40 dark:border-white/5 last:border-0 hover:bg-violet/[0.03] dark:hover:bg-violet/5 transition-colors duration-150">
-                      <td className="px-4 py-2.5 text-ink-2 dark:text-white/60">{formatDate(r.createdAt)}</td>
+                  {(historyData?.runs ?? []).map((r: any) => (
+                    <tr key={r?.id} className="border-b border-border/40 dark:border-white/5 last:border-0 hover:bg-violet/[0.03] dark:hover:bg-violet/5 transition-colors duration-150">
+                      <td className="px-4 py-2.5 text-ink-2 dark:text-white/60">{r?.createdAt ? formatDate(r.createdAt) : '\u2014'}</td>
                       <td className="px-4 py-2.5 text-right">
-                        <span className="font-mono font-bold text-violet">{r.fairValue}%</span>
+                        <span className="font-mono font-bold text-violet">{r?.fairValue ?? '\u2014'}%</span>
                       </td>
                       <td className="px-4 py-2.5 text-right">
-                        <span className="font-mono font-bold text-teal">{r.issuePrice}%</span>
+                        <span className="font-mono font-bold text-teal">{r?.issuePrice ?? '\u2014'}%</span>
                       </td>
-                      <td className="px-4 py-2.5 text-right font-mono text-ink-2 dark:text-white/60">{r.indicativeCoupon ? `${r.indicativeCoupon}%` : '\u2014'}</td>
+                      <td className="px-4 py-2.5 text-right font-mono text-ink-2 dark:text-white/60">{r?.indicativeCoupon ? `${r.indicativeCoupon}%` : '\u2014'}</td>
                       <td className="px-4 py-2.5 text-center">
                         <span className="inline-flex items-center rounded-lg px-2 py-0.5 text-[9px] font-bold bg-violet/10 dark:bg-violet/20 text-violet border border-violet/15">
-                          {r.modelUsed}
+                          {r?.modelUsed ?? '\u2014'}
                         </span>
                       </td>
-                      <td className="px-4 py-2.5 text-right font-mono text-ink-3 dark:text-white/40 text-[11px]">{r.computeTimeMs}ms</td>
+                      <td className="px-4 py-2.5 text-right font-mono text-ink-3 dark:text-white/40 text-[11px]">{r?.computeTimeMs ?? '\u2014'}ms</td>
                     </tr>
                   ))}
                 </tbody>

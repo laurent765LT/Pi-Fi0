@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Bell,
   BellRing,
@@ -26,6 +26,7 @@ import {
   LogOut,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { useLocaleStore } from '@/stores/locale-store';
 
 // ---------------------------------------------------------------------------
 // Toggle Switch
@@ -267,6 +268,43 @@ const DEMO_SESSIONS = [
 ];
 
 // ---------------------------------------------------------------------------
+// Settings persistence
+// ---------------------------------------------------------------------------
+
+const SETTINGS_STORAGE_KEY = 'strickin-settings';
+
+interface AppSettings {
+  emailNotifs: boolean;
+  pushNotifs: boolean;
+  weeklyReport: boolean;
+  language: 'fr' | 'en';
+  twoFa: boolean;
+}
+
+const DEFAULT_SETTINGS: AppSettings = {
+  emailNotifs: true,
+  pushNotifs: false,
+  weeklyReport: true,
+  language: 'fr',
+  twoFa: false,
+};
+
+function loadSettings(): AppSettings {
+  if (typeof window === 'undefined') return DEFAULT_SETTINGS;
+  try {
+    const stored = localStorage.getItem(SETTINGS_STORAGE_KEY);
+    if (stored) return { ...DEFAULT_SETTINGS, ...JSON.parse(stored) };
+  } catch {}
+  return DEFAULT_SETTINGS;
+}
+
+function saveSettings(settings: AppSettings) {
+  try {
+    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+  } catch {}
+}
+
+// ---------------------------------------------------------------------------
 // Section definitions for search
 // ---------------------------------------------------------------------------
 
@@ -284,15 +322,25 @@ const SECTION_DEFS = [
 
 export default function SettingsPage() {
   // Notification preferences
-  const [emailNotifs, setEmailNotifs] = useState(true);
-  const [pushNotifs, setPushNotifs] = useState(false);
-  const [weeklyReport, setWeeklyReport] = useState(true);
+  const [emailNotifs, setEmailNotifs] = useState(() => loadSettings().emailNotifs);
+  const [pushNotifs, setPushNotifs] = useState(() => loadSettings().pushNotifs);
+  const [weeklyReport, setWeeklyReport] = useState(() => loadSettings().weeklyReport);
 
-  // Display preferences
-  const [language, setLanguage] = useState<'fr' | 'en'>('fr');
+  // Display preferences — synced with global locale store
+  const { locale, setLocale } = useLocaleStore();
+  const [language, setLanguageLocal] = useState<'fr' | 'en'>(() => loadSettings().language);
+  const setLanguage = (lang: 'fr' | 'en') => {
+    setLanguageLocal(lang);
+    setLocale(lang);
+  };
+  // Sync on mount if locale store differs
+  useEffect(() => {
+    if (locale !== language) setLanguageLocal(locale);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Security
-  const [twoFa, setTwoFa] = useState(false);
+  const [twoFa, setTwoFa] = useState(() => loadSettings().twoFa);
 
   // Confirmation states
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -306,6 +354,10 @@ export default function SettingsPage() {
   const [sessions, setSessions] = useState(DEMO_SESSIONS);
   const [logoutAllConfirming, setLogoutAllConfirming] = useState(false);
 
+  useEffect(() => {
+    saveSettings({ emailNotifs, pushNotifs, weeklyReport, language, twoFa });
+  }, [emailNotifs, pushNotifs, weeklyReport, language, twoFa]);
+
   const matchingSections = useMemo(() => {
     if (!searchQuery.trim()) return SECTION_DEFS.map((s) => s.id);
     const q = searchQuery.toLowerCase();
@@ -318,6 +370,18 @@ export default function SettingsPage() {
   const isSectionHighlighted = (id: string) => searchQuery.trim() !== '' && matchingSections.includes(id);
 
   const handleExportData = () => {
+    const data = {
+      settings: { emailNotifs, pushNotifs, weeklyReport, language, twoFa },
+      exportedAt: new Date().toISOString(),
+      platform: 'Strick\'in',
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'strickin-export.json';
+    a.click();
+    URL.revokeObjectURL(url);
     setExportSuccess(true);
     setTimeout(() => setExportSuccess(false), 3000);
   };
@@ -769,6 +833,7 @@ export default function SettingsPage() {
                 setWeeklyReport(true);
                 setLanguage('fr');
                 setTwoFa(false);
+                saveSettings(DEFAULT_SETTINGS);
               }}
             />
 

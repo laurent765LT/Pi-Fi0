@@ -23,6 +23,8 @@ import { useAuthStore } from '@/stores/auth-store';
 // Constants
 // ---------------------------------------------------------------------------
 
+const PROFILE_STORAGE_KEY = 'strickin-profile';
+
 const ROLE_LABELS: Record<string, string> = {
   SUPER_ADMIN: 'Super Admin',
   ORG_ADMIN: 'Administrateur',
@@ -136,10 +138,38 @@ export default function ProfilePage() {
   const user = useAuthStore((s) => s.user);
   const u = user as any;
 
-  const [firstName, setFirstName] = useState(u?.firstName ?? '');
-  const [lastName, setLastName] = useState(u?.lastName ?? '');
-  const [phone, setPhone] = useState(u?.phone ?? '+33 6 12 34 56 78');
-  const [company, setCompany] = useState(u?.company ?? 'Mon Cabinet CGP');
+  const [firstName, setFirstName] = useState(() => {
+    if (typeof window === 'undefined') return u?.firstName ?? '';
+    try {
+      const stored = localStorage.getItem(PROFILE_STORAGE_KEY);
+      if (stored) return JSON.parse(stored).firstName ?? u?.firstName ?? '';
+    } catch {}
+    return u?.firstName ?? '';
+  });
+  const [lastName, setLastName] = useState(() => {
+    if (typeof window === 'undefined') return u?.lastName ?? '';
+    try {
+      const stored = localStorage.getItem(PROFILE_STORAGE_KEY);
+      if (stored) return JSON.parse(stored).lastName ?? u?.lastName ?? '';
+    } catch {}
+    return u?.lastName ?? '';
+  });
+  const [phone, setPhone] = useState(() => {
+    if (typeof window === 'undefined') return u?.phone ?? '+33 6 12 34 56 78';
+    try {
+      const stored = localStorage.getItem(PROFILE_STORAGE_KEY);
+      if (stored) return JSON.parse(stored).phone ?? u?.phone ?? '+33 6 12 34 56 78';
+    } catch {}
+    return u?.phone ?? '+33 6 12 34 56 78';
+  });
+  const [company, setCompany] = useState(() => {
+    if (typeof window === 'undefined') return u?.company ?? 'Mon Cabinet CGP';
+    try {
+      const stored = localStorage.getItem(PROFILE_STORAGE_KEY);
+      if (stored) return JSON.parse(stored).company ?? u?.company ?? 'Mon Cabinet CGP';
+    } catch {}
+    return u?.company ?? 'Mon Cabinet CGP';
+  });
   const [isEditing, setIsEditing] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -151,6 +181,10 @@ export default function ProfilePage() {
   const displayName = firstName && lastName ? `${firstName} ${lastName}` : email;
 
   const handleSave = () => {
+    const profileData = { firstName, lastName, phone, company };
+    try {
+      localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profileData));
+    } catch {}
     setIsEditing(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);

@@ -4,6 +4,7 @@ import { useEffect, useCallback } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/auth-store';
 import { useThemeStore } from '@/stores/theme-store';
+import { useLocaleStore } from '@/stores/locale-store';
 import { reportWebVitals } from '@/lib/web-vitals';
 
 const queryClient = new QueryClient({
@@ -53,10 +54,21 @@ function ThemeSync() {
   return null;
 }
 
+function LocaleSync() {
+  const locale = useLocaleStore((s) => s.locale);
+
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
+
+  return null;
+}
+
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeSync />
+      <LocaleSync />
       <AuthHydrator>{children}</AuthHydrator>
     </QueryClientProvider>
   );

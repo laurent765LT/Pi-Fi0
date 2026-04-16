@@ -26,6 +26,9 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useAuthStore } from '@/stores/auth-store';
+import { useProducts } from '@/hooks/use-products';
+import { useMyCommitments } from '@/hooks/use-commitments';
+import { useFavorites } from '@/hooks/use-favorites';
 import { MarketTicker } from '@/components/ui/market-ticker';
 import { useAnimatedCounter } from '@/hooks/use-animated-counter';
 import { Tooltip } from '@/components/ui/tooltip';
@@ -513,7 +516,7 @@ function AreaChart() {
 
 // ─── SVG Donut Chart ─────────────────────────────────────────────────────────
 
-function DonutChart() {
+function DonutChart({ data }: { data: typeof DONUT_DATA }) {
   const [hovered, setHovered] = useState<number | null>(null);
   const radius = 52;
   const strokeWidth = 16;
@@ -525,7 +528,7 @@ function DonutChart() {
       {/* Donut */}
       <div className="relative shrink-0">
         <svg width="130" height="130" viewBox="0 0 130 130">
-          {DONUT_DATA.map((d, i) => {
+          {data.map((d, i) => {
             const dashLen = (d.pct / 100) * circumference;
             const dashGap = circumference - dashLen;
             const currentOffset = offset;
@@ -556,15 +559,15 @@ function DonutChart() {
           {hovered !== null ? (
             <>
               <span className="font-display text-lg font-extrabold text-ink dark:text-ink tabular-nums">
-                {DONUT_DATA[hovered]!.pct}%
+                {data[hovered]!.pct}%
               </span>
               <span className="text-[9px] text-ink-3 font-body mt-0.5 max-w-[60px] text-center leading-tight">
-                {DONUT_DATA[hovered]!.label}
+                {data[hovered]!.label}
               </span>
             </>
           ) : (
             <>
-              <span className="font-display text-lg font-extrabold text-ink dark:text-ink">5</span>
+              <span className="font-display text-lg font-extrabold text-ink dark:text-ink">{data.length}</span>
               <span className="text-[9px] text-ink-3 font-body mt-0.5">Types</span>
             </>
           )}
@@ -573,7 +576,7 @@ function DonutChart() {
 
       {/* Legend — vertical, compact */}
       <div className="flex flex-col gap-1.5 min-w-0">
-        {DONUT_DATA.map((d, i) => (
+        {data.map((d, i) => (
           <div
             key={i}
             className="flex items-center gap-2 cursor-pointer group"
@@ -636,6 +639,56 @@ const PRODUCT_SPARKLINE_DATA: Record<number, number[]> = {
 export default function DashboardPage() {
   const user = useAuthStore((s) => s.user);
   const firstName = (user as any)?.firstName ?? 'Utilisateur';
+
+  // ── Live data from API hooks (with demo fallbacks) ──
+  const { data: productsData } = useProducts();
+  const { data: commitmentsData } = useMyCommitments();
+  const { data: favoritesData } = useFavorites();
+
+  const products = productsData?.data ?? [];
+  const commitments = (commitmentsData as any[]) ?? [];
+  const favorites = (favoritesData as any[]) ?? [];
+
+  const activeProducts = products.filter((p: any) => p.status === 'ACTIVE' || p.status === 'OPEN').length || 17;
+  const totalVolume = commitments.reduce((s: number, c: any) => s + (c.amount ?? 0), 0) || 8_400_000;
+  const totalCommitments = commitments.length || 43;
+  const favCount = favorites.length || 5;
+
+  // Format volume for display (e.g. 8400000 -> "8,4M")
+  const formattedVolume = totalVolume >= 1_000_000
+    ? `${(totalVolume / 1_000_000).toFixed(1).replace('.', ',')}M\u00A0\u20AC`
+    : `${(totalVolume / 1_000).toFixed(0)}k\u00A0\u20AC`;
+
+  // Dynamic KPI cards — same shape as the static KPI_CARDS but with live values
+  const dynamicKpiCards = useMemo(() => KPI_CARDS.map((kpi) => {
+    switch (kpi.label) {
+      case 'Produits actifs':
+        return { ...kpi, value: String(activeProducts) };
+      case 'Volume souscrit':
+        return { ...kpi, value: formattedVolume };
+      case 'Engagements':
+        return { ...kpi, value: String(totalCommitments) };
+      default:
+        return kpi;
+    }
+  }), [activeProducts, formattedVolume, totalCommitments]);
+
+  // Dynamic donut chart data — computed from products by payoff type, fallback to hardcoded
+  const donutData = useMemo(() => {
+    if (!products.length) return DONUT_DATA;
+    const byType: Record<string, number> = {};
+    products.forEach((p: any) => {
+      const key = p.payoffType ?? 'Autre';
+      byType[key] = (byType[key] ?? 0) + 1;
+    });
+    const total = products.length;
+    const palette = ['#3B1FA8', '#00B894', '#5535C4', '#3D63F5', '#D4A017', '#E17055', '#6C5CE7'];
+    return Object.entries(byType).map(([label, count], i) => ({
+      label,
+      pct: Math.round((count / total) * 100),
+      color: palette[i % palette.length]!,
+    }));
+  }, [products]);
 
   // Entrance animation
   const [mounted, setMounted] = useState(false);
@@ -746,7 +799,7 @@ export default function DashboardPage() {
           {/* Top gradient accent bar */}
           <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-violet via-cobalt-light to-teal" />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-x-0 sm:divide-x divide-border/40 dark:divide-border-2/30 divide-y sm:divide-y-0">
-            {KPI_CARDS.map((kpi, i) => {
+            {dynamicKpiCards.map((kpi, i) => {
               const Icon = kpi.icon;
               const kpiHref = KPI_LINKS[kpi.label] ?? '/dashboard';
               return (
@@ -1170,14 +1223,14 @@ export default function DashboardPage() {
             {/* Donut section */}
             <div className="p-4 pb-3">
               <SectionHeader dotColor="bg-cobalt-light">Repartition par type</SectionHeader>
-              {DONUT_DATA.length === 0 ? (
+              {donutData.length === 0 ? (
                 <EmptyState
                   icon={BarChart3}
                   title="Aucune donnee"
                   description="La repartition par type de produit apparaitra ici."
                 />
               ) : (
-                <DonutChart />
+                <DonutChart data={donutData} />
               )}
             </div>
 

@@ -669,9 +669,104 @@ export default function ProductDetailPage() {
   }, []);
 
   const handleExportPdf = useCallback(() => {
+    if (!product) return;
+
+    const coupon = product.couponPct != null ? product.couponPct.toFixed(1) + ' %' : 'N/A';
+    const barrier = product.barrierCapPct != null ? product.barrierCapPct.toFixed(1) + ' %' : 'N/A';
+    const maxGain = product.maxGainPct != null ? product.maxGainPct.toFixed(1) + ' %' : 'N/A';
+    const sri = product.sri ?? 'N/A';
+    const maturity = product.maturityDate ? new Date(product.maturityDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : 'N/A';
+    const insurers = Array.isArray(product.compatibleInsurers) && product.compatibleInsurers.length > 0
+      ? product.compatibleInsurers.join(', ')
+      : 'Non renseigne';
+    const payoffLabel = PAYOFF_LABELS[product.payoffType] ?? product.payoffType ?? 'N/A';
+    const description = product.description ?? '';
+
+    const html = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>${product.name} - Fiche Produit</title>
+<style>
+  @page { size: A4; margin: 20mm; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; color: #1a1a2e; margin: 0; padding: 40px; max-width: 800px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 4px 0; color: #3B1FA8; }
+  .subtitle { font-size: 13px; color: #666; margin-bottom: 20px; }
+  .badge { display: inline-block; background: #EDE8FF; color: #3B1FA8; border: 1px solid #D5CCFA; border-radius: 6px; padding: 2px 10px; font-size: 11px; font-weight: 600; margin-right: 6px; }
+  .badge-sri { background: #FFF8E7; color: #A07800; border-color: #F0E0A8; }
+  .section { margin-top: 24px; }
+  .section-title { font-size: 13px; text-transform: uppercase; letter-spacing: 1.5px; color: #7B6FA0; font-weight: 700; margin-bottom: 10px; border-bottom: 2px solid #EDE8FF; padding-bottom: 6px; }
+  table { width: 100%; border-collapse: collapse; }
+  td { padding: 8px 12px; font-size: 13px; border-bottom: 1px solid #f0f0f0; }
+  td:first-child { color: #7B6FA0; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; width: 40%; }
+  td:last-child { font-weight: 600; text-align: right; }
+  .description { font-size: 13px; line-height: 1.6; color: #444; margin-top: 8px; }
+  .footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid #e0e0e0; font-size: 10px; color: #999; line-height: 1.5; }
+  .insurers-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .insurer-tag { background: #f4f3ef; border: 1px solid #e2dfd8; border-radius: 12px; padding: 3px 10px; font-size: 11px; color: #555; }
+  .header-line { height: 3px; background: linear-gradient(90deg, #3B1FA8, #5535C4, #00B894); border-radius: 2px; margin-bottom: 20px; }
+</style>
+</head>
+<body>
+<div class="header-line"></div>
+<h1>${product.name}</h1>
+<div class="subtitle">
+  ISIN : ${product.isin ?? 'N/A'} &nbsp;|&nbsp; Emetteur : ${product.issuerName ?? 'N/A'}
+</div>
+<span class="badge">${payoffLabel}</span>
+<span class="badge badge-sri">SRI ${sri}/7</span>
+
+<div class="section">
+  <div class="section-title">Metriques cles</div>
+  <table>
+    <tr><td>Coupon</td><td>${coupon}</td></tr>
+    <tr><td>Gain maximum</td><td>${maxGain}</td></tr>
+    <tr><td>Barriere capital</td><td>${barrier}</td></tr>
+    ${product.autocallBarrierPct != null ? `<tr><td>Barriere autocall</td><td>${product.autocallBarrierPct.toFixed(1)} %</td></tr>` : ''}
+    <tr><td>Indicateur de risque (SRI)</td><td>${sri} / 7</td></tr>
+    <tr><td>Echeance</td><td>${maturity}</td></tr>
+    ${product.entryFeePct != null ? `<tr><td>Frais d'entree</td><td>${product.entryFeePct.toFixed(2)} %</td></tr>` : ''}
+  </table>
+</div>
+
+<div class="section">
+  <div class="section-title">Assureurs compatibles</div>
+  <div class="insurers-list">
+    ${Array.isArray(product.compatibleInsurers) && product.compatibleInsurers.length > 0
+      ? product.compatibleInsurers.map((ins: string) => `<span class="insurer-tag">${ins}</span>`).join('')
+      : '<span style="font-size:12px;color:#999">Non renseigne</span>'}
+  </div>
+</div>
+
+${description ? `
+<div class="section">
+  <div class="section-title">Description</div>
+  <p class="description">${description}</p>
+</div>
+` : ''}
+
+<div class="footer">
+  Document genere automatiquement par Strick'in le ${new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}.<br/>
+  Ce document est fourni a titre informatif uniquement et ne constitue pas un conseil en investissement.
+  Les performances passees ne prejugent pas des performances futures. Le capital n'est pas garanti.
+  Avant toute souscription, veuillez consulter le Document d'Informations Cles (KID/PRIIPS).
+</div>
+</body>
+</html>`;
+
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${product.name.replace(/[^a-zA-Z0-9_-]/g, '_')}_fiche_produit.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
     setPdfToast(true);
     setTimeout(() => setPdfToast(false), 3000);
-  }, []);
+  }, [product]);
 
   const handleTabChange = useCallback((value: string) => {
     setActiveTab(value);
@@ -775,8 +870,8 @@ export default function ProductDetailPage() {
                 <FileDown size={14} className="text-white" />
               </div>
               <div>
-                <p className="text-xs font-semibold font-body text-ink">Export PDF en preparation...</p>
-                <p className="text-[10px] font-body text-ink-3">Cette fonctionnalite sera bientot disponible.</p>
+                <p className="text-xs font-semibold font-body text-ink">Fiche produit telecharger</p>
+                <p className="text-[10px] font-body text-ink-3">Ouvrez le fichier HTML dans votre navigateur et imprimez en PDF.</p>
               </div>
             </div>
           )}
@@ -1072,22 +1167,32 @@ export default function ProductDetailPage() {
               )}
 
               <div className="mt-1">
-                <Button
-                  variant={alreadyCommitted ? 'outline' : 'primary'}
-                  size="lg"
-                  className={cn("w-full rounded-xl", !alreadyCommitted && !isClosed && "bg-gradient-to-r from-violet to-violet/85 shadow-md shadow-violet/20 hover:shadow-lg hover:shadow-violet/30")}
-                  disabled={isClosed}
-                  onClick={() => setModalOpen(true)}
-                >
-                  {alreadyCommitted ? (
-                    <><Shield size={15} /> Intérêt déjà enregistré</>
-                  ) : (
-                    <><TrendingUp size={15} /> {isClosed ? 'Produit fermé' : "Marquer mon intérêt"}</>
-                  )}
-                </Button>
-                {!isClosed && (
+                {alreadyCommitted ? (
+                  <div
+                    className="w-full rounded-xl flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold font-body bg-[#F4F3EF] text-[#7B6FA0] border border-[#E2DFD8] cursor-not-allowed select-none"
+                  >
+                    <CheckCircle2 size={15} className="text-[#00B894]" />
+                    Interet deja enregistre
+                  </div>
+                ) : (
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    className={cn("w-full rounded-xl", !isClosed && "bg-gradient-to-r from-violet to-violet/85 shadow-md shadow-violet/20 hover:shadow-lg hover:shadow-violet/30")}
+                    disabled={isClosed}
+                    onClick={() => setModalOpen(true)}
+                  >
+                    <TrendingUp size={15} /> {isClosed ? 'Produit ferme' : "Marquer mon interet"}
+                  </Button>
+                )}
+                {!isClosed && !alreadyCommitted && (
                   <p className="mt-1.5 text-center text-[9px] text-ink-3 font-body leading-relaxed">
-                    Sans engagement ferme de souscription. Votre marque d&apos;intérêt sera transmise aux équipes de distribution.
+                    Sans engagement ferme de souscription. Votre marque d&apos;interet sera transmise aux equipes de distribution.
+                  </p>
+                )}
+                {alreadyCommitted && (
+                  <p className="mt-1.5 text-center text-[9px] text-[#00B894] font-body leading-relaxed font-semibold">
+                    Votre interet a bien ete pris en compte.
                   </p>
                 )}
               </div>

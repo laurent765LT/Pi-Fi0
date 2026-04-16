@@ -119,6 +119,36 @@ type ViewFilter = 'all' | 'favorites' | 'recommended' | 'popular';
 
 const PER_PAGE = 12;
 
+const CSV_COLUMNS = ['Nom', 'ISIN', 'Type', 'Emetteur', 'Coupon', 'Barriere', 'SRI', 'Statut'] as const;
+
+function exportProductsCsv(products: any[]) {
+  const header = CSV_COLUMNS.join(';');
+  const rows = products.map((p: any) => {
+    const cells = [
+      p.name ?? '',
+      p.isin ?? '',
+      PAYOFF_SHORT[p.payoffType] ?? p.payoffType ?? '',
+      p.issuerName ?? '',
+      p.couponPct != null ? `${p.couponPct.toFixed(1)}%` : '',
+      p.barrierCapPct != null ? `${p.barrierCapPct.toFixed(0)}%` : '',
+      p.sri != null ? String(p.sri) : '',
+      STATUS_BADGE[p.status]?.label ?? p.status ?? '',
+    ];
+    return cells.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(';');
+  });
+  const csv = '\uFEFF' + [header, ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const date = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `strickin-produits-${date}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function formatDate(iso: string) {
@@ -621,6 +651,7 @@ export default function ProductsPage() {
 
           {/* Export */}
           <button
+            onClick={() => exportProductsCsv(filtered)}
             className={cn(
               'h-8 px-3 rounded-lg border border-border/50 bg-white dark:bg-ink/40 text-ink-3 dark:text-ink-3',
               'text-[11px] font-medium font-body',
@@ -1304,6 +1335,10 @@ export default function ProductsPage() {
               Comparer
             </Link>
             <button
+              onClick={() => {
+                const selected = products.filter((p: any) => compareIds.includes(p.id));
+                if (selected.length > 0) exportProductsCsv(selected);
+              }}
               className={cn(
                 'h-8 px-4 rounded-lg text-[12px] font-semibold font-body',
                 'bg-white/10 text-white border border-white/10',

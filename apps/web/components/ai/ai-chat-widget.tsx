@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Brain, X, Send, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { api } from '@/lib/api';
+import { DEMO_PRODUCTS } from '@/lib/demo-data';
 
 // ---- Types -----------------------------------------------------------------
 
@@ -13,50 +15,186 @@ interface Message {
   chips?: string[];
 }
 
-// ---- Demo response engine --------------------------------------------------
+// ---- MIF2 compliance guard -------------------------------------------------
 
-function generateDemoResponse(input: string): { text: string; chips: string[] } {
+const MIF2_KEYWORDS = ['acheter', 'vendre', 'investir', 'conseil personnalisé'];
+
+function checkMIF2(lower: string): { text: string; chips: string[] } | null {
+  const triggered = MIF2_KEYWORDS.some((kw) => lower.includes(kw));
+  if (!triggered) return null;
+  return {
+    text: "**Avertissement MIF II / DDA** : Je suis un assistant d'information et ne suis pas habilité a fournir des conseils en investissement personnalisés. Les informations fournies ne constituent ni une recommandation d'achat ou de vente, ni un conseil personnalisé au sens de la directive MIF II (2014/65/UE).\n\nPour toute decision d'investissement, veuillez consulter votre conseiller en gestion de patrimoine (CGP) qui evaluera votre profil de risque, vos objectifs et votre situation financiere.\n\nJe peux neanmoins vous fournir des informations factuelles sur les produits de notre catalogue.",
+    chips: ['Voir le catalogue', 'Informations sur un produit', 'Comprendre les risques'],
+  };
+}
+
+// ---- Intelligent local response engine -------------------------------------
+
+function formatProductCard(p: typeof DEMO_PRODUCTS[number]): string {
+  const coupon = p.couponPct ? `${p.couponPct}% p.a.` : (p.maxGainPct ? `gain max ${p.maxGainPct}%` : 'N/A');
+  const barrier = p.barrierCapPct != null ? `${p.barrierCapPct}%` : 'N/A';
+  return `• **${p.name}** (${p.isin}) — ${p.payoffType.replace(/_/g, ' ')}\n  Emetteur : ${p.issuerName} | SRI ${p.sri}/7 | Barriere ${barrier} | ${coupon}`;
+}
+
+function generateLocalResponse(input: string): { text: string; chips: string[] } {
   const lower = input.toLowerCase();
 
-  if (lower.includes('produit') || lower.includes('autocall')) {
+  // ── MIF2 compliance check (top priority) ────────────────────────────────
+  const mif2 = checkMIF2(lower);
+  if (mif2) return mif2;
+
+  // ── Help / capabilities ─────────────────────────────────────────────────
+  if (lower.includes('aide') || lower.includes('comment') || lower.includes('help') || lower.includes('quoi faire')) {
     return {
-      text: "Nous avons actuellement 34 produits structurés en souscription. Les autocalls représentent 60 % de notre catalogue, avec des coupons conditionnels allant de 6 % à 12 % p.a. Le produit phare cette semaine est le **M Rendement OR Mars 2026** (ISIN : FR00140XXXX) qui offre un coupon mémoire de 9,20 % avec une barrière de protection à -40 %. Souhaitez-vous que je filtre par type de sous-jacent ou niveau de protection ?",
-      chips: ['Voir les autocalls', 'Filtrer par barrière', 'Produits capital garanti'],
+      text: "Je peux vous aider sur plusieurs sujets :\n\n• **Recherche de produit** — par nom, type (autocall, capital protege) ou ISIN\n• **Analyse de risque** — barrieres, SRI, protection du capital\n• **Rendement** — coupons, gains potentiels, comparatifs\n• **Emetteurs** — filtrer par BNP, Natixis, SG, Goldman Sachs\n• **Commissions** — frais d'entree, repartition\n\nPosez-moi une question precise ou utilisez les suggestions ci-dessous.",
+      chips: ['Voir les autocalls', 'Produits capital protege', 'Meilleurs coupons', 'Filtrer par emetteur'],
     };
   }
 
-  if (lower.includes('risque') || lower.includes('barrière') || lower.includes('barriere')) {
+  // ── Issuer filter (BNP, Natixis, SG, Goldman) ──────────────────────────
+  const issuerMap: Record<string, string> = {
+    'bnp': 'BNP Paribas',
+    'natixis': 'Natixis',
+    'societe generale': 'SG Issuer',
+    'sg': 'SG Issuer',
+    'goldman': 'Goldman Sachs',
+  };
+  for (const [keyword, issuerMatch] of Object.entries(issuerMap)) {
+    if (lower.includes(keyword)) {
+      const matches = DEMO_PRODUCTS.filter((p) =>
+        p.issuerName.toLowerCase().includes(issuerMatch.toLowerCase()),
+      );
+      if (matches.length > 0) {
+        const cards = matches.slice(0, 4).map(formatProductCard).join('\n');
+        return {
+          text: `${matches.length} produit(s) emis par **${issuerMatch}** :\n\n${cards}${matches.length > 4 ? `\n\n... et ${matches.length - 4} autre(s). Consultez le catalogue pour la liste complete.` : ''}`,
+          chips: ['Voir tous les produits', 'Comparer ces produits', 'Autre emetteur'],
+        };
+      }
+    }
+  }
+
+  // ── Product name / ISIN search ──────────────────────────────────────────
+  const productNameMatch = DEMO_PRODUCTS.filter((p) =>
+    lower.includes(p.name.toLowerCase()) ||
+    lower.includes(p.isin.toLowerCase()) ||
+    (p.name.toLowerCase().split(' ').length > 1 && p.name.toLowerCase().split(' ').every((w) => lower.includes(w))),
+  );
+  if (productNameMatch.length > 0) {
+    const p = productNameMatch[0];
+    const coupon = p.couponPct ? `Coupon : ${p.couponPct}% p.a.` : (p.maxGainPct ? `Gain max : ${p.maxGainPct}%` : '');
     return {
-      text: "La barrière de protection du capital est le seuil en-dessous duquel l'investisseur subit une perte en capital. Sur notre catalogue actuel :\n\n- **12 produits** avec barrière >= -30 % (protection forte)\n- **18 produits** entre -30 % et -50 %\n- **4 produits** avec barrière < -50 %\n\nLe SRI moyen pondéré est de 4/7. Pour un profil prudent, je recommande de regarder les produits avec barrière >= -30 % et capital protégé.",
-      chips: ['Produits SRI <= 3', 'Comprendre le SRI', 'Capital 100 % protégé'],
+      text: `**${p.name}** (${p.isin})\n\n• Type : ${p.payoffType.replace(/_/g, ' ')}\n• Emetteur : ${p.issuerName}\n• Sous-jacent : ${p.underlyingName}\n• Barriere : ${p.barrierCapPct ?? 'N/A'}% | SRI : ${p.sri}/7\n• ${coupon}\n• Maturite : ${p.maturityDate}\n• Frais d'entree : ${p.entryFeePct}%\n• Remplissage : ${p.fillPct}%\n\n${p.description}`,
+      chips: ['Comparer ce produit', 'Voir le risque', 'Autres produits similaires'],
     };
   }
 
-  if (lower.includes('euro stoxx') || lower.includes('marché') || lower.includes('marche') || lower.includes('cac')) {
+  // ── Product type search (autocall, phoenix, capital protege, taux) ─────
+  const typeMap: Record<string, string> = {
+    'autocall': 'AUTOCALL',
+    'phoenix': 'PHOENIX',
+    'capital protege': 'CAPITAL_PROTECTED',
+    'capital garanti': 'CAPITAL_PROTECTED',
+    'taux': 'CONDITIONAL_RATE',
+    'reverse': 'REVERSE',
+  };
+  for (const [keyword, typeMatch] of Object.entries(typeMap)) {
+    if (lower.includes(keyword)) {
+      const matches = DEMO_PRODUCTS.filter((p) =>
+        p.payoffType.toUpperCase().includes(typeMatch),
+      );
+      if (matches.length > 0) {
+        const cards = matches.slice(0, 4).map(formatProductCard).join('\n');
+        return {
+          text: `${matches.length} produit(s) de type **${keyword}** dans notre catalogue :\n\n${cards}${matches.length > 4 ? `\n\n... et ${matches.length - 4} autre(s).` : ''}`,
+          chips: ['Trier par rendement', 'Trier par risque', 'Voir tout le catalogue'],
+        };
+      }
+    }
+  }
+
+  // ── Risk / SRI / barrier ────────────────────────────────────────────────
+  if (lower.includes('risque') || lower.includes('sri') || lower.includes('barriere') || lower.includes('barrière') || lower.includes('protection')) {
+    const lowRisk = DEMO_PRODUCTS.filter((p) => p.sri <= 3);
+    const midRisk = DEMO_PRODUCTS.filter((p) => p.sri >= 4 && p.sri <= 5);
+    const highRisk = DEMO_PRODUCTS.filter((p) => p.sri >= 6);
+    const capitalProtected = DEMO_PRODUCTS.filter((p) => p.barrierCapPct !== null && p.barrierCapPct >= 90);
+    const avgSri = (DEMO_PRODUCTS.reduce((acc, p) => acc + p.sri, 0) / DEMO_PRODUCTS.length).toFixed(1);
+
     return {
-      text: "L'Euro Stoxx 50 est le sous-jacent le plus utilisé dans nos produits structurés (22 produits sur 34). Points clés :\n\n- Niveau actuel : ~4 980 pts\n- Volatilité implicite 1 an : 18,2 %\n- Dividendes attendus : ~2,8 %\n\nLa volatilité actuelle offre des conditions favorables pour les émissions d'autocalls avec des coupons élevés. Nous constatons un spread de 1,5 pts au-dessus de la moyenne historique sur les rendements offerts.",
-      chips: ['Produits Euro Stoxx 50', 'Autres sous-jacents', 'Historique de performance'],
+      text: `Analyse de risque du catalogue (${DEMO_PRODUCTS.length} produits) :\n\n• **SRI moyen** : ${avgSri}/7\n• **Risque faible** (SRI 1-3) : ${lowRisk.length} produits\n• **Risque modere** (SRI 4-5) : ${midRisk.length} produits\n• **Risque eleve** (SRI 6-7) : ${highRisk.length} produits\n• **Capital protege ≥ 90%** : ${capitalProtected.length} produits\n\nBarrieres de protection :\n${DEMO_PRODUCTS.filter((p) => p.barrierCapPct != null).slice(0, 3).map((p) => `• ${p.name} — barriere ${p.barrierCapPct}%, SRI ${p.sri}`).join('\n')}`,
+      chips: ['Produits SRI ≤ 3', 'Capital 100% protege', 'Voir les barrieres'],
     };
   }
 
-  if (lower.includes('coupon') || lower.includes('rendement') || lower.includes('performance')) {
+  // ── Commission / fees ───────────────────────────────────────────────────
+  if (lower.includes('commission') || lower.includes('frais') || lower.includes('fee')) {
+    const avgFee = (DEMO_PRODUCTS.reduce((acc, p) => acc + p.entryFeePct, 0) / DEMO_PRODUCTS.length).toFixed(2);
+    const minFee = Math.min(...DEMO_PRODUCTS.map((p) => p.entryFeePct));
+    const maxFee = Math.max(...DEMO_PRODUCTS.map((p) => p.entryFeePct));
     return {
-      text: "Voici un résumé des rendements sur notre catalogue actuel :\n\n- **Coupon moyen** : 8,4 % p.a. (conditionnel)\n- **Meilleur coupon** : 12,5 % p.a. (M Ambition 10, SRI 5)\n- **Meilleur ratio coupon/risque** : 7,8 % p.a. avec barrière -30 % (M Sérénité)\n\nLes produits avec mécanisme « mémoire » représentent 70 % du catalogue et permettent de rattraper les coupons non versés les trimestres précédents.",
-      chips: ['Trier par coupon', 'Effet mémoire expliqué', 'Comparer deux produits'],
+      text: `Informations sur les commissions et frais :\n\n• **Frais d'entree moyens** : ${avgFee}%\n• **Fourchette** : ${minFee}% — ${maxFee}%\n• Les frais de gestion et commissions de distribution sont definis par votre cabinet\n\nProduits les moins charges :\n${DEMO_PRODUCTS.sort((a, b) => a.entryFeePct - b.entryFeePct).slice(0, 3).map((p) => `• ${p.name} — ${p.entryFeePct}%`).join('\n')}\n\nLes commissions de distribution se repartissent entre la plateforme (30-40%) et le distributeur (60-70%).`,
+      chips: ['Produits faibles frais', 'Comprendre les commissions', 'Voir un produit'],
     };
   }
 
+  // ── Yield / coupon / gain ───────────────────────────────────────────────
+  if (lower.includes('rendement') || lower.includes('coupon') || lower.includes('gain') || lower.includes('performance')) {
+    const withCoupon = DEMO_PRODUCTS.filter((p) => p.couponPct != null && p.couponPct > 0);
+    const withGain = DEMO_PRODUCTS.filter((p) => p.maxGainPct != null && p.maxGainPct > 0);
+    const bestGain = [...withGain].sort((a, b) => (b.maxGainPct ?? 0) - (a.maxGainPct ?? 0));
+    const bestCoupon = [...withCoupon].sort((a, b) => (b.couponPct ?? 0) - (a.couponPct ?? 0));
+
+    let text = `Rendements du catalogue (${DEMO_PRODUCTS.length} produits) :\n\n`;
+    if (bestCoupon.length > 0) {
+      text += `**Meilleurs coupons recurrents :**\n${bestCoupon.slice(0, 3).map((p) => `• ${p.name} — ${p.couponPct}% p.a. (SRI ${p.sri})`).join('\n')}\n\n`;
+    }
+    if (bestGain.length > 0) {
+      text += `**Meilleurs gains potentiels :**\n${bestGain.slice(0, 3).map((p) => `• ${p.name} — gain max ${p.maxGainPct}% (SRI ${p.sri})`).join('\n')}`;
+    }
+
+    return {
+      text,
+      chips: ['Trier par coupon', 'Produits a rendement fixe', 'Comparer deux produits'],
+    };
+  }
+
+  // ── General product search (produit, catalogue, liste) ─────────────────
+  if (lower.includes('produit') || lower.includes('catalogue') || lower.includes('liste') || lower.includes('offre') || lower.includes('nouveaute')) {
+    const recent = [...DEMO_PRODUCTS].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    const cards = recent.slice(0, 4).map(formatProductCard).join('\n');
+    return {
+      text: `Notre catalogue compte **${DEMO_PRODUCTS.length} produits** en souscription :\n\n${cards}\n\nVous pouvez filtrer par type (autocall, capital protege, taux), par emetteur, ou par niveau de risque.`,
+      chips: ['Voir les autocalls', 'Capital protege', 'Filtrer par emetteur', 'Trier par rendement'],
+    };
+  }
+
+  // ── Comparison ──────────────────────────────────────────────────────────
   if (lower.includes('comparer') || lower.includes('compare') || lower.includes('versus') || lower.includes(' vs ')) {
     return {
-      text: "Pour comparer des produits, vous pouvez utiliser notre comparateur intégré accessible depuis la page Produits. Sélectionnez jusqu'à 3 produits et comparez-les sur :\n\n- Rendement potentiel et barrières\n- Sous-jacents et maturité\n- SRI et scénarios de performance\n\nVoulez-vous que je vous aide à choisir des produits à comparer selon vos critères ?",
-      chips: ['Ouvrir le comparateur', 'Comparer par rendement', 'Comparer par risque'],
+      text: "Pour comparer des produits, utilisez notre comparateur integre depuis la page Produits. Selectionnez jusqu'a 3 produits et comparez-les sur :\n\n• Rendement potentiel et barrieres\n• Sous-jacents et maturite\n• SRI et scenarios de performance\n\nVoulez-vous que je vous aide a choisir des produits a comparer selon vos criteres ?",
+      chips: ['Comparer par rendement', 'Comparer par risque', 'Comparer par emetteur'],
     };
   }
 
-  // Default
+  // ── Market / underlying ────────────────────────────────────────────────
+  if (lower.includes('euro stoxx') || lower.includes('marche') || lower.includes('marché') || lower.includes('cac') || lower.includes('sous-jacent') || lower.includes('or') || lower.includes('gold')) {
+    const underlyingCounts: Record<string, number> = {};
+    DEMO_PRODUCTS.forEach((p) => {
+      const key = p.underlyingName.length > 30 ? p.underlyingName.slice(0, 30) + '...' : p.underlyingName;
+      underlyingCounts[key] = (underlyingCounts[key] ?? 0) + 1;
+    });
+    const sorted = Object.entries(underlyingCounts).sort((a, b) => b[1] - a[1]);
+    return {
+      text: `Repartition des sous-jacents sur ${DEMO_PRODUCTS.length} produits :\n\n${sorted.slice(0, 5).map(([name, count]) => `• **${name}** — ${count} produit(s)`).join('\n')}\n\nLes indices actions avec decrement dominent notre catalogue, offrant des conditions favorables pour les structures autocall.`,
+      chips: ['Produits Euro Stoxx', 'Produits Or', 'Produits Taux'],
+    };
+  }
+
+  // ── Default fallback ───────────────────────────────────────────────────
   return {
-    text: "Les produits structurés sont des instruments financiers combinant une composante obligataire et une composante dérivée. Sur Strick'in, vous pouvez explorer notre catalogue de 34 produits en souscription, comparer les caractéristiques et analyser les risques. N'hésitez pas à me poser une question précise sur un produit, un mécanisme (autocall, Phoenix, reverse convertible) ou un sous-jacent.",
-    chips: ['Explorer les produits', 'Qu\'est-ce qu\'un autocall ?', 'Voir les nouveautés'],
+    text: `Je suis l'assistant Strick'in. Notre catalogue compte **${DEMO_PRODUCTS.length} produits structures** en souscription.\n\nJe peux vous aider a :\n• Rechercher un produit par nom, type ou ISIN\n• Analyser les risques (barrieres, SRI)\n• Comparer les rendements et coupons\n• Filtrer par emetteur (BNP, Natixis, SG, Goldman)\n\nPosez-moi une question ou utilisez les suggestions ci-dessous.`,
+    chips: ['Explorer les produits', 'Meilleurs rendements', 'Produits faible risque', 'Aide'],
   };
 }
 
@@ -166,7 +304,7 @@ export function AiChatWidget() {
   }, [isOpen]);
 
   const sendMessage = useCallback(
-    (text: string) => {
+    async (text: string) => {
       if (!text.trim() || isTyping) return;
 
       const userMsg: Message = {
@@ -180,18 +318,36 @@ export function AiChatWidget() {
       setIsTyping(true);
       setHasSuggestion(false);
 
-      // Simulate AI thinking delay
-      setTimeout(() => {
-        const response = generateDemoResponse(text);
-        const botMsg: Message = {
-          id: crypto.randomUUID(),
-          role: 'assistant',
-          text: response.text,
-          chips: response.chips,
-        };
-        setMessages((prev) => [...prev, botMsg]);
-        setIsTyping(false);
-      }, 1500);
+      try {
+        // Try the real AI API first
+        const aiResponse = await api.aiChat(text.trim());
+
+        // If we got a real response (not demo fallback), use it
+        if (aiResponse.model !== 'demo' && aiResponse.content) {
+          const botMsg: Message = {
+            id: crypto.randomUUID(),
+            role: 'assistant',
+            text: aiResponse.content,
+            chips: ['Poser une autre question', 'Explorer les produits'],
+          };
+          setMessages((prev) => [...prev, botMsg]);
+          setIsTyping(false);
+          return;
+        }
+      } catch {
+        // API failed — fall through to local engine
+      }
+
+      // Fallback: intelligent local response engine
+      const response = generateLocalResponse(text);
+      const botMsg: Message = {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        text: response.text,
+        chips: response.chips,
+      };
+      setMessages((prev) => [...prev, botMsg]);
+      setIsTyping(false);
     },
     [isTyping],
   );

@@ -23,6 +23,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip } from '@/components/ui/tooltip';
 import { Dropdown, DropdownItem, DropdownSeparator } from '@/components/ui/dropdown';
 import { exportToExcel } from '@/lib/export-utils';
+import { useCommissionSummary } from '@/hooks/use-commissions';
 
 // ─── Demo Commission Data ────────────────────────────────────────────────────
 
@@ -339,6 +340,8 @@ const PERIOD_PRESETS: { key: PeriodPreset; label: string }[] = [
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function CommissionsPage() {
+  const { data: summaryData } = useCommissionSummary();
+
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [periodFilter, setPeriodFilter] = useState<string | null>(null);
   const [periodPreset, setPeriodPreset] = useState<PeriodPreset>('all');
@@ -399,9 +402,13 @@ export default function CommissionsPage() {
   const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
   const paginatedData = filtered.slice((page - 1) * perPage, page * perPage);
 
-  const totalPaid = DEMO_COMMISSIONS.filter(c => c.status === 'PAID').reduce((s, c) => s + c.amount, 0);
-  const totalPayable = DEMO_COMMISSIONS.filter(c => c.status === 'PAYABLE').reduce((s, c) => s + c.amount, 0);
-  const totalAccrued = DEMO_COMMISSIONS.filter(c => c.status === 'ACCRUED').reduce((s, c) => s + c.amount, 0);
+  const demoTotalPaid = DEMO_COMMISSIONS.filter(c => c.status === 'PAID').reduce((s, c) => s + c.amount, 0);
+  const demoTotalPayable = DEMO_COMMISSIONS.filter(c => c.status === 'PAYABLE').reduce((s, c) => s + c.amount, 0);
+  const demoTotalAccrued = DEMO_COMMISSIONS.filter(c => c.status === 'ACCRUED').reduce((s, c) => s + c.amount, 0);
+
+  const totalPaid = summaryData?.totalPaid ?? demoTotalPaid;
+  const totalPayable = summaryData?.totalPayable ?? demoTotalPayable;
+  const totalAccrued = summaryData?.totalAccrued ?? demoTotalAccrued;
   const grandTotal = totalPaid + totalPayable + totalAccrued;
   const filteredTotal = filtered.reduce((s, c) => s + c.amount, 0);
 

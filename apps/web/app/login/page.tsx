@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Zap, Eye, EyeOff, Loader2, ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/stores/auth-store';
+import { cn } from '@/lib/cn';
 
 const DEMO_ACCOUNTS = [
   { label: 'Admin', email: 'admin@strickin.com', password: 'Strickin2025!' },
@@ -25,6 +26,8 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showDemo, setShowDemo] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [shake, setShake] = useState(false);
+  const emailInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -44,6 +47,13 @@ export default function LoginPage() {
           ? err.message
           : 'Identifiants incorrects. Veuillez réessayer.';
       setError(message);
+      // Trigger shake animation, clear password, focus email
+      setShake(true);
+      setPassword('');
+      setTimeout(() => {
+        emailInputRef.current?.focus();
+      }, 50);
+      setTimeout(() => setShake(false), 400);
     } finally {
       setLoading(false);
     }
@@ -215,8 +225,9 @@ export default function LoginPage() {
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
+            <form onSubmit={handleSubmit} className={cn('flex flex-col gap-4', shake && 'animate-shake')} noValidate>
               <Input
+                ref={emailInputRef}
                 label="Adresse e-mail"
                 type="email"
                 placeholder="vous@exemple.fr"

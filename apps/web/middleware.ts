@@ -8,6 +8,9 @@ const PUBLIC_PATHS = [
   '/assureur-login',
   '/assureur-register',
   '/onboarding',
+  '/cgu',
+  '/confidentialite',
+  '/mentions-legales',
   '/api',
 ];
 

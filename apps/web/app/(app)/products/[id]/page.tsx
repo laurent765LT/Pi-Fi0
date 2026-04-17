@@ -11,6 +11,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { formatUnderlying } from '@/lib/underlying-labels';
 import { useProduct, useProductPayoff } from '@/hooks/use-products';
 import { useFavorites, useToggleFavorite, useTrackView } from '@/hooks/use-favorites';
 import { buildDefaultScenarios } from '@/components/products/payoff-canvas';
@@ -932,8 +933,8 @@ ${description ? `
             {product.underlyingYahoo && (
               <>
                 <span className="w-px h-3 bg-border/60" />
-                <span className="font-mono text-[10px] text-ink-3/70 bg-violet-ghost dark:bg-violet/10 px-1.5 py-0.5 rounded-md">
-                  {product.underlyingYahoo}
+                <span className="text-[10px] text-ink-3/70 bg-violet-ghost dark:bg-violet/10 px-1.5 py-0.5 rounded-md">
+                  {formatUnderlying(product.underlyingYahoo)}
                 </span>
               </>
             )}
@@ -1004,7 +1005,7 @@ ${description ? `
                   <DetailRow label="Émetteur" value={product.issuerName} />
                   {product.underlyingName && <DetailRow label="Sous-jacent" value={product.underlyingName} />}
                   {product.underlyingYahoo && !product.underlyingName && (
-                    <DetailRow label="Sous-jacent" value={<span className="font-mono">{product.underlyingYahoo}</span>} />
+                    <DetailRow label="Sous-jacent" value={formatUnderlying(product.underlyingYahoo)} />
                   )}
                   {product.barrierCapPct != null && (
                     <DetailRow label="Barrière capital" value={<span className="text-red font-bold">{formatPct(product.barrierCapPct)}</span>} />

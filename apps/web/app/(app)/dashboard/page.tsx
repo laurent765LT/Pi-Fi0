@@ -39,8 +39,8 @@ import { Sparkline } from '@/components/ui/sparkline';
 // ─── Demo Data ───────────────────────────────────────────────────────────────
 
 const MONTH_LABELS = [
-  'Jan', 'Fev', 'Mar', 'Avr', 'Mai', 'Jun',
-  'Jul', 'Aou', 'Sep', 'Oct', 'Nov', 'Dec',
+  'Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun',
+  'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc',
 ];
 
 const COLLECTION_DATA = [
@@ -50,7 +50,7 @@ const COLLECTION_DATA = [
 
 const DONUT_DATA = [
   { label: 'Autocall Phoenix', pct: 34, color: '#3B1FA8' },
-  { label: 'Capital Protege', pct: 24, color: '#00B894' },
+  { label: 'Capital Protégé', pct: 24, color: '#00B894' },
   { label: 'Autocall Coupon', pct: 18, color: '#5535C4' },
   { label: 'Taux Conditionnel', pct: 14, color: '#3D63F5' },
   { label: 'Barrier Note', pct: 10, color: '#D4A017' },
@@ -59,15 +59,15 @@ const DONUT_DATA = [
 const RECENT_COMMITMENTS = [
   { id: 1, product: 'Athena Relax ESG Mars 2026', amount: 250_000, date: '2026-04-11', status: 'CONFIRMED' },
   { id: 2, product: 'Phoenix Rendement Avril 2026', amount: 180_000, date: '2026-04-10', status: 'PENDING' },
-  { id: 3, product: 'Selection Euro Climat', amount: 320_000, date: '2026-04-08', status: 'CONFIRMED' },
-  { id: 4, product: 'Autocall BNP Diversifie', amount: 150_000, date: '2026-04-06', status: 'REVIEW' },
+  { id: 3, product: 'Sélection Euro Climat', amount: 320_000, date: '2026-04-08', status: 'CONFIRMED' },
+  { id: 4, product: 'Autocall BNP Diversifié', amount: 150_000, date: '2026-04-06', status: 'REVIEW' },
   { id: 5, product: 'Phoenix Mensuel SG Q2 2026', amount: 200_000, date: '2026-04-04', status: 'PENDING' },
 ];
 
 const POPULAR_PRODUCTS = [
   { rank: 1, name: 'Athena Relax ESG Mars 2026', volume: '4,2M\u00A0\u20AC', pct: 92 },
   { rank: 2, name: 'Phoenix Rendement Avril 2026', volume: '3,1M\u00A0\u20AC', pct: 71 },
-  { rank: 3, name: 'Selection Euro Climat', volume: '2,6M\u00A0\u20AC', pct: 58 },
+  { rank: 3, name: 'Sélection Euro Climat', volume: '2,6M\u00A0\u20AC', pct: 58 },
 ];
 
 const KPI_CARDS = [
@@ -136,33 +136,33 @@ type SortDir = 'asc' | 'desc';
 const AI_MARKET_INSIGHTS = [
   {
     icon: TrendingUp,
-    title: 'Euro Stoxx 50 en zone de resistance',
+    title: 'Euro Stoxx 50 en zone de résistance',
     analysis:
-      'Signal haussier confirme, le support des 4\u00A0800 pts tient. Les autocalls sur indice beneficient de la dynamique.',
+      'Signal haussier confirmé, le support des 4\u00A0800 pts tient. Les autocalls sur indice bénéficient de la dynamique.',
     sentiment: 'bullish' as const,
     confidence: 87,
   },
   {
     icon: Zap,
-    title: 'Volatilite implicite en hausse',
+    title: 'Volatilité implicite en hausse',
     analysis:
-      'Hausse de +2.1 pts sur le VSTOXX : fenetre attractive pour structurer des coupons eleves sur les Phoenix.',
+      'Hausse de +2.1 pts sur le VSTOXX : fenêtre attractive pour structurer des coupons élevés sur les Phoenix.',
     sentiment: 'bullish' as const,
     confidence: 92,
   },
   {
     icon: Shield,
-    title: 'Spreads de credit stables',
+    title: 'Spreads de crédit stables',
     analysis:
-      'Spread de credit BNP/SG stables : pas de tension sur les emetteurs principaux. Conditions de funding favorables.',
+      'Spread de crédit BNP/SG stables : pas de tension sur les émetteurs principaux. Conditions de funding favorables.',
     sentiment: 'neutral' as const,
     confidence: 78,
   },
   {
     icon: AlertTriangle,
-    title: 'Risque geopolitique modere',
+    title: 'Risque géopolitique modéré',
     analysis:
-      'Les barrieres \u2265 60% restent confortables a horizon 3 ans. Surveillance accrue sur le secteur energie.',
+      'Les barrières \u2265 60% restent confortables à horizon 3 ans. Surveillance accrue sur le secteur énergie.',
     sentiment: 'neutral' as const,
     confidence: 71,
   },
@@ -279,7 +279,7 @@ function todayFormatted(): string {
 
 const STATUS_CONFIG: Record<string, { label: string; classes: string }> = {
   CONFIRMED: {
-    label: 'Confirme',
+    label: 'Confirmé',
     classes:
       'bg-teal/10 text-teal ring-1 ring-teal/20 dark:bg-teal/15 dark:text-teal dark:ring-teal/25',
   },
@@ -662,7 +662,7 @@ export default function DashboardPage() {
   const quickActions = isAdmin
     ? [
         { label: 'Administration', href: '/admin', icon: Shield, accentFrom: 'from-red', accentTo: 'to-red' },
-        { label: 'Gerer les produits', href: '/admin/products', icon: Package, accentFrom: 'from-violet', accentTo: 'to-violet-mid' },
+        { label: 'Gérer les produits', href: '/admin/products', icon: Package, accentFrom: 'from-violet', accentTo: 'to-violet-mid' },
         { label: 'Voir les stats', href: '/commissions', icon: BarChart3, accentFrom: 'from-teal', accentTo: 'to-teal' },
       ]
     : [
@@ -784,7 +784,7 @@ export default function DashboardPage() {
               Bienvenue sur Strick&apos;in !
             </p>
             <p className="font-body text-xs text-ink-3 dark:text-white/60 mt-0.5">
-              Completez votre onboarding pour acceder a toutes les fonctionnalites.
+              Complétez votre onboarding pour accéder à toutes les fonctionnalités.
             </p>
           </div>
           <Link
@@ -898,7 +898,7 @@ export default function DashboardPage() {
                     <div className="flex items-center justify-between">
                       <span className="text-[9px] text-ink-4 dark:text-ink-4 font-body">{kpi.trendLabel}</span>
                       <span className="text-[9px] font-semibold font-body text-violet dark:text-violet-light opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-0.5">
-                        Voir details <ArrowRight size={9} />
+                        Voir détails <ArrowRight size={9} />
                       </span>
                     </div>
                   </div>
@@ -948,13 +948,13 @@ export default function DashboardPage() {
               <h3 className="font-display text-base font-bold text-ink dark:text-white mb-1">
                 Premiers pas sur Strick&apos;in
               </h3>
-              <p className="text-xs text-ink-3 font-body mb-4">Completez ces etapes pour profiter de toutes les fonctionnalites.</p>
+              <p className="text-xs text-ink-3 font-body mb-4">Complétez ces étapes pour profiter de toutes les fonctionnalités.</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 {[
-                  { label: 'Completer l\'onboarding', desc: 'Verifiez votre identite et vos certifications', href: '/onboarding', icon: Shield, done: false },
-                  { label: 'Decouvrir le catalogue', desc: '17 produits structures disponibles', href: '/products', icon: Package, done: false },
+                  { label: 'Compléter l\'onboarding', desc: 'Vérifiez votre identité et vos certifications', href: '/onboarding', icon: Shield, done: false },
+                  { label: 'Découvrir le catalogue', desc: '17 produits structurés disponibles', href: '/products', icon: Package, done: false },
                   { label: 'Simuler un pricing', desc: 'Testez le moteur de pricing IA', href: '/pricing', icon: Calculator, done: false },
-                  { label: 'Explorer la research', desc: 'Analyse de marche en temps reel', href: '/research', icon: Brain, done: false },
+                  { label: 'Explorer la research', desc: 'Analyse de marché en temps réel', href: '/research', icon: Brain, done: false },
                 ].map((step) => {
                   const Icon = step.icon;
                   return (
@@ -995,7 +995,7 @@ export default function DashboardPage() {
                   <div>
                     <div className="flex items-center gap-2">
                       <h2 className="font-display text-[10px] font-bold uppercase tracking-[0.2em] text-ink dark:text-ink">
-                        Pulse IA Marche
+                        Pulse IA Marché
                       </h2>
                       <span className="inline-flex items-center gap-1 px-1.5 py-px rounded-full bg-teal/10 dark:bg-teal/15 text-[9px] font-bold uppercase tracking-wider text-teal">
                         <span className="relative flex h-1.5 w-1.5">
@@ -1006,7 +1006,7 @@ export default function DashboardPage() {
                       </span>
                     </div>
                     <p className="text-[10px] text-ink-4 dark:text-ink-4 font-body mt-px">
-                      Derniere analyse : il y a 12 min
+                      Dernière analyse : il y a 12 min
                     </p>
                   </div>
                 </div>
@@ -1014,7 +1014,7 @@ export default function DashboardPage() {
                   href="/research"
                   className="hidden sm:inline-flex items-center gap-1 text-[10px] font-semibold text-violet dark:text-violet-light hover:text-violet-mid transition-colors font-body"
                 >
-                  Voir l&apos;analyse complete <ArrowRight size={11} />
+                  Voir l&apos;analyse complète <ArrowRight size={11} />
                 </Link>
               </div>
 
@@ -1071,7 +1071,7 @@ export default function DashboardPage() {
                   href="/research"
                   className="inline-flex items-center gap-1 text-[10px] font-semibold text-violet dark:text-violet-light hover:text-violet-mid transition-colors font-body"
                 >
-                  Voir l&apos;analyse complete <ArrowRight size={11} />
+                  Voir l&apos;analyse complète <ArrowRight size={11} />
                 </Link>
               </div>
             </div>
@@ -1122,7 +1122,7 @@ export default function DashboardPage() {
                   </div>
                   <div>
                     <span className="font-body text-xs font-semibold text-ink dark:text-ink block leading-snug">
-                      Consulter les emetteurs
+                      Consulter les émetteurs
                     </span>
                     <span className="text-[9px] text-ink-4 dark:text-ink-4 font-body">prix live</span>
                   </div>
@@ -1203,7 +1203,7 @@ export default function DashboardPage() {
               <EmptyState
                 icon={Inbox}
                 title="Aucun engagement"
-                description="Vos derniers engagements sur les produits structures apparaitront ici."
+                description="Vos derniers engagements sur les produits structurés apparaîtront ici."
               />
             ) : (
               <>
@@ -1312,12 +1312,12 @@ export default function DashboardPage() {
 
             {/* Donut section */}
             <div className="p-4 pb-3">
-              <SectionHeader dotColor="bg-cobalt-light">Repartition par type</SectionHeader>
+              <SectionHeader dotColor="bg-cobalt-light">Répartition par type</SectionHeader>
               {donutData.length === 0 ? (
                 <EmptyState
                   icon={BarChart3}
-                  title="Aucune donnee"
-                  description="La repartition par type de produit apparaitra ici."
+                  title="Aucune donnée"
+                  description="La répartition par type de produit apparaîtra ici."
                 />
               ) : (
                 <DonutChart data={donutData} />
@@ -1334,7 +1334,7 @@ export default function DashboardPage() {
                 <EmptyState
                   icon={Layers}
                   title="Aucun produit populaire"
-                  description="Les produits les plus souscrits apparaitront ici."
+                  description="Les produits les plus souscrits apparaîtront ici."
                 />
               ) : (
                 <div className="flex flex-col gap-2.5">

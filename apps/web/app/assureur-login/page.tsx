@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Zap, Lock, ArrowRight, Building2, Eye, EyeOff, Loader2, ChevronDown } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth-store';
+import { cn } from '@/lib/cn';
 
 const DEMO_ASSUREUR = {
   email: 'cardif@demo.com',
@@ -21,6 +22,8 @@ export default function AssureurLoginPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showDemo, setShowDemo] = useState(false);
+  const [shake, setShake] = useState(false);
+  const emailInputRef = useRef<HTMLInputElement>(null);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -36,6 +39,13 @@ export default function AssureurLoginPage() {
           ? err.message
           : 'Identifiants incorrects. Veuillez réessayer.';
       setError(message);
+      // Trigger shake animation, clear password, focus email
+      setShake(true);
+      setPassword('');
+      setTimeout(() => {
+        emailInputRef.current?.focus();
+      }, 50);
+      setTimeout(() => setShake(false), 400);
     } finally {
       setLoading(false);
     }
@@ -85,10 +95,11 @@ export default function AssureurLoginPage() {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleLogin} noValidate className="flex flex-col gap-4">
+          <form onSubmit={handleLogin} noValidate className={cn('flex flex-col gap-4', shake && 'animate-shake')}>
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-wider mb-1.5 text-ink-3 font-body">Email</label>
+              <label className="block text-[13px] font-semibold mb-1.5 text-ink-2 font-body">Email</label>
               <input
+                ref={emailInputRef}
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -99,7 +110,7 @@ export default function AssureurLoginPage() {
               />
             </div>
             <div className="relative">
-              <label className="block text-[11px] font-semibold uppercase tracking-wider mb-1.5 text-ink-3 font-body">Mot de passe</label>
+              <label className="block text-[13px] font-semibold mb-1.5 text-ink-2 font-body">Mot de passe</label>
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={password}

@@ -110,11 +110,6 @@ export const useNotificationsStore = create<NotificationsState>()(
             read: true, createdAt: new Date(now - 5 * day).toISOString(),
           },
           {
-            id: 'n-sys-cli', type: 'system', title: 'CLI Agent-First disponible',
-            message: 'La nouvelle interface CLI pour agents IA est prête. Tapez `strickin --help`.',
-            read: false, createdAt: new Date(now - 0.2 * day).toISOString(),
-          },
-          {
             id: 'n-sys-welcome', type: 'system', title: 'Bienvenue sur Strick\'in',
             message: 'Votre plateforme de distribution de produits structurés est prête.',
             read: true, createdAt: new Date(now - 10 * day).toISOString(),

@@ -74,7 +74,7 @@ const stats = [
   { icon: Shield, value: 99.9, suffix: '%', label: 'Uptime garanti', decimal: true },
   { icon: BarChart3, value: 150, suffix: '+', label: 'Produits pricés/mois' },
   { icon: Globe, value: 12, suffix: '', label: 'Pays couverts' },
-  { icon: Zap, value: 3, suffix: 's', label: 'Temps moyen de pricing' },
+  { icon: Zap, value: 1.4, suffix: 's', label: 'Temps moyen de pricing', decimal: true },
 ];
 
 const issuers = ['BNP Paribas', 'Goldman Sachs', 'Société Générale', 'Natixis', 'Barclays'];
@@ -134,10 +134,10 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
             <Link
               href="/login"
-              className="group relative inline-flex items-center gap-2.5 px-8 py-3.5 rounded-xl bg-white text-violet font-display font-bold text-sm tracking-wide shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-200 overflow-hidden"
+              className="group relative inline-flex items-center gap-2.5 px-10 py-4 rounded-xl bg-white text-violet font-display font-bold text-base tracking-wide shadow-2xl shadow-gold/30 ring-1 ring-gold/40 hover:shadow-gold/50 hover:scale-[1.03] transition-all duration-200 overflow-hidden"
             >
               {/* CTA shimmer effect */}
-              <span className="absolute inset-0 -translate-x-full animate-[shimmer_3s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-violet/10 to-transparent" />
+              <span className="absolute inset-0 -translate-x-full animate-[shimmer_3s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
               <span className="relative">Demander une d&eacute;mo</span>
               <ArrowRight className="relative w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </Link>
@@ -225,7 +225,7 @@ export default function Home() {
             <div>
               <h4 className="font-display text-sm font-bold text-white mb-4">Entreprise</h4>
               <ul className="space-y-2.5">
-                {['A propos', 'Blog', 'Carrieres'].map((item) => (
+                {['À propos', 'Blog', 'Carrières'].map((item) => (
                   <li key={item}>
                     <a href="#" className="text-sm text-white/40 hover:text-white/80 transition-colors duration-200">{item}</a>
                   </li>
@@ -234,11 +234,15 @@ export default function Home() {
             </div>
             {/* Legal */}
             <div>
-              <h4 className="font-display text-sm font-bold text-white mb-4">Legal</h4>
+              <h4 className="font-display text-sm font-bold text-white mb-4">Légal</h4>
               <ul className="space-y-2.5">
-                {['CGU', 'Confidentialite', 'Mentions legales'].map((item) => (
-                  <li key={item}>
-                    <a href="#" className="text-sm text-white/40 hover:text-white/80 transition-colors duration-200">{item}</a>
+                {[
+                  { label: 'CGU', href: '/cgu' },
+                  { label: 'Confidentialité', href: '/confidentialite' },
+                  { label: 'Mentions légales', href: '/mentions-legales' },
+                ].map((item) => (
+                  <li key={item.label}>
+                    <Link href={item.href} className="text-sm text-white/40 hover:text-white/80 transition-colors duration-200">{item.label}</Link>
                   </li>
                 ))}
               </ul>
@@ -328,12 +332,12 @@ function StatsSection() {
   const s0 = useCounter(Math.round(stats[0].value * 10), 1500, visible);
   const s1 = useCounter(stats[1].value, 1500, visible);
   const s2 = useCounter(stats[2].value, 1500, visible);
-  const s3 = useCounter(stats[3].value, 1500, visible);
+  const s3 = useCounter(Math.round(stats[3].value * 10), 1500, visible);
   const statValues = [
     `${(s0 / 10).toFixed(1).replace('.', ',')}${stats[0].suffix}`,
     `${s1}${stats[1].suffix}`,
     `${s2}`,
-    `${s3}${stats[3].suffix}`,
+    `${(s3 / 10).toFixed(1).replace('.', ',')}${stats[3].suffix}`,
   ];
 
   return (
@@ -427,21 +431,21 @@ const howItWorksSteps = [
     icon: UserPlus,
     title: 'Connectez-vous',
     description:
-      'Creez votre compte CGP et completez votre onboarding reglementaire en quelques minutes.',
+      'Créez votre compte CGP et complétez votre onboarding réglementaire en quelques minutes.',
   },
   {
     num: 2,
     icon: Search,
     title: 'Sourcez les produits',
     description:
-      'Parcourez le catalogue, comparez les produits et envoyez des RFQ a 5+ emetteurs simultanement.',
+      'Parcourez le catalogue, comparez les produits et envoyez des RFQ à 5+ émetteurs simultanément.',
   },
   {
     num: 3,
     icon: TrendingUp,
     title: 'Distribuez',
     description:
-      'Suivez vos engagements, commissions et portfolio en temps reel depuis un tableau de bord unique.',
+      'Suivez vos engagements, commissions et portfolio en temps réel depuis un tableau de bord unique.',
   },
 ];
 
@@ -497,23 +501,23 @@ function HowItWorksSection() {
 const testimonials = [
   {
     quote:
-      "Strick'in a divise par 3 le temps que je passe a sourcer des produits structures. L'interface est claire et les RFQ multi-emetteurs sont un game changer.",
+      "Strick'in a divisé par 3 le temps que je passe à sourcer des produits structurés. L'interface est claire et les RFQ multi-émetteurs sont un game changer.",
     name: 'Thomas R.',
-    role: 'CGP independant',
+    role: 'CGP indépendant',
     company: 'Paris',
   },
   {
     quote:
-      "La plateforme nous donne une visibilite inegalee sur le comportement des distributeurs et le remplissage de nos enveloppes.",
+      "La plateforme nous donne une visibilité inégalée sur le comportement des distributeurs et le remplissage de nos enveloppes.",
     name: 'Sophie M.',
     role: 'Directrice distribution',
     company: 'Generali',
   },
   {
     quote:
-      "Le pricing engine et les recommandations IA m'aident a trouver les meilleurs produits pour mes clients en quelques clics.",
+      "Le pricing engine et les recommandations IA m'aident à trouver les meilleurs produits pour mes clients en quelques clics.",
     name: 'Marc D.',
-    role: 'Associe',
+    role: 'Associé',
     company: 'Cabinet Patrimoine & Conseil',
   },
 ];
@@ -567,22 +571,22 @@ const trustBadges = [
   {
     icon: Shield,
     title: 'MIF II / DDA',
-    description: 'Conforme aux directives europeennes sur la distribution.',
+    description: 'Conforme aux directives européennes sur la distribution.',
   },
   {
     icon: Lock,
     title: 'RGPD',
-    description: 'Protection des donnees personnelles garantie.',
+    description: 'Protection des données personnelles garantie.',
   },
   {
     icon: Server,
-    title: 'Donnees chiffrees',
+    title: 'Données chiffrées',
     description: 'Chiffrement AES-256 au repos et TLS 1.3 en transit.',
   },
   {
     icon: CheckCircle,
-    title: 'Heberge en Europe',
-    description: 'Infrastructure cloud souveraine localisee en France.',
+    title: 'Hébergé en Europe',
+    description: 'Infrastructure cloud souveraine localisée en France.',
   },
 ];
 

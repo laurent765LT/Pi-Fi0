@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Heart, Layers, Check, Clock, Sparkles as SparkleIcon, Copy, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { formatUnderlying } from '@/lib/underlying-labels';
 import { useToggleFavorite } from '@/hooks/use-favorites';
 import { useCompareStore } from '@/stores/compare-store';
 import { Tooltip } from '@/components/ui/tooltip';
@@ -318,8 +319,8 @@ export function ProductCard({ product, className, isFavorited = false, recommend
           {underlyingYahoo && (
             <>
               <span className="text-ink-3/20 dark:text-ink-3/15">·</span>
-              <span className="text-[10px] font-mono text-ink-3/70 dark:text-ink-3/50 bg-surface-2/80 dark:bg-white/[0.04] px-1.5 py-[1px] rounded-md truncate">
-                {underlyingYahoo}
+              <span className="text-[10px] text-ink-3/70 dark:text-ink-3/50 bg-surface-2/80 dark:bg-white/[0.04] px-1.5 py-[1px] rounded-md truncate">
+                {formatUnderlying(underlyingYahoo)}
               </span>
             </>
           )}

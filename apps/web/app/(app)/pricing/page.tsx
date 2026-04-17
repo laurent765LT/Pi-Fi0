@@ -46,20 +46,20 @@ const STRUCTURE_TYPES = [
   { value: 'PHOENIX_AUTOCALL', label: 'Phoenix Autocall' },
   { value: 'MEMORY_COUPON', label: 'Memory Coupon' },
   { value: 'REVERSE_CONVERTIBLE', label: 'Reverse Convertible' },
-  { value: 'CAPITAL_PROTECTED_NOTE', label: 'Capital Protege' },
+  { value: 'CAPITAL_PROTECTED_NOTE', label: 'Capital Protégé' },
   { value: 'BARRIER_REVERSE_CONVERTIBLE', label: 'Barrier RC' },
-  { value: 'CAPPED_PARTICIPATION', label: 'Participation Cappee' },
+  { value: 'CAPPED_PARTICIPATION', label: 'Participation Cappée' },
 ];
 
 const COUPON_TYPES = [
   { value: 'NONE', label: 'Aucun' },
   { value: 'FIXED', label: 'Fixe' },
   { value: 'CONDITIONAL', label: 'Conditionnel' },
-  { value: 'MEMORY', label: 'Memoire' },
+  { value: 'MEMORY', label: 'Mémoire' },
 ];
 
 const BARRIER_TYPES = [
-  { value: 'EUROPEAN', label: 'Europeenne' },
+  { value: 'EUROPEAN', label: 'Européenne' },
   { value: 'CONTINUOUS', label: 'Continue' },
   { value: 'DAILY_CLOSE', label: 'Close journalier' },
 ];
@@ -85,10 +85,10 @@ function formatDate(iso: string) {
 // ─── Step labels ─────────────────────────────────────────────────────────────
 
 const STEPS = [
-  { label: 'Structure', icon: Sliders, tooltip: 'Definissez la structure de base du produit' },
-  { label: 'Payoff', icon: Target, tooltip: 'Configurez les barrieres et coupons' },
-  { label: 'Marche', icon: Activity, tooltip: 'Parametres de marche et sous-jacent' },
-  { label: 'Resultats', icon: CheckCircle2, tooltip: 'Resultats du pricing et analyse' },
+  { label: 'Structure', icon: Sliders, tooltip: 'Définissez la structure de base du produit' },
+  { label: 'Payoff', icon: Target, tooltip: 'Configurez les barrières et coupons' },
+  { label: 'Marché', icon: Activity, tooltip: 'Paramètres de marché et sous-jacent' },
+  { label: 'Résultats', icon: CheckCircle2, tooltip: 'Résultats du pricing et analyse' },
 ];
 
 // ─── Page ────────────────────────────────────────────────────────────────────
@@ -108,7 +108,7 @@ export default function PricingPage() {
 
   // ── Form state ────────────────────────────────────────────────────────────
   const [structureType, setStructureType] = useState('PHOENIX_AUTOCALL');
-  const [productName, setProductName] = useState('Mon Produit Structure');
+  const [productName, setProductName] = useState('Mon Produit Structuré');
   const [currency, setCurrency] = useState('EUR');
   const [nominal, setNominal] = useState(1000000);
   const [selectedUnderlying, setSelectedUnderlying] = useState(0);
@@ -236,7 +236,7 @@ export default function PricingPage() {
       setValidationErrors(result.validation ?? []);
       setStep(3);
     } catch (err: any) {
-      setPricingError(err?.message ?? 'Une erreur est survenue lors du pricing. Veuillez reessayer.');
+      setPricingError(err?.message ?? 'Une erreur est survenue lors du pricing. Veuillez réessayer.');
     }
   };
 
@@ -314,12 +314,12 @@ export default function PricingPage() {
     'Nominal': 'Montant total de l\'émission en devise',
     'Sous-jacent': 'Actif de référence pour le calcul du payoff',
     'Date de strike': 'Date de fixing initial (constatation du niveau de référence)',
-    'Maturite': 'Date d\'échéance maximale du produit',
+    'Maturité': 'Date d\'échéance maximale du produit',
     'Type de coupon': 'Mécanique de distribution des coupons',
     'Coupon (%/an)': 'Taux de coupon annuel exprimé en pourcentage',
-    'Barriere coupon (%)': 'Niveau du sous-jacent sous lequel le coupon n\'est pas versé',
-    'Barriere autocall (%)': 'Niveau au-dessus duquel le produit est rappelé par anticipation',
-    'Barriere protection (%)': 'Niveau de protection du capital (en % du strike)',
+    'Barrière coupon (%)': 'Niveau du sous-jacent sous lequel le coupon n\'est pas versé',
+    'Barrière autocall (%)': 'Niveau au-dessus duquel le produit est rappelé par anticipation',
+    'Barrière protection (%)': 'Niveau de protection du capital (en % du strike)',
     'Monitoring': 'Méthode d\'observation de la barrière',
     'Participation hausse (%)': 'Taux de participation à la hausse du sous-jacent',
     'Cap (%)': 'Plafond de rendement (0 = pas de cap)',
@@ -341,7 +341,7 @@ export default function PricingPage() {
       <PageHeader
         icon={Calculator}
         title="Pricing Engine"
-        subtitle="Construisez, pricez et analysez des produits structures. Lancez des RFQ simulees multi-emetteurs."
+        subtitle="Construisez, pricez et analysez des produits structurés. Lancez des RFQ simulées multi-émetteurs."
         accentFrom="#3B1FA8"
         accentTo="#5B3FD4"
         className="mb-5"
@@ -468,7 +468,7 @@ export default function PricingPage() {
                   </div>
                   <div>
                     <h3 className="font-display text-[14px] font-bold text-ink dark:text-white">Structure du Produit</h3>
-                    <p className="text-[10px] text-ink-3 dark:text-white/40 font-body">Parametres principaux</p>
+                    <p className="text-[10px] text-ink-3 dark:text-white/40 font-body">Paramètres principaux</p>
                   </div>
                 </div>
 
@@ -530,7 +530,7 @@ export default function PricingPage() {
                     <input type="date" value={strikeDate} onChange={(e) => setStrikeDate(e.target.value)} className={inputCls} />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <label className={labelCls}>Maturite</label>
+                    <label className={labelCls}>Maturité</label>
                     <input type="date" value={maturityDate} onChange={(e) => setMaturityDate(e.target.value)} className={inputCls} />
                   </div>
                 </div>
@@ -561,7 +561,7 @@ export default function PricingPage() {
                     <Target size={14} className="text-white" />
                   </div>
                   <div>
-                    <h3 className="font-display text-[14px] font-bold text-ink dark:text-white">Payoff & Barrieres</h3>
+                    <h3 className="font-display text-[14px] font-bold text-ink dark:text-white">Payoff & Barrières</h3>
                     <p className="text-[10px] text-ink-3 dark:text-white/40 font-body">Coupons, autocall et protection</p>
                   </div>
                 </div>
@@ -582,7 +582,7 @@ export default function PricingPage() {
                       </div>
                       {(couponType === 'CONDITIONAL' || couponType === 'MEMORY') && (
                         <div className="flex flex-col gap-1.5">
-                          <label className={labelCls}>Barriere coupon (%)</label>
+                          <label className={labelCls}>Barrière coupon (%)</label>
                           <input type="number" step="5" value={couponBarrier} onChange={(e) => setCouponBarrier(Number(e.target.value))} className={inputCls} />
                         </div>
                       )}
@@ -590,7 +590,7 @@ export default function PricingPage() {
                     {couponType === 'MEMORY' && (
                       <label className="flex items-center gap-2 text-[11px] font-body text-ink-2 dark:text-white/60 cursor-pointer group">
                         <input type="checkbox" checked={couponMemory} onChange={(e) => setCouponMemory(e.target.checked)} className="accent-violet w-3.5 h-3.5 rounded" />
-                        <span className="group-hover:text-ink dark:group-hover:text-white transition-colors duration-200">Effet memoire sur les coupons</span>
+                        <span className="group-hover:text-ink dark:group-hover:text-white transition-colors duration-200">Effet mémoire sur les coupons</span>
                       </label>
                     )}
                   </>
@@ -600,11 +600,11 @@ export default function PricingPage() {
 
                 <label className="flex items-center gap-2 text-[11px] font-body text-ink-2 dark:text-white/60 cursor-pointer group">
                   <input type="checkbox" checked={autocallEnabled} onChange={(e) => setAutocallEnabled(e.target.checked)} className="accent-violet w-3.5 h-3.5 rounded" />
-                  <span className="group-hover:text-ink dark:group-hover:text-white transition-colors duration-200">Autocall active</span>
+                  <span className="group-hover:text-ink dark:group-hover:text-white transition-colors duration-200">Autocall activé</span>
                 </label>
                 {autocallEnabled && (
                   <div className="flex flex-col gap-1.5">
-                    <label className={labelCls}>Barriere autocall (%)</label>
+                    <label className={labelCls}>Barrière autocall (%)</label>
                     <input type="number" step="5" value={autocallBarrier} onChange={(e) => setAutocallBarrier(Number(e.target.value))} className={inputCls} />
                   </div>
                 )}
@@ -613,7 +613,7 @@ export default function PricingPage() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="flex flex-col gap-1.5">
-                    <label className={labelCls}>Barriere protection (%)</label>
+                    <label className={labelCls}>Barrière protection (%)</label>
                     <input type="number" step="5" value={protectionBarrier} onChange={(e) => setProtectionBarrier(Number(e.target.value))} className={inputCls} />
                   </div>
                   <div className="flex flex-col gap-1.5">
@@ -674,7 +674,7 @@ export default function PricingPage() {
                     <Activity size={14} className="text-white" />
                   </div>
                   <div>
-                    <h3 className="font-display text-[14px] font-bold text-ink dark:text-white">Parametres de Marche</h3>
+                    <h3 className="font-display text-[14px] font-bold text-ink dark:text-white">Paramètres de Marché</h3>
                     <p className="text-[10px] text-ink-3 dark:text-white/40 font-body">Taux, spreads et simulation</p>
                   </div>
                 </div>
@@ -708,8 +708,8 @@ export default function PricingPage() {
                   <select value={mcPaths} onChange={(e) => setMcPaths(Number(e.target.value))} className={selectCls}>
                     <option value={1000}>1 000 (rapide)</option>
                     <option value={5000}>5 000 (standard)</option>
-                    <option value={10000}>10 000 (recommande)</option>
-                    <option value={50000}>50 000 (precis)</option>
+                    <option value={10000}>10 000 (recommandé)</option>
+                    <option value={50000}>50 000 (précis)</option>
                   </select>
                 </div>
 
@@ -759,8 +759,8 @@ export default function PricingPage() {
                     <CheckCircle2 size={14} className="text-white" />
                   </div>
                   <div>
-                    <h3 className="font-display text-[14px] font-bold text-ink dark:text-white">Resume</h3>
-                    <p className="text-[10px] text-ink-3 dark:text-white/40 font-body">Pricing termine avec succes</p>
+                    <h3 className="font-display text-[14px] font-bold text-ink dark:text-white">Résumé</h3>
+                    <p className="text-[10px] text-ink-3 dark:text-white/40 font-body">Pricing terminé avec succès</p>
                   </div>
                 </div>
 
@@ -770,14 +770,14 @@ export default function PricingPage() {
                     <p className="font-display text-xl font-bold text-violet">{pricingResult.result.fairValue}%</p>
                   </div>
                   <div className="rounded-xl bg-gradient-to-br from-teal/5 to-teal/10 dark:from-teal/15 dark:to-teal/10 border border-teal/15 p-3.5 text-center">
-                    <span className="text-[9px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-body block mb-0.5">Prix d&apos;emission</span>
+                    <span className="text-[9px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-body block mb-0.5">Prix d&apos;émission</span>
                     <p className="font-display text-xl font-bold text-teal">{pricingResult.result.issuePrice}%</p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-ink/[0.02] dark:bg-white/5 text-[10px] text-ink-3 dark:text-white/40 font-mono">
                   <Clock size={11} className="text-violet/60" />
-                  Calcule en {pricingResult.result.computeTimeMs}ms ({mcPaths.toLocaleString()} paths)
+                  Calculé en {pricingResult.result.computeTimeMs}ms ({mcPaths.toLocaleString()} paths)
                 </div>
 
                 <div className="flex gap-2.5 mt-0.5">
@@ -803,7 +803,7 @@ export default function PricingPage() {
                     )}
                   >
                     <Building2 size={13} />
-                    Emetteurs
+                    Émetteurs
                   </Link>
                 </div>
               </div>
@@ -823,7 +823,7 @@ export default function PricingPage() {
                 <div className="px-4 py-3 border-b border-border/60 dark:border-white/10 bg-gradient-to-r from-violet/[0.03] to-transparent">
                   <h2 className="font-display text-[14px] font-bold text-ink dark:text-white flex items-center gap-2">
                     <BarChart3 size={14} className="text-violet" />
-                    Resultats de pricing
+                    Résultats de pricing
                   </h2>
                 </div>
                 <div className="p-12 flex flex-col items-center justify-center gap-4">
@@ -835,7 +835,7 @@ export default function PricingPage() {
                       En attente de configuration
                     </p>
                     <p className="text-[11px] text-ink-3 dark:text-white/30 font-body max-w-xs">
-                      Configurez votre produit puis lancez le pricing pour voir les resultats ici.
+                      Configurez votre produit puis lancez le pricing pour voir les résultats ici.
                     </p>
                   </div>
                   {/* Progress hint */}
@@ -848,7 +848,7 @@ export default function PricingPage() {
                         )} />
                       ))}
                     </div>
-                    Etape {step + 1} sur 4
+                    Étape {step + 1} sur 4
                   </div>
                   {validationErrors.filter((e: any) => e.severity === 'ERROR').length > 0 && (
                     <div className="w-full max-w-md bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl p-4 mt-3 animate-fade-in">
@@ -932,7 +932,7 @@ export default function PricingPage() {
                     <h3 className="font-display text-[13px] font-bold text-ink dark:text-white">Indicateur de Risque</h3>
                     {(() => {
                       const probLoss = pricingResult.result.riskSummary?.probCapitalLoss ?? 0;
-                      const riskLevel = probLoss > 0.3 ? 'ELEVE' : probLoss > 0.15 ? 'MODERE' : 'FAIBLE';
+                      const riskLevel = probLoss > 0.3 ? 'ÉLEVÉ' : probLoss > 0.15 ? 'MODÉRÉ' : 'FAIBLE';
                       const riskColor = probLoss > 0.3 ? 'text-red-500 bg-red-500/10 border-red-500/20' : probLoss > 0.15 ? 'text-amber-500 bg-amber-500/10 border-amber-500/20' : 'text-teal bg-teal/10 border-teal/20';
                       return (
                         <span className={cn(
@@ -951,13 +951,13 @@ export default function PricingPage() {
                         <div className="w-5 h-5 rounded-md bg-gold/10 flex items-center justify-center">
                           <Crosshair size={10} className="text-gold" />
                         </div>
-                        <span className="text-[9px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-body font-bold">Distance barriere</span>
+                        <span className="text-[9px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-body font-bold">Distance barrière</span>
                       </div>
                       <div className="font-mono text-xl font-bold text-gold mb-1.5">
                         {(((1 - protectionBarrier / 100) * 100)).toFixed(0)}%
                       </div>
                       <p className="text-[9px] text-ink-4 dark:text-white/30 font-body leading-relaxed">
-                        Le sous-jacent peut baisser de {(((1 - protectionBarrier / 100) * 100)).toFixed(0)}% avant d&apos;atteindre la barriere ({protectionBarrier}% du strike)
+                        Le sous-jacent peut baisser de {(((1 - protectionBarrier / 100) * 100)).toFixed(0)}% avant d&apos;atteindre la barrière ({protectionBarrier}% du strike)
                       </p>
                       {/* Barrier distance bar */}
                       <div className="mt-2.5 h-1.5 rounded-full bg-ink/5 dark:bg-white/5 overflow-hidden">
@@ -983,7 +983,7 @@ export default function PricingPage() {
                         {((pricingResult.result.riskSummary?.probAutocall ?? 0) * 100).toFixed(1)}%
                       </div>
                       <p className="text-[9px] text-ink-4 dark:text-white/30 font-body leading-relaxed">
-                        Probabilite de remboursement anticipe via le mecanisme d&apos;autocall ({autocallBarrier}% trigger)
+                        Probabilité de remboursement anticipé via le mécanisme d&apos;autocall ({autocallBarrier}% trigger)
                       </p>
                       {/* Probability ring */}
                       <div className="mt-2.5 flex items-center gap-2">
@@ -1017,7 +1017,7 @@ export default function PricingPage() {
                           : `${(-(100 - protectionBarrier)).toFixed(0)}%`}
                       </div>
                       <p className="text-[9px] text-ink-4 dark:text-white/30 font-body leading-relaxed">
-                        Scenario le plus defavorable si la barriere de protection est franchie a maturite
+                        Scénario le plus défavorable si la barrière de protection est franchie à maturité
                       </p>
                       {/* Severity scale */}
                       <div className="mt-2.5 flex gap-0.5">
@@ -1049,7 +1049,7 @@ export default function PricingPage() {
                     <div className="w-6 h-6 rounded-md bg-violet-ghost dark:bg-violet/20 flex items-center justify-center">
                       <CircleDollarSign size={12} className="text-violet" />
                     </div>
-                    <h3 className="font-display text-[13px] font-bold text-ink dark:text-white">Decomposition du Prix</h3>
+                    <h3 className="font-display text-[13px] font-bold text-ink dark:text-white">Décomposition du Prix</h3>
                   </div>
 
                   {/* Primary pricing cards: Fair Value, Issue Price, Spread, Commission */}
@@ -1065,7 +1065,7 @@ export default function PricingPage() {
                         suffix: '%',
                       },
                       {
-                        label: "Prix d'emission",
+                        label: "Prix d'émission",
                         value: pricingResult.result.issuePrice,
                         icon: CircleDollarSign,
                         gradient: 'from-teal/10 to-teal/5',
@@ -1115,7 +1115,7 @@ export default function PricingPage() {
 
                   {/* Detailed cost bars */}
                   <div className="h-px bg-gradient-to-r from-transparent via-border/60 to-transparent mb-3" />
-                  <span className="text-[9px] uppercase tracking-[0.15em] text-ink-4 dark:text-white/30 font-body font-bold block mb-2.5">Detail des couts</span>
+                  <span className="text-[9px] uppercase tracking-[0.15em] text-ink-4 dark:text-white/30 font-body font-bold block mb-2.5">Détail des coûts</span>
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                     {Object.entries(pricingResult.result.costBreakdown).map(([key, val]: [string, any]) => {
                       const totalCost = Object.values(pricingResult.result.costBreakdown).reduce(
@@ -1146,7 +1146,7 @@ export default function PricingPage() {
                           <span className="text-[9px] uppercase tracking-[0.12em] text-ink-3 dark:text-white/40 font-body">
                             {key === 'structuringMargin' ? 'Structuration' :
                               key === 'distributionFee' ? 'Distribution' :
-                              key === 'executionCost' ? 'Execution' :
+                              key === 'executionCost' ? 'Exécution' :
                               key === 'hedgingCost' ? 'Hedging' : 'Total'}
                           </span>
                         </div>
@@ -1165,9 +1165,9 @@ export default function PricingPage() {
                     <div className="w-6 h-6 rounded-md bg-teal/10 dark:bg-teal/20 flex items-center justify-center">
                       <Activity size={12} className="text-teal" />
                     </div>
-                    <h3 className="font-display text-[13px] font-bold text-ink dark:text-white">Greeks &amp; Sensibilites</h3>
+                    <h3 className="font-display text-[13px] font-bold text-ink dark:text-white">Greeks &amp; Sensibilités</h3>
                     <span className="ml-auto text-[9px] text-ink-4 dark:text-white/25 font-mono uppercase tracking-wider">
-                      Analyse de sensibilite
+                      Analyse de sensibilité
                     </span>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
@@ -1179,7 +1179,7 @@ export default function PricingPage() {
                         gradient: 'from-violet/10 to-violet/5',
                         borderColor: 'border-violet/15',
                         color: '#3B1FA8',
-                        explanation: 'Sensibilite au spot du sous-jacent',
+                        explanation: 'Sensibilité au spot du sous-jacent',
                       },
                       {
                         label: 'Gamma',
@@ -1188,7 +1188,7 @@ export default function PricingPage() {
                         gradient: 'from-violet/8 to-indigo-500/5',
                         borderColor: 'border-violet/12',
                         color: '#5535C4',
-                        explanation: 'Convexite / derivee seconde du delta',
+                        explanation: 'Convexité / dérivée seconde du delta',
                       },
                       {
                         label: 'Vega',
@@ -1197,7 +1197,7 @@ export default function PricingPage() {
                         gradient: 'from-teal/10 to-teal/5',
                         borderColor: 'border-teal/15',
                         color: '#00B894',
-                        explanation: 'Sensibilite a la volatilite implicite',
+                        explanation: 'Sensibilité à la volatilité implicite',
                       },
                       {
                         label: 'Theta',
@@ -1206,7 +1206,7 @@ export default function PricingPage() {
                         gradient: 'from-gold/10 to-gold/5',
                         borderColor: 'border-gold/15',
                         color: '#D4A017',
-                        explanation: 'Decroissance temporelle quotidienne',
+                        explanation: 'Décroissance temporelle quotidienne',
                       },
                       {
                         label: 'Rho',
@@ -1215,7 +1215,7 @@ export default function PricingPage() {
                         gradient: 'from-cobalt-light/10 to-cobalt-light/5',
                         borderColor: 'border-cobalt-light/15',
                         color: '#0A2799',
-                        explanation: 'Sensibilite aux taux d\'interet',
+                        explanation: 'Sensibilité aux taux d\'intérêt',
                       },
                     ].map((g) => {
                       const Icon = g.icon;
@@ -1253,7 +1253,7 @@ export default function PricingPage() {
                   <div className="px-4 py-3 border-b border-border/60 dark:border-white/10 bg-gradient-to-r from-violet/[0.03] to-transparent flex items-center justify-between">
                     <h3 className="font-display text-[13px] font-bold text-ink dark:text-white flex items-center gap-2">
                       <ArrowUpDown size={14} className="text-violet" />
-                      Analyse de Sensibilite (Spot Shocks)
+                      Analyse de Sensibilité (Spot Shocks)
                     </h3>
                     <span className="text-[9px] text-ink-4 dark:text-white/25 font-mono uppercase tracking-wider">
                       Fair Value: {pricingResult.result.fairValue}%
@@ -1348,10 +1348,10 @@ export default function PricingPage() {
                     <div className="w-4 h-4 rounded bg-ink/5 dark:bg-white/10 flex items-center justify-center">
                       <FileText size={10} className="text-ink-3 dark:text-white/40" />
                     </div>
-                    <span className="text-[11px] font-bold text-ink-2 dark:text-white/60 font-body">Modele: {pricingResult.result.modelUsed}</span>
+                    <span className="text-[11px] font-bold text-ink-2 dark:text-white/60 font-body">Modèle: {pricingResult.result.modelUsed}</span>
                   </div>
                   <div className="space-y-1 text-[10px] text-ink-3 dark:text-white/40 font-body leading-relaxed">
-                    <p>Hypotheses: {pricingResult.result.assumptions.join(' \u00b7 ')}</p>
+                    <p>Hypothèses: {pricingResult.result.assumptions.join(' \u00b7 ')}</p>
                     <p>Limitations: {pricingResult.result.modelLimitations.join(' \u00b7 ')}</p>
                   </div>
                   <div className="mt-3 pt-2.5 border-t border-border/40 dark:border-white/5">
@@ -1388,9 +1388,9 @@ export default function PricingPage() {
                   <tr className="border-b border-border/60 dark:border-white/10 bg-violet/[0.03] dark:bg-violet/5">
                     <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-bold">Date</th>
                     <th className="px-4 py-2.5 text-right text-[10px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-bold">Fair Value</th>
-                    <th className="px-4 py-2.5 text-right text-[10px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-bold">Prix emission</th>
+                    <th className="px-4 py-2.5 text-right text-[10px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-bold">Prix émission</th>
                     <th className="px-4 py-2.5 text-right text-[10px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-bold">Coupon</th>
-                    <th className="px-4 py-2.5 text-center text-[10px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-bold">Modele</th>
+                    <th className="px-4 py-2.5 text-center text-[10px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-bold">Modèle</th>
                     <th className="px-4 py-2.5 text-right text-[10px] uppercase tracking-[0.15em] text-ink-3 dark:text-white/40 font-bold">Temps</th>
                   </tr>
                 </thead>
@@ -1426,7 +1426,7 @@ export default function PricingPage() {
                   Aucun historique
                 </p>
                 <p className="text-[11px] text-ink-3 dark:text-white/30 font-body">
-                  Lancez votre premier pricing pour le voir apparaitre ici.
+                  Lancez votre premier pricing pour le voir apparaître ici.
                 </p>
               </div>
             </div>

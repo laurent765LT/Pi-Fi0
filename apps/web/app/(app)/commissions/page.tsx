@@ -46,10 +46,10 @@ const DEMO_COMMISSIONS = [
 ];
 
 const TYPE_LABELS: Record<string, string> = {
-  ENTRY_FEE: "Frais d'entree",
+  ENTRY_FEE: "Frais d'entrée",
   DISTRIBUTION_FEE: 'Distribution',
   MANAGEMENT_FEE: 'Gestion',
-  TRAILER_FEE: 'Retrocession',
+  TRAILER_FEE: 'Rétrocession',
   STRUCTURING_FEE: 'Structuration',
 };
 
@@ -60,9 +60,9 @@ const STATUS_VARIANT: Record<string, 'teal' | 'gold' | 'muted'> = {
 };
 
 const STATUS_LABEL: Record<string, string> = {
-  PAID: 'Verse',
-  PAYABLE: 'A verser',
-  ACCRUED: 'Comptabilise',
+  PAID: 'Versé',
+  PAYABLE: 'À verser',
+  ACCRUED: 'Comptabilisé',
 };
 
 function formatEur(n: number) {
@@ -191,18 +191,19 @@ type QuarterlyStackedData = {
 
 function StackedQuarterlyChart({ data }: { data: QuarterlyStackedData[] }) {
   const max = Math.max(...data.map(d => d.total), 1);
+  const MAX_BAR_PX = 120; // visible height available for the tallest bar
   return (
     <div className="flex items-end gap-3 h-36">
       {data.map((d) => {
-        const barHeight = (d.total / max) * 100;
+        const barHeightPx = Math.max(8, (d.total / max) * MAX_BAR_PX);
         return (
-          <div key={d.period} className="flex-1 flex flex-col items-center gap-1.5 group/bar">
+          <div key={d.period} className="flex-1 h-full flex flex-col items-center justify-end gap-1.5 group/bar">
             <span className="text-[9px] font-mono text-ink-3 dark:text-white/40 opacity-0 group-hover/bar:opacity-100 transition-opacity duration-200 tabular-nums">
               {formatEur(d.total)}
             </span>
             <div
               className="w-full rounded-t-lg overflow-hidden flex flex-col-reverse transition-all duration-500 group-hover/bar:shadow-md group-hover/bar:shadow-[#3B1FA8]/15"
-              style={{ height: `${barHeight}%`, minHeight: 8 }}
+              style={{ height: `${barHeightPx}px` }}
             >
               {d.segments.map((seg, i) => {
                 const segPct = d.total > 0 ? (seg.amount / d.total) * 100 : 0;
@@ -437,7 +438,7 @@ function CommissionCard({ c }: { c: typeof DEMO_COMMISSIONS[number] }) {
       </div>
       {c.paidDate && (
         <p className="text-[10px] text-ink-3 dark:text-white/40 font-mono mt-2 pt-2 border-t border-border/20 tabular-nums">
-          Verse le {c.paidDate}
+          Versé le {c.paidDate}
         </p>
       )}
     </div>
@@ -475,7 +476,7 @@ const PERIOD_PRESETS: { key: PeriodPreset; label: string }[] = [
   { key: 'all', label: 'Tout' },
   { key: 'month', label: 'Ce mois' },
   { key: 'quarter', label: 'Ce trimestre' },
-  { key: 'year', label: 'Cette annee' },
+  { key: 'year', label: 'Cette année' },
 ];
 
 // ─── Page ────────────────────────────────────────────────────────────────────
@@ -604,7 +605,7 @@ export default function CommissionsPage() {
   }, []);
 
   const handleExportCSV = () => {
-    const header = 'Produit,Type,Taux,Montant,Statut,Periode,Date versement\n';
+    const header = 'Produit,Type,Taux,Montant,Statut,Période,Date versement\n';
     const rows = filtered.map(c =>
       `"${c.productName}","${TYPE_LABELS[c.type]}",${c.ratePct}%,${c.amount},${STATUS_LABEL[c.status]},${c.period},${c.paidDate ?? ''}`
     ).join('\n');
@@ -624,7 +625,7 @@ export default function CommissionsPage() {
       'Taux (%)': c.ratePct,
       Montant: c.amount,
       Statut: STATUS_LABEL[c.status],
-      Periode: c.period,
+      Période: c.period,
       'Date versement': c.paidDate ?? '',
     }));
     exportToExcel(excelData, `commissions_strickin_${new Date().toISOString().slice(0, 10)}`, 'Commissions');
@@ -676,26 +677,26 @@ export default function CommissionsPage() {
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <KpiCard
           icon={<CircleDollarSign size={15} className="text-[#3B1FA8]" />}
-          label="Total cumule"
+          label="Total cumulé"
           value={formatEur(grandTotal)}
           accent="#3B1FA8"
-          subtitle="Toutes periodes"
+          subtitle="Toutes périodes"
         />
         <KpiCard
           icon={<CheckCircle2 size={15} className="text-[#00B894]" />}
-          label="Verse"
+          label="Versé"
           value={formatEur(totalPaid)}
           accent="#00B894"
         />
         <KpiCard
           icon={<Clock size={15} className="text-[#D4A017]" />}
-          label="A verser"
+          label="À verser"
           value={formatEur(totalPayable)}
           accent="#D4A017"
         />
         <KpiCard
           icon={<TrendingUp size={15} className="text-[#3D63F5]" />}
-          label="Comptabilise"
+          label="Comptabilisé"
           value={formatEur(totalAccrued)}
           accent="#3D63F5"
         />
@@ -740,7 +741,7 @@ export default function CommissionsPage() {
             <div className="w-6 h-6 rounded-md bg-[#3B1FA8]/8 dark:bg-[#3B1FA8]/20 flex items-center justify-center">
               <Layers size={12} className="text-[#3B1FA8] dark:text-[#C9BCFF]" />
             </div>
-            <h3 className="font-display text-[13px] font-bold text-ink dark:text-white">Repartition par produit</h3>
+            <h3 className="font-display text-[13px] font-bold text-ink dark:text-white">Répartition par produit</h3>
           </div>
           <ProductBreakdownChart products={productBreakdown} grandTotal={grandTotal} />
         </div>
@@ -782,12 +783,12 @@ export default function CommissionsPage() {
               <div className="w-6 h-6 rounded-md bg-[#3B1FA8]/8 dark:bg-[#3B1FA8]/20 flex items-center justify-center">
                 <PieChart size={12} className="text-[#3B1FA8] dark:text-[#C9BCFF]" />
               </div>
-              <h3 className="font-display text-[13px] font-bold text-ink dark:text-white">Repartition par statut</h3>
+              <h3 className="font-display text-[13px] font-bold text-ink dark:text-white">Répartition par statut</h3>
             </div>
             <DonutChart segments={[
-              { label: 'Verse', value: totalPaid, color: '#00B894' },
-              { label: 'A verser', value: totalPayable, color: '#D4A017' },
-              { label: 'Comptabilise', value: totalAccrued, color: '#3D63F5' },
+              { label: 'Versé', value: totalPaid, color: '#00B894' },
+              { label: 'À verser', value: totalPayable, color: '#D4A017' },
+              { label: 'Comptabilisé', value: totalAccrued, color: '#3D63F5' },
             ]} />
           </div>
         </div>
@@ -836,7 +837,7 @@ export default function CommissionsPage() {
               : 'border-border/60 dark:border-white/15 text-ink-3 dark:text-white/50 hover:text-ink dark:hover:text-white/80 hover:border-[#1A0A3E]/40',
           )}
         >
-          Toutes periodes
+          Toutes périodes
         </button>
         {periods.map(p => (
           <button
@@ -879,7 +880,7 @@ export default function CommissionsPage() {
         ))}
         {periodPreset !== 'all' && (
           <span className="text-[11px] font-mono font-semibold text-[#D4A017] ml-2 tabular-nums">
-            Total filtre : {formatEur(filteredTotal)}
+            Total filtré : {formatEur(filteredTotal)}
           </span>
         )}
       </div>
@@ -905,7 +906,7 @@ export default function CommissionsPage() {
                 <SortableTh column="ratePct" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} className="text-right">Taux</SortableTh>
                 <SortableTh column="amount" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} className="text-right">Montant</SortableTh>
                 <SortableTh column="status" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} className="text-center">Statut</SortableTh>
-                <SortableTh column="period" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} className="text-left">Periode</SortableTh>
+                <SortableTh column="period" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} className="text-left">Période</SortableTh>
                 <PremiumTh className="text-right">Date versement</PremiumTh>
               </tr>
             </thead>
@@ -923,7 +924,7 @@ export default function CommissionsPage() {
                   <td className="px-3 py-2.5 font-medium text-ink dark:text-white">{c.productName}</td>
                   <td className="px-3 py-2.5 text-ink-3 dark:text-white/50">{TYPE_LABELS[c.type] ?? c.type}</td>
                   <td className="px-3 py-2.5 text-right font-mono tabular-nums text-ink dark:text-white/80">
-                    <Tooltip content={`Taux calcule sur le nominal investi (${TYPE_LABELS[c.type] ?? c.type})`} side="top">
+                    <Tooltip content={`Taux calculé sur le nominal investi (${TYPE_LABELS[c.type] ?? c.type})`} side="top">
                       <span className="cursor-help border-b border-dotted border-ink-3/30">{c.ratePct}%</span>
                     </Tooltip>
                   </td>
@@ -960,7 +961,7 @@ export default function CommissionsPage() {
               )}
             >
               <ChevronLeft size={12} />
-              Precedent
+              Précédent
             </button>
             <span className="text-[11px] font-body text-ink-3 dark:text-white/50">
               Page <span className="font-mono font-bold text-[#3B1FA8] dark:text-[#C9BCFF] tabular-nums">{page}</span> sur{' '}

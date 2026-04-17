@@ -111,9 +111,9 @@ const MARKET_INDICES: MarketIndex[] = [
 const SECTOR_DATA: SectorData[] = [
   { name: 'Technologie', changePct: 2.1, icon: <Cpu size={14} /> },
   { name: 'Banque', changePct: 1.5, icon: <Landmark size={14} /> },
-  { name: 'Energie', changePct: -0.8, icon: <Flame size={14} /> },
-  { name: 'Sante', changePct: 0.3, icon: <HeartPulse size={14} /> },
-  { name: 'Defense', changePct: 4.2, icon: <Shield size={14} /> },
+  { name: 'Énergie', changePct: -0.8, icon: <Flame size={14} /> },
+  { name: 'Santé', changePct: 0.3, icon: <HeartPulse size={14} /> },
+  { name: 'Défense', changePct: 4.2, icon: <Shield size={14} /> },
   { name: 'Luxe', changePct: -1.2, icon: <Gem size={14} /> },
   { name: 'Auto', changePct: -2.1, icon: <Car size={14} /> },
   { name: 'Telecom', changePct: 0.5, icon: <Radio size={14} /> },
@@ -122,10 +122,10 @@ const SECTOR_DATA: SectorData[] = [
 // ─── AI Market Brief Data ───────────────────────────────────────────────────
 
 const AI_BRIEF_BULLETS = [
-  'Les marches europeens consolident pres des plus hauts annuels. L\'Euro Stoxx 50 teste la resistance des 4 900 pts avec une volatilite implicite contenue.',
-  'Secteur defense en tete (+4.2% hebdo) porte par les nouveaux engagements OTAN et le fonds souverainete europeen vote la semaine derniere.',
-  'Les spreads de credit des emetteurs majeurs (BNP, SG, Natixis) restent stables a 52 bps, validant la solidite du gisement autocall.',
-  'Attention au risque tarifaire US : les negociations commerciales sino-americaines reprennent le 22 mars. VIX pourrait rebondir temporairement.',
+  'Les marchés européens consolident près des plus hauts annuels. L\'Euro Stoxx 50 teste la résistance des 4 900 pts avec une volatilité implicite contenue.',
+  'Secteur défense en tête (+4.2% hebdo) porté par les nouveaux engagements OTAN et le fonds souveraineté européen voté la semaine dernière.',
+  'Les spreads de crédit des émetteurs majeurs (BNP, SG, Natixis) restent stables à 52 bps, validant la solidité du gisement autocall.',
+  'Attention au risque tarifaire US : les négociations commerciales sino-américaines reprennent le 22 mars. VIX pourrait rebondir temporairement.',
 ];
 
 const AI_BRIEF_CONFIDENCE = 87;
@@ -140,7 +140,7 @@ const SENTIMENT = { bull: 45, neutral: 35, bear: 20 };
 const TRADE_IDEAS: TradeIdea[] = [
   {
     id: '1',
-    title: 'Defense Europeenne : Le Supercycle',
+    title: 'Défense Européenne : Le Supercycle',
     subtitle: 'Phoenix Autocall -- Worst-Of',
     date: '2026-03-03',
     underlying: 'Rheinmetall / Thales',
@@ -150,22 +150,22 @@ const TRADE_IDEAS: TradeIdea[] = [
     aiConfidence: 91,
     aiVerdict: 'strong_buy',
     analysis: {
-      thesis: 'Les budgets de defense en Europe augmentent structurellement. Les pays de l\'OTAN visent 3-5% du PIB contre 2% precedemment. La Pologne depasse 4.5% en 2025. Le STOXX Europe Aerospace & Defense Index a progresse de +65% en 2025. Rheinmetall a bondi de +200% depuis janvier 2025, portee par les commandes d\'armement terrestre. Thales est juge sous-evalue par Morningstar avec un positionnement cle en cyberdefense et avionique.',
+      thesis: 'Les budgets de défense en Europe augmentent structurellement. Les pays de l\'OTAN visent 3-5% du PIB contre 2% précédemment. La Pologne dépasse 4.5% en 2025. Le STOXX Europe Aerospace & Defense Index a progressé de +65% en 2025. Rheinmetall a bondi de +200% depuis janvier 2025, portée par les commandes d\'armement terrestre. Thales est jugé sous-évalué par Morningstar avec un positionnement clé en cyberdéfense et avionique.',
       keyMetrics: [
         { label: 'Croissance Rheinmetall 2025', value: '+200%' },
         { label: 'STOXX A&D Index 2025', value: '+65%' },
-        { label: 'Budgets defense UE /an', value: '+6.8%' },
+        { label: 'Budgets défense UE /an', value: '+6.8%' },
         { label: 'Carnets de commandes', value: '+15%' },
       ],
       catalysts: [
-        'Plans de rearmement europeens (Allemagne : \u20AC100Mrd fonds special)',
-        'Prolongation du conflit Ukraine -- depenses munitions record',
-        'BEI triple les financements defense a \u20AC3Mrd',
-        'M&A en acceleration : +35% en H1 2025',
+        'Plans de réarmement européens (Allemagne : \u20AC100Mrd fonds spécial)',
+        'Prolongation du conflit Ukraine -- dépenses munitions record',
+        'BEI triple les financements défense à \u20AC3Mrd',
+        'M&A en accélération : +35% en H1 2025',
       ],
       risks: [
         'Cessez-le-feu Ukraine -> baisse temporaire du secteur',
-        'Valorisations elevees (Rheinmetall P/E forward 39x)',
+        'Valorisations élevées (Rheinmetall P/E forward 39x)',
         'Cycles de contrats longs (10-15 ans)',
       ],
       sources: [
@@ -173,7 +173,7 @@ const TRADE_IDEAS: TradeIdea[] = [
         'Fitch Ratings -- European Defense Companies',
         'STOXX Europe Total Market Aerospace & Defense Index',
       ],
-      structureDetails: 'Autocall Phoenix Worst-Of sur panier Rheinmetall/Thales. Rappel anticipe si les deux titres sont >= 100% du niveau initial. Coupon memoire 19% p.a. conditionnel si aucun titre < 60%. Barriere capitale 50% a maturite. Duree max 5 ans.',
+      structureDetails: 'Autocall Phoenix Worst-Of sur panier Rheinmetall/Thales. Rappel anticipé si les deux titres sont >= 100% du niveau initial. Coupon mémoire 19% p.a. conditionnel si aucun titre < 60%. Barrière capitale 50% à maturité. Durée max 5 ans.',
     },
   },
   {
@@ -188,21 +188,21 @@ const TRADE_IDEAS: TradeIdea[] = [
     aiConfidence: 87,
     aiVerdict: 'buy',
     analysis: {
-      thesis: 'L\'industrie des semiconducteurs a genere $772Mrd de revenus en 2025 (+22.5%) et le consensus prevoit $975Mrd en 2026 (+26.3%). NVIDIA reste le leader inconteste de l\'IA avec Blackwell en ramp-up complet et Rubin prevu pour H2 2026. ASML a releve ses previsions : CA 2026 entre \u20AC34-39Mrd. Les depenses en serveurs IA pourraient bondir de 45% en 2026 a $312Mrd selon Bloomberg Intelligence.',
+      thesis: 'L\'industrie des semiconducteurs a généré $772Mrd de revenus en 2025 (+22.5%) et le consensus prévoit $975Mrd en 2026 (+26.3%). NVIDIA reste le leader incontesté de l\'IA avec Blackwell en ramp-up complet et Rubin prévu pour H2 2026. ASML a relevé ses prévisions : CA 2026 entre \u20AC34-39Mrd. Les dépenses en serveurs IA pourraient bondir de 45% en 2026 à $312Mrd selon Bloomberg Intelligence.',
       keyMetrics: [
         { label: 'NVIDIA performance 2025', value: '+39%' },
         { label: 'ASML performance 2025', value: '+54%' },
         { label: 'Revenus secteur 2026e', value: '$975Mrd' },
-        { label: 'Depenses serveurs IA 2026', value: '$312Mrd' },
+        { label: 'Dépenses serveurs IA 2026', value: '$312Mrd' },
       ],
       catalysts: [
         'NVIDIA Blackwell ramp-up complet -- Rubin en H2 2026',
         'ASML : carnet de commandes EUV record (\u20AC7.4Mrd Q4)',
-        'Investissements hyperscalers IA en acceleration',
+        'Investissements hyperscalers IA en accélération',
         'Reshoring semi-conducteurs (CHIPS Act US + EU)',
       ],
       risks: [
-        'Volatilite elevee (NVIDIA beta 2.31)',
+        'Volatilité élevée (NVIDIA beta 2.31)',
         'Restrictions export Chine -- impact sur revenus',
         'Valorisations tendues (ASML P/E forward 34x)',
       ],
@@ -212,13 +212,13 @@ const TRADE_IDEAS: TradeIdea[] = [
         'Bloomberg Intelligence -- AI Server Spending',
         'WSTS -- Semiconductor Industry Forecast',
       ],
-      structureDetails: 'Autocall Athena Worst-Of sur NVIDIA/ASML. Rappel anticipe des l\'annee 1 si les deux titres >= 100%. Gain a maturite 16% par annee ecoulee. Barriere capitale 50%. Protection partielle grace a la diversification sectorielle (design + equipement).',
+      structureDetails: 'Autocall Athena Worst-Of sur NVIDIA/ASML. Rappel anticipé dès l\'année 1 si les deux titres >= 100%. Gain à maturité 16% par année écoulée. Barrière capitale 50%. Protection partielle grâce à la diversification sectorielle (design + équipement).',
     },
   },
   {
     id: '3',
-    title: 'Or : Valeur Refuge & Capital Protege',
-    subtitle: 'Note a Capital Protege 90%',
+    title: 'Or : Valeur Refuge & Capital Protégé',
+    subtitle: 'Note à Capital Protégé 90%',
     date: '2026-02-05',
     underlying: 'iEdge Gold Shares EUR Index',
     returnPct: 12,
@@ -227,7 +227,7 @@ const TRADE_IDEAS: TradeIdea[] = [
     aiConfidence: 83,
     aiVerdict: 'buy',
     analysis: {
-      thesis: 'L\'or a atteint $5,081/oz en mars 2026. J.P. Morgan cible $6,300 fin 2026, Goldman Sachs $5,400 et Wells Fargo $6,100-6,300. Les achats des banques centrales restent record : 95% d\'entre elles prevoient d\'augmenter leurs reserves d\'or. Les ETF or ont enregistre des flux entrants massifs. L\'incertitude geopolitique et la politique tarifaire americaine soutiennent la demande.',
+      thesis: 'L\'or a atteint $5,081/oz en mars 2026. J.P. Morgan cible $6,300 fin 2026, Goldman Sachs $5,400 et Wells Fargo $6,100-6,300. Les achats des banques centrales restent record : 95% d\'entre elles prévoient d\'augmenter leurs réserves d\'or. Les ETF or ont enregistré des flux entrants massifs. L\'incertitude géopolitique et la politique tarifaire américaine soutiennent la demande.',
       keyMetrics: [
         { label: 'Prix actuel (mars 2026)', value: '$5,081/oz' },
         { label: 'Cible JPM fin 2026', value: '$6,300/oz' },
@@ -235,15 +235,15 @@ const TRADE_IDEAS: TradeIdea[] = [
         { label: 'Achats banques centrales', value: '>1,000t/an' },
       ],
       catalysts: [
-        'Banques centrales : 3eme annee > 1,000 tonnes d\'achats',
-        'Tensions geopolitiques persistantes',
+        'Banques centrales : 3ème année > 1,000 tonnes d\'achats',
+        'Tensions géopolitiques persistantes',
         'Diversification hors dollar US',
-        'Offre miniere contrainte (10-20 ans pour nouvelles mines)',
+        'Offre minière contrainte (10-20 ans pour nouvelles mines)',
       ],
       risks: [
-        'Hausse des taux reels -> pression baissiere',
+        'Hausse des taux réels -> pression baissière',
         'Renforcement du dollar',
-        'Correction possible de 5-20% (scenario Citi)',
+        'Correction possible de 5-20% (scénario Citi)',
       ],
       sources: [
         'J.P. Morgan -- Gold Price Target $6,300',
@@ -251,7 +251,7 @@ const TRADE_IDEAS: TradeIdea[] = [
         'Morgan Stanley -- Gold Rally Forecast',
         'Goldman Sachs -- Commodities Research',
       ],
-      structureDetails: 'Note a capital protege 90% indexee sur iEdge Gold Shares EUR PR Index. Participation a la hausse plafonnee a 121% du nominal. Duree 3 ans. Protection du capital en cas de baisse limitee a -10%.',
+      structureDetails: 'Note à capital protégé 90% indexée sur iEdge Gold Shares EUR PR Index. Participation à la hausse plafonnée à 121% du nominal. Durée 3 ans. Protection du capital en cas de baisse limitée à -10%.',
     },
   },
   {
@@ -266,9 +266,9 @@ const TRADE_IDEAS: TradeIdea[] = [
     aiConfidence: 78,
     aiVerdict: 'hold',
     analysis: {
-      thesis: 'La BCE maintient ses taux a 2.15% (MRO) et 2.00% (facilite de depot). Le consensus Reuters prevoit des taux stables jusqu\'a mi-2026 au minimum. La courbe des taux EUR s\'est pentifiee significativement en 2025 avec une hausse de 26bp du taux 10 ans nominal OIS. L\'inflation zone euro est tombee a 1.7% en janvier 2026, sous la cible de 2%. Environnement ideal pour les produits de taux conditionnels.',
+      thesis: 'La BCE maintient ses taux à 2.15% (MRO) et 2.00% (facilité de dépôt). Le consensus Reuters prévoit des taux stables jusqu\'à mi-2026 au minimum. La courbe des taux EUR s\'est pentifiée significativement en 2025 avec une hausse de 26bp du taux 10 ans nominal OIS. L\'inflation zone euro est tombée à 1.7% en janvier 2026, sous la cible de 2%. Environnement idéal pour les produits de taux conditionnels.',
       keyMetrics: [
-        { label: 'Taux BCE (depot)', value: '2.00%' },
+        { label: 'Taux BCE (dépôt)', value: '2.00%' },
         { label: 'Taux BCE (MRO)', value: '2.15%' },
         { label: 'Inflation zone euro', value: '1.7%' },
         { label: 'Core inflation', value: '2.2%' },
@@ -281,22 +281,22 @@ const TRADE_IDEAS: TradeIdea[] = [
       ],
       risks: [
         'Surprise inflationniste -> hausse de taux inattendue',
-        'Risque budgetaire souverain (France, Italie)',
-        'Choc geopolitique affectant les marches obligataires',
+        'Risque budgétaire souverain (France, Italie)',
+        'Choc géopolitique affectant les marchés obligataires',
       ],
       sources: [
-        'BCE -- Comptes rendus des reunions (janv-fev 2026)',
+        'BCE -- Comptes rendus des réunions (janv-fév 2026)',
         'Reuters -- ECB Rate Poll',
         'ECB Blog -- Euro Area Yield Curve Repricing',
         'Survey of Professional Forecasters Q4 2025',
       ],
-      structureDetails: 'Coupon conditionnel 6% p.a. si le taux EUR CMS 10 ans reste <= 3.20%. Capital integralement protege a maturite. Possibilite de remboursement anticipe si taux <= 2.40%. Duree 12 ans.',
+      structureDetails: 'Coupon conditionnel 6% p.a. si le taux EUR CMS 10 ans reste <= 3.20%. Capital intégralement protégé à maturité. Possibilité de remboursement anticipé si taux <= 2.40%. Durée 12 ans.',
     },
   },
   {
     id: '5',
-    title: 'Transition Verte : Le Rebond Selectif',
-    subtitle: 'Phoenix Memoire -- Clean Energy',
+    title: 'Transition Verte : Le Rebond Sélectif',
+    subtitle: 'Phoenix Mémoire -- Clean Energy',
     date: '2025-12-10',
     underlying: 'Engie / RWE',
     returnPct: 14,
@@ -305,23 +305,23 @@ const TRADE_IDEAS: TradeIdea[] = [
     aiConfidence: 74,
     aiVerdict: 'cautious',
     analysis: {
-      thesis: 'Les actions d\'energie renouvelable ont rebondi de +23 points de pourcentage en 2025. Apres 9 trimestres de sorties nettes, les fonds europeens clean energy ont recu pres de \u20AC900M d\'entrees au Q4 2025. La narration a evolue : securite energetique, competitivite industrielle et electrification IA dominent. RWE est identifiee comme beneficiaire cle du mix transition + independance europeenne.',
+      thesis: 'Les actions d\'énergie renouvelable ont rebondi de +23 points de pourcentage en 2025. Après 9 trimestres de sorties nettes, les fonds européens clean energy ont reçu près de \u20AC900M d\'entrées au Q4 2025. La narration a évolué : sécurité énergétique, compétitivité industrielle et électrification IA dominent. RWE est identifiée comme bénéficiaire clé du mix transition + indépendance européenne.',
       keyMetrics: [
         { label: 'Rebond clean energy 2025', value: '+23pp' },
         { label: 'Flux fonds Q4 2025', value: '\u20AC900M' },
-        { label: 'Croissance capacite renouvelable', value: '+15%/an' },
-        { label: 'Mecanisme CBAM UE', value: 'Actif' },
+        { label: 'Croissance capacité renouvelable', value: '+15%/an' },
+        { label: 'Mécanisme CBAM UE', value: 'Actif' },
       ],
       catalysts: [
-        'Demande electricite IA -> besoin infrastructures vertes',
-        'CBAM europeen renforce la competitivite verte',
+        'Demande électricité IA -> besoin infrastructures vertes',
+        'CBAM européen renforce la compétitivité verte',
         'RWE : sortie du charbon + build-out renouvelable massif',
-        'Directive Omnibus UE adoptee (fev. 2026)',
+        'Directive Omnibus UE adoptée (fév. 2026)',
       ],
       risks: [
-        'Taux eleves -> cout de financement des projets',
-        'Retards de permitting et interconnexion reseau',
-        'Volatilite des rendements projets',
+        'Taux élevés -> coût de financement des projets',
+        'Retards de permitting et interconnexion réseau',
+        'Volatilité des rendements projets',
       ],
       sources: [
         'Morningstar -- Are Renewable Energy Stocks a Buy in 2026',
@@ -329,7 +329,7 @@ const TRADE_IDEAS: TradeIdea[] = [
         'Franklin Templeton -- ESG 2026 Outlook',
         'World Gold Council -- Energy Transition',
       ],
-      structureDetails: 'Phoenix a memoire sur panier Engie/RWE. Coupon 14% p.a. avec effet memoire si les deux titres >= 65% du niveau initial. Barriere capitale 50%. Rappel anticipe possible des l\'annee 2.',
+      structureDetails: 'Phoenix à mémoire sur panier Engie/RWE. Coupon 14% p.a. avec effet mémoire si les deux titres >= 65% du niveau initial. Barrière capitale 50%. Rappel anticipé possible dès l\'année 2.',
     },
   },
   {
@@ -344,22 +344,22 @@ const TRADE_IDEAS: TradeIdea[] = [
     aiConfidence: 93,
     aiVerdict: 'strong_buy',
     analysis: {
-      thesis: 'En 2025, 338 autocalls UK capital-at-risk lies au FTSE ont mature : 100% ont rapporte capital + profit. Le rendement annualise moyen etait de 7.85%. Sur la decennie 2016-2025, plus de 2,000 maturites avec 99.7% de rendements positifs et zero perte en capital. Le sentiment sur les produits structures est au plus haut : 85% des professionnels sont optimistes ou tres optimistes.',
+      thesis: 'En 2025, 338 autocalls UK capital-at-risk liés au FTSE ont maturé : 100% ont rapporté capital + profit. Le rendement annualisé moyen était de 7.85%. Sur la décennie 2016-2025, plus de 2,000 maturités avec 99.7% de rendements positifs et zéro perte en capital. Le sentiment sur les produits structurés est au plus haut : 85% des professionnels sont optimistes ou très optimistes.',
       keyMetrics: [
-        { label: 'Autocalls UK matures 2025', value: '338 (100% +)' },
-        { label: 'Rendement moyen annualise', value: '7.85%' },
+        { label: 'Autocalls UK maturés 2025', value: '338 (100% +)' },
+        { label: 'Rendement moyen annualisé', value: '7.85%' },
         { label: 'Track record 10 ans', value: '99.7% positif' },
-        { label: 'Duree de vie moyenne', value: '2.3 ans' },
+        { label: 'Durée de vie moyenne', value: '2.3 ans' },
       ],
       catalysts: [
         'Euro Stoxx 50 proche des plus hauts historiques',
-        'Momentum beneficiaire : +13% attendu en 2026',
-        'Conditions de marche favorables au rappel anticipe',
-        'BNP Paribas innove : structure "Catapult" a upside x1.5',
+        'Momentum bénéficiaire : +13% attendu en 2026',
+        'Conditions de marché favorables au rappel anticipé',
+        'BNP Paribas innove : structure "Catapult" à upside x1.5',
       ],
       risks: [
-        'Correction de marche -> extension de la duree de vie',
-        'Tarifs douaniers US -> volatilite accrue (VIX +40% en avril 2025)',
+        'Correction de marché -> extension de la durée de vie',
+        'Tarifs douaniers US -> volatilité accrue (VIX +40% en avril 2025)',
         'Risque de contrepartie bancaire',
       ],
       sources: [
@@ -368,13 +368,13 @@ const TRADE_IDEAS: TradeIdea[] = [
         'Risk.net -- BNP Paribas Structured Products House of the Year',
         'Morgan Stanley -- 2026 Market Outlook',
       ],
-      structureDetails: 'Phoenix Autocall classique sur Euro Stoxx 50. Coupon 8% p.a. si indice >= 70% du niveau initial. Rappel anticipe des l\'annee 1 si indice >= 100%. Barriere capitale 60% de type europeenne. Duree max 10 ans.',
+      structureDetails: 'Phoenix Autocall classique sur Euro Stoxx 50. Coupon 8% p.a. si indice >= 70% du niveau initial. Rappel anticipé dès l\'année 1 si indice >= 100%. Barrière capitale 60% de type européenne. Durée max 10 ans.',
     },
   },
 ];
 
 const CATEGORY_LABELS: Record<string, { label: string; color: string }> = {
-  thematic: { label: 'Thematique', color: '#3B1FA8' },
+  thematic: { label: 'Thématique', color: '#3B1FA8' },
   sector: { label: 'Sectoriel', color: '#0A2799' },
   macro: { label: 'Macro', color: '#D4A017' },
   esg: { label: 'ESG', color: '#00B894' },
@@ -391,7 +391,7 @@ const AI_MARKET_BRIEF = {
   sentiment: 'Haussier' as const,
   sentimentScore: 72,
   lastUpdate: 'il y a 8 min',
-  summary: 'Les marches europeens consolident pres des plus hauts. L\'Euro Stoxx 50 teste la resistance des 5 100 pts avec une volatilite implicite contenue a 17.8%. Les conditions sont favorables aux emissions d\'autocalls (vol implicite > vol realisee). Les spreads de credit des emetteurs majeurs (BNP, SG, Natixis) restent stables, validant la solidite du gisement. Attention au risque tarifaire US qui pourrait generer un pic de volatilite ponctuel.',
+  summary: 'Les marchés européens consolident près des plus hauts. L\'Euro Stoxx 50 teste la résistance des 5 100 pts avec une volatilité implicite contenue à 17.8%. Les conditions sont favorables aux émissions d\'autocalls (vol implicite > vol réalisée). Les spreads de crédit des émetteurs majeurs (BNP, SG, Natixis) restent stables, validant la solidité du gisement. Attention au risque tarifaire US qui pourrait générer un pic de volatilité ponctuel.',
   keyData: [
     { label: 'Euro Stoxx 50', value: '5 042 pts', change: '+0.8%', up: true },
     { label: 'Vol. implicite 1M', value: '17.8%', change: '-1.2 pts', up: false },
@@ -492,10 +492,10 @@ export default function ResearchPage() {
       `Confiance IA: ${idea.aiConfidence}%`,
       `Verdict IA  : ${verdict}`,
       ``,
-      `── These d'investissement ──────────────`,
+      `── Thèse d'investissement ──────────────`,
       idea.analysis.thesis,
       ``,
-      `── Metriques cles ─────────────────────`,
+      `── Métriques clés ─────────────────────`,
       ...idea.analysis.keyMetrics.map((m) => `  ${m.label}: ${m.value}`),
       ``,
       `── Catalyseurs ────────────────────────`,
@@ -504,14 +504,14 @@ export default function ResearchPage() {
       `── Risques ────────────────────────────`,
       ...idea.analysis.risks.map((r) => `  * ${r}`),
       ``,
-      `── Structure proposee ─────────────────`,
+      `── Structure proposée ─────────────────`,
       idea.analysis.structureDetails,
       ``,
       `── Sources ────────────────────────────`,
       ...idea.analysis.sources.map((s) => `  * ${s}`),
       ``,
       `════════════════════════════════════════`,
-      `  Genere par Strick'in Research`,
+      `  Généré par Strick'in Research`,
       `════════════════════════════════════════`,
     ];
     const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
@@ -614,7 +614,7 @@ export default function ResearchPage() {
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <Activity size={13} className="text-violet" />
-            <span className="text-[11px] font-bold text-ink font-body">Sentiment de marche -- Mars 2026</span>
+            <span className="text-[11px] font-bold text-ink font-body">Sentiment de marché -- Mars 2026</span>
           </div>
           <div className="flex items-center gap-3 text-[9px] font-body font-semibold">
             <span className="flex items-center gap-1">
@@ -694,7 +694,7 @@ export default function ResearchPage() {
         {/* AI Market Brief -- 2 cols */}
         <div className="lg:col-span-2 relative bg-white/80 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 ring-1 ring-black/[0.03] overflow-hidden shadow-sm">
           <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg, #3B1FA8, #5B3FD4)' }} />
-          <div className="p-4 flex flex-col h-full">
+          <div className="p-4 flex flex-col">
             <div className="flex items-center gap-2 mb-3">
               <div
                 className="w-6 h-6 rounded-lg flex items-center justify-center shadow-sm"
@@ -711,7 +711,7 @@ export default function ResearchPage() {
               </div>
             </div>
 
-            <ul className="flex flex-col gap-2 flex-1">
+            <ul className="flex flex-col gap-2">
               {AI_BRIEF_BULLETS.map((bullet, i) => (
                 <li key={i} className="text-[10px] text-ink-2 font-body leading-relaxed flex items-start gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-violet/40 mt-1 shrink-0" />
@@ -722,7 +722,7 @@ export default function ResearchPage() {
 
             <div className="flex items-center gap-1.5 mt-3 pt-2 border-t border-border/30">
               <Clock size={9} className="text-ink-3" />
-              <span className="text-[9px] text-ink-3 font-body">Genere le {AI_BRIEF_DATE}</span>
+              <span className="text-[9px] text-ink-3 font-body">Généré le {AI_BRIEF_DATE}</span>
             </div>
           </div>
         </div>
@@ -731,41 +731,14 @@ export default function ResearchPage() {
       <PageHeader
         icon={Brain}
         title="Research & Trade Ideas"
-        subtitle={`Synthese IA du marche -- mise a jour ${AI_MARKET_BRIEF.lastUpdate}`}
+        subtitle={`Synthèse IA du marché -- mise à jour ${AI_MARKET_BRIEF.lastUpdate}`}
         accentFrom="#3B1FA8"
         accentTo="#5B3FD4"
         className="mb-4"
       />
 
       {/* ================================================================== */}
-      {/* 4. LIVE MARKET DATA TICKER                                          */}
-      {/* ================================================================== */}
-      <div className="relative bg-white/80 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 ring-1 ring-black/[0.03] overflow-hidden mb-4 shadow-sm">
-        <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg, #3B1FA8, #00B894, #D4A017)' }} />
-        <div className="p-4">
-
-          <p className="text-[11px] text-ink-2 font-body leading-relaxed mb-3">{AI_MARKET_BRIEF.summary}</p>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1.5">
-            {AI_MARKET_BRIEF.keyData.map((d, i) => (
-              <div key={i} className="flex flex-col items-center gap-0.5 py-1.5 px-1.5 rounded-lg bg-surface-2/40 dark:bg-white/[0.03] border border-border/30 hover:border-violet/20 hover:shadow-sm transition-all duration-200">
-                <span className="text-[8px] uppercase tracking-wider text-ink-3 font-bold">{d.label}</span>
-                <span className="font-mono text-[12px] font-bold text-ink tabular-nums">{d.value}</span>
-                <span className={cn(
-                  'flex items-center gap-0.5 text-[9px] font-mono font-semibold tabular-nums',
-                  d.up ? 'text-teal' : 'text-red',
-                )}>
-                  {d.up ? <TrendingUp size={8} /> : <Activity size={8} />}
-                  {d.change}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ================================================================== */}
-      {/* 5. FEATURED CAROUSEL                                                */}
+      {/* 4. FEATURED CAROUSEL                                                */}
       {/* ================================================================== */}
       <div className="relative bg-white/80 dark:bg-white/5 backdrop-blur-md rounded-xl border border-border/60 ring-1 ring-black/[0.03] overflow-hidden mb-4 shadow-sm hover:shadow-md hover:shadow-violet/5 transition-all duration-300">
         <div className="absolute top-0 left-0 right-0 h-[2px] rounded-b-full opacity-80" style={{ background: 'linear-gradient(90deg, #3B1FA8, #5B3FD4, #3D63F5)' }} />
@@ -1003,7 +976,7 @@ export default function ResearchPage() {
             {filteredAndSortedIdeas.length === 0 && (
               <div className="bg-white/60 dark:bg-white/5 rounded-lg border border-border/40 p-6 text-center">
                 <Search size={20} className="text-ink-3/30 mx-auto mb-2" />
-                <p className="text-[11px] text-ink-3 font-body">Aucun resultat pour cette recherche.</p>
+                <p className="text-[11px] text-ink-3 font-body">Aucun résultat pour cette recherche.</p>
               </div>
             )}
           </div>
@@ -1053,7 +1026,7 @@ export default function ResearchPage() {
                     <div className="w-5 h-5 rounded flex items-center justify-center bg-[#3B1FA8]/8">
                       <FileText size={11} className="text-[#3B1FA8]" />
                     </div>
-                    <h3 className="font-display text-[12px] font-bold text-ink">These d&apos;investissement</h3>
+                    <h3 className="font-display text-[12px] font-bold text-ink">Thèse d&apos;investissement</h3>
                   </div>
                   <p className="text-[11px] text-ink-2 font-body leading-relaxed">
                     {selectedIdea.analysis.thesis}
@@ -1107,7 +1080,7 @@ export default function ResearchPage() {
                     <div className="w-5 h-5 rounded flex items-center justify-center bg-[#3B1FA8]/10">
                       <Target size={10} className="text-[#3B1FA8]" />
                     </div>
-                    <span className="text-[11px] font-bold text-[#3B1FA8] font-body">Structure proposee</span>
+                    <span className="text-[11px] font-bold text-[#3B1FA8] font-body">Structure proposée</span>
                   </div>
                   <p className="text-[11px] text-ink-2 font-body leading-relaxed">
                     {selectedIdea.analysis.structureDetails}
@@ -1176,7 +1149,7 @@ export default function ResearchPage() {
                     )}
                   >
                     <Download size={11} />
-                    Telecharger le PDF
+                    Télécharger le PDF
                   </button>
                   <button
                     onClick={() => handleShare(selectedIdea)}
@@ -1200,7 +1173,7 @@ export default function ResearchPage() {
                 <FileText size={22} className="text-ink-3/30" />
               </div>
               <p className="text-[12px] text-ink-3 font-body">
-                Selectionnez une idee de trade pour voir l&apos;apercu.
+                Sélectionnez une idée de trade pour voir l&apos;aperçu.
               </p>
             </div>
           )}

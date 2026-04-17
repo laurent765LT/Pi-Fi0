@@ -38,7 +38,7 @@ function formatRelativeTime(isoDate: string): string {
   const hours = Math.floor(diff / 3_600_000);
   const days = Math.floor(diff / 86_400_000);
 
-  if (minutes < 1) return "A l'instant";
+  if (minutes < 1) return "À l'instant";
   if (minutes < 60) return `Il y a ${minutes} min`;
   if (hours < 24) return `Il y a ${hours}h`;
   if (days < 7) return `Il y a ${days}j`;
@@ -125,7 +125,7 @@ const TYPE_CONFIG: Record<
     accent: '#00B894',
     bgGradient: 'from-[#00B894]/10 to-[#00B894]/5',
     ringColor: 'ring-[#00B894]/15',
-    label: 'Succes',
+    label: 'Succès',
   },
   warning: {
     icon: AlertTriangle,
@@ -158,25 +158,25 @@ const DEMO_NOTIFICATIONS = [
   {
     title: 'Nouveau produit disponible',
     message:
-      'Un nouvel Autocall Phoenix sur CAC 40 est maintenant ouvert a la souscription. Rendement indicatif : 9,5% /an.',
+      'Un nouvel Autocall Phoenix sur CAC 40 est maintenant ouvert à la souscription. Rendement indicatif : 9,5% /an.',
     type: 'info' as NotificationType,
   },
   {
-    title: "Marque d'interet confirmee",
+    title: "Marque d'intérêt confirmée",
     message:
-      'Votre marque d\'interet de 500 000 EUR sur "Phoenix Europe Dividendes 2026" a ete confirmee.',
+      'Votre marque d\'intérêt de 500 000 EUR sur "Phoenix Europe Dividendes 2026" a été confirmée.',
     type: 'success' as NotificationType,
   },
   {
-    title: 'Cloture imminente',
+    title: 'Clôture imminente',
     message:
-      'L\'enveloppe "Barrier Note Energie Q2 2025" ferme dans 48h. Il reste 12% de capacite disponible.',
+      'L\'enveloppe "Barrier Note Energie Q2 2025" ferme dans 48h. Il reste 12% de capacité disponible.',
     type: 'warning' as NotificationType,
   },
   {
-    title: 'Mise a jour reglementaire',
+    title: 'Mise à jour réglementaire',
     message:
-      'Votre dossier ORIAS est en cours de verification. Vous serez notifie des validation par nos equipes.',
+      'Votre dossier ORIAS est en cours de vérification. Vous serez notifié des validation par nos équipes.',
     type: 'info' as NotificationType,
   },
 ];
@@ -501,7 +501,7 @@ export default function NotificationsPage() {
     const timer = setTimeout(() => {
       addNotification({
         type: 'closing',
-        title: 'Rappel: Cloture imminente',
+        title: 'Rappel: Clôture imminente',
         message: 'M Ambition 10 ferme dans 3 jours. N\'oubliez pas de finaliser vos engagements.',
         productId: 'prod-010',
         productName: 'M Ambition 10',
@@ -544,7 +544,7 @@ export default function NotificationsPage() {
       <PageHeader
         icon={Bell}
         title="Notifications"
-        subtitle="Restez informe des opportunites et mises a jour."
+        subtitle="Restez informé des opportunités et mises à jour."
         accentFrom="#3B1FA8"
         accentTo="#1A0A3E"
         className="mb-1.5"
@@ -573,7 +573,7 @@ export default function NotificationsPage() {
           )}
         >
           <Settings size={11} />
-          Gerer les preferences
+          Gérer les préférences
         </Link>
       </div>
 
@@ -606,7 +606,7 @@ export default function NotificationsPage() {
           active={typeFilter === 'success'}
           onClick={() => setTypeFilter('success')}
           icon={CheckCircle2}
-          label="Succes"
+          label="Succès"
           count={typeCounts.success}
           accent="#00B894"
         />
@@ -640,7 +640,7 @@ export default function NotificationsPage() {
             </p>
             <p className="font-body text-[11px] text-ink-3 dark:text-white/40 mt-0.5 max-w-xs">
               {typeFilter === 'all'
-                ? 'Vous serez averti ici des nouvelles opportunites et mises a jour importantes.'
+                ? 'Vous serez averti ici des nouvelles opportunités et mises à jour importantes.'
                 : 'Essayez un autre filtre pour voir vos notifications.'}
             </p>
           </div>

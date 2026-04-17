@@ -6,6 +6,7 @@ import { ArrowLeft, Trophy, Shield, TrendingUp, X, Check, ToggleLeft, ToggleRigh
 import { useCompareStore } from '@/stores/compare-store';
 import { useProduct } from '@/hooks/use-products';
 import { cn } from '@/lib/cn';
+import { formatUnderlying } from '@/lib/underlying-labels';
 import type { Product } from '@/components/products/product-card';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -302,7 +303,7 @@ export default function ComparePage() {
     },
     {
       label: 'Sous-jacent',
-      getValue: (p) => p.underlyingYahoo,
+      getValue: (p) => formatUnderlying(p.underlyingYahoo),
       highlight: 'none',
     },
     {

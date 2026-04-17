@@ -23,7 +23,7 @@ type EventFilter = 'all' | 'closing' | 'observation' | 'coupon' | 'autocall';
 // --- Constants ---------------------------------------------------------------
 
 const EVENT_CONFIG: Record<string, { icon: typeof Calendar; label: string; color: string; bg: string }> = {
-  closing: { icon: Calendar, label: 'Cloture', color: '#E8334A', bg: '#FFF0F2' },
+  closing: { icon: Calendar, label: 'Clôture', color: '#E8334A', bg: '#FFF0F2' },
   observation: { icon: Eye, label: 'Observation', color: '#3B1FA8', bg: '#F0ECFF' },
   coupon: { icon: DollarSign, label: 'Coupon', color: '#00B894', bg: '#E6FAF5' },
   autocall: { icon: RefreshCw, label: 'Autocall potentiel', color: '#D4A017', bg: '#FFF8E7' },
@@ -31,7 +31,7 @@ const EVENT_CONFIG: Record<string, { icon: typeof Calendar; label: string; color
 
 const FILTER_OPTIONS: { value: EventFilter; label: string }[] = [
   { value: 'all', label: 'Tous' },
-  { value: 'closing', label: 'Clotures' },
+  { value: 'closing', label: 'Clôtures' },
   { value: 'observation', label: 'Observations' },
   { value: 'coupon', label: 'Coupons' },
   { value: 'autocall', label: 'Autocalls' },
@@ -63,7 +63,7 @@ function isToday(iso: string): boolean {
 // --- Page --------------------------------------------------------------------
 
 export default function EventsPage() {
-  useEffect(() => { document.title = "Evenements | Strick'in"; }, []);
+  useEffect(() => { document.title = "Événements | Strick'in"; }, []);
   const [filter, setFilter] = useState<EventFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const { data: productsData, isLoading } = useProducts({});
@@ -84,7 +84,7 @@ export default function EventsPage() {
           productId: p.id,
           productName: p.name,
           productIsin: p.isin,
-          detail: `Cloture de l'etagere`,
+          detail: `Clôture de l'étagère`,
         });
       }
 
@@ -166,8 +166,8 @@ export default function EventsPage() {
     <div className="w-full animate-fade-in">
       <PageHeader
         icon={Calendar}
-        title="Evenements"
-        subtitle="Tous les evenements a venir sur vos produits structures."
+        title="Événements"
+        subtitle="Tous les événements à venir sur vos produits structurés."
         accentFrom="#3B1FA8"
         accentTo="#1A0A3E"
         className="mb-4"
@@ -272,14 +272,14 @@ export default function EventsPage() {
           </div>
           <div className="text-center">
             <p className="font-display text-[15px] font-bold text-ink dark:text-white">
-              Aucun evenement trouve
+              Aucun événement trouvé
             </p>
             <p className="font-body text-[12px] text-ink-3 dark:text-white/40 mt-1 max-w-sm">
               {searchQuery
-                ? `Aucun resultat pour "${searchQuery}". Essayez un autre terme ou ajustez vos filtres.`
+                ? `Aucun résultat pour "${searchQuery}". Essayez un autre terme ou ajustez vos filtres.`
                 : filter !== 'all'
-                  ? 'Aucun evenement pour ce type. Essayez de modifier le filtre ou selectionnez "Tous".'
-                  : 'Les evenements apparaitront ici lorsque des produits auront des dates futures.'}
+                  ? 'Aucun événement pour ce type. Essayez de modifier le filtre ou sélectionnez "Tous".'
+                  : 'Les événements apparaîtront ici lorsque des produits auront des dates futures.'}
             </p>
             {(searchQuery || filter !== 'all') && (
               <button
@@ -297,7 +297,7 @@ export default function EventsPage() {
                   'transition-all duration-150',
                 )}
               >
-                Reinitialiser les filtres
+                Réinitialiser les filtres
               </button>
             )}
           </div>

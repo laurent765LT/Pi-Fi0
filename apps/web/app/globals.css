@@ -482,6 +482,14 @@ main { animation: fadeIn 0.3s ease-out; }
   100% { transform: translateX(100%); }
 }
 
+/* Error shake animation for login forms */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  75% { transform: translateX(8px); }
+}
+.animate-shake { animation: shake 0.3s ease-in-out; }
+
 /* Scroll-triggered reveal */
 .reveal-hidden { opacity: 0; transform: translateY(20px); transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
 .reveal-visible { opacity: 1; transform: translateY(0); }

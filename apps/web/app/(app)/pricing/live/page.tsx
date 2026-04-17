@@ -266,7 +266,7 @@ function QuoteCard({
             isBest && 'shadow-sm hover:shadow-md',
           )}
         >
-          Selectionner
+          Sélectionner
           <ChevronRight size={13} className="ml-0.5" />
         </Button>
       </div>
@@ -280,7 +280,7 @@ export default function PricingLivePage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const fairValue = parseFloat(searchParams.get('fv') ?? '96.5');
-  const productName = searchParams.get('name') ?? 'Mon Produit Structure';
+  const productName = searchParams.get('name') ?? 'Mon Produit Structuré';
 
   const [quotes, setQuotes] = useState<LiveQuote[]>([]);
   const [selectedQuote, setSelectedQuote] = useState<LiveQuote | null>(null);
@@ -345,11 +345,11 @@ export default function PricingLivePage() {
               <CheckCircle2 size={32} className="text-teal drop-shadow-sm" />
             </div>
             <h2 className="font-display text-xl font-bold text-ink dark:text-white mb-2">
-              Offre selectionnee
+              Offre sélectionnée
             </h2>
             <p className="font-body text-sm text-ink-3 mb-6 max-w-md mx-auto">
-              Vous avez selectionne l&apos;offre de{' '}
-              <span className="font-semibold text-ink dark:text-white">{selectedQuote.issuerName}</span> a{' '}
+              Vous avez sélectionné l&apos;offre de{' '}
+              <span className="font-semibold text-ink dark:text-white">{selectedQuote.issuerName}</span> à{' '}
               <span className="font-semibold text-violet dark:text-violet-light">{selectedQuote.price.toFixed(2)}%</span>{' '}
               pour <span className="font-semibold text-ink dark:text-white">{productName}</span>.
             </p>
@@ -382,7 +382,7 @@ export default function PricingLivePage() {
             </div>
 
             <p className="text-[11px] text-ink-3 font-body italic mb-6">
-              Cette selection est simulee. En production, elle declencherait le processus de confirmation avec l&apos;emetteur.
+              Cette sélection est simulée. En production, elle déclencherait le processus de confirmation avec l&apos;émetteur.
             </p>
 
             <div className="flex items-center justify-center gap-3">
@@ -422,7 +422,7 @@ export default function PricingLivePage() {
           <div>
             <div className="flex items-center gap-3 mb-1.5">
               <h1 className="font-display text-[28px] font-bold text-ink dark:text-white leading-tight">
-                Consultation Emetteurs
+                Consultation Émetteurs
               </h1>
               <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-violet/10 dark:bg-violet/20">
                 <Radio size={11} className={cn('text-violet', !allReceived && 'animate-pulse')} />
@@ -432,7 +432,7 @@ export default function PricingLivePage() {
               </div>
             </div>
             <p className="text-sm text-ink-3 font-body">
-              Cotations en temps reel pour{' '}
+              Cotations en temps réel pour{' '}
               <span className="font-semibold text-ink dark:text-white">{productName}</span>
               {' '}&mdash; Fair Value :{' '}
               <span className="font-mono font-semibold text-violet dark:text-violet-light tabular-nums">
@@ -451,12 +451,15 @@ export default function PricingLivePage() {
                 )}
               />
               <span className="text-[11px] font-mono font-semibold text-ink-2 tabular-nums">
-                {receivedQuotes.length}/{quotes.length} recues
+                {receivedQuotes.length}/{quotes.length} reçues
               </span>
             </div>
             <div className="flex items-center gap-1.5 bg-white dark:bg-white/[0.06] border border-border/60 dark:border-white/10 rounded-xl px-3 py-2 shadow-sm">
               <Clock size={12} className="text-ink-3" />
-              <span className="text-[11px] font-mono font-semibold text-ink-3 tabular-nums">
+              <span className="text-[11px] font-body font-semibold text-ink-3">
+                Temps écoulé :
+              </span>
+              <span className="text-[11px] font-mono font-semibold text-ink-2 tabular-nums">
                 {elapsedSeconds}s
               </span>
             </div>
@@ -511,11 +514,11 @@ export default function PricingLivePage() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-body text-sm font-semibold text-ink dark:text-white">
-                Toutes les cotations ont ete recues
+                Toutes les cotations ont été reçues
               </p>
               <p className="font-body text-[11px] text-ink-3 mt-0.5">
                 Meilleure offre :{' '}
-                <span className="font-semibold text-teal">{sortedReceived[0]?.issuerName}</span> a{' '}
+                <span className="font-semibold text-teal">{sortedReceived[0]?.issuerName}</span> à{' '}
                 <span className="font-mono font-semibold text-violet dark:text-violet-light tabular-nums">
                   {sortedReceived[0]?.price.toFixed(2)}%
                 </span>{' '}
@@ -529,7 +532,7 @@ export default function PricingLivePage() {
               className="rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
             >
               <Trophy size={14} className="mr-1.5" />
-              Selectionner la meilleure
+              Sélectionner la meilleure
             </Button>
           </div>
         </div>

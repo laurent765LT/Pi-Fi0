@@ -637,7 +637,7 @@ export default function AssureurRegisterPage() {
 
                   {/* Product types - multi-select checkboxes */}
                   <div className="flex flex-col gap-1.5">
-                    <label className="font-body text-xs font-bold uppercase tracking-wide text-ink-2">
+                    <label className="font-body text-[13px] font-semibold text-ink-2">
                       Types de produits distribues
                     </label>
                     <div className="grid grid-cols-2 gap-2">
@@ -673,7 +673,7 @@ export default function AssureurRegisterPage() {
 
                   {/* Annual volume */}
                   <div className="flex flex-col gap-1.5">
-                    <label className="font-body text-xs font-bold uppercase tracking-wide text-ink-2">
+                    <label className="font-body text-[13px] font-semibold text-ink-2">
                       Volume annuel estime
                     </label>
                     <div className="grid grid-cols-2 gap-2">

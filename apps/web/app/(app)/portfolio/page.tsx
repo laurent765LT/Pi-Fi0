@@ -40,6 +40,7 @@ import { Tooltip } from '@/components/ui/tooltip';
 import { useAnimatedCounter } from '@/hooks/use-animated-counter';
 import { ToastContainer, useToast } from '@/components/ui/toast';
 import { exportToExcel } from '@/lib/export-utils';
+import { formatUnderlying } from '@/lib/underlying-labels';
 import { PageHeader } from '@/components/ui/page-header';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -96,7 +97,7 @@ const TABS: { id: PortfolioTab; label: string; icon: React.ElementType }[] = [
   { id: 'underlyings', label: 'Sous-jacents', icon: BarChart3 },
   { id: 'timeline', label: 'Timeline', icon: Calendar },
   { id: 'allocations', label: 'Allocations', icon: Layers },
-  { id: 'expired', label: 'Produits expires', icon: Clock },
+  { id: 'expired', label: 'Produits expirés', icon: Clock },
 ];
 
 const STATUS_VARIANT: Record<string, 'teal' | 'gold' | 'violet' | 'red' | 'muted'> = {
@@ -108,19 +109,19 @@ const STATUS_VARIANT: Record<string, 'teal' | 'gold' | 'violet' | 'red' | 'muted
 };
 
 const STATUS_LABEL: Record<string, string> = {
-  CONFIRMED: 'Confirme',
+  CONFIRMED: 'Confirmé',
   WAITING: 'En attente',
   PENDING: 'En cours',
   REVIEW: 'En examen',
-  CANCELLED: 'Annule',
+  CANCELLED: 'Annulé',
 };
 
 const BARRIER_FILTERS: { id: BarrierStatus | ''; label: string; color: string }[] = [
   { id: '', label: 'Tous', color: '#7B6FA0' },
   { id: 'above', label: 'Au-dessus du strike', color: '#00B894' },
   { id: 'below', label: 'Sous le strike', color: '#3D63F5' },
-  { id: 'watch', label: 'A surveiller', color: '#D4A017' },
-  { id: 'barrier', label: 'Sous la barriere', color: '#E8334A' },
+  { id: 'watch', label: 'À surveiller', color: '#D4A017' },
+  { id: 'barrier', label: 'Sous la barrière', color: '#E8334A' },
 ];
 
 // ─── Mini Sparkline ──────────────────────────────────────────────────────────
@@ -368,7 +369,7 @@ function CalendarView({ products }: { products: any[] }) {
       <div className="px-4 py-3 border-b border-border/50 dark:border-white/8 flex items-center justify-between bg-gradient-to-r from-[#F8F6FF]/80 to-transparent dark:from-white/[0.02] dark:to-transparent">
         <h3 className="font-display text-[13px] font-bold text-ink dark:text-white flex items-center gap-1.5">
           <Calendar size={13} className="text-[#3B1FA8]" />
-          Calendrier des evenements
+          Calendrier des événements
         </h3>
         <div className="flex items-center gap-1.5">
           <button
@@ -398,8 +399,8 @@ function CalendarView({ products }: { products: any[] }) {
         <div className="flex items-center gap-3 text-[9px] font-body font-medium">
           <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#D4A017]" />Observation</span>
           <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#3D63F5]" />Autocall</span>
-          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#E8334A]" />Cloture</span>
-          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-ink-3" />Maturite</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#E8334A]" />Clôture</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-ink-3" />Maturité</span>
         </div>
       </div>
       <div className="p-4">
@@ -448,7 +449,7 @@ function CalendarView({ products }: { products: any[] }) {
         {/* Upcoming events list */}
         <div className="mt-4 pt-3 border-t border-border/30 dark:border-white/6">
           <p className="text-[10px] font-bold uppercase tracking-wider text-ink-3 dark:text-white/35 mb-2 font-body">
-            Prochains evenements ce mois
+            Prochains événements ce mois
           </p>
           {(() => {
             const upcoming: { day: number; type: string; color: string; productName: string }[] = [];
@@ -465,7 +466,7 @@ function CalendarView({ products }: { products: any[] }) {
               if (p.shelfClosingDate) {
                 const dt = new Date(p.shelfClosingDate);
                 if (dt.getMonth() === month && dt.getFullYear() === year && dt.getDate() >= today) {
-                  upcoming.push({ day: dt.getDate(), type: 'Cloture', color: '#E8334A', productName: p.name });
+                  upcoming.push({ day: dt.getDate(), type: 'Clôture', color: '#E8334A', productName: p.name });
                 }
               }
             }
@@ -473,7 +474,7 @@ function CalendarView({ products }: { products: any[] }) {
             if (upcoming.length === 0) {
               return (
                 <div className="py-4 px-3 bg-gradient-to-br from-[#F8F6FF] to-[#F0ECFF] dark:from-white/[0.02] dark:to-white/[0.01] rounded-lg text-center border border-[#3B1FA8]/5 dark:border-white/5">
-                  <p className="text-[11px] text-ink-3 dark:text-white/45 font-body">Aucun evenement restant ce mois.</p>
+                  <p className="text-[11px] text-ink-3 dark:text-white/45 font-body">Aucun événement restant ce mois.</p>
                 </div>
               );
             }
@@ -505,25 +506,25 @@ const AI_ALERTS = [
     icon: AlertCircle,
     color: '#D4A017',
     bg: '#D4A017',
-    text: '2 produits approchent de leur date d\u2019observation autocall ce mois. Probabilite de rappel anticipe estimee a 65%.',
+    text: '2 produits approchent de leur date d\u2019observation autocall ce mois. Probabilité de rappel anticipé estimée à 65%.',
   },
   {
     icon: TrendingDown,
     color: '#3D63F5',
     bg: '#3D63F5',
-    text: 'Votre exposition Euro Stoxx 50 represente 45% du portefeuille. Envisagez de diversifier vers d\u2019autres sous-jacents.',
+    text: 'Votre exposition Euro Stoxx 50 représente 45% du portefeuille. Envisagez de diversifier vers d\u2019autres sous-jacents.',
   },
   {
     icon: TrendingUp,
     color: '#00B894',
     bg: '#00B894',
-    text: 'Le spread de credit SG Issuer s\u2019est resserre de 12 bps \u2014 impact positif sur la valorisation de 3 positions.',
+    text: 'Le spread de crédit SG Issuer s\u2019est resserré de 12 bps \u2014 impact positif sur la valorisation de 3 positions.',
   },
 ];
 
 const AI_METRICS = [
   { label: 'Diversification', value: '72', suffix: '/100', color: '#D4A017' },
-  { label: 'Exposition barrieres', value: 'Moderee', suffix: '', color: '#3D63F5' },
+  { label: 'Exposition barrières', value: 'Modérée', suffix: '', color: '#3D63F5' },
   { label: 'Rendement moyen', value: '8.2%', suffix: ' p.a.', color: '#00B894' },
   { label: 'Horizon moyen', value: '3.4', suffix: ' ans', color: '#3B1FA8' },
 ];
@@ -565,7 +566,7 @@ function AiPortfolioHealth({ onOptimize, onStressTest }: { onOptimize: () => voi
               </h3>
               <p className="text-[9px] text-ink-3 dark:text-white/35 font-body mt-0.5 flex items-center gap-0.5">
                 <Sparkles size={8} className="text-[#D4A017]" />
-                Mis a jour il y a 2 min
+                Mis à jour il y a 2 min
               </p>
             </div>
           </div>
@@ -581,7 +582,7 @@ function AiPortfolioHealth({ onOptimize, onStressTest }: { onOptimize: () => voi
             <>
               {/* Circular Score */}
               <div className="flex items-center justify-center mb-3">
-                <Tooltip content="Score calcule a partir de la diversification, exposition aux barrieres et rendement moyen">
+                <Tooltip content="Score calculé à partir de la diversification, exposition aux barrières et rendement moyen">
                   <div className="relative w-24 h-24">
                     <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
                       <circle
@@ -824,7 +825,7 @@ function AllocationChart({ products, commitments }: { products: any[]; commitmen
   const PAYOFF_LABELS: Record<string, string> = {
     AUTOCALL_PHOENIX: 'Autocall Phoenix',
     AUTOCALL_COUPON: 'Autocall Coupon',
-    CAPITAL_PROTECTED: 'Capital Protege',
+    CAPITAL_PROTECTED: 'Capital Protégé',
     CONDITIONAL_RATE: 'Taux Conditionnel',
     BARRIER_NOTE: 'Barrier Note',
     AUTRE: 'Autre',
@@ -836,7 +837,7 @@ function AllocationChart({ products, commitments }: { products: any[]; commitmen
         <div className="px-4 py-3 border-b border-border/50 dark:border-white/8 flex items-center justify-between bg-gradient-to-r from-[#F8F6FF]/80 to-transparent dark:from-white/[0.02] dark:to-transparent">
           <h2 className="font-display text-[13px] font-bold text-ink dark:text-white flex items-center gap-1.5">
             <PieChart size={12} className="text-[#3B1FA8]" />
-            Repartition du portefeuille
+            Répartition du portefeuille
           </h2>
         </div>
         <div className="p-10 flex flex-col items-center justify-center gap-2.5">
@@ -845,7 +846,7 @@ function AllocationChart({ products, commitments }: { products: any[]; commitmen
           </div>
           <p className="font-body text-[12px] text-ink-3 dark:text-white/45">Aucune allocation pour le moment.</p>
           <p className="font-body text-[10px] text-ink-3/50 dark:text-white/25">
-            Les allocations seront visibles une fois vos engagements confirmes.
+            Les allocations seront visibles une fois vos engagements confirmés.
           </p>
         </div>
       </div>
@@ -859,7 +860,7 @@ function AllocationChart({ products, commitments }: { products: any[]; commitmen
         <div className="px-4 py-3 border-b border-border/50 dark:border-white/8 bg-gradient-to-r from-[#F8F6FF]/80 to-transparent dark:from-white/[0.02] dark:to-transparent">
           <h3 className="font-display text-[13px] font-bold text-ink dark:text-white flex items-center gap-1.5">
             <Shield size={12} className="text-[#3B1FA8]" />
-            Par emetteur
+            Par émetteur
           </h3>
         </div>
         <div className="p-4 space-y-3">
@@ -1096,11 +1097,11 @@ export default function PortfolioPage() {
   const animatedTotal = useAnimatedCounter(stats.total, 800, !loadingCommitments);
 
   const handleCancel = (id: string) => {
-    if (window.confirm("Etes-vous sur de vouloir annuler cette marque d'interet ?")) {
+    if (window.confirm("Êtes-vous sûr de vouloir annuler cette marque d'intérêt ?")) {
       cancelMutation.mutate(id, {
         onSuccess: () => {
           setStatusOverrides((prev) => ({ ...prev, [id]: 'CANCELLED' }));
-          toastSuccess('Engagement annule avec succes.');
+          toastSuccess('Engagement annulé avec succès.');
         },
         onError: () => toastError("Erreur lors de l'annulation."),
       });
@@ -1111,7 +1112,7 @@ export default function PortfolioPage() {
     reviewMutation.mutate(id, {
       onSuccess: () => {
         setStatusOverrides((prev) => ({ ...prev, [id]: 'REVIEW' }));
-        toastSuccess('Engagement passe en revue.');
+        toastSuccess('Engagement passé en revue.');
       },
       onError: () => toastError('Erreur lors du changement de statut.'),
     });
@@ -1121,7 +1122,7 @@ export default function PortfolioPage() {
     approveMutation.mutate(id, {
       onSuccess: () => {
         setStatusOverrides((prev) => ({ ...prev, [id]: 'CONFIRMED' }));
-        toastSuccess('Engagement approuve.');
+        toastSuccess('Engagement approuvé.');
       },
       onError: () => toastError("Erreur lors de l'approbation."),
     });
@@ -1133,7 +1134,7 @@ export default function PortfolioPage() {
       rejectMutation.mutate({ id, reason: reason.trim() }, {
         onSuccess: () => {
           setStatusOverrides((prev) => ({ ...prev, [id]: 'CANCELLED' }));
-          toastSuccess('Engagement rejete.');
+          toastSuccess('Engagement rejeté.');
         },
         onError: () => toastError('Erreur lors du rejet.'),
       });
@@ -1200,11 +1201,11 @@ export default function PortfolioPage() {
       return {
         Produit: c.productName ?? product?.name ?? '--',
         ISIN: c.isin || product?.isin || '--',
-        'Sous-jacent': product?.underlyingYahoo ?? '--',
+        'Sous-jacent': product?.underlyingYahoo ? formatUnderlying(product.underlyingYahoo) : '--',
         'Montant (EUR)': c.amount ?? 0,
         SRI: product?.sri ?? '--',
         'Coupon (%)': product?.couponPct != null ? product.couponPct.toFixed(1) : '--',
-        'Barriere (%)': product?.barrierCapPct != null ? String(product.barrierCapPct) : '--',
+        'Barrière (%)': product?.barrierCapPct != null ? String(product.barrierCapPct) : '--',
         Statut: STATUS_LABEL[c.status] ?? c.status ?? '--',
         Date: c.createdAt ? formatDate(c.createdAt) : '--',
       };
@@ -1215,7 +1216,7 @@ export default function PortfolioPage() {
   // Export Underlyings tab to CSV
   const handleExportUnderlyings = () => {
     if (!products || (products as any[]).length === 0) return;
-    const headers = ['Sous-jacent', 'Strike', 'Performance (%)', 'Barriere capital (%)', 'Distance barriere (%)', 'ISIN', 'Produit', 'SRI'];
+    const headers = ['Sous-jacent', 'Strike', 'Performance (%)', 'Barrière capital (%)', 'Distance barrière (%)', 'ISIN', 'Produit', 'SRI'];
     const csvRows = (products as any[]).slice(0, 15).map((p: any) => {
       const barrierPct = p.barrierCapPct ?? 60;
       let hash = 0;
@@ -1223,7 +1224,7 @@ export default function PortfolioPage() {
       const simulatedPerf = ((Math.abs(hash) % 40) - 10);
       const distance = 100 + simulatedPerf - barrierPct;
       return [
-        p.underlyingYahoo ?? p.underlyingName ?? '--',
+        p.underlyingYahoo ? formatUnderlying(p.underlyingYahoo) : (p.underlyingName ?? '--'),
         '100.00',
         simulatedPerf.toFixed(1),
         p.barrierCapPct != null ? p.barrierCapPct.toFixed(1) : '--',
@@ -1249,11 +1250,11 @@ export default function PortfolioPage() {
   // Export Expired tab to CSV
   const handleExportExpired = () => {
     const expiredData = [
-      { name: 'Phoenix Autocall SX5E 2023', isin: 'FR0014007A95', issuer: 'SG Issuer', maturity: '15 mars 2024', coupon: '8.5%', protection: '60%', result: 'Rappele' },
-      { name: 'Athena BNP Euro Rendement', isin: 'FR0014008B12', issuer: 'BNP Paribas', maturity: '22 jan. 2024', coupon: '7.2%', protection: '50%', result: 'Maturite' },
+      { name: 'Phoenix Autocall SX5E 2023', isin: 'FR0014007A95', issuer: 'SG Issuer', maturity: '15 mars 2024', coupon: '8.5%', protection: '60%', result: 'Rappelé' },
+      { name: 'Athena BNP Euro Rendement', isin: 'FR0014008B12', issuer: 'BNP Paribas', maturity: '22 jan. 2024', coupon: '7.2%', protection: '50%', result: 'Maturité' },
     ];
     if (expiredData.length === 0) return;
-    const headers = ['Produit', 'ISIN', 'Emetteur', 'Maturite', 'Coupon', 'Protection', 'Resultat'];
+    const headers = ['Produit', 'ISIN', 'Émetteur', 'Maturité', 'Coupon', 'Protection', 'Résultat'];
     const csvRows = expiredData.map(p => [
       p.name,
       p.isin,
@@ -1281,7 +1282,7 @@ export default function PortfolioPage() {
       <PageHeader
         icon={Wallet}
         title="Mon Portfolio"
-        subtitle="Suivez vos investissements et engagements en produits structures."
+        subtitle="Suivez vos investissements et engagements en produits structurés."
         accentFrom="#3B1FA8"
         accentTo="#5B3FD4"
         className="mb-4"
@@ -1322,20 +1323,20 @@ export default function PortfolioPage() {
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 stagger-grid">
         <KpiCard
           icon={<Wallet size={15} className="text-[#3B1FA8]" />}
-          label="Total engage"
+          label="Total engagé"
           value={loadingCommitments ? '...' : formatAmount(animatedTotal)}
           accent="#3B1FA8"
           trend="up"
-          trendLabel="+12.3% vs mois precedent"
+          trendLabel="+12.3% vs mois précédent"
           sparkData={sparklinePoints('total-engaged', 12)}
         />
         <KpiCard
           icon={<CheckCircle2 size={15} className="text-[#00B894]" />}
-          label="Confirmes"
+          label="Confirmés"
           value={loadingCommitments ? '...' : stats.confirmed}
           accent="#00B894"
           trend="up"
-          trendLabel="+8% vs mois precedent"
+          trendLabel="+8% vs mois précédent"
           sparkData={sparklinePoints('confirmed', 12)}
         />
         <KpiCard
@@ -1344,16 +1345,16 @@ export default function PortfolioPage() {
           value={loadingCommitments ? '...' : stats.waiting}
           accent="#D4A017"
           trend="neutral"
-          trendLabel="stable vs mois precedent"
+          trendLabel="stable vs mois précédent"
           sparkData={sparklinePoints('waiting', 12)}
         />
         <KpiCard
           icon={<X size={15} className="text-[#E8334A]" />}
-          label="Annules"
+          label="Annulés"
           value={loadingCommitments ? '...' : stats.cancelled}
           accent="#E8334A"
           trend="down"
-          trendLabel="-3% vs mois precedent"
+          trendLabel="-3% vs mois précédent"
           sparkData={sparklinePoints('cancelled', 12)}
         />
       </section>
@@ -1396,7 +1397,7 @@ export default function PortfolioPage() {
         />
         <KpiCard
           icon={<Calendar size={15} className="text-[#3B1FA8]" />}
-          label="Prochain evenement"
+          label="Prochain événement"
           value={
             loadingCommitments
               ? '...'
@@ -1467,7 +1468,7 @@ export default function PortfolioPage() {
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#3B1FA8]/8 to-[#3B1FA8]/[0.03] flex items-center justify-center ring-1 ring-[#3B1FA8]/8 shadow-sm">
                 <Package size={22} className="text-[#3B1FA8]/25" />
               </div>
-              <p className="font-body text-[12px] text-ink-3 dark:text-white/45">Aucune marque d&apos;interet pour le moment.</p>
+              <p className="font-body text-[12px] text-ink-3 dark:text-white/45">Aucune marque d&apos;intérêt pour le moment.</p>
               <Link
                 href="/products"
                 className={cn(
@@ -1546,7 +1547,7 @@ export default function PortfolioPage() {
                         </span>
                         {product?.barrierCapPct != null && (
                           <span className="font-mono text-[10px] tabular-nums text-[#E8334A] font-semibold">
-                            Barriere: {product.barrierCapPct}%
+                            Barrière: {product.barrierCapPct}%
                           </span>
                         )}
                       </div>
@@ -1565,7 +1566,7 @@ export default function PortfolioPage() {
                       <PremiumTh className="text-right" sortable sortKey="amount" activeSort={sortCol} activeSortDir={sortDir} onSort={handleSort}>Montant</PremiumTh>
                       <PremiumTh className="text-center" sortable sortKey="sri" activeSort={sortCol} activeSortDir={sortDir} onSort={handleSort}>SRI</PremiumTh>
                       <PremiumTh className="text-right" sortable sortKey="coupon" activeSort={sortCol} activeSortDir={sortDir} onSort={handleSort}>Coupon</PremiumTh>
-                      <PremiumTh className="text-right" sortable sortKey="barrier" activeSort={sortCol} activeSortDir={sortDir} onSort={handleSort}>Barriere</PremiumTh>
+                      <PremiumTh className="text-right" sortable sortKey="barrier" activeSort={sortCol} activeSortDir={sortDir} onSort={handleSort}>Barrière</PremiumTh>
                       <PremiumTh className="text-center" sortable sortKey="status" activeSort={sortCol} activeSortDir={sortDir} onSort={handleSort}>Statut</PremiumTh>
                       <PremiumTh className="text-center">Rang</PremiumTh>
                       <PremiumTh className="text-right" sortable sortKey="date" activeSort={sortCol} activeSortDir={sortDir} onSort={handleSort}>Date</PremiumTh>
@@ -1611,7 +1612,7 @@ export default function PortfolioPage() {
 
                           {/* Underlying */}
                           <td className="px-3 py-2.5 text-[11px] text-ink-2 dark:text-white/55 font-medium truncate max-w-[100px]">
-                            {product?.underlyingYahoo ?? '--'}
+                            {product?.underlyingYahoo ? formatUnderlying(product.underlyingYahoo) : '--'}
                           </td>
 
                           {/* Amount */}
@@ -1712,7 +1713,7 @@ export default function PortfolioPage() {
                               )}
                               {status === 'CANCELLED' && (
                                 <span className="text-[#E8334A] text-[11px] font-semibold">
-                                  {c.rejectionReason ? `Rejete : ${c.rejectionReason}` : 'Rejete'}
+                                  {c.rejectionReason ? `Rejeté : ${c.rejectionReason}` : 'Rejeté'}
                                 </span>
                               )}
                               {status === 'WAITING' && (
@@ -1740,7 +1741,7 @@ export default function PortfolioPage() {
                 <div className="w-6 h-6 rounded-md bg-[#E8334A]/6 dark:bg-[#E8334A]/15 flex items-center justify-center">
                   <Shield size={12} className="text-[#E8334A]" />
                 </div>
-                Synthese des risques
+                Synthèse des risques
               </h3>
             </div>
             <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -1780,7 +1781,7 @@ export default function PortfolioPage() {
                       portfolioAnalytics.avgSri > 3 && portfolioAnalytics.avgSri <= 5 && 'text-[#D4A017] bg-[#D4A017]/8',
                       portfolioAnalytics.avgSri > 5 && 'text-[#E8334A] bg-[#E8334A]/8',
                     )}>
-                      {portfolioAnalytics.avgSri <= 3 ? 'Faible' : portfolioAnalytics.avgSri <= 5 ? 'Modere' : 'Eleve'}
+                      {portfolioAnalytics.avgSri <= 3 ? 'Faible' : portfolioAnalytics.avgSri <= 5 ? 'Modéré' : 'Élevé'}
                     </span>
                   )}
                 </div>
@@ -1805,7 +1806,7 @@ export default function PortfolioPage() {
                     <AlertCircle size={15} style={{ color: portfolioAnalytics.closestBarrier && portfolioAnalytics.closestBarrier.distance < 15 ? '#E8334A' : '#D4A017' }} />
                   </div>
                   <span className="text-[9px] uppercase tracking-[0.18em] text-ink-3 dark:text-ink-3/70 font-semibold font-body leading-none">
-                    Distance barriere min.
+                    Distance barrière min.
                   </span>
                 </div>
                 <div className="flex items-end justify-between">
@@ -1820,7 +1821,7 @@ export default function PortfolioPage() {
                         portfolioAnalytics.closestBarrier.distance > 15 && portfolioAnalytics.closestBarrier.distance <= 30 && 'text-[#D4A017] bg-[#D4A017]/8',
                         portfolioAnalytics.closestBarrier.distance <= 15 && 'text-[#E8334A] bg-[#E8334A]/8',
                       )}>
-                        {portfolioAnalytics.closestBarrier.distance > 30 ? 'Confortable' : portfolioAnalytics.closestBarrier.distance > 15 ? 'A surveiller' : 'Risque'}
+                        {portfolioAnalytics.closestBarrier.distance > 30 ? 'Confortable' : portfolioAnalytics.closestBarrier.distance > 15 ? 'À surveiller' : 'Risque'}
                       </span>
                     </Tooltip>
                   )}
@@ -1846,7 +1847,7 @@ export default function PortfolioPage() {
                     <Clock size={15} className="text-[#3B1FA8]" />
                   </div>
                   <span className="text-[9px] uppercase tracking-[0.18em] text-ink-3 dark:text-ink-3/70 font-semibold font-body leading-none">
-                    Profil de maturite
+                    Profil de maturité
                   </span>
                 </div>
                 <div className="flex flex-col gap-1">
@@ -1909,8 +1910,8 @@ export default function PortfolioPage() {
                     <PremiumTh className="text-left">Sous-jacent</PremiumTh>
                     <PremiumTh className="text-right">Strike</PremiumTh>
                     <PremiumTh className="text-right">Performance</PremiumTh>
-                    <PremiumTh className="text-right">Barriere capital</PremiumTh>
-                    <PremiumTh className="text-left min-w-[120px]">Distance barriere</PremiumTh>
+                    <PremiumTh className="text-right">Barrière capital</PremiumTh>
+                    <PremiumTh className="text-left min-w-[120px]">Distance barrière</PremiumTh>
                     <PremiumTh className="text-left">ISIN</PremiumTh>
                     <PremiumTh className="text-left">Produit</PremiumTh>
                     <PremiumTh className="text-center">SRI</PremiumTh>
@@ -1920,7 +1921,7 @@ export default function PortfolioPage() {
                   {products.length === 0 ? (
                     <tr>
                       <td colSpan={8} className="px-3 py-10 text-center text-[12px] text-ink-3 dark:text-white/45">
-                        Aucun sous-jacent a afficher pour le moment.
+                        Aucun sous-jacent à afficher pour le moment.
                       </td>
                     </tr>
                   ) : (
@@ -1945,7 +1946,7 @@ export default function PortfolioPage() {
                           <td className="px-3 py-2.5">
                             <div className="flex items-center gap-2">
                               <Activity size={12} className="text-[#3B1FA8] shrink-0" />
-                              <span className="font-medium text-ink dark:text-white">{p.underlyingYahoo ?? p.underlyingName ?? '--'}</span>
+                              <span className="font-medium text-ink dark:text-white">{p.underlyingYahoo ? formatUnderlying(p.underlyingYahoo) : (p.underlyingName ?? '--')}</span>
                             </div>
                           </td>
                           <td className="px-3 py-2.5 text-right font-mono tabular-nums text-ink-2 dark:text-white/55">100.00</td>
@@ -1999,7 +2000,7 @@ export default function PortfolioPage() {
               <div className="w-6 h-6 rounded-md bg-ink-3/6 dark:bg-white/8 flex items-center justify-center">
                 <Clock size={12} className="text-ink-3 dark:text-white/45" />
               </div>
-              Produits expires
+              Produits expirés
             </h2>
             <button
               onClick={handleExportExpired}
@@ -2018,18 +2019,18 @@ export default function PortfolioPage() {
                 <tr className="border-b border-border/50 dark:border-white/8 bg-gradient-to-r from-[#F8F6FF]/50 to-[#F0ECFF]/20 dark:from-white/[0.015] dark:to-transparent">
                   <PremiumTh className="text-left">Produit</PremiumTh>
                   <PremiumTh className="text-left">ISIN</PremiumTh>
-                  <PremiumTh className="text-left">Emetteur</PremiumTh>
-                  <PremiumTh className="text-right">Maturite</PremiumTh>
+                  <PremiumTh className="text-left">Émetteur</PremiumTh>
+                  <PremiumTh className="text-right">Maturité</PremiumTh>
                   <PremiumTh className="text-right">Coupon</PremiumTh>
                   <PremiumTh className="text-right">Protection</PremiumTh>
-                  <PremiumTh className="text-center">Resultat</PremiumTh>
+                  <PremiumTh className="text-center">Résultat</PremiumTh>
                 </tr>
               </thead>
               <tbody>
                 {/* Demo expired products for visual completeness */}
                 {[
-                  { name: 'Phoenix Autocall SX5E 2023', isin: 'FR0014007A95', issuer: 'SG Issuer', maturity: '15 mars 2024', coupon: '8.5%', protection: '60%', result: 'Rappele' as const },
-                  { name: 'Athena BNP Euro Rendement', isin: 'FR0014008B12', issuer: 'BNP Paribas', maturity: '22 jan. 2024', coupon: '7.2%', protection: '50%', result: 'Maturite' as const },
+                  { name: 'Phoenix Autocall SX5E 2023', isin: 'FR0014007A95', issuer: 'SG Issuer', maturity: '15 mars 2024', coupon: '8.5%', protection: '60%', result: 'Rappelé' as const },
+                  { name: 'Athena BNP Euro Rendement', isin: 'FR0014008B12', issuer: 'BNP Paribas', maturity: '22 jan. 2024', coupon: '7.2%', protection: '50%', result: 'Maturité' as const },
                 ].map((p, idx) => (
                   <tr
                     key={idx}
@@ -2049,11 +2050,11 @@ export default function PortfolioPage() {
                     <td className="px-3 py-2.5 text-center">
                       <span className={cn(
                         'inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold',
-                        p.result === 'Rappele'
+                        p.result === 'Rappelé'
                           ? 'bg-[#00B894]/8 text-[#00B894] ring-1 ring-[#00B894]/15'
                           : 'bg-[#3B1FA8]/6 text-[#3B1FA8] ring-1 ring-[#3B1FA8]/15',
                       )}>
-                        {p.result === 'Rappele' && <CheckCircle2 size={10} />}
+                        {p.result === 'Rappelé' && <CheckCircle2 size={10} />}
                         {p.result}
                       </span>
                     </td>
@@ -2092,33 +2093,33 @@ const OPTIMIZE_RECOMMENDATIONS = [
   {
     type: 'rebalance' as const,
     priority: 'high' as const,
-    title: 'Reduire la concentration Euro Stoxx 50',
-    description: 'Votre exposition a l\'Euro Stoxx 50 represente 45% du portefeuille. Recommandation : diversifier vers des sous-jacents decorreles (S&P 500, Nikkei 225).',
+    title: 'Réduire la concentration Euro Stoxx 50',
+    description: 'Votre exposition à l\'Euro Stoxx 50 représente 45% du portefeuille. Recommandation : diversifier vers des sous-jacents décorrélés (S&P 500, Nikkei 225).',
     impact: '+8 pts diversification',
     impactColor: '#00B894',
   },
   {
     type: 'risk' as const,
     priority: 'medium' as const,
-    title: 'Renforcer la protection barriere',
-    description: 'Le SRI moyen est de 5.2. Pour un profil equilibre, visez des produits avec barriere >= 60% pour les nouvelles souscriptions.',
+    title: 'Renforcer la protection barrière',
+    description: 'Le SRI moyen est de 5.2. Pour un profil équilibré, visez des produits avec barrière >= 60% pour les nouvelles souscriptions.',
     impact: '-1.2 SRI moyen',
     impactColor: '#3D63F5',
   },
   {
     type: 'yield' as const,
     priority: 'medium' as const,
-    title: 'Opportunite de rendement',
-    description: 'Les conditions de marche actuelles (volatilite haute, spreads stables) sont favorables aux Phoenix Autocall avec coupon conditionnel 8-10%.',
+    title: 'Opportunité de rendement',
+    description: 'Les conditions de marché actuelles (volatilité haute, spreads stables) sont favorables aux Phoenix Autocall avec coupon conditionnel 8-10%.',
     impact: '+1.5% rendement',
     impactColor: '#D4A017',
   },
   {
     type: 'timing' as const,
     priority: 'low' as const,
-    title: 'Echelonner les maturites',
-    description: 'Votre horizon moyen est de 3.4 ans. Ajoutez des produits court terme (18-24 mois) pour equilibrer les flux de tresorerie.',
-    impact: 'Meilleure liquidite',
+    title: 'Échelonner les maturités',
+    description: 'Votre horizon moyen est de 3.4 ans. Ajoutez des produits court terme (18-24 mois) pour équilibrer les flux de trésorerie.',
+    impact: 'Meilleure liquidité',
     impactColor: '#3B1FA8',
   },
 ];
@@ -2181,7 +2182,7 @@ function OptimizeModal({ onClose, commitments, products }: ModalProps) {
               </div>
               <div>
                 <h2 className="font-display text-lg font-bold text-ink dark:text-white">Optimisation IA du portefeuille</h2>
-                <p className="text-xs text-ink-3 dark:text-white/45 font-body">Analyse basee sur {commitments.length} engagements &bull; {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(allocation.total)}</p>
+                <p className="text-xs text-ink-3 dark:text-white/45 font-body">Analyse basée sur {commitments.length} engagements &bull; {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(allocation.total)}</p>
               </div>
             </div>
             <button onClick={onClose} className="w-8 h-8 rounded-lg hover:bg-ink-3/10 dark:hover:bg-white/10 flex items-center justify-center transition-colors">
@@ -2202,7 +2203,7 @@ function OptimizeModal({ onClose, commitments, products }: ModalProps) {
               </div>
               <div className="text-center">
                 <p className="font-display text-sm font-semibold text-ink dark:text-white">Analyse en cours...</p>
-                <p className="text-xs text-ink-3 dark:text-white/40 font-body mt-1">L&apos;IA examine votre portefeuille et les conditions de marche</p>
+                <p className="text-xs text-ink-3 dark:text-white/40 font-body mt-1">L&apos;IA examine votre portefeuille et les conditions de marché</p>
               </div>
             </div>
           ) : (
@@ -2211,8 +2212,8 @@ function OptimizeModal({ onClose, commitments, products }: ModalProps) {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
                   { label: 'Score global', value: '72/100', delta: '+5 possible', color: '#3B1FA8' },
-                  { label: 'Diversification', value: '58%', delta: 'A ameliorer', color: '#D4A017' },
-                  { label: 'Risque ajuste', value: 'Modere', delta: 'Equilibre', color: '#00B894' },
+                  { label: 'Diversification', value: '58%', delta: 'À améliorer', color: '#D4A017' },
+                  { label: 'Risque ajusté', value: 'Modéré', delta: 'Équilibré', color: '#00B894' },
                   { label: 'Rendement/Risque', value: '1.4x', delta: 'Optimisable', color: '#3D63F5' },
                 ].map((m, i) => (
                   <div key={i} className="rounded-xl border border-border/50 dark:border-white/8 p-3 text-center bg-white/60 dark:bg-white/[0.03]">
@@ -2230,15 +2231,15 @@ function OptimizeModal({ onClose, commitments, products }: ModalProps) {
                     <CheckCircle2 size={16} className="text-[#00B894]" />
                   </div>
                   <div>
-                    <p className="font-display text-sm font-bold text-[#00B894]">Suggestions appliquees avec succes</p>
+                    <p className="font-display text-sm font-bold text-[#00B894]">Suggestions appliquées avec succès</p>
                     <p className="text-xs text-ink-2 dark:text-white/55 font-body mt-1 leading-relaxed">
-                      Les recommandations ont ete enregistrees. Votre score de diversification passera de <strong>58%</strong> a <strong>72%</strong> une fois les operations realisees.
-                      Un plan d&apos;action detaille a ete ajoute a votre espace &laquo;&nbsp;Actions recommandees&nbsp;&raquo;.
+                      Les recommandations ont été enregistrées. Votre score de diversification passera de <strong>58%</strong> à <strong>72%</strong> une fois les opérations réalisées.
+                      Un plan d&apos;action détaillé a été ajouté à votre espace &laquo;&nbsp;Actions recommandées&nbsp;&raquo;.
                     </p>
                     <div className="flex items-center gap-2 mt-2.5">
                       <Link href="/products" className="text-[11px] font-semibold font-body text-[#3B1FA8] hover:underline flex items-center gap-1">
                         <ExternalLink size={10} />
-                        Voir les produits suggeres
+                        Voir les produits suggérés
                       </Link>
                       <span className="text-ink-3/30">|</span>
                       <Link href="/notifications" className="text-[11px] font-semibold font-body text-[#3B1FA8] hover:underline flex items-center gap-1">
@@ -2300,11 +2301,11 @@ function OptimizeModal({ onClose, commitments, products }: ModalProps) {
 
               {/* Suggested allocation */}
               <div className="rounded-xl border border-border/50 dark:border-white/8 p-4 bg-gradient-to-br from-[#F8F6FF]/50 to-transparent dark:from-white/[0.02]">
-                <h3 className="font-display text-sm font-bold text-ink dark:text-white mb-3">Allocation cible suggeree</h3>
+                <h3 className="font-display text-sm font-bold text-ink dark:text-white mb-3">Allocation cible suggérée</h3>
                 <div className="space-y-2">
                   {[
                     { label: 'Phoenix Autocall', current: 55, target: 40, color: '#3B1FA8' },
-                    { label: 'Capital Protege', current: 15, target: 25, color: '#00B894' },
+                    { label: 'Capital Protégé', current: 15, target: 25, color: '#00B894' },
                     { label: 'Taux Conditionnel', current: 25, target: 25, color: '#D4A017' },
                     { label: 'Reverse Convertible', current: 5, target: 10, color: '#3D63F5' },
                   ].map((a, i) => (
@@ -2330,7 +2331,7 @@ function OptimizeModal({ onClose, commitments, products }: ModalProps) {
           <div className="sticky bottom-0 px-6 py-4 border-t border-border/50 dark:border-white/8 bg-white/90 dark:bg-[#1A0A3E]/90 backdrop-blur-sm flex items-center justify-between">
             <p className="text-[10px] text-ink-3 dark:text-white/35 font-body">
               <Sparkles size={10} className="inline mr-1 text-[#D4A017]" />
-              Analyse generee par l&apos;IA &bull; A titre indicatif uniquement
+              Analyse générée par l&apos;IA &bull; À titre indicatif uniquement
             </p>
             <div className="flex items-center gap-2">
               <button onClick={onClose} className="px-4 py-2 rounded-lg text-xs font-semibold font-body border border-border/50 dark:border-white/12 text-ink-3 dark:text-white/50 hover:text-ink dark:hover:text-white transition-colors">
@@ -2355,7 +2356,7 @@ function OptimizeModal({ onClose, commitments, products }: ModalProps) {
                 ) : applied ? (
                   <>
                     <CheckCircle2 size={12} />
-                    Suggestions appliquees !
+                    Suggestions appliquées !
                   </>
                 ) : (
                   'Appliquer les suggestions'
@@ -2374,9 +2375,9 @@ function OptimizeModal({ onClose, commitments, products }: ModalProps) {
 const STRESS_SCENARIOS = [
   {
     id: 'crash',
-    label: 'Crash marche -30%',
+    label: 'Crash marché -30%',
     icon: TrendingDown,
-    description: 'Baisse soudaine des marches actions de 30%, volatilite a 45%',
+    description: 'Baisse soudaine des marchés actions de 30%, volatilité à 45%',
     color: '#E8334A',
     impact: { portfolioValue: -18.5, atRisk: 3, autocallTriggered: 0, barriersBroken: 2, estimatedLoss: -604_250 },
   },
@@ -2384,7 +2385,7 @@ const STRESS_SCENARIOS = [
     id: 'correction',
     label: 'Correction -15%',
     icon: TrendingDown,
-    description: 'Correction standard, volatilite a 28%',
+    description: 'Correction standard, volatilité à 28%',
     color: '#D4A017',
     impact: { portfolioValue: -7.2, atRisk: 1, autocallTriggered: 0, barriersBroken: 0, estimatedLoss: -235_200 },
   },
@@ -2392,7 +2393,7 @@ const STRESS_SCENARIOS = [
     id: 'rally',
     label: 'Rally haussier +20%',
     icon: TrendingUp,
-    description: 'Forte hausse des marches, volatilite en baisse a 14%',
+    description: 'Forte hausse des marchés, volatilité en baisse à 14%',
     color: '#00B894',
     impact: { portfolioValue: +12.8, atRisk: 0, autocallTriggered: 4, barriersBroken: 0, estimatedLoss: 418_400 },
   },
@@ -2400,15 +2401,15 @@ const STRESS_SCENARIOS = [
     id: 'rates',
     label: 'Hausse taux +200bp',
     icon: Activity,
-    description: 'Remontee rapide des taux directeurs de la BCE',
+    description: 'Remontée rapide des taux directeurs de la BCE',
     color: '#3D63F5',
     impact: { portfolioValue: -3.8, atRisk: 0, autocallTriggered: 1, barriersBroken: 0, estimatedLoss: -124_200 },
   },
   {
     id: 'flat',
-    label: 'Marche plat 12 mois',
+    label: 'Marché plat 12 mois',
     icon: Activity,
-    description: 'Marches stables, volatilite basse a 12%',
+    description: 'Marchés stables, volatilité basse à 12%',
     color: '#7B6FA0',
     impact: { portfolioValue: +2.4, atRisk: 0, autocallTriggered: 2, barriersBroken: 0, estimatedLoss: 78_500 },
   },
@@ -2507,7 +2508,7 @@ function StressTestModal({ onClose, commitments, products }: ModalProps) {
                 <Zap size={20} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[#E8334A]" />
               </div>
               <div className="text-center">
-                <p className="font-display text-sm font-semibold text-ink dark:text-white">Calcul des scenarios...</p>
+                <p className="font-display text-sm font-semibold text-ink dark:text-white">Calcul des scénarios...</p>
                 <p className="text-xs text-ink-3 dark:text-white/40 font-body mt-1">Simulation Monte-Carlo sur 10 000 trajectoires</p>
               </div>
             </div>
@@ -2516,7 +2517,7 @@ function StressTestModal({ onClose, commitments, products }: ModalProps) {
               {/* Scenario selector — multi-select */}
               <div>
                 <p className="text-[10px] text-ink-3 dark:text-white/40 font-body font-semibold uppercase tracking-widest mb-2">
-                  Selectionnez un ou plusieurs scenarios pour comparer
+                  Sélectionnez un ou plusieurs scénarios pour comparer
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {STRESS_SCENARIOS.map((s, idx) => {
@@ -2555,19 +2556,19 @@ function StressTestModal({ onClose, commitments, products }: ModalProps) {
                     <div className="px-4 py-2.5 bg-gradient-to-r from-[#F8F6FF]/60 to-transparent dark:from-white/[0.02] border-b border-border/30 dark:border-white/5">
                       <h3 className="font-display text-sm font-bold text-ink dark:text-white flex items-center gap-2">
                         <BarChart3 size={14} className="text-[#3B1FA8]" />
-                        Comparaison des scenarios
+                        Comparaison des scénarios
                       </h3>
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full text-[11px] font-body" aria-label="Comparaison des scenarios">
                         <thead>
                           <tr className="border-b border-border/50 dark:border-white/8">
-                            <th className="px-3 py-2.5 text-left text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Scenario</th>
+                            <th className="px-3 py-2.5 text-left text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Scénario</th>
                             <th className="px-3 py-2.5 text-right text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Impact</th>
-                            <th className="px-3 py-2.5 text-right text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">P&amp;L estime</th>
-                            <th className="px-3 py-2.5 text-center text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Positions a risque</th>
+                            <th className="px-3 py-2.5 text-right text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">P&amp;L estimé</th>
+                            <th className="px-3 py-2.5 text-center text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Positions à risque</th>
                             <th className="px-3 py-2.5 text-center text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Autocalls</th>
-                            <th className="px-3 py-2.5 text-center text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Barrieres</th>
+                            <th className="px-3 py-2.5 text-center text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Barrières</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -2646,7 +2647,7 @@ function StressTestModal({ onClose, commitments, products }: ModalProps) {
                             <th className="px-3 py-2 text-right text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Montant</th>
                             {selectedList.map(s => (
                               <th key={s.id} className="px-3 py-2 text-center text-[9px] uppercase tracking-widest font-semibold" style={{ color: s.color }}>
-                                {s.label.replace('Crash marche ', '').replace('Rally haussier ', '+').replace('Correction ', '').replace('Hausse taux ', '').replace('Marche plat ', '')}
+                                {s.label.replace('Crash marché ', '').replace('Rally haussier ', '+').replace('Correction ', '').replace('Hausse taux ', '').replace('Marché plat ', '')}
                               </th>
                             ))}
                           </tr>
@@ -2706,19 +2707,19 @@ function StressTestModal({ onClose, commitments, products }: ModalProps) {
                                 color: scenario.impact.portfolioValue >= 0 ? '#00B894' : '#E8334A',
                               },
                               {
-                                label: 'Positions a risque',
+                                label: 'Positions à risque',
                                 value: scenario.impact.atRisk.toString(),
                                 sub: `sur ${commitments.length}`,
                                 color: scenario.impact.atRisk > 0 ? '#E8334A' : '#00B894',
                               },
                               {
-                                label: 'Autocall declenches',
+                                label: 'Autocall déclenchés',
                                 value: scenario.impact.autocallTriggered.toString(),
-                                sub: 'remboursement anticipe',
+                                sub: 'remboursement anticipé',
                                 color: scenario.impact.autocallTriggered > 0 ? '#D4A017' : '#7B6FA0',
                               },
                               {
-                                label: 'Barrieres touchees',
+                                label: 'Barrières touchées',
                                 value: scenario.impact.barriersBroken.toString(),
                                 sub: 'perte en capital',
                                 color: scenario.impact.barriersBroken > 0 ? '#E8334A' : '#00B894',
@@ -2740,12 +2741,12 @@ function StressTestModal({ onClose, commitments, products }: ModalProps) {
                             Impact par position
                           </h3>
                           <div className="rounded-xl border border-border/50 dark:border-white/8 overflow-hidden">
-                            <table className="w-full text-[11px] font-body" aria-label="Detail impact par position">
+                            <table className="w-full text-[11px] font-body" aria-label="Détail impact par position">
                               <thead>
                                 <tr className="border-b border-border/50 dark:border-white/8 bg-[#F8F6FF]/50 dark:bg-white/[0.02]">
                                   <th className="px-3 py-2 text-left text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Produit</th>
                                   <th className="px-3 py-2 text-right text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Montant</th>
-                                  <th className="px-3 py-2 text-center text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Barriere</th>
+                                  <th className="px-3 py-2 text-center text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Barrière</th>
                                   <th className="px-3 py-2 text-right text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Impact</th>
                                   <th className="px-3 py-2 text-center text-[9px] uppercase tracking-widest text-ink-3 dark:text-white/40 font-semibold">Statut</th>
                                 </tr>
@@ -2775,7 +2776,7 @@ function StressTestModal({ onClose, commitments, products }: ModalProps) {
                                             : isAtRisk ? 'bg-[#D4A017]/10 text-[#D4A017]'
                                             : 'bg-[#00B894]/10 text-[#00B894]',
                                         )}>
-                                          {isBroken ? 'Barriere touchee' : isAtRisk ? 'A surveiller' : 'Protege'}
+                                          {isBroken ? 'Barrière touchée' : isAtRisk ? 'À surveiller' : 'Protégé'}
                                         </span>
                                       </td>
                                     </tr>
@@ -2799,7 +2800,7 @@ function StressTestModal({ onClose, commitments, products }: ModalProps) {
           <div className="sticky bottom-0 px-6 py-4 border-t border-border/50 dark:border-white/8 bg-white/90 dark:bg-[#1A0A3E]/90 backdrop-blur-sm flex items-center justify-between">
             <p className="text-[10px] text-ink-3 dark:text-white/35 font-body">
               <AlertCircle size={10} className="inline mr-1" />
-              Simulation indicative &bull; Les resultats passes ne garantissent pas les performances futures
+              Simulation indicative &bull; Les résultats passés ne garantissent pas les performances futures
             </p>
             <div className="flex items-center gap-2">
               <button onClick={onClose} className="px-4 py-2 rounded-lg text-xs font-semibold font-body border border-border/50 dark:border-white/12 text-ink-3 dark:text-white/50 hover:text-ink dark:hover:text-white transition-colors">
@@ -2817,7 +2818,7 @@ function StressTestModal({ onClose, commitments, products }: ModalProps) {
                 {exported ? (
                   <>
                     <CheckCircle2 size={12} />
-                    Rapport exporte !
+                    Rapport exporté !
                   </>
                 ) : (
                   <>

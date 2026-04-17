@@ -15,6 +15,7 @@ import {
   ChevronLeft,
   Calculator,
   BookOpen,
+  Library,
   TrendingUp,
   FileSearch,
   Calendar,
@@ -29,6 +30,7 @@ import {
 import { cn } from '@/lib/cn';
 import { useAuthStore } from '@/stores/auth-store';
 import { useNotificationsStore } from '@/stores/notifications-store';
+import { useAlertsStore } from '@/stores/alerts-store';
 import { Dropdown, DropdownItem, DropdownSeparator } from '@/components/ui/dropdown';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { LocaleSwitcher } from '@/components/ui/locale-switcher';
@@ -52,6 +54,8 @@ const toolsNav = [
   { href: '/pricing/live', label: 'Consultation live', icon: Radio },
   { href: '/rfq', label: 'RFQ Screener', icon: FileSearch },
   { href: '/research', label: 'Research', icon: BookOpen },
+  { href: '/glossaire', label: 'Glossaire', icon: Library },
+  { href: '/alertes', label: 'Alertes', icon: Bell },
   { href: '/notifications', label: 'Notifications', icon: Bell, shortcut: '\u2318N' },
 ];
 
@@ -61,6 +65,9 @@ const ROLE_LABELS: Record<string, string> = {
   MANAGER: 'Manager',
   VIEWER: 'CGP',
 };
+
+// Known demo account emails — used to show the "DÉMO" chip
+const DEMO_EMAILS = new Set(['cgp@demo.com', 'admin@strickin.com', 'assureur@cardiff.fr']);
 
 // ---------------------------------------------------------------------------
 // localStorage helper for collapsed state
@@ -247,6 +254,10 @@ export function Sidebar({ isOpen, onClose }: SidebarProps = {}) {
   const user = useAuthStore((s) => s.user);
   const logoutAction = useAuthStore((s) => s.logout);
   const unreadCount = useNotificationsStore((s) => s.notifications.filter((n) => !n.read).length);
+  const activeAlertsCount = useAlertsStore((s) => s.alerts.filter((a) => a.enabled).length);
+  const triggeredAlertsCount = useAlertsStore((s) => s.alerts.filter((a) => a.triggered).length);
+  // Notifications bell also surfaces alerts the user has configured, for a combined unread feel
+  const combinedBellCount = unreadCount + triggeredAlertsCount;
 
   const [collapsed, setCollapsed] = useState(false);
 
@@ -276,6 +287,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps = {}) {
   const roleLabel = ROLE_LABELS[roleKey] ?? roleKey;
   const initials = getInitials(firstName, lastName, u?.email);
   const isAdmin = roleKey === 'SUPER_ADMIN' || roleKey === 'ORG_ADMIN';
+  const isDemoUser = !!(u?.email && DEMO_EMAILS.has(String(u.email).toLowerCase()));
 
   const isActivePath = (href: string) => pathname === href || pathname.startsWith(href + '/');
 
@@ -404,7 +416,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps = {}) {
             shortcut={shortcut}
             badge={
               label === 'Notifications' ? (
-                <NotificationBadge count={unreadCount} isActive={isActivePath(href)} />
+                <NotificationBadge count={combinedBellCount} isActive={isActivePath(href)} />
+              ) : label === 'Alertes' ? (
+                <NotificationBadge count={activeAlertsCount} isActive={isActivePath(href)} />
               ) : undefined
             }
           />
@@ -476,6 +490,17 @@ export function Sidebar({ isOpen, onClose }: SidebarProps = {}) {
                     >
                       {roleLabel}
                     </span>
+                    {isDemoUser && (
+                      <span
+                        className="inline-flex text-[8px] uppercase tracking-wider font-bold px-1.5 py-[1px] rounded-full text-white"
+                        style={{
+                          background: 'linear-gradient(135deg, #3B1FA8 0%, #7B5FE0 100%)',
+                        }}
+                        title="Compte démo"
+                      >
+                        D&eacute;mo
+                      </span>
+                    )}
                   </div>
                 </div>
 

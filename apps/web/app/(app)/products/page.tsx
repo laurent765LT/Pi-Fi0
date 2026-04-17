@@ -36,6 +36,7 @@ import { useRecommendations, useGenerateRecommendations } from '@/hooks/use-reco
 import { useCompareStore } from '@/stores/compare-store';
 import { Countdown } from '@/components/ui/countdown';
 import { Tooltip } from '@/components/ui/tooltip';
+import { TermTooltip, FINANCIAL_GLOSSARY } from '@/components/ui/term-tooltip';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -210,6 +211,7 @@ function SortTh({
   sortDir,
   onSort,
   className,
+  glossaryKey,
 }: {
   label: string;
   field: SortField;
@@ -217,8 +219,10 @@ function SortTh({
   sortDir: SortDir;
   onSort: (f: SortField) => void;
   className?: string;
+  glossaryKey?: string;
 }) {
   const active = sortField === field;
+  const glossaryDef = glossaryKey ? FINANCIAL_GLOSSARY[glossaryKey] : undefined;
   return (
     <th
       onClick={() => onSort(field)}
@@ -230,7 +234,11 @@ function SortTh({
       )}
     >
       <span className="inline-flex items-center gap-1">
-        {label}
+        {glossaryKey && glossaryDef ? (
+          <TermTooltip term={glossaryKey} definition={glossaryDef}>{label}</TermTooltip>
+        ) : (
+          label
+        )}
         {active ? (
           sortDir === 'asc' ? <ArrowUp size={10} /> : <ArrowDown size={10} />
         ) : (
@@ -912,7 +920,9 @@ export default function ProductsPage() {
           <div className="flex items-center gap-2.5 flex-wrap pt-1 pb-0.5">
             {/* SRI Range */}
             <div className="flex items-center gap-1.5 text-[11px] font-body text-ink-3 dark:text-ink-3">
-              <span className="font-semibold text-ink dark:text-surface text-[10px] uppercase tracking-wider">SRI</span>
+              <span className="font-semibold text-ink dark:text-surface text-[10px] uppercase tracking-wider">
+                <TermTooltip term="SRI" definition={FINANCIAL_GLOSSARY['SRI']!}>SRI</TermTooltip>
+              </span>
               <select
                 value={minSri ?? ''}
                 onChange={(e) => setFilter('minSri', e.target.value ? Number(e.target.value) : null)}
@@ -1113,10 +1123,10 @@ export default function ProductsPage() {
                       <th className="px-3 py-2.5 text-left text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">ISIN</th>
                       <SortTh label="Emetteur" field="issuerName" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
                       <th className="px-3 py-2.5 text-left text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">Type</th>
-                      <SortTh label="Barriere" field="barrierCapPct" sortField={sortField} sortDir={sortDir} onSort={handleSort} className="text-right" />
-                      <SortTh label="Coupon" field="couponPct" sortField={sortField} sortDir={sortDir} onSort={handleSort} className="text-right" />
+                      <SortTh label="Barriere" field="barrierCapPct" sortField={sortField} sortDir={sortDir} onSort={handleSort} className="text-right" glossaryKey="Barrière" />
+                      <SortTh label="Coupon" field="couponPct" sortField={sortField} sortDir={sortDir} onSort={handleSort} className="text-right" glossaryKey="Coupon" />
                       <SortTh label="Gain max" field="maxGainPct" sortField={sortField} sortDir={sortDir} onSort={handleSort} className="text-right" />
-                      <SortTh label="SRI" field="sri" sortField={sortField} sortDir={sortDir} onSort={handleSort} className="text-center" />
+                      <SortTh label="SRI" field="sri" sortField={sortField} sortDir={sortDir} onSort={handleSort} className="text-center" glossaryKey="SRI" />
                       <SortTh label="Echeance" field="maturityDate" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
                       <th className="px-3 py-2.5 text-center text-[10px] uppercase tracking-[0.15em] text-ink-3 font-semibold">Statut</th>
                       <th className="px-3 py-2.5 w-9" />

@@ -29,6 +29,7 @@ import {
   Activity,
   PieChart,
   Shield,
+  FileText,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useMyCommitments, useCancelCommitment } from '@/hooks/use-commitments';
@@ -42,6 +43,8 @@ import { ToastContainer, useToast } from '@/components/ui/toast';
 import { exportToExcel } from '@/lib/export-utils';
 import { formatUnderlying } from '@/lib/underlying-labels';
 import { PageHeader } from '@/components/ui/page-header';
+import { generatePortfolioReport } from '@/lib/portfolio-pdf';
+import { useAuthStore } from '@/stores/auth-store';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -989,6 +992,7 @@ function AllocationChart({ products, commitments }: { products: any[]; commitmen
 export default function PortfolioPage() {
   useEffect(() => { document.title = "Mon Portfolio | Strick'in"; }, []);
   const { toasts, success: toastSuccess, error: toastError, dismiss: dismissToast } = useToast();
+  const user = useAuthStore((s) => s.user);
   const [statusOverrides, setStatusOverrides] = useState<Record<string, string>>({});
   const [activeTab, setActiveTab] = useState<PortfolioTab>('products');
   const [barrierFilter, setBarrierFilter] = useState<BarrierStatus | ''>('');
@@ -1213,6 +1217,34 @@ export default function PortfolioPage() {
     exportToExcel(rows, `portfolio-export-${new Date().toISOString().slice(0, 10)}`, 'Portfolio');
   };
 
+  // Generate & print a comprehensive PDF-style HTML report
+  const handleExportPdf = () => {
+    if (!commitments || commitments.length === 0) {
+      toastError('Aucun engagement à inclure dans le rapport.');
+      return;
+    }
+    try {
+      const reportHtml = generatePortfolioReport({
+        commitments,
+        products: products as any[],
+        user: user as any,
+        stats,
+        analytics: portfolioAnalytics,
+      });
+      const win = window.open('', '_blank');
+      if (!win) {
+        toastError("Impossible d'ouvrir la fenêtre du rapport. Vérifiez le blocage des pop-ups.");
+        return;
+      }
+      win.document.open();
+      win.document.write(reportHtml);
+      win.document.close();
+      toastSuccess('Rapport PDF généré. Utilisez "Imprimer / Enregistrer en PDF".');
+    } catch (err) {
+      toastError('Erreur lors de la génération du rapport.');
+    }
+  };
+
   // Export Underlyings tab to CSV
   const handleExportUnderlyings = () => {
     if (!products || (products as any[]).length === 0) return;
@@ -1301,7 +1333,24 @@ export default function PortfolioPage() {
           )}
         >
           <Download size={12} />
-          Exporter
+          Exporter CSV
+        </button>
+        <button
+          onClick={handleExportPdf}
+          disabled={!commitments || commitments.length === 0}
+          title="Générer un rapport PDF complet (ouvre la boîte d'impression)"
+          className={cn(
+            'h-8 px-3.5 rounded-lg border',
+            'bg-gradient-to-r from-[#D4A017] to-[#E6B733] border-[#D4A017]/30',
+            'text-white text-[11px] font-semibold font-body flex items-center gap-1.5',
+            'shadow-sm shadow-[#D4A017]/15 hover:shadow-md hover:shadow-[#D4A017]/25',
+            'hover:brightness-110 active:brightness-95',
+            'transition-all duration-150',
+            'disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:brightness-100',
+          )}
+        >
+          <FileText size={12} />
+          Rapport PDF
         </button>
         <Link
           href="/portfolio/agent"

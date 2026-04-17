@@ -8,7 +8,7 @@ import {
   Shield, TrendingUp, Info, ExternalLink, Clock, Users, Download,
   Sparkles, Brain, Target, BarChart3, Lightbulb, CheckCircle2,
   XCircle, Minus, Zap, Activity, PieChart, Copy, Check, FileDown,
-  ChevronDown,
+  ChevronDown, Bell,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { formatUnderlying } from '@/lib/underlying-labels';
@@ -23,6 +23,7 @@ import { ProductPdfExport } from '@/components/products/product-pdf-export';
 import { Tabs, TabPanel } from '@/components/ui/tabs';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { Tooltip } from '@/components/ui/tooltip';
+import { TermTooltip, FINANCIAL_GLOSSARY } from '@/components/ui/term-tooltip';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -86,7 +87,7 @@ const REGULATORY_DISCLAIMERS = [
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
-function DetailRow({ label, value, className }: { label: string; value: React.ReactNode; className?: string }) {
+function DetailRow({ label, value, className }: { label: React.ReactNode; value: React.ReactNode; className?: string }) {
   return (
     <div className={cn("flex items-start justify-between gap-4 py-2 border-b border-border/50 last:border-0", className)}>
       <span className="text-[10px] text-ink-3 font-body uppercase tracking-widest shrink-0">{label}</span>
@@ -978,11 +979,11 @@ ${description ? `
           <div className="lg:col-span-2 flex flex-col gap-4">
             {/* SRI Gauge */}
             <div className="bg-white dark:bg-white/5 rounded-xl border border-border/60 shadow-sm p-4">
-              <Tooltip content="Indicateur de risque de 1 (faible) à 7 (élevé)">
-                <h3 className="font-body text-[10px] uppercase tracking-widest text-ink-3 font-semibold mb-3">
+              <h3 className="font-body text-[10px] uppercase tracking-widest text-ink-3 font-semibold mb-3">
+                <TermTooltip term="SRI" definition={FINANCIAL_GLOSSARY['SRI']!}>
                   Indicateur de risque (SRI)
-                </h3>
-              </Tooltip>
+                </TermTooltip>
+              </h3>
               <SriGauge sri={product.sri} />
             </div>
 
@@ -1002,19 +1003,28 @@ ${description ? `
 
               <TabPanel value="overview" activeTab={activeTab} className="p-4 stagger-grid">
                 <div className="divide-y divide-border/50">
-                  <DetailRow label="Émetteur" value={product.issuerName} />
+                  <DetailRow
+                    label={<TermTooltip term="Émetteur" definition={FINANCIAL_GLOSSARY['Émetteur']!}>Émetteur</TermTooltip>}
+                    value={product.issuerName}
+                  />
                   {product.underlyingName && <DetailRow label="Sous-jacent" value={product.underlyingName} />}
                   {product.underlyingYahoo && !product.underlyingName && (
                     <DetailRow label="Sous-jacent" value={formatUnderlying(product.underlyingYahoo)} />
                   )}
                   {product.barrierCapPct != null && (
-                    <DetailRow label="Barrière capital" value={<span className="text-red font-bold">{formatPct(product.barrierCapPct)}</span>} />
+                    <DetailRow
+                      label={<TermTooltip term="Barrière" definition={FINANCIAL_GLOSSARY['Barrière']!}>Barrière capital</TermTooltip>}
+                      value={<span className="text-red font-bold">{formatPct(product.barrierCapPct)}</span>}
+                    />
                   )}
                   {product.autocallBarrierPct != null && (
                     <DetailRow label="Barrière autocall" value={formatPct(product.autocallBarrierPct)} />
                   )}
                   {product.couponPct != null && (
-                    <DetailRow label="Coupon" value={<span className="text-teal">{formatPct(product.couponPct)}</span>} />
+                    <DetailRow
+                      label={<TermTooltip term="Coupon" definition={FINANCIAL_GLOSSARY['Coupon']!}>Coupon</TermTooltip>}
+                      value={<span className="text-teal">{formatPct(product.couponPct)}</span>}
+                    />
                   )}
                   {product.maxGainPct != null && (
                     <DetailRow label="Gain maximum" value={<span className="text-gold font-bold">{formatPct(product.maxGainPct)}</span>} />
@@ -1046,7 +1056,7 @@ ${description ? `
                 {Array.isArray(product.observationDates) && product.observationDates.length > 0 ? (
                   <>
                     <p className="text-[11px] text-ink-3 font-body mb-3">
-                      Dates de constatation pour le mécanisme de remboursement anticipé automatique.
+                      Dates d&apos;<TermTooltip term="Observation" definition={FINANCIAL_GLOSSARY['Observation']!}>observation</TermTooltip> pour le mécanisme de remboursement anticipé automatique.
                     </p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                       {product.observationDates.map((date: string, i: number) => {
@@ -1197,6 +1207,34 @@ ${description ? `
                   </p>
                 )}
               </div>
+
+              {/* Create alert CTA */}
+              <Link
+                href={`/alertes?product=${encodeURIComponent(product.id)}&productName=${encodeURIComponent(product.name)}`}
+                className={cn(
+                  'group/alert flex items-center gap-2 px-3 py-2.5 rounded-lg border border-violet/30 bg-gradient-to-r from-violet-pale to-white dark:from-violet/10 dark:to-transparent',
+                  'hover:border-violet hover:shadow-sm transition-all duration-150',
+                  'text-left w-full',
+                )}
+              >
+                <span
+                  className="flex items-center justify-center w-8 h-8 rounded-lg shrink-0"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(59,31,168,0.12) 0%, rgba(0,184,148,0.08) 100%)',
+                  }}
+                >
+                  <Bell size={14} className="text-violet" strokeWidth={2} />
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[12px] font-body font-semibold text-ink leading-tight">
+                    Créer une alerte
+                  </p>
+                  <p className="text-[10px] font-body text-ink-3 leading-tight mt-0.5">
+                    Être notifié sur ce produit
+                  </p>
+                </div>
+                <ExternalLink size={12} className="text-ink-3 group-hover/alert:text-violet transition-colors" />
+              </Link>
 
               {/* Documents section */}
               <div className="flex flex-col gap-1.5">

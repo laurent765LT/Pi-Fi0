@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Calculator, Sparkles, Building2, ArrowRight, ChevronDown, Zap, Shield, BarChart3, Globe, UserPlus, Search, TrendingUp, Quote, Lock, Server, CheckCircle, Mail, Linkedin } from 'lucide-react';
+import { Calculator, Sparkles, Building2, ArrowRight, ChevronDown, Zap, Shield, BarChart3, Globe, UserPlus, Search, TrendingUp, Quote, Lock, Server, CheckCircle, Mail, Linkedin, PlayCircle } from 'lucide-react';
 
 // ─── Animated counter hook (inline for landing — no auth-gated imports) ──────
 function useCounter(target: number, duration = 1800, enabled = true) {
@@ -141,6 +141,13 @@ export default function Home() {
               <span className="relative">Demander une d&eacute;mo</span>
               <ArrowRight className="relative w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </Link>
+            <Link
+              href="/demo"
+              className="group inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-white/10 border border-white/25 text-white font-display font-bold text-sm tracking-wide hover:bg-white/15 hover:border-white/40 transition-all duration-200"
+            >
+              <PlayCircle className="w-4 h-4" />
+              Essayer la d&eacute;mo
+            </Link>
             <button
               onClick={() =>
                 document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })
@@ -230,6 +237,18 @@ export default function Home() {
                     <a href="#" className="text-sm text-white/40 hover:text-white/80 transition-colors duration-200">{item}</a>
                   </li>
                 ))}
+                <li>
+                  <Link
+                    href="/status"
+                    className="inline-flex items-center gap-1.5 text-sm text-white/40 hover:text-white/80 transition-colors duration-200"
+                  >
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal opacity-70" />
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-teal" />
+                    </span>
+                    Statut
+                  </Link>
+                </li>
               </ul>
             </div>
             {/* Legal */}
@@ -410,14 +429,23 @@ function CtaSection() {
           Rejoignez les CGP et compagnies qui utilisent d&eacute;j&agrave; Strick&apos;in pour
           sourcer, pricer et souscrire leurs produits structur&eacute;s.
         </p>
-        <Link
-          href="/login"
-          className="group relative inline-flex items-center gap-2.5 px-8 py-3.5 rounded-xl bg-white text-violet font-display font-bold text-sm tracking-wide shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-200 overflow-hidden"
-        >
-          <span className="absolute inset-0 -translate-x-full animate-[shimmer_3s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-violet/10 to-transparent" />
-          <span className="relative">Essai gratuit 30 jours</span>
-          <ArrowRight className="relative w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-        </Link>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <Link
+            href="/login"
+            className="group relative inline-flex items-center gap-2.5 px-8 py-3.5 rounded-xl bg-white text-violet font-display font-bold text-sm tracking-wide shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-200 overflow-hidden"
+          >
+            <span className="absolute inset-0 -translate-x-full animate-[shimmer_3s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-violet/10 to-transparent" />
+            <span className="relative">Essai gratuit 30 jours</span>
+            <ArrowRight className="relative w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+          </Link>
+          <Link
+            href="/demo"
+            className="group inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-white/5 border border-white/20 text-white font-display font-bold text-sm tracking-wide hover:bg-white/10 hover:border-white/35 transition-all duration-200"
+          >
+            <PlayCircle className="w-4 h-4" />
+            Essayer la d&eacute;mo
+          </Link>
+        </div>
       </div>
     </section>
   );

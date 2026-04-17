@@ -5,12 +5,14 @@ const PUBLIC_PATHS = [
   '/',
   '/login',
   '/register',
+  '/demo',
   '/assureur-login',
   '/assureur-register',
   '/onboarding',
   '/cgu',
   '/confidentialite',
   '/mentions-legales',
+  '/status',
   '/api',
 ];
 

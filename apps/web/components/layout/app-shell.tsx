@@ -9,8 +9,12 @@ import { ScrollProgress } from '@/components/ui/scroll-progress';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { useRealtimeNotifications } from '@/hooks/use-realtime-notifications';
 import { useNotificationsStore } from '@/stores/notifications-store';
-import { Menu, Search, Bell } from 'lucide-react';
+import { Menu, Search, Bell, X, Sparkles } from 'lucide-react';
 import Link from 'next/link';
+
+// Known demo account emails — used to detect demo mode on reload
+const DEMO_EMAILS = new Set(['cgp@demo.com', 'admin@strickin.com', 'assureur@cardiff.fr']);
+const DEMO_BANNER_DISMISSED_KEY = 'strickin-demo-banner-dismissed';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -21,10 +25,44 @@ export const AppShell = React.memo(function AppShell({ children }: AppShellProps
   const router = useRouter();
   const pathname = usePathname();
   const isAuthenticated = useAuthStore(selectIsAuthenticated);
+  const user = useAuthStore((s) => s.user);
   const unreadCount = useNotificationsStore((s) => s.notifications.filter((n) => !n.read).length);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [cmdPaletteOpen, setCmdPaletteOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [demoBannerVisible, setDemoBannerVisible] = useState(false);
+
+  // Detect demo mode (URL query param on first mount OR current user is a demo account)
+  // and respect the localStorage dismissal flag.
+  useEffect(() => {
+    if (!hydrated) return;
+    const isDemoQuery =
+      typeof window !== 'undefined' &&
+      new URLSearchParams(window.location.search).get('demo') === 'true';
+    const isDemoUser = !!(user?.email && DEMO_EMAILS.has(String(user.email).toLowerCase()));
+    if (!isDemoQuery && !isDemoUser) {
+      setDemoBannerVisible(false);
+      return;
+    }
+    try {
+      if (localStorage.getItem(DEMO_BANNER_DISMISSED_KEY) === 'true') {
+        setDemoBannerVisible(false);
+        return;
+      }
+    } catch {
+      // ignore storage errors
+    }
+    setDemoBannerVisible(true);
+  }, [hydrated, user, pathname]);
+
+  const dismissDemoBanner = useCallback(() => {
+    try {
+      localStorage.setItem(DEMO_BANNER_DISMISSED_KEY, 'true');
+    } catch {
+      // ignore storage errors
+    }
+    setDemoBannerVisible(false);
+  }, []);
 
   const closeSidebar = useCallback(() => setSidebarOpen(false), []);
   const closeCmdPalette = useCallback(() => setCmdPaletteOpen(false), []);
@@ -79,6 +117,42 @@ export const AppShell = React.memo(function AppShell({ children }: AppShellProps
 
       {/* Scroll progress bar at the very top */}
       <ScrollProgress />
+
+      {/* Demo mode banner — only shown when exploring via /demo auto-login */}
+      {demoBannerVisible && (
+        <div
+          role="region"
+          aria-label="Mode démo"
+          className="sticky top-0 z-40 md:pl-[248px] bg-gradient-to-r from-[#3B1FA8] via-[#5535C4] to-[#7B5FE0] text-white shadow-md"
+        >
+          <div className="flex items-center gap-3 px-4 md:px-6 py-2.5 text-sm">
+            <Sparkles size={16} className="shrink-0 text-white/90" />
+            <p className="flex-1 font-body leading-snug">
+              <span className="font-semibold">Mode d&eacute;mo</span>
+              <span className="text-white/80"> &mdash; Vous explorez Strick&apos;in avec des donn&eacute;es fictives</span>
+            </p>
+            <Link
+              href="/register"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-white text-[#3B1FA8] font-display font-semibold text-xs hover:bg-white/95 transition-colors"
+            >
+              Cr&eacute;er un vrai compte
+            </Link>
+            <Link
+              href="/register"
+              className="sm:hidden inline-flex items-center px-2.5 py-1 rounded-md bg-white text-[#3B1FA8] font-display font-semibold text-[11px] hover:bg-white/95 transition-colors"
+            >
+              S&apos;inscrire
+            </Link>
+            <button
+              onClick={dismissDemoBanner}
+              className="p-1 -mr-1 rounded-md hover:bg-white/10 transition-colors shrink-0"
+              aria-label="Fermer la banni\u00e8re de mode d\u00e9mo"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      )}
 
       <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />
 

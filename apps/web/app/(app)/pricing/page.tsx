@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { Tooltip } from '@/components/ui/tooltip';
+import { TermTooltip, FINANCIAL_GLOSSARY } from '@/components/ui/term-tooltip';
 import { PageHeader } from '@/components/ui/page-header';
 import { usePriceProduct, useValidatePricingConfig, useProductTemplates, usePricingHistory } from '@/hooks/use-pricing';
 import { PricingAiGuide } from '@/components/pricing/pricing-ai-guide';
@@ -526,7 +527,9 @@ export default function PricingPage() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="flex flex-col gap-1.5">
-                    <label className={labelCls}>Date de strike</label>
+                    <label className={labelCls}>
+                      Date de <TermTooltip term="Strike" definition={FINANCIAL_GLOSSARY['Strike']!}>strike</TermTooltip>
+                    </label>
                     <input type="date" value={strikeDate} onChange={(e) => setStrikeDate(e.target.value)} className={inputCls} />
                   </div>
                   <div className="flex flex-col gap-1.5">
@@ -567,7 +570,9 @@ export default function PricingPage() {
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className={labelCls}>Type de coupon</label>
+                  <label className={labelCls}>
+                    Type de <TermTooltip term="Coupon" definition={FINANCIAL_GLOSSARY['Coupon']!}>coupon</TermTooltip>
+                  </label>
                   <select value={couponType} onChange={(e) => setCouponType(e.target.value)} className={selectCls}>
                     {COUPON_TYPES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
                   </select>
@@ -582,7 +587,9 @@ export default function PricingPage() {
                       </div>
                       {(couponType === 'CONDITIONAL' || couponType === 'MEMORY') && (
                         <div className="flex flex-col gap-1.5">
-                          <label className={labelCls}>Barrière coupon (%)</label>
+                          <label className={labelCls}>
+                            <TermTooltip term="Barrière" definition={FINANCIAL_GLOSSARY['Barrière']!}>Barrière</TermTooltip> coupon (%)
+                          </label>
                           <input type="number" step="5" value={couponBarrier} onChange={(e) => setCouponBarrier(Number(e.target.value))} className={inputCls} />
                         </div>
                       )}
@@ -604,7 +611,9 @@ export default function PricingPage() {
                 </label>
                 {autocallEnabled && (
                   <div className="flex flex-col gap-1.5">
-                    <label className={labelCls}>Barrière autocall (%)</label>
+                    <label className={labelCls}>
+                      <TermTooltip term="Autocall Phoenix" definition={FINANCIAL_GLOSSARY['Autocall Phoenix']!}>Barrière autocall</TermTooltip> (%)
+                    </label>
                     <input type="number" step="5" value={autocallBarrier} onChange={(e) => setAutocallBarrier(Number(e.target.value))} className={inputCls} />
                   </div>
                 )}
@@ -613,7 +622,9 @@ export default function PricingPage() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="flex flex-col gap-1.5">
-                    <label className={labelCls}>Barrière protection (%)</label>
+                    <label className={labelCls}>
+                      <TermTooltip term="Capital protégé" definition={FINANCIAL_GLOSSARY['Capital protégé']!}>Barrière protection</TermTooltip> (%)
+                    </label>
                     <input type="number" step="5" value={protectionBarrier} onChange={(e) => setProtectionBarrier(Number(e.target.value))} className={inputCls} />
                   </div>
                   <div className="flex flex-col gap-1.5">

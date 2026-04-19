@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Brain, X, Send, Sparkles } from 'lucide-react';
+import { Brain, X, Send, Sparkles, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { api } from '@/lib/api';
 import { DEMO_PRODUCTS } from '@/lib/demo-data';
@@ -454,6 +454,12 @@ export function AiChatWidget() {
               <Send size={15} strokeWidth={2.5} />
             </button>
           </form>
+          <p className="mt-2 flex items-start gap-1.5 text-[10px] leading-snug text-ink-3 dark:text-white/50 font-body">
+            <AlertTriangle size={11} className="shrink-0 mt-0.5" />
+            <span>
+              Informations a titre indicatif. Ne constitue pas un conseil en investissement au sens MIF2.
+            </span>
+          </p>
         </div>
       </div>
 

@@ -1,4 +1,3 @@
-# Strick'in — robots.txt
 User-agent: *
 Allow: /
 Disallow: /api/
@@ -12,9 +11,4 @@ Disallow: /notifications/
 Disallow: /settings/
 Disallow: /profile/
 
-# Allow public pages
-Allow: /
-Allow: /login
-Allow: /products
-
-Sitemap: https://app.strickin.com/sitemap.xml
+Sitemap: https://strickin-web-web.vercel.app/sitemap.xml

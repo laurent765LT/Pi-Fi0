@@ -3,11 +3,32 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Calculator, Sparkles, Building2, ArrowRight, ChevronDown, Zap, Shield, BarChart3, Globe, UserPlus, Search, TrendingUp, Quote, Lock, Server, CheckCircle, Mail, Linkedin, PlayCircle } from 'lucide-react';
+import { LandingNavbar } from '@/components/landing/landing-navbar';
+
+// ─── Reduced-motion detection ────────────────────────────────────────────────
+function prefersReducedMotion(): boolean {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
+  try {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  } catch {
+    return false;
+  }
+}
 
 // ─── Animated counter hook (inline for landing — no auth-gated imports) ──────
+// Crash-proof: honors prefers-reduced-motion and has a fallback safety net
+// so counters never remain stuck at 0 if IntersectionObserver fails to fire.
 function useCounter(target: number, duration = 1800, enabled = true) {
-  const [value, setValue] = useState(0);
+  const reduced = prefersReducedMotion();
+  // If reduced motion, show final value immediately (skip 0 state entirely)
+  const [value, setValue] = useState<number>(reduced ? target : 0);
+
   useEffect(() => {
+    // Respect reduced motion: snap to target, no animation
+    if (reduced) {
+      setValue(target);
+      return;
+    }
     if (!enabled) return;
     const start = performance.now();
     let raf: number;
@@ -19,24 +40,50 @@ function useCounter(target: number, duration = 1800, enabled = true) {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [target, duration, enabled]);
+  }, [target, duration, enabled, reduced]);
+
+  // Safety net: if after 2s the value is still 0 (observer never fired,
+  // animation never started), snap to target so we never display "0".
+  useEffect(() => {
+    if (reduced) return;
+    const fallback = setTimeout(() => {
+      setValue((current) => (current === 0 && target !== 0 ? target : current));
+    }, 2000);
+    return () => clearTimeout(fallback);
+  }, [target, reduced]);
+
   return value;
 }
 
 // ─── Scroll reveal hook ─────────────────────────────────────────────────────
+// Crash-proof: honors prefers-reduced-motion, triggers slightly before the
+// element enters the viewport, and snaps to visible if the observer is
+// unavailable (SSR, old browsers, or failure).
 function useScrollReveal<T extends HTMLElement>() {
   const ref = useRef<T>(null);
-  const [visible, setVisible] = useState(false);
+  const reduced = typeof window !== 'undefined' ? prefersReducedMotion() : false;
+  const [visible, setVisible] = useState(reduced);
+
   useEffect(() => {
+    if (reduced) { setVisible(true); return; }
     const el = ref.current;
     if (!el) return;
+    // Safety: if IntersectionObserver is unavailable, show content immediately
+    if (typeof IntersectionObserver === 'undefined') { setVisible(true); return; }
+
     const obs = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect(); } },
-      { threshold: 0.15 },
+      { threshold: 0, rootMargin: '0px 0px -80px 0px' },
     );
     obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
+
+    // Fallback: if nothing fires after 2.5s (e.g., element already past
+    // viewport, observer misbehaves), reveal anyway so content never stays hidden.
+    const fallback = setTimeout(() => setVisible(true), 2500);
+
+    return () => { obs.disconnect(); clearTimeout(fallback); };
+  }, [reduced]);
+
   return { ref, visible };
 }
 
@@ -73,7 +120,7 @@ const features = [
 const stats = [
   { icon: Shield, value: 99.9, suffix: '%', label: 'Uptime garanti', decimal: true },
   { icon: BarChart3, value: 150, suffix: '+', label: 'Produits pricés/mois' },
-  { icon: Globe, value: 12, suffix: '', label: 'Pays couverts' },
+  { icon: Globe, value: 1, suffix: '', label: 'Pays (France)' },
   { icon: Zap, value: 1.4, suffix: 's', label: 'Temps moyen de pricing', decimal: true },
 ];
 
@@ -90,6 +137,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-surface font-body">
+      <LandingNavbar />
       {/* ─── Hero ──────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-gradient-violet min-h-screen flex flex-col items-center justify-center px-6">
         {/* Background decoration */}

@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { Pause, Play } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
 // ---------------------------------------------------------------------------
@@ -37,6 +38,8 @@ const TICKER_DATA: TickerItem[] = [
 // ---------------------------------------------------------------------------
 
 function MarketTicker({ className }: MarketTickerProps) {
+  const [paused, setPaused] = React.useState(false);
+
   return (
     <div
       className={cn(
@@ -58,38 +61,60 @@ function MarketTicker({ className }: MarketTickerProps) {
         }}
       />
 
-      <div
-        className="flex items-center h-full whitespace-nowrap"
-        style={{
-          animation: 'ticker-scroll 40s linear infinite',
-          width: 'max-content',
-        }}
-      >
-        {/* Render items twice for seamless loop */}
-        {[...TICKER_DATA, ...TICKER_DATA].map((item, idx) => (
-          <React.Fragment key={`${item.name}-${idx}`}>
-            {idx > 0 && (
-              <span
-                className="inline-block w-1 h-1 rounded-full bg-white/25 mx-4 shrink-0"
-                aria-hidden="true"
-              />
-            )}
-            <span className="inline-flex items-center gap-1.5 text-xs font-body shrink-0">
-              <span className="text-white/70 font-medium">{item.name}</span>
-              <span className="text-white font-semibold">{item.value}</span>
-              {item.change && (
+      <div className="flex items-center h-full">
+        <button
+          onClick={() => setPaused(!paused)}
+          className="flex-shrink-0 inline-flex items-center justify-center px-3 h-full text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+          aria-label={paused ? 'Reprendre le défilement' : 'Mettre en pause le défilement'}
+        >
+          {paused ? <Play size={14} /> : <Pause size={14} />}
+        </button>
+
+        <div
+          className="flex items-center h-full whitespace-nowrap"
+          style={{
+            animation: 'ticker-scroll 40s linear infinite',
+            animationPlayState: paused ? 'paused' : 'running',
+            width: 'max-content',
+          }}
+          aria-hidden="true"
+        >
+          {/* Render items twice for seamless loop */}
+          {[...TICKER_DATA, ...TICKER_DATA].map((item, idx) => (
+            <React.Fragment key={`${item.name}-${idx}`}>
+              {idx > 0 && (
                 <span
-                  className={cn(
-                    'font-mono text-[11px]',
-                    item.positive ? 'text-teal-light' : 'text-red-light',
-                  )}
-                >
-                  {item.change}
-                </span>
+                  className="inline-block w-1 h-1 rounded-full bg-white/25 mx-4 shrink-0"
+                  aria-hidden="true"
+                />
               )}
-            </span>
-          </React.Fragment>
-        ))}
+              <span className="inline-flex items-center gap-1.5 text-xs font-body shrink-0">
+                <span className="text-white/70 font-medium">{item.name}</span>
+                <span className="text-white font-semibold">{item.value}</span>
+                {item.change && (
+                  <span
+                    className={cn(
+                      'font-mono text-[11px]',
+                      item.positive ? 'text-teal-light' : 'text-red-light',
+                    )}
+                  >
+                    {item.change}
+                  </span>
+                )}
+              </span>
+            </React.Fragment>
+          ))}
+        </div>
+
+        {/* Screen reader accessible version */}
+        <ul className="sr-only">
+          {TICKER_DATA.map((item) => (
+            <li key={item.name}>
+              {item.name}: {item.value}
+              {item.change ? ` (${item.change})` : ''}
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );

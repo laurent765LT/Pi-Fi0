@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { Calendar, Eye, DollarSign, RefreshCw, ArrowRight, ArrowLeft, Search, X, CalendarX } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { downloadIcs } from '@/lib/export-ics';
 import { PageHeader } from '@/components/ui/page-header';
 import { useProducts } from '@/hooks/use-products';
 
@@ -162,6 +163,19 @@ export default function EventsPage() {
     return Array.from(grouped.entries());
   }, [filtered]);
 
+  const handleExportIcs = () => {
+    const calendarEvents = filtered.map((e, i) => ({
+      id: `${e.productId}-${e.type}-${e.date}-${i}`,
+      title: EVENT_CONFIG[e.type]?.label ?? e.type,
+      description: e.detail,
+      date: e.date,
+      productName: e.productName,
+      isin: e.productIsin,
+      type: EVENT_CONFIG[e.type]?.label ?? e.type,
+    }));
+    downloadIcs(calendarEvents);
+  };
+
   return (
     <div className="w-full animate-fade-in">
       <PageHeader
@@ -173,9 +187,9 @@ export default function EventsPage() {
         className="mb-4"
       />
 
-      {/* Search Bar */}
-      <div className="mb-4">
-        <div className="relative max-w-md">
+      {/* Search Bar + Actions */}
+      <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
+        <div className="relative max-w-md flex-1 min-w-[240px]">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-3/50 dark:text-white/30 pointer-events-none" />
           <input
             type="text"
@@ -201,6 +215,14 @@ export default function EventsPage() {
             </button>
           )}
         </div>
+        <button
+          onClick={handleExportIcs}
+          disabled={filtered.length === 0}
+          className="h-8 px-3.5 rounded-lg border border-border/60 bg-white/80 text-[11px] font-semibold font-body text-ink-2 hover:border-[#3B1FA8] hover:text-[#3B1FA8] flex items-center gap-1.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-border/60 disabled:hover:text-ink-2"
+        >
+          <Calendar size={12} />
+          Exporter ICS
+        </button>
       </div>
 
       {/* Filters */}

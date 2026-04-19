@@ -999,6 +999,16 @@ export default function PortfolioAgentPage() {
           <p className="text-[9px] text-ink-4 font-body mt-1.5 text-center">
             Analyse locale — vos donnees restent privees
           </p>
+          <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/40 rounded-lg">
+            <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed flex items-start gap-2">
+              <AlertTriangle size={14} className="shrink-0 mt-0.5" />
+              <span>
+                <strong>Information importante :</strong> Les réponses de l'agent IA sont fournies
+                à titre indicatif uniquement et ne constituent pas un conseil en investissement au sens
+                de la directive MIF2. Consultez un professionnel agréé AMF pour toute décision.
+              </span>
+            </p>
+          </div>
         </div>
       </div>
 

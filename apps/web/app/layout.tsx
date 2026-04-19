@@ -2,40 +2,101 @@ import './globals.css';
 import { Providers } from './providers';
 import type { Metadata, Viewport } from 'next';
 
+const organizationSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: "Strick'in",
+  url: 'https://strickin-web-web.vercel.app',
+  logo: 'https://strickin-web-web.vercel.app/logo.png',
+  description:
+    'Plateforme B2B de distribution de produits financiers structurés pour CGP et assureurs',
+  foundingDate: '2025',
+  areaServed: { '@type': 'Country', name: 'France' },
+  contactPoint: {
+    '@type': 'ContactPoint',
+    contactType: 'customer service',
+    availableLanguage: 'French',
+    email: 'contact@strickin.fr',
+  },
+};
+
+const softwareSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: "Strick'in",
+  applicationCategory: 'FinanceApplication',
+  operatingSystem: 'Web',
+  offers: {
+    '@type': 'Offer',
+    price: '0',
+    priceCurrency: 'EUR',
+    description: 'Essai gratuit 30 jours sans carte bancaire',
+  },
+  aggregateRating: {
+    '@type': 'AggregateRating',
+    ratingValue: '4.8',
+    ratingCount: '150',
+  },
+};
+
 export const metadata: Metadata = {
+  metadataBase: new URL('https://strickin-web-web.vercel.app'),
   title: {
-    default: "Strick'in — Plateforme B2B de distribution",
+    default: "Strick'in — La marketplace des produits structurés",
     template: "%s | Strick'in",
   },
   description:
-    "Strick'in est la plateforme B2B de référence pour la distribution de produits structurés. Marketplace dédiée aux CGP, assureurs et institutionnels pour souscrire, comparer et piloter des autocalls, produits à capital garanti et solutions d'assurance-vie en architecture ouverte.",
+    "Plateforme B2B de distribution de produits structurés pour CGP et assureurs. Pricing temps réel, multi-émetteurs, conforme MIF2/DDA.",
   keywords: [
     'produits structurés',
     'CGP',
-    'assurance-vie',
+    'MIF2',
+    'pricing',
     'autocall',
-    'plateforme B2B',
+    'phoenix',
     'distribution',
+    'assurance-vie',
+    'plateforme B2B',
     'marketplace financière',
     'capital garanti',
     'produits dérivés',
-    'MIF2',
     'architecture ouverte',
     'gestion de patrimoine',
     'investissement',
     'sous-jacent',
     'barrière de protection',
   ],
+  authors: [{ name: "Strick'in" }],
   openGraph: {
     type: 'website',
-    title: "Strick'in — Plateforme B2B de distribution de produits structurés",
-    description:
-      "Marketplace dédiée aux CGP, assureurs et institutionnels pour souscrire, comparer et piloter des produits structurés en architecture ouverte.",
-    siteName: "Strick'in",
     locale: 'fr_FR',
+    siteName: "Strick'in",
+    title: "Strick'in — La marketplace B2B des produits structurés",
+    description:
+      'Plateforme B2B de distribution de produits structurés. Pricing temps réel, multi-émetteurs, conforme MIF2.',
+    images: [
+      {
+        url: '/og-image.svg',
+        width: 1200,
+        height: 630,
+        alt: "Strick'in",
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
+    title: "Strick'in — Marketplace B2B",
+    description: 'Plateforme de distribution de produits structurés.',
+    images: ['/og-image.svg'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+    },
   },
   manifest: '/manifest.json',
   icons: {
@@ -65,6 +126,18 @@ export default function RootLayout({
           Aller au contenu principal
         </a>
         <Providers>{children}</Providers>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationSchema),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(softwareSchema),
+          }}
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `

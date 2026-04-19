@@ -530,6 +530,7 @@ export default function RegisterPage() {
                         value={form.firstName}
                         onChange={(e) => updateField('firstName', e.target.value)}
                         error={fieldError('firstName')}
+                        autoComplete="given-name"
                         className={cn(
                           fieldError('firstName') && 'border-red focus:ring-red',
                         )}
@@ -547,6 +548,7 @@ export default function RegisterPage() {
                         value={form.lastName}
                         onChange={(e) => updateField('lastName', e.target.value)}
                         error={fieldError('lastName')}
+                        autoComplete="family-name"
                         className={cn(
                           fieldError('lastName') && 'border-red focus:ring-red',
                         )}
@@ -669,6 +671,7 @@ export default function RegisterPage() {
                       value={form.company}
                       onChange={(e) => updateField('company', e.target.value)}
                       error={fieldError('company')}
+                      autoComplete="organization"
                     />
                     <Building2
                       size={14}
@@ -702,6 +705,7 @@ export default function RegisterPage() {
                       placeholder="Paris"
                       value={form.city}
                       onChange={(e) => updateField('city', e.target.value)}
+                      autoComplete="address-level2"
                     />
                     <MapPin
                       size={14}
@@ -718,6 +722,7 @@ export default function RegisterPage() {
                       value={form.phone}
                       onChange={(e) => updateField('phone', e.target.value)}
                       error={fieldError('phone')}
+                      autoComplete="tel"
                       hint="Facultatif"
                     />
                     <Phone
@@ -806,6 +811,8 @@ export default function RegisterPage() {
                         checked={form.acceptCgu}
                         onChange={(e) => updateField('acceptCgu', e.target.checked)}
                         className="sr-only peer"
+                        required
+                        aria-required="true"
                       />
                       <div
                         className={cn(
@@ -820,15 +827,25 @@ export default function RegisterPage() {
                         )}
                       </div>
                     </div>
-                    <span className="font-body text-xs text-ink-2 leading-relaxed">
+                    <span className="text-sm text-gray-600 leading-relaxed">
                       J&apos;accepte les{' '}
-                      <span className="text-violet font-semibold hover:underline cursor-pointer">
-                        Conditions Generales d&apos;Utilisation
-                      </span>{' '}
-                      et la{' '}
-                      <span className="text-violet font-semibold hover:underline cursor-pointer">
-                        Politique de Confidentialite
-                      </span>
+                      <Link
+                        href="/cgu"
+                        target="_blank"
+                        className="text-violet underline hover:no-underline"
+                      >
+                        Conditions G&eacute;n&eacute;rales d&apos;Utilisation
+                      </Link>
+                      {' '}et la{' '}
+                      <Link
+                        href="/confidentialite"
+                        target="_blank"
+                        className="text-violet underline hover:no-underline"
+                      >
+                        Politique de confidentialit&eacute;
+                      </Link>
+                      {' '}de Strick&apos;in, conform&eacute;ment au RGPD.
+                      <span className="text-red-500 ml-1">*</span>
                     </span>
                   </label>
                 </div>

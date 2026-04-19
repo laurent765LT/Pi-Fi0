@@ -473,6 +473,7 @@ export default function AssureurRegisterPage() {
                       value={form.firstName}
                       onChange={(e) => set('firstName', e.target.value)}
                       error={errors.firstName}
+                      autoComplete="given-name"
                       disabled={loading}
                     />
                     <Input
@@ -481,6 +482,7 @@ export default function AssureurRegisterPage() {
                       value={form.lastName}
                       onChange={(e) => set('lastName', e.target.value)}
                       error={errors.lastName}
+                      autoComplete="family-name"
                       disabled={loading}
                     />
                   </div>
@@ -568,6 +570,7 @@ export default function AssureurRegisterPage() {
                     placeholder="Directeur distribution, Responsable produits..."
                     value={form.jobTitle}
                     onChange={(e) => set('jobTitle', e.target.value)}
+                    autoComplete="organization-title"
                     disabled={loading}
                   />
                 </>
@@ -589,6 +592,7 @@ export default function AssureurRegisterPage() {
                       onFocus={() => setShowSuggestions(true)}
                       onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                       error={errors.companyName}
+                      autoComplete="organization"
                       disabled={loading}
                     />
                     {showSuggestions && form.companyName.length === 0 && (
@@ -756,6 +760,14 @@ export default function AssureurRegisterPage() {
 
                   {/* CGU checkbox */}
                   <label className="flex items-start gap-2.5 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={form.acceptTerms}
+                      onChange={(e) => set('acceptTerms', e.target.checked)}
+                      className="sr-only"
+                      required
+                      aria-required="true"
+                    />
                     <button
                       type="button"
                       onClick={() => set('acceptTerms', !form.acceptTerms)}
@@ -764,18 +776,31 @@ export default function AssureurRegisterPage() {
                         background: form.acceptTerms ? COBALT : 'transparent',
                         border: form.acceptTerms ? 'none' : '1.5px solid #D1D5DB',
                       }}
+                      aria-label={form.acceptTerms ? 'Retirer l\'acceptation des CGU' : 'Accepter les CGU'}
                     >
                       {form.acceptTerms && <Check size={12} className="text-white" strokeWidth={3} />}
                     </button>
-                    <span className="text-[13px] font-body text-ink-2 leading-snug">
+                    <span className="text-sm text-gray-600 leading-relaxed">
                       J&apos;accepte les{' '}
-                      <span style={{ color: COBALT }} className="font-semibold cursor-pointer hover:underline">
-                        Conditions Generales d&apos;Utilisation
-                      </span>{' '}
-                      et la{' '}
-                      <span style={{ color: COBALT }} className="font-semibold cursor-pointer hover:underline">
-                        Politique de Confidentialite
-                      </span>
+                      <Link
+                        href="/cgu"
+                        target="_blank"
+                        className="underline hover:no-underline"
+                        style={{ color: COBALT }}
+                      >
+                        Conditions G&eacute;n&eacute;rales d&apos;Utilisation
+                      </Link>
+                      {' '}et la{' '}
+                      <Link
+                        href="/confidentialite"
+                        target="_blank"
+                        className="underline hover:no-underline"
+                        style={{ color: COBALT }}
+                      >
+                        Politique de confidentialit&eacute;
+                      </Link>
+                      {' '}de Strick&apos;in, conform&eacute;ment au RGPD.
+                      <span className="text-red-500 ml-1">*</span>
                     </span>
                   </label>
                   {errors.acceptTerms && (

@@ -2,9 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&display=swap');
 
 :root {
+  /* New editorial design tokens */
+  --redesign-white: #FFFFFF;
+  --redesign-off-white: #FCFCFB;
+  --redesign-surface: #F5F4F1;
+  --redesign-surface-2: #EFEDE8;
+  --redesign-border: #ECEAE4;
+  --redesign-border-strong: #D8D5CE;
+  --redesign-text-primary: #1A1815;
+  --redesign-text-secondary: #5C5955;
+  --redesign-text-tertiary: #A8A59E;
+  --redesign-accent: #3B1FA8;
+  --redesign-accent-hover: #2D178A;
+  --redesign-accent-light: #F0ECFA;
+  --redesign-accent-subtle: #F8F6FE;
+  --redesign-success: #2D7A4E;
+  --redesign-success-bg: #F3F7F4;
+  --redesign-warning: #A66A12;
+  --redesign-warning-bg: #FAF7F1;
+  --redesign-danger: #B33636;
+  --redesign-danger-bg: #FAF3F3;
+  --redesign-info: #2E5AA8;
+  --redesign-info-bg: #F2F5FA;
+  --redesign-gold-new: #B8902A;
+
+  /* Existing tokens (fallbacks) */
   --violet: #3B1FA8;
   --violet-d: #270F7A;
   --violet-m: #5535C4;
@@ -534,4 +559,136 @@ main { animation: fadeIn 0.3s ease-out; }
   background: linear-gradient(90deg, var(--violet), var(--cobalt-l));
   transform-origin: left;
   z-index: 9999;
+}
+
+/* ─── Editorial redesign utilities ─── */
+
+.font-display-new {
+  font-family: 'Syne', 'Inter', sans-serif;
+  letter-spacing: -0.025em;
+}
+
+.font-mono-new {
+  font-family: 'JetBrains Mono', 'DM Mono', ui-monospace, monospace;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Editorial Buttons */
+.btn-new {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 500;
+  border-radius: 6px;
+  transition: background 120ms ease-out, color 120ms ease-out, border-color 120ms ease-out;
+  cursor: pointer;
+  border: 1px solid transparent;
+  font-size: 13px;
+  line-height: 1;
+  white-space: nowrap;
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+.btn-primary-new {
+  background: var(--redesign-text-primary);
+  color: white;
+  padding: 0 16px;
+  height: 38px;
+}
+.btn-primary-new:hover { background: #000; }
+.btn-secondary-new {
+  background: var(--redesign-white);
+  color: var(--redesign-text-primary);
+  border-color: var(--redesign-border-strong);
+  padding: 0 16px;
+  height: 38px;
+}
+.btn-secondary-new:hover {
+  background: var(--redesign-surface);
+  border-color: var(--redesign-text-tertiary);
+}
+.btn-ghost-new {
+  background: transparent;
+  color: var(--redesign-text-secondary);
+  padding: 0 12px;
+  height: 34px;
+}
+.btn-ghost-new:hover {
+  background: var(--redesign-surface);
+  color: var(--redesign-text-primary);
+}
+.btn-lg-new { height: 44px; padding: 0 22px; font-size: 14px; }
+.btn-sm-new { height: 30px; padding: 0 12px; font-size: 12px; }
+
+/* Editorial Pills */
+.pill-new {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.005em;
+  border: 1px solid transparent;
+  height: 22px;
+}
+
+/* Tag eyebrow — purement typographique */
+.tag-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  background: transparent;
+  color: var(--redesign-text-tertiary);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: none;
+}
+.tag-eyebrow::before {
+  content: '';
+  width: 20px;
+  height: 1px;
+  background: var(--redesign-text-tertiary);
+}
+
+/* Editorial Cards */
+.card-new {
+  background: var(--redesign-white);
+  border: 1px solid var(--redesign-border);
+  border-radius: 8px;
+  box-shadow: none;
+  transition: border-color 150ms ease-out;
+}
+.card-new-hover:hover {
+  border-color: var(--redesign-border-strong);
+}
+
+/* Editorial animations */
+@keyframes fadeUpEditorial {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up { animation: fadeUpEditorial 0.5s ease-out both; }
+
+/* Ticker scroll */
+@keyframes tickerScroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.ticker-track { display: flex; gap: 56px; width: max-content; animation: tickerScroll 80s linear infinite; }
+.ticker-paused .ticker-track { animation-play-state: paused; }
+
+/* Grid background subtle */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, rgba(26, 24, 21, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(26, 24, 21, 0.03) 1px, transparent 1px);
+  background-size: 80px 80px;
 }

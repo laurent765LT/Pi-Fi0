@@ -1,638 +1,1477 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Calculator, Sparkles, Building2, ArrowRight, ChevronDown, Zap, Shield, BarChart3, Globe, UserPlus, Search, TrendingUp, Quote, Lock, Server, CheckCircle, Mail, Linkedin, PlayCircle } from 'lucide-react';
-import { LandingNavbar } from '@/components/landing/landing-navbar';
 
-// ─── Reduced-motion detection ────────────────────────────────────────────────
-function prefersReducedMotion(): boolean {
-  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
-  try {
-    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  } catch {
-    return false;
-  }
-}
-
-// ─── Animated counter hook (inline for landing — no auth-gated imports) ──────
-// Crash-proof: honors prefers-reduced-motion and has a fallback safety net
-// so counters never remain stuck at 0 if IntersectionObserver fails to fire.
-function useCounter(target: number, duration = 1800, enabled = true) {
-  const reduced = prefersReducedMotion();
-  // If reduced motion, show final value immediately (skip 0 state entirely)
-  const [value, setValue] = useState<number>(reduced ? target : 0);
-
-  useEffect(() => {
-    // Respect reduced motion: snap to target, no animation
-    if (reduced) {
-      setValue(target);
-      return;
-    }
-    if (!enabled) return;
-    const start = performance.now();
-    let raf: number;
-    const tick = (now: number) => {
-      const t = Math.min((now - start) / duration, 1);
-      const ease = 1 - Math.pow(1 - t, 3);
-      setValue(Math.round(target * ease));
-      if (t < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [target, duration, enabled, reduced]);
-
-  // Safety net: if after 2s the value is still 0 (observer never fired,
-  // animation never started), snap to target so we never display "0".
-  useEffect(() => {
-    if (reduced) return;
-    const fallback = setTimeout(() => {
-      setValue((current) => (current === 0 && target !== 0 ? target : current));
-    }, 2000);
-    return () => clearTimeout(fallback);
-  }, [target, reduced]);
-
-  return value;
-}
-
-// ─── Scroll reveal hook ─────────────────────────────────────────────────────
-// Crash-proof: honors prefers-reduced-motion, triggers slightly before the
-// element enters the viewport, and snaps to visible if the observer is
-// unavailable (SSR, old browsers, or failure).
-function useScrollReveal<T extends HTMLElement>() {
-  const ref = useRef<T>(null);
-  const reduced = typeof window !== 'undefined' ? prefersReducedMotion() : false;
-  const [visible, setVisible] = useState(reduced);
-
-  useEffect(() => {
-    if (reduced) { setVisible(true); return; }
-    const el = ref.current;
-    if (!el) return;
-    // Safety: if IntersectionObserver is unavailable, show content immediately
-    if (typeof IntersectionObserver === 'undefined') { setVisible(true); return; }
-
-    const obs = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect(); } },
-      { threshold: 0, rootMargin: '0px 0px -80px 0px' },
-    );
-    obs.observe(el);
-
-    // Fallback: if nothing fires after 2.5s (e.g., element already past
-    // viewport, observer misbehaves), reveal anyway so content never stays hidden.
-    const fallback = setTimeout(() => setVisible(true), 2500);
-
-    return () => { obs.disconnect(); clearTimeout(fallback); };
-  }, [reduced]);
-
-  return { ref, visible };
-}
-
-const metrics = [
-  { value: 17, suffix: '', label: 'Produits actifs' },
-  { value: 5, suffix: '', label: 'Émetteurs' },
-  { value: 2.1, suffix: 'Mrd €', label: 'Sous gestion', decimal: true },
+// ─── Issuer data ─────────────────────────────────────────────────────────────
+const ISSUERS = [
+  { id: 'etoile', name: 'Banque Étoile', short: 'ÉTO', color: '#2B3A67' },
+  { id: 'lumiere', name: 'Crédit Lumière', short: 'LUM', color: '#7A1E3C' },
+  { id: 'mistral', name: 'Mistral Finance', short: 'MST', color: '#1F5F4F' },
+  { id: 'septembre', name: 'Septembre Capital', short: 'SPT', color: '#4A2B7A' },
+  { id: 'arcane', name: 'Arcane Marchés', short: 'ARC', color: '#8B5A1A' },
 ];
 
-const features = [
-  {
-    icon: Calculator,
-    title: 'Pricing Engine',
-    description:
-      'Simulez vos produits en temps réel avec des données de marché live. Obtenez des cotations instantanées sur autocalls, phoenix, reverse convertibles et plus.',
-    gradient: 'from-violet to-violet-mid',
-  },
-  {
-    icon: Sparkles,
-    title: 'IA Intégrée',
-    description:
-      'Recommandations personnalisées, analyse de portefeuille et génération de documents KID automatisée grâce à notre moteur d\'intelligence artificielle.',
-    gradient: 'from-cobalt to-cobalt-light',
-  },
-  {
-    icon: Building2,
-    title: 'Multi-émetteurs',
-    description:
-      'Envoyez des RFQ simultanées à 5+ émetteurs et comparez les offres en direct. BNP, Goldman Sachs, SocGen, Natixis et Barclays connectés.',
-    gradient: 'from-violet-mid to-cobalt-mid',
-  },
-];
+function IssuerBadge({ id, size = 24 }: { id: string; size?: number }) {
+  const iss = ISSUERS.find((i) => i.id === id) ?? ISSUERS[0];
+  return (
+    <span
+      aria-hidden
+      style={{
+        width: size,
+        height: size,
+        minWidth: size,
+        borderRadius: 4,
+        background: iss.color,
+        color: '#fff',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: 'JetBrains Mono, monospace',
+        fontSize: Math.max(8, Math.round(size * 0.36)),
+        fontWeight: 600,
+        letterSpacing: '0.04em',
+      }}
+    >
+      {iss.short}
+    </span>
+  );
+}
 
-const stats = [
-  { icon: Shield, value: 99.9, suffix: '%', label: 'Uptime garanti', decimal: true },
-  { icon: BarChart3, value: 150, suffix: '+', label: 'Produits pricés/mois' },
-  { icon: Globe, value: 1, suffix: '', label: 'Pays (France)' },
-  { icon: Zap, value: 1.4, suffix: 's', label: 'Temps moyen de pricing', decimal: true },
-];
-
-const issuers = ['BNP Paribas', 'Goldman Sachs', 'Société Générale', 'Natixis', 'Barclays'];
-
-export default function Home() {
-  const [heroVisible, setHeroVisible] = useState(false);
-  useEffect(() => { setHeroVisible(true); }, []);
-
-  const m0 = useCounter(metrics[0].value, 1800, heroVisible);
-  const m1 = useCounter(metrics[1].value, 1800, heroVisible);
-  const m2 = useCounter(Math.round(metrics[2].value * 10), 1800, heroVisible);
-  const metricValues = [String(m0), String(m1), `${(m2 / 10).toFixed(1).replace('.', ',')} Mrd €`];
+// ─── Navbar ──────────────────────────────────────────────────────────────────
+function LandingNavbar() {
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   return (
-    <div className="min-h-screen bg-surface font-body">
-      <LandingNavbar />
-      {/* ─── Hero ──────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-gradient-violet min-h-screen flex flex-col items-center justify-center px-6">
-        {/* Background decoration */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full bg-cobalt-light/10 blur-3xl animate-[breathe_8s_ease-in-out_infinite]" />
-          <div className="absolute -bottom-60 -left-40 w-[500px] h-[500px] rounded-full bg-violet-light/10 blur-3xl animate-[breathe_10s_ease-in-out_infinite_2s]" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-white/[0.02] blur-2xl" />
-          {/* Floating particles */}
-          <div className="absolute top-[20%] left-[15%] w-1.5 h-1.5 rounded-full bg-white/20 animate-float" />
-          <div className="absolute top-[60%] right-[20%] w-2 h-2 rounded-full bg-white/10 animate-float" style={{ animationDelay: '1s' }} />
-          <div className="absolute top-[35%] right-[10%] w-1 h-1 rounded-full bg-white/15 animate-float" style={{ animationDelay: '2s' }} />
+    <nav
+      aria-label="Navigation principale"
+      style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 50,
+        height: 64,
+        background: scrolled ? 'rgba(252,252,251,0.92)' : 'transparent',
+        backdropFilter: scrolled ? 'saturate(180%) blur(12px)' : 'none',
+        WebkitBackdropFilter: scrolled ? 'saturate(180%) blur(12px)' : 'none',
+        borderBottom: scrolled
+          ? '1px solid var(--redesign-border)'
+          : '1px solid transparent',
+        transition: 'all 200ms ease-out',
+      }}
+    >
+      <div
+        style={{
+          maxWidth: 1180,
+          margin: '0 auto',
+          padding: '0 32px',
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 40,
+        }}
+      >
+        <Link
+          href="/"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            color: 'var(--redesign-text-primary)',
+            textDecoration: 'none',
+          }}
+        >
+          <span
+            className="font-display-new"
+            style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-0.025em' }}
+          >
+            Strick&apos;in
+          </span>
+        </Link>
+
+        <div style={{ display: 'flex', gap: 28, marginLeft: 8, flex: 1 }}>
+          {['Produit', 'Émetteurs', 'Tarifs', 'À propos'].map((l) => (
+            <a
+              key={l}
+              href="#"
+              onClick={(e) => e.preventDefault()}
+              style={{
+                fontSize: 13,
+                color: 'var(--redesign-text-secondary)',
+                textDecoration: 'none',
+              }}
+            >
+              {l}
+            </a>
+          ))}
         </div>
 
-        {/* Content */}
-        <div className={`relative z-10 max-w-4xl mx-auto text-center transition-all duration-1000 ${heroVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/15 backdrop-blur-sm mb-8 animate-pulse-subtle">
-            <Zap className="w-3.5 h-3.5 text-gold" />
-            <span className="text-xs font-semibold tracking-wide text-white/90 uppercase">
-              Plateforme #1 en France
-            </span>
-            <Sparkles className="w-3.5 h-3.5 text-gold" />
-          </div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <Link href="/login" className="btn-new btn-ghost-new btn-sm-new">
+            Se connecter
+          </Link>
+          <Link href="/login" className="btn-new btn-primary-new btn-sm-new">
+            Demander un accès
+          </Link>
+        </div>
+      </div>
+    </nav>
+  );
+}
 
-          {/* Headline */}
-          <h1 className="font-display text-5xl md:text-7xl font-extrabold text-white leading-[1.05] mb-6">
-            La marketplace des
+// ─── Hero ────────────────────────────────────────────────────────────────────
+function HeroSection() {
+  return (
+    <section
+      style={{
+        background: 'var(--redesign-white)',
+        borderBottom: '1px solid var(--redesign-border)',
+      }}
+    >
+      <div
+        style={{
+          maxWidth: 1180,
+          margin: '0 auto',
+          padding: '120px 32px 140px',
+          position: 'relative',
+        }}
+      >
+        <div className="animate-fade-up" style={{ maxWidth: 820 }}>
+          <div className="tag-eyebrow" style={{ marginBottom: 32 }}>
+            Marketplace B2B · Produits structurés
+          </div>
+          <h1
+            className="font-display-new"
+            style={{
+              fontSize: 84,
+              fontWeight: 700,
+              lineHeight: 1.0,
+              margin: '0 0 32px',
+              letterSpacing: '-0.04em',
+              color: 'var(--redesign-text-primary)',
+            }}
+          >
+            Distribuer
             <br />
-            <span className="bg-gradient-to-r from-white via-violet-pale to-cobalt-pale bg-clip-text text-transparent">
-              produits structurés
+            <span style={{ fontStyle: 'italic', fontWeight: 500 }}>
+              autrement.
             </span>
           </h1>
-
-          {/* Subtitle */}
-          <p className="max-w-2xl mx-auto text-lg md:text-xl text-white/70 font-body leading-relaxed mb-10">
-            Strick&apos;in connecte les CGP et assureurs aux meilleurs émetteurs
-            de produits structurés. Pricing en temps réel, comparaison
-            multi-émetteurs et souscription digitalisée.
+          <p
+            style={{
+              fontSize: 19,
+              lineHeight: 1.55,
+              color: 'var(--redesign-text-secondary)',
+              maxWidth: 560,
+              margin: '0 0 40px',
+            }}
+          >
+            Une plateforme sobre pour connecter CGP, assureurs et émetteurs.
+            Pricing, RFQ et conformité — au même endroit.
           </p>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+            <Link href="/login" className="btn-new btn-primary-new btn-lg-new">
+              Demander un accès
+            </Link>
+            <Link href="/demo" className="btn-new btn-ghost-new btn-lg-new">
+              Voir la démo →
+            </Link>
+          </div>
+        </div>
 
-          {/* CTAs */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-            <Link
-              href="/login"
-              className="group relative inline-flex items-center gap-2.5 px-10 py-4 rounded-xl bg-white text-violet font-display font-bold text-base tracking-wide shadow-2xl shadow-gold/30 ring-1 ring-gold/40 hover:shadow-gold/50 hover:scale-[1.03] transition-all duration-200 overflow-hidden"
+        {/* Metric strip */}
+        <div
+          style={{
+            marginTop: 120,
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: 48,
+            paddingTop: 40,
+            borderTop: '1px solid var(--redesign-border)',
+          }}
+        >
+          {[
+            { v: '17', l: 'Produits actifs' },
+            { v: '5', l: 'Émetteurs' },
+            { v: '2,1 Mrd €', l: 'Sous gestion' },
+            { v: '< 30 s', l: 'Par pricing' },
+          ].map((s, i) => (
+            <div key={i}>
+              <div
+                className="font-mono-new tabular"
+                style={{
+                  fontSize: 22,
+                  fontWeight: 500,
+                  color: 'var(--redesign-text-primary)',
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                {s.v}
+              </div>
+              <div
+                style={{
+                  fontSize: 12,
+                  color: 'var(--redesign-text-tertiary)',
+                  marginTop: 6,
+                }}
+              >
+                {s.l}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Ticker ──────────────────────────────────────────────────────────────────
+function LandingTicker() {
+  const items = [
+    { n: 'Autocall Phoenix Mémoire', iss: 'ÉTO', cp: '7,25 %', tr: '2,4 M€' },
+    { n: 'Athéna Trimestriel', iss: 'LUM', cp: '6,50 %', tr: '1,8 M€' },
+    { n: 'Capital Protégé Europe', iss: 'MST', cp: '4,10 %', tr: '3,1 M€' },
+    { n: 'Reverse Tech', iss: 'SPT', cp: '9,80 %', tr: '840 k€' },
+    { n: 'Phoenix Dividende', iss: 'ARC', cp: '6,90 %', tr: '2,2 M€' },
+    { n: 'Autocall Prestige', iss: 'LUM', cp: '7,80 %', tr: '1,5 M€' },
+    { n: 'Capital Garanti Monde', iss: 'MST', cp: '3,95 %', tr: '4,4 M€' },
+    { n: 'Bonus Énergie', iss: 'ÉTO', cp: '5,75 %', tr: '920 k€' },
+  ];
+  const doubled = [...items, ...items];
+  return (
+    <section
+      style={{
+        background: 'var(--redesign-white)',
+        borderBottom: '1px solid var(--redesign-border)',
+        padding: '24px 0',
+        overflow: 'hidden',
+      }}
+    >
+      <div
+        style={{
+          maxWidth: 1180,
+          margin: '0 auto 20px',
+          padding: '0 32px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'baseline',
+        }}
+      >
+        <div className="tag-eyebrow" style={{ margin: 0 }}>
+          Aujourd&apos;hui sur la plateforme · flux indicatif
+        </div>
+        <div
+          className="font-mono-new"
+          style={{
+            fontSize: 11,
+            color: 'var(--redesign-text-tertiary)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+          }}
+        >
+          <span
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: 999,
+              background: 'var(--redesign-success)',
+              animation: 'pulse 2s ease-in-out infinite',
+            }}
+          />
+          LIVE
+        </div>
+      </div>
+      <div
+        style={{
+          maskImage:
+            'linear-gradient(to right, transparent, black 5%, black 95%, transparent)',
+          WebkitMaskImage:
+            'linear-gradient(to right, transparent, black 5%, black 95%, transparent)',
+          overflow: 'hidden',
+        }}
+      >
+        <div className="ticker-track" style={{ animationDuration: '60s' }}>
+          {doubled.map((it, i) => (
+            <div
+              key={i}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 12,
+                padding: '8px 16px',
+                border: '1px solid var(--redesign-border)',
+                borderRadius: 999,
+                background: 'var(--redesign-off-white)',
+                whiteSpace: 'nowrap',
+              }}
             >
-              {/* CTA shimmer effect */}
-              <span className="absolute inset-0 -translate-x-full animate-[shimmer_3s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
-              <span className="relative">Demander une d&eacute;mo</span>
-              <ArrowRight className="relative w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-            </Link>
-            <Link
-              href="/demo"
-              className="group inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-white/10 border border-white/25 text-white font-display font-bold text-sm tracking-wide hover:bg-white/15 hover:border-white/40 transition-all duration-200"
+              <span
+                style={{
+                  fontSize: 10,
+                  fontFamily: 'JetBrains Mono, monospace',
+                  color: 'var(--redesign-text-tertiary)',
+                  letterSpacing: '0.05em',
+                }}
+              >
+                {it.iss}
+              </span>
+              <span
+                style={{
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: 'var(--redesign-text-primary)',
+                }}
+              >
+                {it.n}
+              </span>
+              <span
+                className="font-mono-new tabular"
+                style={{
+                  fontSize: 12,
+                  color: 'var(--redesign-accent)',
+                  fontWeight: 500,
+                }}
+              >
+                {it.cp}
+              </span>
+              <span
+                className="font-mono-new tabular"
+                style={{
+                  fontSize: 11,
+                  color: 'var(--redesign-text-tertiary)',
+                }}
+              >
+                {it.tr}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Features ────────────────────────────────────────────────────────────────
+function FeaturesSection() {
+  const feats = [
+    {
+      num: '01',
+      title: 'Pricing Engine',
+      body: 'Un prix indicatif en moins de trente secondes. Sur autocall, reverse, capital protégé et phoenix mémoire.',
+    },
+    {
+      num: '02',
+      title: 'RFQ multi-émetteurs',
+      body: 'Une demande, cinq émetteurs, cinq offres comparables en temps réel. Sans échanges par email.',
+    },
+    {
+      num: '03',
+      title: 'Intelligence intégrée',
+      body: "L'agent IA analyse vos portefeuilles, suggère des produits et anticipe les observations.",
+    },
+  ];
+  return (
+    <section
+      style={{
+        background: 'var(--redesign-off-white)',
+        padding: '140px 32px',
+        borderBottom: '1px solid var(--redesign-border)',
+      }}
+    >
+      <div style={{ maxWidth: 1180, margin: '0 auto' }}>
+        <div style={{ marginBottom: 80, maxWidth: 640 }}>
+          <div className="tag-eyebrow" style={{ marginBottom: 24 }}>
+            Produit
+          </div>
+          <h2
+            className="font-display-new"
+            style={{
+              fontSize: 48,
+              fontWeight: 700,
+              margin: 0,
+              letterSpacing: '-0.025em',
+              lineHeight: 1.1,
+              color: 'var(--redesign-text-primary)',
+            }}
+          >
+            Trois outils essentiels. Rien de plus.
+          </h2>
+        </div>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: 0,
+            borderTop: '1px solid var(--redesign-border)',
+          }}
+        >
+          {feats.map((f, i) => (
+            <div
+              key={i}
+              style={{
+                padding: '40px 32px 40px 0',
+                borderRight:
+                  i < 2 ? '1px solid var(--redesign-border)' : 'none',
+                paddingLeft: i > 0 ? 32 : 0,
+              }}
             >
-              <PlayCircle className="w-4 h-4" />
-              Essayer la d&eacute;mo
-            </Link>
-            <button
-              onClick={() =>
-                document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })
-              }
-              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl border border-white/25 text-white font-display font-bold text-sm tracking-wide hover:bg-white/10 transition-all duration-200"
+              <div
+                className="font-mono-new"
+                style={{
+                  fontSize: 11,
+                  color: 'var(--redesign-text-tertiary)',
+                  marginBottom: 20,
+                  letterSpacing: '0.04em',
+                }}
+              >
+                {f.num}
+              </div>
+              <h3
+                className="font-display-new"
+                style={{
+                  fontSize: 22,
+                  fontWeight: 600,
+                  margin: '0 0 12px',
+                  letterSpacing: '-0.015em',
+                  color: 'var(--redesign-text-primary)',
+                }}
+              >
+                {f.title}
+              </h3>
+              <p
+                style={{
+                  fontSize: 14,
+                  lineHeight: 1.65,
+                  color: 'var(--redesign-text-secondary)',
+                  margin: 0,
+                }}
+              >
+                {f.body}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Comparator Demo ─────────────────────────────────────────────────────────
+function ComparatorDemo() {
+  const [type, setType] = useState('Autocall');
+  const [underlying, setUnderlying] = useState('CAC 40');
+  const [barrier, setBarrier] = useState(70);
+  const [maturity, setMaturity] = useState(5);
+
+  const price = useMemo(() => {
+    const base =
+      ({ Autocall: 7.2, 'Capital Protégé': 3.9, Reverse: 9.1, Phoenix: 6.8 } as Record<
+        string,
+        number
+      >)[type] ?? 6;
+    const mat = maturity * 0.12;
+    const bar = (100 - barrier) * 0.05;
+    return (base + mat - bar).toFixed(2);
+  }, [type, barrier, maturity]);
+
+  const offers = [
+    { iss: 'etoile', name: 'Banque Étoile', delta: 0 },
+    { iss: 'lumiere', name: 'Crédit Lumière', delta: -0.18 },
+    { iss: 'mistral', name: 'Mistral Finance', delta: 0.12 },
+    { iss: 'septembre', name: 'Septembre Capital', delta: -0.35 },
+    { iss: 'arcane', name: 'Arcane Marchés', delta: 0.22 },
+  ];
+
+  const bestIdx = offers.reduce(
+    (best, cur, idx) =>
+      parseFloat(price) + cur.delta >
+      parseFloat(price) + offers[best].delta
+        ? idx
+        : best,
+    0,
+  );
+
+  return (
+    <section
+      style={{
+        background: 'var(--redesign-off-white)',
+        padding: '140px 32px',
+        borderBottom: '1px solid var(--redesign-border)',
+      }}
+    >
+      <div style={{ maxWidth: 1180, margin: '0 auto' }}>
+        <div style={{ marginBottom: 56, maxWidth: 720 }}>
+          <div className="tag-eyebrow" style={{ marginBottom: 24 }}>
+            Démonstration
+          </div>
+          <h2
+            className="font-display-new"
+            style={{
+              fontSize: 48,
+              fontWeight: 700,
+              margin: 0,
+              letterSpacing: '-0.025em',
+              lineHeight: 1.1,
+              color: 'var(--redesign-text-primary)',
+            }}
+          >
+            Essayez le moteur en direct.
+          </h2>
+          <p
+            style={{
+              fontSize: 17,
+              color: 'var(--redesign-text-secondary)',
+              margin: '16px 0 0',
+              maxWidth: 520,
+            }}
+          >
+            Modifiez les paramètres. Cinq offres émetteurs, comparables, en
+            moins de trente secondes.
+          </p>
+        </div>
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '380px 1fr',
+            gap: 0,
+            border: '1px solid var(--redesign-border)',
+            background: 'var(--redesign-white)',
+          }}
+        >
+          {/* Parameters */}
+          <div
+            style={{
+              padding: 32,
+              borderRight: '1px solid var(--redesign-border)',
+            }}
+          >
+            <div
+              style={{
+                fontSize: 11,
+                fontFamily: 'JetBrains Mono, monospace',
+                color: 'var(--redesign-text-tertiary)',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                marginBottom: 20,
+              }}
             >
-              Découvrir
-              <ChevronDown className="w-4 h-4 animate-float" />
-            </button>
+              Paramètres
+            </div>
+
+            <div style={{ marginBottom: 22 }}>
+              <label
+                style={{
+                  fontSize: 12,
+                  fontWeight: 500,
+                  color: 'var(--redesign-text-secondary)',
+                  marginBottom: 8,
+                  display: 'block',
+                }}
+              >
+                Type de produit
+              </label>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: 6,
+                }}
+              >
+                {['Autocall', 'Capital Protégé', 'Reverse', 'Phoenix'].map(
+                  (t) => (
+                    <button
+                      key={t}
+                      onClick={() => setType(t)}
+                      style={{
+                        border: `1px solid ${
+                          type === t
+                            ? 'var(--redesign-text-primary)'
+                            : 'var(--redesign-border)'
+                        }`,
+                        background:
+                          type === t
+                            ? 'var(--redesign-text-primary)'
+                            : 'var(--redesign-white)',
+                        color:
+                          type === t
+                            ? 'white'
+                            : 'var(--redesign-text-primary)',
+                        padding: '10px 12px',
+                        fontSize: 12,
+                        fontWeight: 500,
+                        cursor: 'pointer',
+                        fontFamily: 'Inter, sans-serif',
+                        borderRadius: 4,
+                      }}
+                    >
+                      {t}
+                    </button>
+                  ),
+                )}
+              </div>
+            </div>
+
+            <div style={{ marginBottom: 22 }}>
+              <label
+                style={{
+                  fontSize: 12,
+                  fontWeight: 500,
+                  color: 'var(--redesign-text-secondary)',
+                  marginBottom: 8,
+                  display: 'block',
+                }}
+              >
+                Sous-jacent
+              </label>
+              <select
+                value={underlying}
+                onChange={(e) => setUnderlying(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  border: '1px solid var(--redesign-border)',
+                  borderRadius: 4,
+                  fontSize: 13,
+                  fontFamily: 'Inter, sans-serif',
+                  background: 'var(--redesign-white)',
+                  color: 'var(--redesign-text-primary)',
+                }}
+              >
+                {[
+                  'CAC 40',
+                  'Euro Stoxx 50',
+                  'S&P 500',
+                  'Nasdaq 100',
+                  'MSCI World',
+                ].map((u) => (
+                  <option key={u}>{u}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ marginBottom: 22 }}>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  marginBottom: 8,
+                }}
+              >
+                <label
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 500,
+                    color: 'var(--redesign-text-secondary)',
+                  }}
+                >
+                  Barrière
+                </label>
+                <span
+                  className="font-mono-new tabular"
+                  style={{
+                    fontSize: 12,
+                    color: 'var(--redesign-text-primary)',
+                    fontWeight: 500,
+                  }}
+                >
+                  {barrier} %
+                </span>
+              </div>
+              <input
+                type="range"
+                min={50}
+                max={100}
+                step={5}
+                value={barrier}
+                onChange={(e) => setBarrier(+e.target.value)}
+                style={{
+                  width: '100%',
+                  accentColor: 'var(--redesign-accent)',
+                }}
+              />
+            </div>
+
+            <div>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  marginBottom: 8,
+                }}
+              >
+                <label
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 500,
+                    color: 'var(--redesign-text-secondary)',
+                  }}
+                >
+                  Maturité
+                </label>
+                <span
+                  className="font-mono-new tabular"
+                  style={{
+                    fontSize: 12,
+                    color: 'var(--redesign-text-primary)',
+                    fontWeight: 500,
+                  }}
+                >
+                  {maturity} ans
+                </span>
+              </div>
+              <input
+                type="range"
+                min={2}
+                max={10}
+                step={1}
+                value={maturity}
+                onChange={(e) => setMaturity(+e.target.value)}
+                style={{
+                  width: '100%',
+                  accentColor: 'var(--redesign-accent)',
+                }}
+              />
+            </div>
           </div>
 
-          {/* Floating metrics — animated counters */}
-          <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10">
-            {metrics.map((m, i) => (
+          {/* Results */}
+          <div
+            style={{
+              padding: 32,
+              background: 'var(--redesign-off-white)',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'baseline',
+                marginBottom: 24,
+              }}
+            >
               <div
-                key={m.label}
-                className={`relative flex flex-col items-center px-6 py-4 rounded-2xl bg-white/[0.07] border border-white/10 backdrop-blur-sm transition-all duration-700 ${heroVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}
-                style={{ transitionDelay: `${600 + i * 150}ms` }}
+                style={{
+                  fontSize: 11,
+                  fontFamily: 'JetBrains Mono, monospace',
+                  color: 'var(--redesign-text-tertiary)',
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                }}
               >
-                <span className="font-display text-2xl md:text-3xl font-extrabold text-white tabular-nums">
-                  {metricValues[i]}
-                </span>
-                <span className="text-[11px] uppercase tracking-[0.15em] text-white/50 font-semibold mt-1">
-                  {m.label}
-                </span>
+                Cinq offres comparables
+              </div>
+              <div
+                style={{
+                  fontSize: 11,
+                  color: 'var(--redesign-success)',
+                  fontFamily: 'JetBrains Mono, monospace',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                }}
+              >
+                <span
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: 999,
+                    background: 'var(--redesign-success)',
+                    animation: 'pulse 2s ease-in-out infinite',
+                  }}
+                />
+                Actualisé il y a 2 s
+              </div>
+            </div>
+
+            {offers.map((o, i) => {
+              const cp = (parseFloat(price) + o.delta).toFixed(2);
+              const isBest = i === bestIdx;
+              return (
+                <div
+                  key={i}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr auto auto',
+                    alignItems: 'center',
+                    gap: 24,
+                    padding: '16px 0',
+                    borderBottom:
+                      i < offers.length - 1
+                        ? '1px solid var(--redesign-border)'
+                        : 'none',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                    }}
+                  >
+                    <IssuerBadge id={o.iss} size={28} />
+                    <div>
+                      <div
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 500,
+                          color: 'var(--redesign-text-primary)',
+                        }}
+                      >
+                        {o.name}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 11,
+                          color: 'var(--redesign-text-tertiary)',
+                          fontFamily: 'JetBrains Mono, monospace',
+                        }}
+                      >
+                        Coupon conditionnel · Observation trimestrielle
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    className="font-mono-new tabular"
+                    style={{
+                      fontSize: 20,
+                      fontWeight: 500,
+                      color: isBest
+                        ? 'var(--redesign-accent)'
+                        : 'var(--redesign-text-primary)',
+                      letterSpacing: '-0.02em',
+                    }}
+                  >
+                    {cp} %
+                  </div>
+                  {isBest ? (
+                    <span
+                      className="pill-new"
+                      style={{
+                        background: 'var(--redesign-accent-light)',
+                        color: 'var(--redesign-accent)',
+                        fontFamily: 'JetBrains Mono, monospace',
+                        fontSize: 10,
+                        letterSpacing: '0.06em',
+                      }}
+                    >
+                      MEILLEURE
+                    </span>
+                  ) : (
+                    <span
+                      style={{
+                        fontSize: 11,
+                        color: 'var(--redesign-text-tertiary)',
+                        fontFamily: 'JetBrains Mono, monospace',
+                      }}
+                    >
+                      {o.delta > 0 ? '+' : ''}
+                      {o.delta.toFixed(2)}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Roles ───────────────────────────────────────────────────────────────────
+type RoleKey = 'cgp' | 'family' | 'assurance';
+function RolesSection() {
+  const [active, setActive] = useState<RoleKey>('cgp');
+  const roles: Record<
+    RoleKey,
+    {
+      label: string;
+      title: string;
+      body: string;
+      stats: { k: string; v: string }[];
+      bullets: string[];
+    }
+  > = {
+    cgp: {
+      label: 'Conseiller en gestion de patrimoine',
+      title: 'Pour les CGP',
+      body: 'Un catalogue curé, un pricing instantané et des commissions consolidées. Allez du rendez-vous client à la souscription en quelques clics.',
+      stats: [
+        { k: 'Temps de sélection', v: '—68 %' },
+        { k: "Taux d'adoption", v: '92 %' },
+        { k: 'Utilisateurs actifs', v: '1 240' },
+      ],
+      bullets: [
+        'Catalogue multi-émetteurs',
+        'Simulations illustrées client',
+        'Commissions consolidées',
+        'Conformité MIF2 automatique',
+      ],
+    },
+    family: {
+      label: 'Family Office',
+      title: 'Pour les Family Offices',
+      body: "Construisez des produits sur-mesure, comparez cinq offres simultanément et bénéficiez d'un research macro intégré. Vos mandats, à l'échelle.",
+      stats: [
+        { k: 'RFQ traités', v: '3 800/mois' },
+        { k: 'Gain de marge', v: '+47 pb' },
+        { k: 'Émetteurs comparés', v: '5' },
+      ],
+      bullets: [
+        'RFQ multi-émetteurs',
+        'Produits sur-mesure',
+        'Research intégré Bloomberg',
+        'Portefeuilles consolidés',
+      ],
+    },
+    assurance: {
+      label: 'Assureur & Réseaux',
+      title: 'Pour les assureurs',
+      body: "Intégrez le catalogue à votre contrat UC, supervisez la distribution de vos conseillers et reportez en un clic auprès de l'ACPR.",
+      stats: [
+        { k: 'UC référencées', v: '340' },
+        { k: 'Conseillers', v: '6 200' },
+        { k: 'Reporting ACPR', v: 'Natif' },
+      ],
+      bullets: [
+        'Référencement UC structurées',
+        'Supervision multi-cabinets',
+        'Reporting ACPR natif',
+        'Auditabilité complète',
+      ],
+    },
+  };
+  const r = roles[active];
+
+  return (
+    <section
+      style={{
+        background: 'var(--redesign-white)',
+        padding: '140px 32px',
+        borderBottom: '1px solid var(--redesign-border)',
+      }}
+    >
+      <div style={{ maxWidth: 1180, margin: '0 auto' }}>
+        <div style={{ marginBottom: 56, maxWidth: 720 }}>
+          <div className="tag-eyebrow" style={{ marginBottom: 24 }}>
+            Pour qui
+          </div>
+          <h2
+            className="font-display-new"
+            style={{
+              fontSize: 48,
+              fontWeight: 700,
+              margin: 0,
+              letterSpacing: '-0.025em',
+              lineHeight: 1.1,
+              color: 'var(--redesign-text-primary)',
+            }}
+          >
+            Un outil, trois métiers.
+          </h2>
+        </div>
+
+        <div
+          style={{
+            display: 'flex',
+            gap: 4,
+            marginBottom: 48,
+            borderBottom: '1px solid var(--redesign-border)',
+            flexWrap: 'wrap',
+          }}
+        >
+          {(Object.entries(roles) as [RoleKey, (typeof roles)[RoleKey]][]).map(
+            ([key, role]) => (
+              <button
+                key={key}
+                onClick={() => setActive(key)}
+                style={{
+                  border: 'none',
+                  background: 'transparent',
+                  cursor: 'pointer',
+                  padding: '16px 24px 16px 0',
+                  marginRight: 24,
+                  fontSize: 14,
+                  fontWeight: active === key ? 600 : 500,
+                  color:
+                    active === key
+                      ? 'var(--redesign-text-primary)'
+                      : 'var(--redesign-text-tertiary)',
+                  borderBottom:
+                    active === key
+                      ? '1.5px solid var(--redesign-text-primary)'
+                      : '1.5px solid transparent',
+                  marginBottom: -1,
+                  fontFamily: 'Inter, sans-serif',
+                }}
+              >
+                {role.label}
+              </button>
+            ),
+          )}
+        </div>
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1.2fr 1fr',
+            gap: 80,
+          }}
+        >
+          <div>
+            <h3
+              className="font-display-new"
+              style={{
+                fontSize: 40,
+                fontWeight: 700,
+                margin: '0 0 24px',
+                letterSpacing: '-0.025em',
+                lineHeight: 1.1,
+                color: 'var(--redesign-text-primary)',
+              }}
+            >
+              {r.title}
+            </h3>
+            <p
+              style={{
+                fontSize: 17,
+                lineHeight: 1.6,
+                color: 'var(--redesign-text-secondary)',
+                margin: '0 0 32px',
+              }}
+            >
+              {r.body}
+            </p>
+            <ul
+              style={{
+                listStyle: 'none',
+                padding: 0,
+                margin: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 10,
+              }}
+            >
+              {r.bullets.map((b) => (
+                <li
+                  key={b}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    fontSize: 14,
+                    color: 'var(--redesign-text-primary)',
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 16,
+                      height: 1,
+                      background: 'var(--redesign-accent)',
+                    }}
+                  />
+                  {b}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              gap: 0,
+              borderLeft: '1px solid var(--redesign-border)',
+              paddingLeft: 48,
+            }}
+          >
+            {r.stats.map((s, i) => (
+              <div
+                key={i}
+                style={{
+                  padding: '28px 0',
+                  borderBottom:
+                    i < r.stats.length - 1
+                      ? '1px solid var(--redesign-border)'
+                      : 'none',
+                }}
+              >
+                <div
+                  className="font-display-new"
+                  style={{
+                    fontSize: 44,
+                    fontWeight: 700,
+                    letterSpacing: '-0.03em',
+                    color: 'var(--redesign-text-primary)',
+                    lineHeight: 1,
+                  }}
+                >
+                  {s.v}
+                </div>
+                <div
+                  style={{
+                    fontSize: 12,
+                    color: 'var(--redesign-text-tertiary)',
+                    marginTop: 8,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.06em',
+                  }}
+                >
+                  {s.k}
+                </div>
               </div>
             ))}
           </div>
         </div>
-
-        {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-float">
-          <div className="w-6 h-10 rounded-full border-2 border-white/20 flex items-start justify-center p-1.5">
-            <div className="w-1.5 h-2.5 rounded-full bg-white/40 animate-pulse-subtle" />
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Features ──────────────────────────────────────────────────────── */}
-      <FeaturesSection />
-
-      {/* ─── Stats Band ───────────────────────────────────────────────────── */}
-      <StatsSection />
-
-      {/* ─── Social Proof ──────────────────────────────────────────────────── */}
-      <IssuersSection />
-
-      {/* ─── How It Works ─────────────────────────────────────────────────── */}
-      <HowItWorksSection />
-
-      {/* ─── Testimonials ─────────────────────────────────────────────────── */}
-      <TestimonialsSection />
-
-      {/* ─── Compliance / Trust ────────────────────────────────────────────── */}
-      <ComplianceSection />
-
-      {/* ─── CTA Footer ───────────────────────────────────────────────────── */}
-      <CtaSection />
-
-      {/* ─── Enhanced Footer ──────────────────────────────────────────────── */}
-      <footer className="bg-ink border-t border-white/5 pt-16 pb-8 px-6">
-        <div className="max-w-container mx-auto">
-          {/* Footer columns */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-14">
-            {/* Produit */}
-            <div>
-              <h4 className="font-display text-sm font-bold text-white mb-4">Produit</h4>
-              <ul className="space-y-2.5">
-                {[
-                  { label: 'Catalogue', href: '/login' },
-                  { label: 'Pricing', href: '/login' },
-                  { label: 'RFQ', href: '/login' },
-                  { label: 'Research', href: '/login' },
-                ].map((item) => (
-                  <li key={item.label}>
-                    <Link href={item.href} className="text-sm text-white/40 hover:text-white/80 transition-colors duration-200">{item.label}</Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            {/* Entreprise */}
-            <div>
-              <h4 className="font-display text-sm font-bold text-white mb-4">Entreprise</h4>
-              <ul className="space-y-2.5">
-                {['À propos', 'Blog', 'Carrières'].map((item) => (
-                  <li key={item}>
-                    <a href="#" className="text-sm text-white/40 hover:text-white/80 transition-colors duration-200">{item}</a>
-                  </li>
-                ))}
-                <li>
-                  <Link
-                    href="/status"
-                    className="inline-flex items-center gap-1.5 text-sm text-white/40 hover:text-white/80 transition-colors duration-200"
-                  >
-                    <span className="relative flex h-1.5 w-1.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal opacity-70" />
-                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-teal" />
-                    </span>
-                    Statut
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            {/* Legal */}
-            <div>
-              <h4 className="font-display text-sm font-bold text-white mb-4">Légal</h4>
-              <ul className="space-y-2.5">
-                {[
-                  { label: 'CGU', href: '/cgu' },
-                  { label: 'Confidentialité', href: '/confidentialite' },
-                  { label: 'Mentions légales', href: '/mentions-legales' },
-                ].map((item) => (
-                  <li key={item.label}>
-                    <Link href={item.href} className="text-sm text-white/40 hover:text-white/80 transition-colors duration-200">{item.label}</Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            {/* Contact */}
-            <div>
-              <h4 className="font-display text-sm font-bold text-white mb-4">Contact</h4>
-              <ul className="space-y-2.5">
-                <li>
-                  <a href="mailto:contact@strickin.com" className="inline-flex items-center gap-2 text-sm text-white/40 hover:text-white/80 transition-colors duration-200">
-                    <Mail className="w-3.5 h-3.5" />
-                    contact@strickin.com
-                  </a>
-                </li>
-                <li>
-                  <a href="https://www.linkedin.com/company/strickin" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-white/40 hover:text-white/80 transition-colors duration-200">
-                    <Linkedin className="w-3.5 h-3.5" />
-                    LinkedIn
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          {/* Bottom bar */}
-          <div className="border-t border-white/5 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <span className="font-display text-sm font-bold text-white/60">Strick&apos;in</span>
-            <span className="text-xs text-white/30">
-              &copy; {new Date().getFullYear()} Strick&apos;in. Tous droits r&eacute;serv&eacute;s.
-            </span>
-            <span className="text-xs text-white/30">
-              Fait avec passion &agrave; Paris
-            </span>
-          </div>
-        </div>
-      </footer>
-    </div>
+      </div>
+    </section>
   );
 }
 
-// ─── Features Section (scroll reveal) ──────────────────────────────────────
-
-function FeaturesSection() {
-  const { ref, visible } = useScrollReveal<HTMLElement>();
+// ─── Issuers ─────────────────────────────────────────────────────────────────
+function IssuersSection() {
   return (
-    <section id="features" className="py-24 md:py-32 px-6" ref={ref}>
-      <div className="max-w-container mx-auto">
-        <div className={`text-center mb-16 transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-          <span className="label-section">Fonctionnalités</span>
-          <h2 className="font-display text-3xl md:text-4xl font-extrabold text-ink mt-4 mb-4">
-            Tout ce qu&apos;il faut pour{' '}
-            <span className="text-gradient">distribuer mieux</span>
-          </h2>
-          <p className="max-w-xl mx-auto text-ink-3 leading-relaxed">
-            Une plateforme pensée pour les professionnels de la gestion de patrimoine
-            et de l&apos;assurance-vie.
-          </p>
+    <section
+      style={{
+        background: 'var(--redesign-white)',
+        padding: '100px 32px',
+        borderBottom: '1px solid var(--redesign-border)',
+      }}
+    >
+      <div style={{ maxWidth: 1080, margin: '0 auto' }}>
+        <div
+          className="tag-eyebrow"
+          style={{
+            marginBottom: 48,
+            justifyContent: 'center',
+            display: 'flex',
+          }}
+        >
+          Émetteurs partenaires
         </div>
-
-        <div className="grid md:grid-cols-3 gap-6">
-          {features.map((f, i) => (
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 24,
+          }}
+        >
+          {ISSUERS.map((iss) => (
             <div
-              key={f.title}
-              className={`group relative bg-white rounded-2xl p-8 shadow-card hover:shadow-card-hover border border-border/50 hover:border-violet-pale transition-all duration-500 hover:-translate-y-1 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
-              style={{ transitionDelay: `${200 + i * 150}ms` }}
+              key={iss.id}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                opacity: 0.55,
+              }}
+            >
+              <IssuerBadge id={iss.id} size={22} />
+              <span
+                style={{
+                  fontSize: 14,
+                  fontWeight: 500,
+                  color: 'var(--redesign-text-primary)',
+                }}
+              >
+                {iss.name}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Process ─────────────────────────────────────────────────────────────────
+function ProcessSection() {
+  const steps = [
+    {
+      n: '01',
+      t: 'Onboarding en 10 minutes',
+      b: "Vérification ORIAS et AMF automatisée dès l'inscription.",
+    },
+    {
+      n: '02',
+      t: 'Comparez en temps réel',
+      b: 'Un RFQ envoyé à cinq émetteurs simultanément.',
+    },
+    {
+      n: '03',
+      t: 'Distribuez, suivez',
+      b: 'Souscription et commissions consolidées dans un tableau de bord unifié.',
+    },
+  ];
+  return (
+    <section
+      style={{
+        background: 'var(--redesign-off-white)',
+        padding: '140px 32px',
+        borderBottom: '1px solid var(--redesign-border)',
+      }}
+    >
+      <div style={{ maxWidth: 1180, margin: '0 auto' }}>
+        <div style={{ marginBottom: 80, maxWidth: 640 }}>
+          <div className="tag-eyebrow" style={{ marginBottom: 24 }}>
+            Processus
+          </div>
+          <h2
+            className="font-display-new"
+            style={{
+              fontSize: 48,
+              fontWeight: 700,
+              margin: 0,
+              letterSpacing: '-0.025em',
+              lineHeight: 1.1,
+              color: 'var(--redesign-text-primary)',
+            }}
+          >
+            De l&apos;inscription au premier pricing, moins d&apos;une heure.
+          </h2>
+        </div>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: 64,
+          }}
+        >
+          {steps.map((s, i) => (
+            <div key={i}>
+              <div
+                className="font-mono-new"
+                style={{
+                  fontSize: 11,
+                  color: 'var(--redesign-text-tertiary)',
+                  marginBottom: 20,
+                }}
+              >
+                {s.n}
+              </div>
+              <h3
+                className="font-display-new"
+                style={{
+                  fontSize: 22,
+                  fontWeight: 600,
+                  margin: '0 0 12px',
+                  letterSpacing: '-0.015em',
+                  color: 'var(--redesign-text-primary)',
+                }}
+              >
+                {s.t}
+              </h3>
+              <p
+                style={{
+                  fontSize: 14,
+                  lineHeight: 1.65,
+                  color: 'var(--redesign-text-secondary)',
+                  margin: 0,
+                }}
+              >
+                {s.b}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Testimonials ────────────────────────────────────────────────────────────
+function TestimonialsSection() {
+  const tes = [
+    {
+      q: "Strick'in a réduit notre temps de sélection de produits de trois jours à trente minutes.",
+      name: 'Hélène Marchetti',
+      role: 'Ingénierie patrimoniale, Cabinet Véga',
+    },
+    {
+      q: 'La conformité MIF2 est enfin un non-sujet. Tout est tracé, tout est audit-ready.',
+      name: 'Thibault Roussel',
+      role: 'CGP associé, Roussel & Associés',
+    },
+    {
+      q: 'Le pricing est fiable en vingt secondes, directement utilisable en rendez-vous client.',
+      name: 'Émilie Fontaine',
+      role: 'Produits structurés, Assurances Méridien',
+    },
+  ];
+  return (
+    <section
+      style={{
+        background: 'var(--redesign-white)',
+        padding: '140px 32px',
+        borderBottom: '1px solid var(--redesign-border)',
+      }}
+    >
+      <div style={{ maxWidth: 1180, margin: '0 auto' }}>
+        <div className="tag-eyebrow" style={{ marginBottom: 48 }}>
+          Témoignages
+        </div>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: 0,
+            borderTop: '1px solid var(--redesign-border)',
+          }}
+        >
+          {tes.map((t, i) => (
+            <div
+              key={i}
+              style={{
+                padding: '40px 32px 40px 0',
+                borderRight:
+                  i < 2 ? '1px solid var(--redesign-border)' : 'none',
+                paddingLeft: i > 0 ? 32 : 0,
+              }}
+            >
+              <p
+                className="font-display-new"
+                style={{
+                  fontSize: 20,
+                  lineHeight: 1.4,
+                  color: 'var(--redesign-text-primary)',
+                  margin: '0 0 32px',
+                  letterSpacing: '-0.015em',
+                  fontWeight: 500,
+                }}
+              >
+                <span style={{ fontStyle: 'italic' }}>«</span> {t.q}{' '}
+                <span style={{ fontStyle: 'italic' }}>»</span>
+              </p>
+              <div
+                style={{
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: 'var(--redesign-text-primary)',
+                }}
+              >
+                {t.name}
+              </div>
+              <div
+                style={{
+                  fontSize: 12,
+                  color: 'var(--redesign-text-tertiary)',
+                  marginTop: 2,
+                }}
+              >
+                {t.role}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Security ────────────────────────────────────────────────────────────────
+function SecuritySection() {
+  const items = [
+    {
+      t: 'MIF2 & DDA',
+      b: 'Conformité vérifiée à chaque transaction, traçabilité complète.',
+    },
+    {
+      t: 'RGPD',
+      b: 'Hébergement en Europe. Vos données ne quittent jamais l\u2019UE.',
+    },
+    {
+      t: 'Chiffrement',
+      b: 'TLS 1.3 et chiffrement au repos. SOC 2 Type II en cours.',
+    },
+    {
+      t: '2FA',
+      b: 'Double authentification obligatoire pour les comptes institutionnels.',
+    },
+  ];
+  return (
+    <section
+      style={{
+        background: 'var(--redesign-off-white)',
+        padding: '140px 32px',
+        borderBottom: '1px solid var(--redesign-border)',
+      }}
+    >
+      <div style={{ maxWidth: 1180, margin: '0 auto' }}>
+        <div style={{ marginBottom: 64, maxWidth: 640 }}>
+          <div className="tag-eyebrow" style={{ marginBottom: 24 }}>
+            Sécurité
+          </div>
+          <h2
+            className="font-display-new"
+            style={{
+              fontSize: 48,
+              fontWeight: 700,
+              margin: 0,
+              letterSpacing: '-0.025em',
+              lineHeight: 1.1,
+              color: 'var(--redesign-text-primary)',
+            }}
+          >
+            Conçu pour les professionnels régulés.
+          </h2>
+        </div>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: 0,
+            borderTop: '1px solid var(--redesign-border)',
+          }}
+        >
+          {items.map((it, i) => (
+            <div
+              key={i}
+              style={{
+                padding: '32px 24px 32px 0',
+                borderRight:
+                  i < 3 ? '1px solid var(--redesign-border)' : 'none',
+                paddingLeft: i > 0 ? 24 : 0,
+              }}
             >
               <div
-                className={`w-12 h-12 rounded-xl bg-gradient-to-br ${f.gradient} flex items-center justify-center mb-5 shadow-violet/20 shadow-md group-hover:scale-110 transition-transform duration-300`}
+                className="font-mono-new"
+                style={{
+                  fontSize: 11,
+                  color: 'var(--redesign-text-tertiary)',
+                  marginBottom: 14,
+                }}
               >
-                <f.icon className="w-5 h-5 text-white" strokeWidth={2.2} />
+                {String(i + 1).padStart(2, '0')}
               </div>
-              <h3 className="font-display text-lg font-bold text-ink mb-2">{f.title}</h3>
-              <p className="text-sm text-ink-3 leading-relaxed">{f.description}</p>
-              <div className="absolute bottom-0 left-6 right-6 h-[2px] rounded-full bg-gradient-to-r from-violet via-cobalt-light to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ─── Stats Section (animated counters on scroll) ───────────────────────────
-
-function StatsSection() {
-  const { ref, visible } = useScrollReveal<HTMLElement>();
-  const s0 = useCounter(Math.round(stats[0].value * 10), 1500, visible);
-  const s1 = useCounter(stats[1].value, 1500, visible);
-  const s2 = useCounter(stats[2].value, 1500, visible);
-  const s3 = useCounter(Math.round(stats[3].value * 10), 1500, visible);
-  const statValues = [
-    `${(s0 / 10).toFixed(1).replace('.', ',')}${stats[0].suffix}`,
-    `${s1}${stats[1].suffix}`,
-    `${s2}`,
-    `${(s3 / 10).toFixed(1).replace('.', ',')}${stats[3].suffix}`,
-  ];
-
-  return (
-    <section ref={ref} className="py-16 bg-gradient-to-r from-violet/[0.03] via-cobalt/[0.02] to-violet/[0.03]">
-      <div className="max-w-container mx-auto px-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-          {stats.map((s, i) => (
-            <div
-              key={s.label}
-              className={`flex flex-col items-center text-center transition-all duration-600 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}
-              style={{ transitionDelay: `${i * 100}ms` }}
-            >
-              <div className="w-10 h-10 rounded-xl bg-violet/[0.08] flex items-center justify-center mb-3">
-                <s.icon className="w-5 h-5 text-violet" strokeWidth={2} />
-              </div>
-              <span className="font-display text-3xl md:text-4xl font-extrabold text-ink tabular-nums">
-                {statValues[i]}
-              </span>
-              <span className="text-xs text-ink-3 font-medium mt-1">{s.label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ─── Issuers Section ───────────────────────────────────────────────────────
-
-function IssuersSection() {
-  const { ref, visible } = useScrollReveal<HTMLElement>();
-  return (
-    <section ref={ref} className="py-12 border-y border-border/60 bg-white">
-      <div className="max-w-container mx-auto px-6">
-        <p className={`text-center text-[10px] uppercase tracking-[0.3em] text-ink-4 font-semibold mb-6 transition-all duration-500 ${visible ? 'opacity-100' : 'opacity-0'}`}>
-          Émetteurs connectés
-        </p>
-        <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
-          {issuers.map((name, i) => (
-            <span
-              key={name}
-              className={`font-display text-lg md:text-xl font-bold text-ink-3/40 hover:text-violet transition-all duration-500 cursor-default ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
-              style={{ transitionDelay: `${i * 80}ms` }}
-            >
-              {name}
-            </span>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ─── CTA Section ───────────────────────────────────────────────────────────
-
-function CtaSection() {
-  const { ref, visible } = useScrollReveal<HTMLElement>();
-  return (
-    <section ref={ref} className="relative overflow-hidden bg-ink py-20 md:py-28 px-6">
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-violet/20 blur-[120px] rounded-full" />
-      </div>
-      <div className={`relative z-10 max-w-2xl mx-auto text-center transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-        <h2 className="font-display text-3xl md:text-4xl font-extrabold text-white mb-4 leading-tight">
-          Prêt à transformer
-          <br />
-          votre distribution ?
-        </h2>
-        <p className="text-white/50 mb-10 leading-relaxed">
-          Rejoignez les CGP et compagnies qui utilisent d&eacute;j&agrave; Strick&apos;in pour
-          sourcer, pricer et souscrire leurs produits structur&eacute;s.
-        </p>
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-          <Link
-            href="/login"
-            className="group relative inline-flex items-center gap-2.5 px-8 py-3.5 rounded-xl bg-white text-violet font-display font-bold text-sm tracking-wide shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-200 overflow-hidden"
-          >
-            <span className="absolute inset-0 -translate-x-full animate-[shimmer_3s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-violet/10 to-transparent" />
-            <span className="relative">Essai gratuit 30 jours</span>
-            <ArrowRight className="relative w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-          </Link>
-          <Link
-            href="/demo"
-            className="group inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-white/5 border border-white/20 text-white font-display font-bold text-sm tracking-wide hover:bg-white/10 hover:border-white/35 transition-all duration-200"
-          >
-            <PlayCircle className="w-4 h-4" />
-            Essayer la d&eacute;mo
-          </Link>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ─── How It Works Section ─────────────────────────────────────────────────
-
-const howItWorksSteps = [
-  {
-    num: 1,
-    icon: UserPlus,
-    title: 'Connectez-vous',
-    description:
-      'Créez votre compte CGP et complétez votre onboarding réglementaire en quelques minutes.',
-  },
-  {
-    num: 2,
-    icon: Search,
-    title: 'Sourcez les produits',
-    description:
-      'Parcourez le catalogue, comparez les produits et envoyez des RFQ à 5+ émetteurs simultanément.',
-  },
-  {
-    num: 3,
-    icon: TrendingUp,
-    title: 'Distribuez',
-    description:
-      'Suivez vos engagements, commissions et portfolio en temps réel depuis un tableau de bord unique.',
-  },
-];
-
-function HowItWorksSection() {
-  const { ref, visible } = useScrollReveal<HTMLElement>();
-  return (
-    <section ref={ref} className="py-24 md:py-32 px-6 bg-white">
-      <div className="max-w-container mx-auto">
-        <div className={`text-center mb-16 transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-          <span className="label-section">Processus</span>
-          <h2 className="font-display text-3xl md:text-4xl font-extrabold text-ink mt-4 mb-4">
-            Comment &ccedil;a{' '}
-            <span className="text-gradient">marche</span>
-          </h2>
-          <p className="max-w-xl mx-auto text-ink-3 leading-relaxed">
-            Trois &eacute;tapes simples pour commencer &agrave; distribuer des produits structur&eacute;s.
-          </p>
-        </div>
-
-        <div className="relative grid md:grid-cols-3 gap-8 md:gap-12">
-          {/* Connecting dotted lines (desktop only) */}
-          <div className="hidden md:block absolute top-16 left-[calc(33.33%_-_16px)] right-[calc(33.33%_-_16px)] h-0 border-t-2 border-dashed border-violet/20 pointer-events-none" />
-
-          {howItWorksSteps.map((step, i) => (
-            <div
-              key={step.num}
-              className={`relative flex flex-col items-center text-center transition-all duration-600 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
-              style={{ transitionDelay: `${200 + i * 200}ms` }}
-            >
-              {/* Numbered circle */}
-              <div className="relative z-10 w-14 h-14 rounded-full bg-gradient-to-br from-violet to-cobalt flex items-center justify-center shadow-lg shadow-violet/20 mb-6">
-                <span className="font-display text-lg font-extrabold text-white">{step.num}</span>
-              </div>
-
-              {/* Card */}
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-border/50 shadow-card w-full">
-                <div className="w-10 h-10 rounded-xl bg-violet/[0.08] flex items-center justify-center mx-auto mb-4">
-                  <step.icon className="w-5 h-5 text-violet" strokeWidth={2} />
-                </div>
-                <h3 className="font-display text-lg font-bold text-ink mb-2">{step.title}</h3>
-                <p className="text-sm text-ink-3 leading-relaxed">{step.description}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ─── Testimonials Section ─────────────────────────────────────────────────
-
-const testimonials = [
-  {
-    quote:
-      "Strick'in a divisé par 3 le temps que je passe à sourcer des produits structurés. L'interface est claire et les RFQ multi-émetteurs sont un game changer.",
-    name: 'Thomas R.',
-    role: 'CGP indépendant',
-    company: 'Paris',
-  },
-  {
-    quote:
-      "La plateforme nous donne une visibilité inégalée sur le comportement des distributeurs et le remplissage de nos enveloppes.",
-    name: 'Sophie M.',
-    role: 'Directrice distribution',
-    company: 'Generali',
-  },
-  {
-    quote:
-      "Le pricing engine et les recommandations IA m'aident à trouver les meilleurs produits pour mes clients en quelques clics.",
-    name: 'Marc D.',
-    role: 'Associé',
-    company: 'Cabinet Patrimoine & Conseil',
-  },
-];
-
-function TestimonialsSection() {
-  const { ref, visible } = useScrollReveal<HTMLElement>();
-  return (
-    <section ref={ref} className="py-24 md:py-32 px-6 bg-gradient-to-b from-white to-violet/[0.02]">
-      <div className="max-w-container mx-auto">
-        <div className={`text-center mb-16 transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-          <span className="label-section">T&eacute;moignages</span>
-          <h2 className="font-display text-3xl md:text-4xl font-extrabold text-ink mt-4 mb-4">
-            Ce que disent{' '}
-            <span className="text-gradient">nos utilisateurs</span>
-          </h2>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-6">
-          {testimonials.map((t, i) => (
-            <div
-              key={t.name}
-              className={`relative bg-white rounded-2xl p-8 shadow-card border border-border/50 border-l-4 border-l-violet transition-all duration-600 hover:-translate-y-1 hover:shadow-card-hover ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
-              style={{ transitionDelay: `${200 + i * 150}ms` }}
-            >
-              <Quote className="w-8 h-8 text-violet/20 mb-4" />
-              <p className="text-sm text-ink-3 leading-relaxed italic mb-6">
-                &ldquo;{t.quote}&rdquo;
+              <h3
+                style={{
+                  fontSize: 14,
+                  fontWeight: 600,
+                  margin: '0 0 8px',
+                  color: 'var(--redesign-text-primary)',
+                }}
+              >
+                {it.t}
+              </h3>
+              <p
+                style={{
+                  fontSize: 13,
+                  color: 'var(--redesign-text-secondary)',
+                  margin: 0,
+                  lineHeight: 1.55,
+                }}
+              >
+                {it.b}
               </p>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet to-cobalt flex items-center justify-center">
-                  <span className="font-display text-xs font-bold text-white">
-                    {t.name.split(' ').map((n) => n[0]).join('')}
-                  </span>
-                </div>
-                <div>
-                  <p className="font-display text-sm font-bold text-ink">{t.name}</p>
-                  <p className="text-xs text-ink-3">{t.role}, {t.company}</p>
-                </div>
-              </div>
             </div>
           ))}
         </div>
@@ -641,63 +1480,333 @@ function TestimonialsSection() {
   );
 }
 
-// ─── Compliance / Trust Section ───────────────────────────────────────────
-
-const trustBadges = [
-  {
-    icon: Shield,
-    title: 'MIF II / DDA',
-    description: 'Conforme aux directives européennes sur la distribution.',
-  },
-  {
-    icon: Lock,
-    title: 'RGPD',
-    description: 'Protection des données personnelles garantie.',
-  },
-  {
-    icon: Server,
-    title: 'Données chiffrées',
-    description: 'Chiffrement AES-256 au repos et TLS 1.3 en transit.',
-  },
-  {
-    icon: CheckCircle,
-    title: 'Hébergé en Europe',
-    description: 'Infrastructure cloud souveraine localisée en France.',
-  },
-];
-
-function ComplianceSection() {
-  const { ref, visible } = useScrollReveal<HTMLElement>();
+// ─── FAQ ─────────────────────────────────────────────────────────────────────
+function FaqSection() {
+  const [open, setOpen] = useState<number>(0);
+  const faqs = [
+    {
+      q: "Combien de temps dure l'onboarding ?",
+      a: 'Dix minutes en moyenne. Vous renseignez vos numéros ORIAS et AMF, nous vérifions automatiquement leur validité, puis vous signez la convention distributeur. Vous pouvez pricer dès la validation.',
+    },
+    {
+      q: 'Quels types de produits sont disponibles ?',
+      a: 'Autocall, Phoenix Mémoire, Reverse Convertible, Capital Protégé, Bonus Cappé, et certificats indexés. Plus de cent fiches actives en permanence, sur plus de trente sous-jacents.',
+    },
+    {
+      q: 'Les émetteurs voient-ils mes clients ?',
+      a: "Non, jamais. Seuls votre cabinet et son SIREN sont transmis à l'émetteur. L'identité du client souscripteur ne quitte jamais votre CRM.",
+    },
+    {
+      q: 'Comment sont calculées les commissions ?',
+      a: "Les commissions d'apport et de suivi sont négociées par produit avec chaque émetteur. Strick'in prélève une commission plateforme forfaitaire par transaction, visible avant souscription.",
+    },
+    {
+      q: 'Quelle est la conformité réglementaire ?',
+      a: "Strick'in est enregistré ORIAS comme courtier intermédiaire, et détient le statut PSAN auprès de l'AMF. Tous les flux MIF2 (cible client, rémunération, adéquation) sont tracés et exportables.",
+    },
+    {
+      q: 'Puis-je tester avant de m\u2019engager ?',
+      a: "Oui. Un environnement bac à sable est accessible trente jours, avec toutes les fonctionnalités et de faux produits. Aucun engagement, aucune carte bancaire.",
+    },
+  ];
   return (
-    <section ref={ref} className="py-24 md:py-28 px-6 bg-gradient-to-r from-violet/[0.03] via-cobalt/[0.02] to-violet/[0.03]">
-      <div className="max-w-container mx-auto">
-        <div className={`text-center mb-14 transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-          <span className="label-section">Confiance</span>
-          <h2 className="font-display text-3xl md:text-4xl font-extrabold text-ink mt-4 mb-4">
-            S&eacute;curit&eacute; &amp;{' '}
-            <span className="text-gradient">Conformit&eacute;</span>
-          </h2>
-          <p className="max-w-xl mx-auto text-ink-3 leading-relaxed">
-            Vos donn&eacute;es et celles de vos clients sont prot&eacute;g&eacute;es par les standards les plus exigeants.
-          </p>
+    <section
+      style={{
+        background: 'var(--redesign-off-white)',
+        padding: '140px 32px',
+        borderBottom: '1px solid var(--redesign-border)',
+      }}
+    >
+      <div style={{ maxWidth: 820, margin: '0 auto' }}>
+        <div className="tag-eyebrow" style={{ marginBottom: 32 }}>
+          FAQ
         </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {trustBadges.map((badge, i) => (
+        <h2
+          className="font-display-new"
+          style={{
+            fontSize: 48,
+            fontWeight: 700,
+            margin: '0 0 56px',
+            letterSpacing: '-0.025em',
+            lineHeight: 1.1,
+            color: 'var(--redesign-text-primary)',
+          }}
+        >
+          Questions fréquentes.
+        </h2>
+        <div style={{ borderTop: '1px solid var(--redesign-border)' }}>
+          {faqs.map((f, i) => (
             <div
-              key={badge.title}
-              className={`flex flex-col items-center text-center bg-white rounded-2xl p-6 shadow-card border border-border/50 transition-all duration-600 hover:-translate-y-1 hover:shadow-card-hover ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
-              style={{ transitionDelay: `${i * 100}ms` }}
+              key={i}
+              style={{
+                borderBottom: '1px solid var(--redesign-border)',
+              }}
             >
-              <div className="w-12 h-12 rounded-xl bg-violet/[0.08] flex items-center justify-center mb-4">
-                <badge.icon className="w-6 h-6 text-violet" strokeWidth={1.8} />
-              </div>
-              <h3 className="font-display text-sm font-bold text-ink mb-1.5">{badge.title}</h3>
-              <p className="text-xs text-ink-3 leading-relaxed">{badge.description}</p>
+              <button
+                onClick={() => setOpen(open === i ? -1 : i)}
+                style={{
+                  width: '100%',
+                  padding: '24px 0',
+                  background: 'transparent',
+                  border: 'none',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  fontFamily: 'inherit',
+                }}
+              >
+                <span
+                  className="font-display-new"
+                  style={{
+                    fontSize: 18,
+                    fontWeight: 500,
+                    color: 'var(--redesign-text-primary)',
+                    letterSpacing: '-0.015em',
+                  }}
+                >
+                  {f.q}
+                </span>
+                <span
+                  style={{
+                    fontSize: 20,
+                    color: 'var(--redesign-text-tertiary)',
+                    transform: open === i ? 'rotate(45deg)' : 'none',
+                    transition: 'transform 200ms',
+                    display: 'inline-block',
+                    width: 20,
+                    textAlign: 'center',
+                  }}
+                >
+                  +
+                </span>
+              </button>
+              {open === i && (
+                <div
+                  style={{ paddingBottom: 24, paddingRight: 48 }}
+                  className="animate-fade-up"
+                >
+                  <p
+                    style={{
+                      fontSize: 15,
+                      lineHeight: 1.65,
+                      color: 'var(--redesign-text-secondary)',
+                      margin: 0,
+                    }}
+                  >
+                    {f.a}
+                  </p>
+                </div>
+              )}
             </div>
           ))}
         </div>
       </div>
     </section>
+  );
+}
+
+// ─── Final CTA ───────────────────────────────────────────────────────────────
+function FinalCTA() {
+  return (
+    <section
+      style={{
+        background: 'var(--redesign-white)',
+        padding: '160px 32px',
+        borderBottom: '1px solid var(--redesign-border)',
+      }}
+    >
+      <div style={{ maxWidth: 720, margin: '0 auto', textAlign: 'center' }}>
+        <h2
+          className="font-display-new"
+          style={{
+            fontSize: 56,
+            fontWeight: 700,
+            margin: '0 0 24px',
+            letterSpacing: '-0.03em',
+            lineHeight: 1.05,
+            color: 'var(--redesign-text-primary)',
+          }}
+        >
+          Prêt à essayer ?
+        </h2>
+        <p
+          style={{
+            fontSize: 17,
+            color: 'var(--redesign-text-secondary)',
+            margin: '0 auto 40px',
+            maxWidth: 480,
+          }}
+        >
+          Trente jours d&apos;essai. Sans carte bancaire. Sans engagement.
+        </p>
+        <Link
+          href="/login"
+          className="btn-new btn-primary-new btn-lg-new"
+          style={{ padding: '0 32px' }}
+        >
+          Demander un accès →
+        </Link>
+      </div>
+    </section>
+  );
+}
+
+// ─── Footer ──────────────────────────────────────────────────────────────────
+function LandingFooter() {
+  const cols: { t: string; l: { label: string; href: string }[] }[] = [
+    {
+      t: 'Produit',
+      l: [
+        { label: 'Catalogue', href: '#' },
+        { label: 'Pricing', href: '#' },
+        { label: 'RFQ', href: '#' },
+        { label: 'Research', href: '#' },
+      ],
+    },
+    {
+      t: 'Entreprise',
+      l: [
+        { label: 'À propos', href: '#' },
+        { label: 'Blog', href: '#' },
+        { label: 'Carrières', href: '#' },
+        { label: 'Contact', href: '#' },
+      ],
+    },
+    {
+      t: 'Légal',
+      l: [
+        { label: 'CGU', href: '/cgu' },
+        { label: 'Confidentialité', href: '/confidentialite' },
+        { label: 'Mentions', href: '/mentions-legales' },
+        { label: 'Sécurité', href: '#' },
+      ],
+    },
+  ];
+  return (
+    <footer
+      style={{
+        background: 'var(--redesign-white)',
+        padding: '64px 32px 32px',
+      }}
+    >
+      <div
+        style={{
+          maxWidth: 1180,
+          margin: '0 auto',
+          display: 'grid',
+          gridTemplateColumns: '2fr 1fr 1fr 1fr',
+          gap: 48,
+        }}
+      >
+        <div>
+          <div
+            className="font-display-new"
+            style={{
+              fontSize: 19,
+              fontWeight: 700,
+              letterSpacing: '-0.025em',
+              color: 'var(--redesign-text-primary)',
+            }}
+          >
+            Strick&apos;in
+          </div>
+          <p
+            style={{
+              fontSize: 13,
+              lineHeight: 1.55,
+              margin: '16px 0 0',
+              maxWidth: 280,
+              color: 'var(--redesign-text-secondary)',
+            }}
+          >
+            Marketplace B2B des produits structurés.
+          </p>
+        </div>
+        {cols.map((c, i) => (
+          <div key={i}>
+            <div
+              style={{
+                fontSize: 12,
+                fontWeight: 600,
+                marginBottom: 16,
+                color: 'var(--redesign-text-primary)',
+              }}
+            >
+              {c.t}
+            </div>
+            <ul
+              style={{
+                listStyle: 'none',
+                padding: 0,
+                margin: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 8,
+              }}
+            >
+              {c.l.map((l) => (
+                <li key={l.label}>
+                  <Link
+                    href={l.href}
+                    style={{
+                      fontSize: 13,
+                      color: 'var(--redesign-text-secondary)',
+                      textDecoration: 'none',
+                    }}
+                  >
+                    {l.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+      <div
+        style={{
+          maxWidth: 1180,
+          margin: '48px auto 0',
+          paddingTop: 24,
+          borderTop: '1px solid var(--redesign-border)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          fontSize: 12,
+          color: 'var(--redesign-text-tertiary)',
+        }}
+      >
+        <span>© {new Date().getFullYear()} Strick&apos;in SAS</span>
+        <span>RCS Paris 902 458 177 · ORIAS 22 004 128</span>
+      </div>
+    </footer>
+  );
+}
+
+// ─── Page ────────────────────────────────────────────────────────────────────
+export default function Home() {
+  return (
+    <div
+      style={{
+        background: 'var(--redesign-off-white)',
+        color: 'var(--redesign-text-primary)',
+        minHeight: '100vh',
+        fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
+      }}
+    >
+      <LandingNavbar />
+      <HeroSection />
+      <LandingTicker />
+      <FeaturesSection />
+      <ComparatorDemo />
+      <RolesSection />
+      <IssuersSection />
+      <ProcessSection />
+      <TestimonialsSection />
+      <SecuritySection />
+      <FaqSection />
+      <FinalCTA />
+      <LandingFooter />
+    </div>
   );
 }

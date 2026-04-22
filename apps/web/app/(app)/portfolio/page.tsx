@@ -45,6 +45,7 @@ import { formatUnderlying } from '@/lib/underlying-labels';
 import { PageHeader } from '@/components/ui/page-header';
 import { generatePortfolioReport } from '@/lib/portfolio-pdf';
 import { useAuthStore } from '@/stores/auth-store';
+import { AICommentaryButton } from '@/components/ai/AICommentaryButton';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -1770,6 +1771,24 @@ export default function PortfolioPage() {
                                   Annuler
                                 </Button>
                               )}
+                              {/* AI commentary generator — always available per row */}
+                              <AICommentaryButton
+                                variant="ghost"
+                                size="sm"
+                                iconOnly
+                                label="Générer un commentaire client"
+                                product={{
+                                  id: product?.id ?? c.productId ?? c.shelfId ?? c.id,
+                                  name: c.productName ?? product?.name ?? c.shelfId ?? 'Produit',
+                                  isin: c.isin ?? product?.isin ?? null,
+                                  payoffType: product?.payoffType ?? 'AUTOCALL_PHOENIX',
+                                  couponPct: product?.couponPct ?? null,
+                                  barrierCapPct: product?.barrierCapPct ?? null,
+                                  underlyingYahoo: product?.underlyingYahoo ?? null,
+                                  sri: product?.sri ?? null,
+                                  maturityDate: product?.maturityDate ?? null,
+                                }}
+                              />
                             </div>
                           </td>
                         </tr>

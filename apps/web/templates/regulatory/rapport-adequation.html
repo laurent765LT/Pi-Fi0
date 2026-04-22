@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<title>Rapport d'adéquation — {{clientFullName}}</title>
+<style>
+  @page { size: A4; margin: 1.8cm 2cm; }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    color: #1A0A3E;
+    background: #fff;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  body { font-size: 11px; line-height: 1.55; }
+  h1, h2, h3 { margin: 0; font-weight: 700; color: #1A0A3E; }
+  h1 { font-size: 24px; letter-spacing: -0.3px; color: #fff; }
+  h2 {
+    font-size: 14px; letter-spacing: -0.1px;
+    margin-top: 22px; margin-bottom: 8px;
+    padding-bottom: 5px; border-bottom: 1.5px solid #E6E2F3;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2::before {
+    content: ''; width: 3px; height: 14px;
+    background: linear-gradient(180deg, #3B1FA8, #5B3FD4);
+    border-radius: 2px;
+  }
+  h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: #3D2C6E;
+       margin-top: 16px; margin-bottom: 6px; }
+  p { margin: 0 0 8px; }
+  ul { margin: 4px 0 8px 18px; padding: 0; }
+  li { margin-bottom: 3px; }
+
+  .header-brand {
+    background: linear-gradient(135deg, #3B1FA8 0%, #5535C4 60%, #7B5FDC 100%);
+    color: #fff;
+    padding: 26px 30px 22px;
+    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 18px;
+  }
+  .header-brand::before {
+    content: ''; position: absolute; top: -50%; right: -10%;
+    width: 280px; height: 280px;
+    background: radial-gradient(circle, rgba(212,160,23,0.22), transparent 60%);
+    border-radius: 50%;
+  }
+  .header-brand::after {
+    content: ''; position: absolute; bottom: -40%; left: -10%;
+    width: 240px; height: 240px;
+    background: radial-gradient(circle, rgba(0,184,148,0.18), transparent 60%);
+    border-radius: 50%;
+  }
+  .brand-mark {
+    position: relative; z-index: 1;
+    display: inline-flex; align-items: center; gap: 8px;
+    font-weight: 800; font-size: 17px;
+    letter-spacing: -0.3px; margin-bottom: 14px;
+  }
+  .brand-dot { width: 7px; height: 7px; border-radius: 50%; background: #D4A017; }
+  .brand-accent { color: #D4A017; }
+  .header-title { position: relative; z-index: 1; }
+  .header-subtitle {
+    position: relative; z-index: 1;
+    font-size: 12px; color: rgba(255,255,255,0.82);
+    margin-top: 6px;
+  }
+
+  .meta-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+    margin-top: 10px;
+  }
+  .meta-card {
+    background: #F8F6FF;
+    border: 1px solid #E6E2F3;
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+  .meta-card .key {
+    font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.14em;
+    font-weight: 700; color: #7B6FA0; margin-bottom: 4px;
+  }
+  .meta-card .val { font-size: 11.5px; font-weight: 600; color: #1A0A3E; }
+
+  .profile-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;
+  }
+  .profile-card {
+    border: 1px solid #E6E2F3;
+    border-radius: 10px;
+    padding: 11px 13px;
+    background: #fff;
+  }
+  .profile-card .label {
+    font-size: 9px; text-transform: uppercase; letter-spacing: 0.14em;
+    font-weight: 700; color: #7B6FA0; margin-bottom: 3px;
+  }
+  .profile-card .value { font-size: 12px; font-weight: 700; color: #1A0A3E; }
+  .profile-card .sub { font-size: 9.5px; color: #7B6FA0; margin-top: 3px; }
+
+  .objective-pill {
+    display: inline-block; padding: 3px 10px;
+    margin: 2px 4px 2px 0;
+    border-radius: 10px;
+    background: rgba(59,31,168,0.10);
+    color: #3B1FA8;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+
+  table.products {
+    width: 100%; border-collapse: collapse; margin-top: 6px;
+  }
+  table.products thead th {
+    text-align: left;
+    font-size: 8.5px; text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-weight: 700; color: #7B6FA0;
+    padding: 8px 10px;
+    background: #F8F6FF;
+    border-bottom: 1.5px solid #E6E2F3;
+  }
+  table.products tbody td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #E6E2F3;
+    font-size: 10.5px; color: #3D2C6E;
+    vertical-align: top;
+  }
+  table.products tbody tr:nth-child(even) td { background: #FBFAFF; }
+  .prod-name { font-weight: 700; color: #1A0A3E; }
+  .prod-isin { font-family: monospace; font-size: 9.5px; color: #7B6FA0; }
+  .prod-badge {
+    display: inline-block; padding: 2px 8px;
+    border-radius: 10px; font-size: 9px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .prod-badge.phoenix { background: rgba(59,31,168,0.10); color: #3B1FA8; }
+  .prod-badge.coupon { background: rgba(91,63,212,0.10); color: #5B3FD4; }
+  .prod-badge.protected { background: rgba(0,184,148,0.12); color: #007A63; }
+  .prod-badge.rate { background: rgba(212,160,23,0.15); color: #9B7210; }
+  .prod-badge.barrier { background: rgba(232,51,74,0.12); color: #E8334A; }
+  .prod-badge.autre { background: rgba(123,111,160,0.15); color: #7B6FA0; }
+
+  .adequacy-table {
+    width: 100%; border-collapse: collapse; margin-top: 8px;
+  }
+  .adequacy-table th, .adequacy-table td {
+    padding: 7px 10px; text-align: left; font-size: 10.5px;
+    border-bottom: 1px solid #E6E2F3;
+  }
+  .adequacy-table th {
+    background: #F8F6FF; font-weight: 700; color: #3D2C6E;
+    font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .adequacy-table td.status {
+    font-weight: 700; text-align: center;
+  }
+  .adequacy-ok { color: #007A63; }
+  .adequacy-warn { color: #9B7210; }
+  .adequacy-bad { color: #E8334A; }
+
+  .conclusion-box {
+    background: linear-gradient(135deg, rgba(59,31,168,0.05) 0%, rgba(0,184,148,0.05) 100%);
+    border: 1px solid #C9BCFF;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-top: 12px;
+  }
+  .conclusion-box strong { color: #3B1FA8; }
+
+  .disclaimer {
+    margin-top: 22px;
+    padding: 12px 14px;
+    border: 1px solid #E6E2F3;
+    border-radius: 8px;
+    background: #F8F6FF;
+    font-size: 9.5px; color: #7B6FA0;
+    line-height: 1.55;
+  }
+  .disclaimer strong { color: #3D2C6E; }
+
+  .signatures {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+    margin-top: 26px; page-break-inside: avoid;
+  }
+  .sign-block {
+    border-top: 1.5px solid #3D2C6E;
+    padding-top: 12px; min-height: 100px;
+  }
+  .sign-block .role-label {
+    font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.12em;
+    font-weight: 700; color: #3D2C6E; margin-bottom: 4px;
+  }
+  .sign-block .name { font-size: 11.5px; font-weight: 600; color: #1A0A3E; }
+  .sign-block .location {
+    font-size: 9.5px; color: #7B6FA0; margin-top: 2px; font-style: italic;
+  }
+
+  .print-toolbar {
+    position: fixed; top: 16px; right: 16px; z-index: 100;
+    display: flex; gap: 8px;
+  }
+  .print-toolbar button {
+    font-family: inherit; font-size: 12px; font-weight: 600;
+    padding: 8px 14px; border-radius: 8px; border: 0; cursor: pointer;
+    color: #fff; background: linear-gradient(135deg, #3B1FA8, #5B3FD4);
+    box-shadow: 0 6px 18px rgba(59,31,168,0.3);
+  }
+  .print-toolbar button.secondary {
+    background: #fff; color: #3D2C6E;
+    border: 1px solid #E6E2F3;
+    box-shadow: 0 2px 8px rgba(26,10,62,0.08);
+  }
+
+  @page {
+    @bottom-left {
+      content: "Strick'in \2014 Rapport d'ad\u00e9quation MIF II";
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 8.5px; color: #7B6FA0;
+    }
+    @bottom-right {
+      content: "Page " counter(page) " / " counter(pages);
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 8.5px; color: #7B6FA0;
+    }
+  }
+
+  @media print {
+    .print-toolbar { display: none !important; }
+    body { font-size: 10.5px; }
+  }
+</style>
+</head>
+<body>
+  <div class="print-toolbar">
+    <button type="button" class="secondary" onclick="window.close();">Fermer</button>
+    <button type="button" onclick="window.print();">Imprimer / Enregistrer en PDF</button>
+  </div>
+
+  <header class="header-brand">
+    <div class="brand-mark">
+      <span class="brand-dot"></span>
+      Strick<span class="brand-accent">'</span>in
+    </div>
+    <div class="header-title">
+      <h1>Rapport d\u2019ad\u00e9quation MIF II</h1>
+      <p class="header-subtitle">
+        \u00c9tabli conform\u00e9ment \u00e0 l\u2019article L.533-13 du Code mon\u00e9taire et financier
+        et au R\u00e8glement d\u00e9l\u00e9gu\u00e9 (UE) 2017/565
+      </p>
+    </div>
+    <div class="meta-grid">
+      <div class="meta-card">
+        <div class="key">Client</div>
+        <div class="val">{{clientFullName}}</div>
+      </div>
+      <div class="meta-card">
+        <div class="key">Conseiller</div>
+        <div class="val">{{cgpFullName}}</div>
+      </div>
+      <div class="meta-card">
+        <div class="key">Date du rapport</div>
+        <div class="val">{{currentDate}}</div>
+      </div>
+    </div>
+  </header>
+
+  <h2>1. Situation personnelle du Client</h2>
+  <table class="adequacy-table">
+    <tr>
+      <th style="width: 32%;">\u00c9l\u00e9ment</th>
+      <th>Valeur d\u00e9clar\u00e9e</th>
+    </tr>
+    <tr><td>Nom et pr\u00e9nom</td><td>{{clientFullName}}</td></tr>
+    <tr><td>Date de naissance</td><td>{{clientBirthDate}}</td></tr>
+    <tr><td>Situation familiale</td><td>{{clientFamilySituation}}</td></tr>
+    <tr><td>Profession</td><td>{{clientProfession}}</td></tr>
+    <tr><td>Revenus annuels d\u00e9clar\u00e9s</td><td>{{clientRevenues}}</td></tr>
+  </table>
+
+  <h2>2. Profil d\u2019investisseur et capacit\u00e9 \u00e0 subir des pertes</h2>
+  <div class="profile-grid">
+    <div class="profile-card">
+      <div class="label">Connaissance des march\u00e9s</div>
+      <div class="value">{{marketKnowledgeLabel}}</div>
+      <div class="sub">Auto-\u00e9valuation conforme \u00e0 l\u2019article 314-44 RGAMF</div>
+    </div>
+    <div class="profile-card">
+      <div class="label">Exp\u00e9rience produits structur\u00e9s</div>
+      <div class="value">{{productExperienceLabel}}</div>
+      <div class="sub">D\u00e9clar\u00e9e par le Client</div>
+    </div>
+    <div class="profile-card">
+      <div class="label">Capacit\u00e9 \u00e0 subir des pertes</div>
+      <div class="value">{{lossToleranceLabel}}</div>
+      <div class="sub">Tol\u00e9rance au risque maximale accept\u00e9e</div>
+    </div>
+    <div class="profile-card">
+      <div class="label">Horizon d\u2019investissement</div>
+      <div class="value">{{investmentHorizonLabel}}</div>
+      <div class="sub">Dur\u00e9e de d\u00e9tention envisag\u00e9e</div>
+    </div>
+  </div>
+
+  <h3>Objectifs patrimoniaux prioritaires</h3>
+  <div>{{objectivesPills}}</div>
+
+  <h2>3. Produits recommand\u00e9s</h2>
+  <p>
+    Les produits suivants ont \u00e9t\u00e9 s\u00e9lectionn\u00e9s par le Conseiller apr\u00e8s analyse du
+    catalogue Strick\u2019in et mise en ad\u00e9quation avec le profil du Client&nbsp;:
+  </p>
+  <table class="products">
+    <thead>
+      <tr>
+        <th>Produit</th>
+        <th>ISIN</th>
+        <th>Payoff</th>
+        <th>SRI</th>
+        <th>Maturit\u00e9</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{productRows}}
+    </tbody>
+  </table>
+
+  <h2>4. Analyse d\u2019ad\u00e9quation</h2>
+  <table class="adequacy-table">
+    <tr>
+      <th>Crit\u00e8re d\u2019ad\u00e9quation</th>
+      <th>\u00c9valuation</th>
+      <th style="width: 18%;">Statut</th>
+    </tr>
+    <tr>
+      <td>Connaissance et exp\u00e9rience</td>
+      <td>{{knowledgeAdequacy}}</td>
+      <td class="status {{knowledgeStatusClass}}">{{knowledgeStatusLabel}}</td>
+    </tr>
+    <tr>
+      <td>Situation financi\u00e8re (revenus, patrimoine)</td>
+      <td>{{financeAdequacy}}</td>
+      <td class="status {{financeStatusClass}}">{{financeStatusLabel}}</td>
+    </tr>
+    <tr>
+      <td>Capacit\u00e9 \u00e0 subir des pertes</td>
+      <td>{{lossAdequacy}}</td>
+      <td class="status {{lossStatusClass}}">{{lossStatusLabel}}</td>
+    </tr>
+    <tr>
+      <td>Horizon d\u2019investissement</td>
+      <td>{{horizonAdequacy}}</td>
+      <td class="status {{horizonStatusClass}}">{{horizonStatusLabel}}</td>
+    </tr>
+    <tr>
+      <td>Objectifs d\u2019investissement</td>
+      <td>{{objectivesAdequacy}}</td>
+      <td class="status {{objectivesStatusClass}}">{{objectivesStatusLabel}}</td>
+    </tr>
+  </table>
+
+  <div class="conclusion-box">
+    <strong>Conclusion du Conseiller.</strong> {{adequacyConclusion}}
+  </div>
+
+  <h2>5. Risques et avertissements sp\u00e9cifiques</h2>
+  <ul>
+    <li>Les produits structur\u00e9s sont des instruments financiers complexes au sens de la
+        directive MIF II et peuvent entra\u00eener une <strong>perte en capital partielle ou totale</strong>.</li>
+    <li>Le coupon ou la prime versu\u00e9 est conditionn\u00e9 \u00e0 la performance d\u2019un ou plusieurs sous-jacents
+        et peut \u00eatre nul sur une p\u00e9riode donn\u00e9e.</li>
+    <li>Le remboursement anticip\u00e9 automatique (autocall) peut intervenir \u00e0 tout moment et
+        r\u00e9duire la dur\u00e9e effective de l\u2019investissement.</li>
+    <li>Le Client est expos\u00e9 au <strong>risque \u00e9metteur</strong> et \u00e0 la liquidit\u00e9 du march\u00e9 secondaire.</li>
+    <li>Les performances pass\u00e9es ne pr\u00e9jugent pas des performances futures.</li>
+  </ul>
+
+  <div class="disclaimer">
+    <strong>Avertissement r\u00e9glementaire (MIF II \u00b7 PRIIPs).</strong>
+    Le pr\u00e9sent rapport d\u2019ad\u00e9quation est \u00e9tabli \u00e0 partir des informations communiqu\u00e9es
+    par le Client, sous sa seule responsabilit\u00e9 et d\u00e9clar\u00e9es sinc\u00e8res et compl\u00e8tes.
+    Le Conseiller attire l\u2019attention du Client sur l\u2019importance de l\u2019exactitude de ces informations,
+    toute information erron\u00e9e \u00e9tant de nature \u00e0 remettre en cause l\u2019ad\u00e9quation des
+    recommandations formul\u00e9es. Avant toute souscription, le Client doit avoir pris
+    connaissance du Document d\u2019Informations Cl\u00e9s (DIC / KID) et du prospectus de
+    chaque produit. Strick\u2019in n\u2019est pas l\u2019\u00e9metteur des produits pr\u00e9sent\u00e9s et ne garantit
+    ni la performance ni le remboursement du capital investi.
+  </div>
+
+  <div class="signatures">
+    <div class="sign-block">
+      <div class="role-label">Le Conseiller</div>
+      <div class="name">{{cgpFullName}}</div>
+      <div class="location">Fait \u00e0 {{signatureCity}}, le {{currentDate}}</div>
+    </div>
+    <div class="sign-block">
+      <div class="role-label">Le Client</div>
+      <div class="name">{{clientFullName}}</div>
+      <div class="location">Signature pr\u00e9c\u00e9d\u00e9e de la mention \u00ab lu et approuv\u00e9 \u00bb</div>
+    </div>
+  </div>
+</body>
+</html>

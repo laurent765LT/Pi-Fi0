@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<title>Document d'Entrée en Relation — {{clientFullName}}</title>
+<style>
+  @page { size: A4; margin: 1.8cm 2cm; }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    color: #1A0A3E;
+    background: #fff;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  body { font-size: 11px; line-height: 1.55; }
+  h1, h2, h3 { margin: 0; font-weight: 700; color: #1A0A3E; }
+  h1 { font-size: 22px; letter-spacing: -0.3px; color: #fff; }
+  h2 {
+    font-size: 13.5px; letter-spacing: -0.1px;
+    margin-top: 20px; margin-bottom: 7px;
+    padding-bottom: 5px; border-bottom: 1.5px solid #E6E2F3;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2::before {
+    content: ''; width: 3px; height: 14px;
+    background: linear-gradient(180deg, #3B1FA8, #5B3FD4);
+    border-radius: 2px;
+  }
+  h3 { font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: #3D2C6E;
+       margin-top: 12px; margin-bottom: 5px; }
+  p { margin: 0 0 6px; }
+  ul { margin: 4px 0 8px 18px; padding: 0; }
+  li { margin-bottom: 3px; }
+
+  .header-brand {
+    background: linear-gradient(135deg, #3B1FA8 0%, #5535C4 60%, #7B5FDC 100%);
+    color: #fff;
+    padding: 24px 28px 20px;
+    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .header-brand::before {
+    content: ''; position: absolute; top: -50%; right: -10%;
+    width: 260px; height: 260px;
+    background: radial-gradient(circle, rgba(212,160,23,0.22), transparent 60%);
+    border-radius: 50%;
+  }
+  .brand-mark {
+    position: relative; z-index: 1;
+    display: inline-flex; align-items: center; gap: 8px;
+    font-weight: 800; font-size: 16px;
+    letter-spacing: -0.3px; margin-bottom: 12px;
+  }
+  .brand-dot { width: 7px; height: 7px; border-radius: 50%; background: #D4A017; }
+  .brand-accent { color: #D4A017; }
+  .header-title { position: relative; z-index: 1; }
+  .header-subtitle {
+    position: relative; z-index: 1;
+    font-size: 12px; color: rgba(255,255,255,0.82);
+    margin-top: 6px;
+  }
+
+  .identity-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    margin-top: 6px; margin-bottom: 6px;
+  }
+  .identity-card {
+    background: #F8F6FF;
+    border: 1px solid #E6E2F3;
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+  .identity-card .key {
+    font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.14em;
+    font-weight: 700; color: #7B6FA0; margin-bottom: 4px;
+  }
+  .identity-card .val { font-size: 11px; font-weight: 600; color: #1A0A3E; }
+
+  .info-table {
+    width: 100%; border-collapse: collapse;
+    margin: 4px 0 6px;
+  }
+  .info-table td {
+    padding: 5px 8px;
+    border-bottom: 1px solid #F0EEF8;
+    font-size: 10.5px;
+    color: #3D2C6E;
+    vertical-align: top;
+  }
+  .info-table td.label {
+    width: 42%;
+    font-weight: 600;
+    color: #7B6FA0;
+    font-size: 9.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .orias-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #EDE8FF; color: #3B1FA8;
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-weight: 700; font-size: 10px;
+    letter-spacing: 0.06em;
+  }
+
+  .reg-box {
+    background: #F8F6FF;
+    border-left: 3px solid #3B1FA8;
+    border-radius: 0 8px 8px 0;
+    padding: 9px 12px;
+    margin: 6px 0 10px;
+    font-size: 10.5px;
+  }
+  .reg-box strong { color: #3B1FA8; }
+
+  .authority-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;
+    margin: 6px 0;
+  }
+  .authority-card {
+    border: 1px solid #E6E2F3;
+    border-radius: 8px;
+    padding: 9px 11px;
+    background: #fff;
+  }
+  .authority-card .title {
+    font-weight: 700; color: #1A0A3E;
+    font-size: 10.5px; margin-bottom: 2px;
+  }
+  .authority-card .addr { color: #7B6FA0; font-size: 9.5px; }
+
+  .acknowledgement {
+    border: 1.5px dashed #CCC8EA;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-top: 20px;
+    background: #FAFAF8;
+  }
+  .acknowledgement strong { color: #3B1FA8; }
+
+  .signatures {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+    margin-top: 24px; page-break-inside: avoid;
+  }
+  .sign-block {
+    border-top: 1.5px solid #3D2C6E;
+    padding-top: 10px;
+    min-height: 100px;
+  }
+  .sign-block .role-label {
+    font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.12em;
+    font-weight: 700; color: #3D2C6E; margin-bottom: 4px;
+  }
+  .sign-block .name { font-size: 11.5px; font-weight: 600; color: #1A0A3E; }
+  .sign-block .location {
+    font-size: 9.5px; color: #7B6FA0; margin-top: 2px; font-style: italic;
+  }
+
+  .print-toolbar {
+    position: fixed; top: 16px; right: 16px; z-index: 100;
+    display: flex; gap: 8px;
+  }
+  .print-toolbar button {
+    font-family: inherit; font-size: 12px; font-weight: 600;
+    padding: 8px 14px; border-radius: 8px; border: 0; cursor: pointer;
+    color: #fff; background: linear-gradient(135deg, #3B1FA8, #5B3FD4);
+    box-shadow: 0 6px 18px rgba(59,31,168,0.3);
+  }
+  .print-toolbar button.secondary {
+    background: #fff; color: #3D2C6E;
+    border: 1px solid #E6E2F3;
+    box-shadow: 0 2px 8px rgba(26,10,62,0.08);
+  }
+
+  @page {
+    @bottom-left {
+      content: "Strick'in \2014 DER confidentiel";
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 8.5px; color: #7B6FA0;
+    }
+    @bottom-right {
+      content: "Page " counter(page) " / " counter(pages);
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 8.5px; color: #7B6FA0;
+    }
+  }
+
+  @media print {
+    .print-toolbar { display: none !important; }
+    body { font-size: 10.5px; }
+  }
+</style>
+</head>
+<body>
+  <div class="print-toolbar">
+    <button type="button" class="secondary" onclick="window.close();">Fermer</button>
+    <button type="button" onclick="window.print();">Imprimer / Enregistrer en PDF</button>
+  </div>
+
+  <header class="header-brand">
+    <div class="brand-mark">
+      <span class="brand-dot"></span>
+      Strick<span class="brand-accent">'</span>in
+    </div>
+    <div class="header-title">
+      <h1>Document d\u2019Entr\u00e9e en Relation</h1>
+      <p class="header-subtitle">
+        Information pr\u00e9alable pr\u00e9vue par les articles 325-3 et suivants du R\u00e8glement
+        g\u00e9n\u00e9ral de l\u2019AMF et R.519-20 du Code mon\u00e9taire et financier
+      </p>
+    </div>
+  </header>
+
+  <h2>1. Identification du cabinet</h2>
+  <div class="identity-grid">
+    <div class="identity-card">
+      <div class="key">Raison sociale</div>
+      <div class="val">{{cgpCompany}}</div>
+    </div>
+    <div class="identity-card">
+      <div class="key">Conseiller r\u00e9f\u00e9rent</div>
+      <div class="val">{{cgpFullName}}</div>
+    </div>
+    <div class="identity-card">
+      <div class="key">Adresse professionnelle</div>
+      <div class="val">{{cgpAddress}}</div>
+    </div>
+    <div class="identity-card">
+      <div class="key">Contact</div>
+      <div class="val">{{cgpEmail}}<br />{{cgpPhone}}</div>
+    </div>
+  </div>
+  <p>
+    Immatricul\u00e9 au Registre unique des interm\u00e9diaires ORIAS
+    <span class="orias-chip">ORIAS n\u00b0 {{cgpOriasNumber}}</span>
+    (v\u00e9rifiable sur <strong>www.orias.fr</strong>).
+  </p>
+
+  <h2>2. Statuts et activit\u00e9s r\u00e9glement\u00e9es</h2>
+  <div class="reg-box">
+    Le cabinet exerce les activit\u00e9s r\u00e9glement\u00e9es suivantes au titre de son immatriculation
+    ORIAS&nbsp;:
+  </div>
+  <table class="info-table">
+    <tr>
+      <td class="label">Conseiller en Investissement Financier (CIF)</td>
+      <td>Enregistr\u00e9 aupr\u00e8s de l\u2019association <strong>{{cgpCifAssociation}}</strong>,
+          association professionnelle agr\u00e9\u00e9e par l\u2019AMF.</td>
+    </tr>
+    <tr>
+      <td class="label">Courtier en Op\u00e9rations de Banque et Services de Paiement (IOBSP)</td>
+      <td>Cat\u00e9gorie {{cgpIobspCategory}}. Contr\u00f4le de l\u2019ACPR.</td>
+    </tr>
+    <tr>
+      <td class="label">Courtier en assurance (COA)</td>
+      <td>{{cgpCoaStatus}}</td>
+    </tr>
+    <tr>
+      <td class="label">Responsabilit\u00e9 Civile Professionnelle</td>
+      <td>Police n\u00b0 {{cgpRcpNumber}} \u2014 {{cgpRcpInsurer}}</td>
+    </tr>
+    <tr>
+      <td class="label">Garantie financi\u00e8re</td>
+      <td>{{cgpFinancialGuarantee}}</td>
+    </tr>
+  </table>
+
+  <h2>3. Autorit\u00e9s de tutelle</h2>
+  <div class="authority-grid">
+    <div class="authority-card">
+      <div class="title">AMF \u2014 Autorit\u00e9 des March\u00e9s Financiers</div>
+      <div class="addr">17 place de la Bourse, 75082 Paris Cedex 02<br />www.amf-france.org</div>
+    </div>
+    <div class="authority-card">
+      <div class="title">ACPR \u2014 Autorit\u00e9 de Contr\u00f4le Prudentiel et de R\u00e9solution</div>
+      <div class="addr">4 place de Budapest, 75436 Paris Cedex 09<br />acpr.banque-france.fr</div>
+    </div>
+    <div class="authority-card">
+      <div class="title">ORIAS \u2014 Registre des interm\u00e9diaires</div>
+      <div class="addr">1 rue Jules Lefebvre, 75311 Paris Cedex 09<br />www.orias.fr</div>
+    </div>
+    <div class="authority-card">
+      <div class="title">CNIL \u2014 Commission Nationale de l\u2019Informatique et des Libert\u00e9s</div>
+      <div class="addr">3 place de Fontenoy, 75007 Paris<br />www.cnil.fr</div>
+    </div>
+  </div>
+
+  <h2>4. Modes de r\u00e9mun\u00e9ration</h2>
+  <p>
+    Le cabinet per\u00e7oit principalement des commissions vers\u00e9es par les partenaires
+    producteurs lors de la souscription ou du maintien d\u2019un contrat. Des honoraires
+    de conseil peuvent \u00eatre factur\u00e9s sur devis pr\u00e9alable accept\u00e9 par le Client.
+    Le d\u00e9tail des r\u00e9mun\u00e9rations per\u00e7ues au titre d\u2019une op\u00e9ration est communiqu\u00e9 au Client
+    avant la souscription.
+  </p>
+
+  <h2>5. Conflits d\u2019int\u00e9r\u00eats</h2>
+  <p>
+    Le cabinet met en \u0153uvre une politique de pr\u00e9vention, d\u2019identification et de
+    gestion des conflits d\u2019int\u00e9r\u00eats conforme aux articles 325-8 \u00e0 325-12 du R\u00e8glement
+    g\u00e9n\u00e9ral de l\u2019AMF. Tout conflit d\u2019int\u00e9r\u00eat potentiel susceptible d\u2019affecter la
+    qualit\u00e9 du conseil rendu est r\u00e9v\u00e9l\u00e9 au Client avant la formulation de toute
+    recommandation.
+  </p>
+
+  <h2>6. Traitement des r\u00e9clamations &amp; m\u00e9diation</h2>
+  <p>
+    Toute r\u00e9clamation doit \u00eatre formul\u00e9e par \u00e9crit \u00e0 l\u2019adresse du cabinet
+    ou par courriel \u00e0 <strong>{{cgpEmail}}</strong>. Un accus\u00e9 de r\u00e9ception est adress\u00e9
+    sous 10 jours ouvr\u00e9s et une r\u00e9ponse apport\u00e9e dans un d\u00e9lai maximum de 2 mois.
+    \u00c0 d\u00e9faut d\u2019accord, le Client peut saisir gratuitement&nbsp;:
+  </p>
+  <ul>
+    <li><strong>M\u00e9diateur de l\u2019AMF</strong> \u2014 17 place de la Bourse, 75082 Paris Cedex 02.</li>
+    <li><strong>M\u00e9diateur de l\u2019ACPR</strong> \u2014 61 rue Taitbout, 75436 Paris Cedex 09.</li>
+    <li><strong>M\u00e9diation de la consommation</strong> \u2014 selon le secteur concern\u00e9.</li>
+  </ul>
+
+  <h2>7. Protection des donn\u00e9es personnelles (RGPD)</h2>
+  <p>
+    Le cabinet agit en qualit\u00e9 de responsable de traitement au sens du RGPD. Les donn\u00e9es
+    collect\u00e9es sont n\u00e9cessaires \u00e0 l\u2019ex\u00e9cution de la mission de conseil, \u00e0 la lutte contre
+    le blanchiment des capitaux et le financement du terrorisme (LCB-FT) et au respect des
+    obligations r\u00e9glementaires. Elles sont conserv\u00e9es pour une dur\u00e9e maximale de 5 ans
+    apr\u00e8s la fin de la relation commerciale, sauf obligation l\u00e9gale sup\u00e9rieure.
+    Le Client dispose d\u2019un droit d\u2019acc\u00e8s, de rectification, d\u2019effacement,
+    de limitation, de portabilit\u00e9 et d\u2019opposition exer\u00e7able \u00e0 {{cgpEmail}}.
+  </p>
+
+  <h2>8. Client concern\u00e9</h2>
+  <div class="identity-grid">
+    <div class="identity-card">
+      <div class="key">Nom / Pr\u00e9nom</div>
+      <div class="val">{{clientFullName}}</div>
+    </div>
+    <div class="identity-card">
+      <div class="key">Date de naissance</div>
+      <div class="val">{{clientBirthDate}}</div>
+    </div>
+    <div class="identity-card">
+      <div class="key">Situation familiale</div>
+      <div class="val">{{clientFamilySituation}}</div>
+    </div>
+    <div class="identity-card">
+      <div class="key">Profession</div>
+      <div class="val">{{clientProfession}}</div>
+    </div>
+  </div>
+
+  <div class="acknowledgement">
+    <strong>Accus\u00e9 de r\u00e9ception.</strong> Le Client reconna\u00eet avoir re\u00e7u, lu et compris
+    le pr\u00e9sent Document d\u2019Entr\u00e9e en Relation pr\u00e9alablement \u00e0 toute prestation de
+    conseil. Il reconna\u00eet \u00e9galement avoir \u00e9t\u00e9 inform\u00e9 des statuts, des autorit\u00e9s de
+    tutelle, des modes de r\u00e9mun\u00e9ration, de la proc\u00e9dure de r\u00e9clamation et de la
+    politique de protection des donn\u00e9es du cabinet.
+  </div>
+
+  <div class="signatures">
+    <div class="sign-block">
+      <div class="role-label">Le Conseiller</div>
+      <div class="name">{{cgpFullName}}</div>
+      <div class="location">Fait \u00e0 {{signatureCity}}, le {{currentDate}}</div>
+    </div>
+    <div class="sign-block">
+      <div class="role-label">Le Client</div>
+      <div class="name">{{clientFullName}}</div>
+      <div class="location">Signature pr\u00e9c\u00e9d\u00e9e de la mention \u00ab lu et approuv\u00e9 \u00bb</div>
+    </div>
+  </div>
+</body>
+</html>

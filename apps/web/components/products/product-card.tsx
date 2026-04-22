@@ -8,6 +8,7 @@ import { formatUnderlying } from '@/lib/underlying-labels';
 import { useToggleFavorite } from '@/hooks/use-favorites';
 import { useCompareStore } from '@/stores/compare-store';
 import { Tooltip } from '@/components/ui/tooltip';
+import { ESGBadge } from '@/components/products/ESGBadge';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -391,6 +392,21 @@ export function ProductCard({ product, className, isFavorited = false, recommend
               </span>
             </div>
           </Tooltip>
+        </div>
+
+        {/* ── ESG badge ── */}
+        <div className="flex items-center gap-1.5">
+          <ESGBadge
+            productId={id}
+            compact
+            onClick={(e) => {
+              // Prevent bubbling so clicking the badge doesn't navigate.
+              // Instead, navigate to the detail page anchored to the ESG block.
+              e.preventDefault();
+              e.stopPropagation();
+              window.location.href = `/products/${id}#esg`;
+            }}
+          />
         </div>
 
         {/* ── Enveloppe progress bar with shimmer and threshold markers ── */}

@@ -37,6 +37,8 @@ import { useCompareStore } from '@/stores/compare-store';
 import { Countdown } from '@/components/ui/countdown';
 import { Tooltip } from '@/components/ui/tooltip';
 import { TermTooltip, FINANCIAL_GLOSSARY } from '@/components/ui/term-tooltip';
+import { Leaf } from 'lucide-react';
+import { mockESGForProduct } from '@/lib/esg/scoring-engine';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -419,6 +421,8 @@ export default function ProductsPage() {
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [viewFilter, setViewFilter] = useState<ViewFilter>('all');
   const [issuerFilter, setIssuerFilter] = useState<string>('');
+  const [esgOnly, setEsgOnly] = useState<boolean>(false);
+  const [minEsgScore, setMinEsgScore] = useState<number>(0);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [page, setPage] = useState(1);
 
@@ -481,8 +485,8 @@ export default function ProductsPage() {
     (mostViewedData as any[])?.map((m: any) => m.productId) ?? []
   );
 
-  const hasActiveFilters = payoffType !== null || minSri !== null || maxSri !== null || search !== '' || status !== '' || issuerFilter !== '';
-  const activeFilterCount = [payoffType !== null, minSri !== null, maxSri !== null, search !== '', status !== '', issuerFilter !== ''].filter(Boolean).length;
+  const hasActiveFilters = payoffType !== null || minSri !== null || maxSri !== null || search !== '' || status !== '' || issuerFilter !== '' || esgOnly || minEsgScore > 0;
+  const activeFilterCount = [payoffType !== null, minSri !== null, maxSri !== null, search !== '', status !== '', issuerFilter !== '', esgOnly, minEsgScore > 0].filter(Boolean).length;
 
   // Apply view filter + issuer filter + sorting
   const filtered = useMemo(() => {
@@ -491,6 +495,17 @@ export default function ProductsPage() {
     // Issuer filter
     if (issuerFilter) {
       arr = arr.filter((p: any) => p.issuerName === issuerFilter);
+    }
+
+    // ESG filters
+    if (esgOnly) {
+      arr = arr.filter((p: any) => {
+        const esg = mockESGForProduct(p.id);
+        return esg.sfdr === 'art8' || esg.sfdr === 'art9';
+      });
+    }
+    if (minEsgScore > 0) {
+      arr = arr.filter((p: any) => mockESGForProduct(p.id).overallScore >= minEsgScore);
     }
 
     // View filter
@@ -523,7 +538,7 @@ export default function ProductsPage() {
     }
 
     return arr;
-  }, [products, sortField, sortDir, viewFilter, favoriteIds, recommendationMap, mostViewedIds, issuerFilter]);
+  }, [products, sortField, sortDir, viewFilter, favoriteIds, recommendationMap, mostViewedIds, issuerFilter, esgOnly, minEsgScore]);
 
   // Pagination
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
@@ -536,7 +551,7 @@ export default function ProductsPage() {
   // Reset page when filters change
   useEffect(() => {
     setPage(1);
-  }, [payoffType, minSri, maxSri, status, viewFilter, issuerFilter, sortField, sortDir]);
+  }, [payoffType, minSri, maxSri, status, viewFilter, issuerFilter, sortField, sortDir, esgOnly, minEsgScore]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -595,6 +610,20 @@ export default function ProductsPage() {
       key: 'issuer',
       label: `Emetteur : ${issuerFilter}`,
       onRemove: () => setIssuerFilter(''),
+    });
+  }
+  if (esgOnly) {
+    activeFilters.push({
+      key: 'esg-only',
+      label: 'ESG uniquement (Art. 8 / 9)',
+      onRemove: () => setEsgOnly(false),
+    });
+  }
+  if (minEsgScore > 0) {
+    activeFilters.push({
+      key: 'min-esg-score',
+      label: `Score ESG \u2265 ${minEsgScore}`,
+      onRemove: () => setMinEsgScore(0),
     });
   }
 
@@ -894,6 +923,8 @@ export default function ProductsPage() {
                 resetFilters();
                 setIssuerFilter('');
                 setSearchInput('');
+                setEsgOnly(false);
+                setMinEsgScore(0);
               }}
               className={cn(
                 'h-8 px-2.5 rounded-lg border border-red/20 text-red bg-red-light dark:bg-red/10',
@@ -914,7 +945,7 @@ export default function ProductsPage() {
         <div
           className={cn(
             'overflow-hidden transition-all duration-300 ease-out',
-            showAdvanced ? 'max-h-16 opacity-100' : 'max-h-0 opacity-0',
+            showAdvanced ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0',
           )}
         >
           <div className="flex items-center gap-2.5 flex-wrap pt-1 pb-0.5">
@@ -960,6 +991,62 @@ export default function ProductsPage() {
               ))}
             </select>
           </div>
+
+          {/* ESG Row */}
+          <div className="flex items-center gap-3 flex-wrap pt-2 pb-1">
+            <button
+              type="button"
+              aria-pressed={esgOnly}
+              onClick={() => setEsgOnly((v) => !v)}
+              className={cn(
+                'inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border text-[11px] font-semibold font-body transition-all duration-200',
+                esgOnly
+                  ? 'bg-teal/15 text-[#008B6E] dark:text-[#00D4AA] border-teal/40 shadow-sm'
+                  : 'bg-white dark:bg-ink/40 text-ink-3 border-border/50 hover:border-teal/40 hover:text-teal',
+              )}
+              title="Afficher uniquement les produits SFDR Art. 8 et Art. 9"
+            >
+              <Leaf size={11} fill={esgOnly ? 'currentColor' : 'none'} strokeWidth={2} />
+              ESG uniquement
+            </button>
+
+            <div className="flex items-center gap-2 text-[11px] font-body text-ink-3 dark:text-ink-3">
+              <label htmlFor="min-esg-slider" className="font-semibold text-ink dark:text-surface text-[10px] uppercase tracking-wider whitespace-nowrap">
+                Score ESG min
+              </label>
+              <input
+                id="min-esg-slider"
+                type="range"
+                min={0}
+                max={100}
+                step={5}
+                value={minEsgScore}
+                onChange={(e) => setMinEsgScore(Number(e.target.value))}
+                aria-valuetext={`Score ESG minimum ${minEsgScore} sur 100`}
+                className={cn(
+                  'w-32 h-8 cursor-pointer accent-teal',
+                  '[&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4',
+                  '[&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-teal [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:shadow',
+                )}
+              />
+              <span className={cn(
+                'font-mono text-[11px] font-bold tabular-nums w-9 text-right',
+                minEsgScore > 0 ? 'text-teal' : 'text-ink-3',
+              )}>
+                {minEsgScore}
+              </span>
+              {minEsgScore > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setMinEsgScore(0)}
+                  className="text-ink-3 hover:text-red transition-colors"
+                  title="R\u00e9initialiser"
+                >
+                  <X size={11} />
+                </button>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* ── Active Filters Pills ── */}
@@ -973,6 +1060,8 @@ export default function ProductsPage() {
                 resetFilters();
                 setIssuerFilter('');
                 setSearchInput('');
+                setEsgOnly(false);
+                setMinEsgScore(0);
               }}
               className="text-[11px] text-ink-3 hover:text-red font-semibold font-body ml-1 transition-colors duration-150"
             >
@@ -1078,7 +1167,7 @@ export default function ProductsPage() {
             )}
             {(viewFilter === 'all' || viewFilter === 'popular') && hasActiveFilters && (
               <button
-                onClick={() => { resetFilters(); setIssuerFilter(''); setSearchInput(''); }}
+                onClick={() => { resetFilters(); setIssuerFilter(''); setSearchInput(''); setEsgOnly(false); setMinEsgScore(0); }}
                 className="text-[12px] text-violet dark:text-violet-light font-semibold hover:underline flex items-center gap-1"
               >
                 <X size={11} />

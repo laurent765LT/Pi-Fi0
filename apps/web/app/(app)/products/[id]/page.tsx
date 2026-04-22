@@ -24,6 +24,13 @@ import { Tabs, TabPanel } from '@/components/ui/tabs';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { Tooltip } from '@/components/ui/tooltip';
 import { TermTooltip, FINANCIAL_GLOSSARY } from '@/components/ui/term-tooltip';
+import { ESGDetailBlock } from '@/components/products/ESGDetailBlock';
+import { GreenwashingAlert } from '@/components/products/GreenwashingAlert';
+import { ScenarioSimulator } from '@/components/products/ScenarioSimulator';
+import { ESGBadge } from '@/components/products/ESGBadge';
+import { AMFSevenQuestions } from '@/components/products/AMFSevenQuestions';
+import { TargetMarketBlock } from '@/components/products/TargetMarketBlock';
+import { AICommentaryButton } from '@/components/ai/AICommentaryButton';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -919,6 +926,14 @@ ${description ? `
                 Clôture J-{closingDays}
               </span>
             )}
+            <ESGBadge
+              productId={product.id}
+              onClick={(e) => {
+                e.preventDefault();
+                const el = document.getElementById('esg');
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
+            />
           </div>
 
           <h1 className="font-display text-xl md:text-2xl font-bold leading-tight mb-1 bg-gradient-to-r from-[#1A0A3E] via-[#3B1FA8] to-[#1A0A3E] bg-clip-text text-transparent dark:from-white dark:via-[#C9BCFF] dark:to-white">
@@ -960,6 +975,9 @@ ${description ? `
           )}
         </div>
 
+        {/* ── 7 questions AMF (ultra-visible en tete de fiche) ────── */}
+        <AMFSevenQuestions product={product} className="mb-5" />
+
         {/* ── Key Metrics ─────────────────────────────────────────── */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1.5 sm:gap-2 mb-5">
           {product.couponPct != null && (
@@ -972,6 +990,9 @@ ${description ? `
           )}
           <StatBox label="Échéance" value={product.maturityDate ? formatDateShort(product.maturityDate) : '—'} icon={Calendar} />
         </div>
+
+        {/* ── Greenwashing alert (surface early if present) ───────── */}
+        <GreenwashingAlert productId={product.id} className="mb-4" />
 
         {/* ── Two-column layout ───────────────────────────────────── */}
         <div className="grid lg:grid-cols-3 gap-4 mb-5">
@@ -1117,6 +1138,18 @@ ${description ? `
                 currentPct={product.currentPct}
               />
             )}
+
+            {/* ── Target Market PRIIPs ─────────────────────────── */}
+            <TargetMarketBlock
+              productId={product.id}
+              productSri={product.sri ?? undefined}
+            />
+
+            {/* ── ESG Detail Block ─────────────────────────────── */}
+            <ESGDetailBlock productId={product.id} id="esg" />
+
+            {/* ── Scenario Simulator "Et si ?" ─────────────────── */}
+            <ScenarioSimulator product={product} />
           </div>
 
           {/* Right: CTA Card (1/3) */}
@@ -1206,6 +1239,49 @@ ${description ? `
                     Votre interet a bien ete pris en compte.
                   </p>
                 )}
+              </div>
+
+              {/* Commentaire client IA */}
+              <div
+                className={cn(
+                  'rounded-lg border border-violet/25 bg-gradient-to-br from-violet-pale to-white dark:from-violet/10 dark:to-transparent',
+                  'px-3 py-2.5 flex items-center gap-2.5',
+                )}
+              >
+                <span
+                  className="flex items-center justify-center w-8 h-8 rounded-lg shrink-0"
+                  style={{
+                    background:
+                      'linear-gradient(135deg, rgba(59,31,168,0.18) 0%, rgba(212,160,23,0.14) 100%)',
+                  }}
+                  aria-hidden="true"
+                >
+                  <Sparkles size={14} className="text-violet" strokeWidth={2} />
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[12px] font-body font-semibold text-ink dark:text-white leading-tight">
+                    Commentaire client IA
+                  </p>
+                  <p className="text-[10px] font-body text-ink-3 dark:text-white/45 leading-tight mt-0.5">
+                    4 paragraphes personnalisés en un clic
+                  </p>
+                </div>
+                <AICommentaryButton
+                  product={{
+                    id: product.id,
+                    name: product.name,
+                    isin: product.isin,
+                    payoffType: product.payoffType,
+                    couponPct: product.couponPct,
+                    barrierCapPct: product.barrierCapPct,
+                    underlyingYahoo: product.underlyingYahoo,
+                    sri: product.sri,
+                    maturityDate: product.maturityDate,
+                  }}
+                  variant="primary"
+                  size="sm"
+                  label="Générer"
+                />
               </div>
 
               {/* Create alert CTA */}

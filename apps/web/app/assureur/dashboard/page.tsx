@@ -10,6 +10,7 @@ import {
   ASSUREUR_DEMO,
 } from '@/lib/mock-data-assureur';
 import { cn } from '@/lib/cn';
+import { ESGDashboard } from '@/components/assureur/ESGDashboard';
 
 // ─── Stat Card ───────────────────────────────────────────────────────────────
 
@@ -672,6 +673,29 @@ export default function AssureurDashboard() {
             <EnveloppeRow key={env.id} env={env} />
           ))}
         </div>
+      </div>
+
+      {/* ─── ESG & Greenwashing ───────────────────────────────────────────── */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-[15px] font-bold text-ink dark:text-white font-display">
+            Profil ESG du catalogue
+          </h3>
+          <span className="text-[11px] font-body text-ink-3 dark:text-white/40">
+            Donn\u00e9es estim\u00e9es \u00e0 titre p\u00e9dagogique
+          </span>
+        </div>
+        <ESGDashboard
+          products={PRODUITS.map((p) => ({ id: p.id, name: p.nom }))}
+          envelopes={ENVELOPPES.map((env) => {
+            const produit = getProduit(env.produitId);
+            return {
+              id: env.id,
+              name: produit?.nom ?? env.id,
+              productIds: [env.produitId],
+            };
+          })}
+        />
       </div>
     </div>
   );

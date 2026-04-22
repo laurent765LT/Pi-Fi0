@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<title>Lettre de mission — {{clientFullName}}</title>
+<style>
+  @page { size: A4; margin: 1.8cm 2cm; }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    color: #1A0A3E;
+    background: #fff;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  body { font-size: 11px; line-height: 1.55; }
+  h1, h2, h3 { margin: 0; font-weight: 700; color: #1A0A3E; }
+  h1 { font-size: 24px; letter-spacing: -0.3px; color: #fff; }
+  h2 { font-size: 14px; letter-spacing: -0.1px; margin-top: 22px; margin-bottom: 8px;
+       padding-bottom: 5px; border-bottom: 1.5px solid #E6E2F3; display: flex; align-items: center; gap: 8px; }
+  h2::before {
+    content: ''; width: 3px; height: 14px;
+    background: linear-gradient(180deg, #3B1FA8, #5B3FD4);
+    border-radius: 2px;
+  }
+  h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: #3D2C6E;
+       margin-top: 16px; margin-bottom: 6px; }
+  p { margin: 0 0 8px; }
+  ul { margin: 4px 0 8px 18px; padding: 0; }
+  li { margin-bottom: 3px; }
+
+  .header-brand {
+    background: linear-gradient(135deg, #3B1FA8 0%, #5535C4 60%, #7B5FDC 100%);
+    color: #fff;
+    padding: 26px 30px 22px;
+    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 18px;
+  }
+  .header-brand::before {
+    content: ''; position: absolute; top: -50%; right: -10%;
+    width: 280px; height: 280px;
+    background: radial-gradient(circle, rgba(212,160,23,0.22), transparent 60%);
+    border-radius: 50%;
+  }
+  .header-brand::after {
+    content: ''; position: absolute; bottom: -40%; left: -10%;
+    width: 240px; height: 240px;
+    background: radial-gradient(circle, rgba(0,184,148,0.18), transparent 60%);
+    border-radius: 50%;
+  }
+  .brand-mark {
+    position: relative; z-index: 1;
+    display: inline-flex; align-items: center; gap: 8px;
+    font-weight: 800; font-size: 17px;
+    letter-spacing: -0.3px;
+    margin-bottom: 14px;
+  }
+  .brand-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #D4A017;
+  }
+  .brand-accent { color: #D4A017; }
+  .header-title { position: relative; z-index: 1; }
+  .header-subtitle {
+    position: relative; z-index: 1;
+    font-size: 12px; color: rgba(255,255,255,0.82);
+    margin-top: 6px;
+  }
+
+  .parties-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    margin-bottom: 10px;
+  }
+  .party-card {
+    background: #F8F6FF;
+    border: 1px solid #E6E2F3;
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .party-card .role {
+    font-size: 9px; text-transform: uppercase; letter-spacing: 0.14em;
+    font-weight: 700; color: #7B6FA0; margin-bottom: 6px;
+  }
+  .party-card .name { font-size: 13px; font-weight: 700; color: #1A0A3E; }
+  .party-card .detail { font-size: 10.5px; color: #3D2C6E; margin-top: 3px; }
+
+  .info-table {
+    width: 100%; border-collapse: collapse;
+    margin: 4px 0 8px;
+  }
+  .info-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #F0EEF8;
+    font-size: 10.5px;
+    color: #3D2C6E;
+    vertical-align: top;
+  }
+  .info-table td.label {
+    width: 40%;
+    font-weight: 600;
+    color: #7B6FA0;
+    font-size: 9.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .obligations-box {
+    background: #F8F6FF;
+    border-left: 3px solid #3B1FA8;
+    border-radius: 0 8px 8px 0;
+    padding: 10px 14px;
+    margin: 8px 0 12px;
+  }
+  .obligations-box strong { color: #3B1FA8; font-size: 10.5px; }
+
+  .legal-note {
+    background: #FFF8E7;
+    border: 1px solid #F0D98A;
+    border-radius: 6px;
+    padding: 9px 12px;
+    font-size: 9.5px;
+    color: #9B7210;
+    line-height: 1.5;
+    margin-top: 10px;
+  }
+  .legal-note strong { color: #7A5A08; }
+
+  .signatures {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+    margin-top: 30px;
+    page-break-inside: avoid;
+  }
+  .sign-block {
+    border-top: 1.5px solid #3D2C6E;
+    padding-top: 12px;
+    min-height: 110px;
+  }
+  .sign-block .role-label {
+    font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.12em;
+    font-weight: 700; color: #3D2C6E; margin-bottom: 4px;
+  }
+  .sign-block .name { font-size: 11.5px; font-weight: 600; color: #1A0A3E; }
+  .sign-block .location {
+    font-size: 9.5px; color: #7B6FA0; margin-top: 2px; font-style: italic;
+  }
+
+  .print-toolbar {
+    position: fixed; top: 16px; right: 16px; z-index: 100;
+    display: flex; gap: 8px;
+  }
+  .print-toolbar button {
+    font-family: inherit; font-size: 12px; font-weight: 600;
+    padding: 8px 14px; border-radius: 8px; border: 0; cursor: pointer;
+    color: #fff; background: linear-gradient(135deg, #3B1FA8, #5B3FD4);
+    box-shadow: 0 6px 18px rgba(59,31,168,0.3);
+  }
+  .print-toolbar button.secondary {
+    background: #fff; color: #3D2C6E;
+    border: 1px solid #E6E2F3;
+    box-shadow: 0 2px 8px rgba(26,10,62,0.08);
+  }
+
+  @page {
+    @bottom-left {
+      content: "Strick'in \2014 Lettre de mission confidentielle";
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 8.5px; color: #7B6FA0;
+    }
+    @bottom-right {
+      content: "Page " counter(page) " / " counter(pages);
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 8.5px; color: #7B6FA0;
+    }
+  }
+
+  @media print {
+    .print-toolbar { display: none !important; }
+    body { font-size: 10.5px; }
+    .header-brand { margin-bottom: 14px; }
+  }
+</style>
+</head>
+<body>
+  <div class="print-toolbar">
+    <button type="button" class="secondary" onclick="window.close();">Fermer</button>
+    <button type="button" onclick="window.print();">Imprimer / Enregistrer en PDF</button>
+  </div>
+
+  <header class="header-brand">
+    <div class="brand-mark">
+      <span class="brand-dot"></span>
+      Strick<span class="brand-accent">'</span>in
+    </div>
+    <div class="header-title">
+      <h1>Lettre de mission</h1>
+      <p class="header-subtitle">
+        Conseil en investissement financier (CIF) &amp; courtage en op\u00e9rations
+        de banque et services de paiement (IOBSP)
+      </p>
+    </div>
+  </header>
+
+  <p>
+    La pr\u00e9sente lettre de mission est \u00e9tablie le <strong>{{currentDate}}</strong> entre les parties
+    suivantes afin de d\u00e9finir les termes, le p\u00e9rim\u00e8tre et les modalit\u00e9s de la mission de conseil.
+  </p>
+
+  <div class="parties-grid">
+    <div class="party-card">
+      <div class="role">Le Conseiller (CGP)</div>
+      <div class="name">{{cgpFullName}}</div>
+      <div class="detail">{{cgpCompany}}</div>
+      <div class="detail">{{cgpAddress}}</div>
+      <div class="detail">ORIAS n\u00b0 {{cgpOriasNumber}}</div>
+      <div class="detail">{{cgpEmail}} \u00b7 {{cgpPhone}}</div>
+    </div>
+    <div class="party-card">
+      <div class="role">Le Client</div>
+      <div class="name">{{clientFullName}}</div>
+      <div class="detail">N\u00e9(e) le {{clientBirthDate}}</div>
+      <div class="detail">Situation : {{clientFamilySituation}}</div>
+      <div class="detail">Profession : {{clientProfession}}</div>
+    </div>
+  </div>
+
+  <h2>Article 1 \u2014 Objet de la mission</h2>
+  <p>
+    Le Conseiller s\u2019engage \u00e0 fournir au Client un conseil en investissement financier
+    personnalis\u00e9, portant notamment sur la souscription de produits structur\u00e9s
+    r\u00e9f\u00e9renc\u00e9s par l\u2019interm\u00e9diaire de la plateforme Strick\u2019in.
+    Cette mission couvre :
+  </p>
+  <ul>
+    <li>L\u2019analyse de la situation personnelle, financi\u00e8re et patrimoniale du Client.</li>
+    <li>L\u2019\u00e9valuation du profil d\u2019investisseur conform\u00e9ment \u00e0 la directive MIF II.</li>
+    <li>La formulation de recommandations personnalis\u00e9es et \u00e9crites.</li>
+    <li>Le suivi des investissements r\u00e9alis\u00e9s et le reporting p\u00e9riodique.</li>
+  </ul>
+
+  <h2>Article 2 \u2014 Statuts et immatriculations du Conseiller</h2>
+  <div class="obligations-box">
+    <strong>Obligations r\u00e9glementaires CIF / IOBSP</strong><br />
+    Le Conseiller est immatricul\u00e9 au Registre Unique des Interm\u00e9diaires en Assurance,
+    Banque et Finance (ORIAS) sous le num\u00e9ro <strong>{{cgpOriasNumber}}</strong> en qualit\u00e9 de :
+  </div>
+  <table class="info-table">
+    <tr>
+      <td class="label">Conseiller en Investissement Financier (CIF)</td>
+      <td>Adh\u00e9rent de l\u2019association <strong>{{cgpCifAssociation}}</strong>, agr\u00e9\u00e9e par l\u2019AMF.</td>
+    </tr>
+    <tr>
+      <td class="label">Courtier en Op\u00e9rations de Banque et Services de Paiement (IOBSP)</td>
+      <td>Sous le contr\u00f4le de l\u2019ACPR (Autorit\u00e9 de Contr\u00f4le Prudentiel et de R\u00e9solution).</td>
+    </tr>
+    <tr>
+      <td class="label">Responsabilit\u00e9 Civile Professionnelle</td>
+      <td>Police n\u00b0 {{cgpRcpNumber}} aupr\u00e8s de {{cgpRcpInsurer}}.</td>
+    </tr>
+  </table>
+
+  <h2>Article 3 \u2014 Obligations d\u2019information et de conseil</h2>
+  <p>
+    Conform\u00e9ment aux articles L.541-8-1 et suivants du Code mon\u00e9taire et financier et
+    aux exigences de la directive 2014/65/UE (MIF II), le Conseiller s\u2019engage \u00e0 :
+  </p>
+  <ul>
+    <li>Remettre pr\u00e9alablement le Document d\u2019Entr\u00e9e en Relation (DER).</li>
+    <li>Recueillir les informations n\u00e9cessaires \u00e0 l\u2019\u00e9valuation du caract\u00e8re ad\u00e9quat de
+        tout investissement au regard du profil, des connaissances, de l\u2019exp\u00e9rience
+        et de la capacit\u00e9 \u00e0 subir des pertes du Client.</li>
+    <li>Formuler chaque recommandation de mani\u00e8re claire, non trompeuse et motiv\u00e9e.</li>
+    <li>Remettre le Document d\u2019Informations Cl\u00e9s (DIC / KID) pr\u00e9vu par le r\u00e8glement PRIIPs.</li>
+    <li>Pr\u00e9venir, g\u00e9rer et, le cas \u00e9ch\u00e9ant, r\u00e9v\u00e9ler les conflits d\u2019int\u00e9r\u00eats.</li>
+  </ul>
+
+  <h2>Article 4 \u2014 R\u00e9mun\u00e9ration</h2>
+  <p>
+    Le Conseiller per\u00e7oit une r\u00e9tro-commission vers\u00e9e par le producteur du produit
+    souscrit. Aucune facturation d\u2019honoraires n\u2019est mise \u00e0 la charge du Client au titre
+    de la pr\u00e9sente mission, sauf convention particuli\u00e8re. Le d\u00e9tail des r\u00e9mun\u00e9rations per\u00e7ues est
+    communiqu\u00e9 sur demande et rappel\u00e9 avant toute souscription.
+  </p>
+
+  <h2>Article 5 \u2014 Protection des donn\u00e9es personnelles</h2>
+  <p>
+    Les donn\u00e9es personnelles collect\u00e9es dans le cadre de la mission sont trait\u00e9es
+    conform\u00e9ment au R\u00e8glement G\u00e9n\u00e9ral sur la Protection des Donn\u00e9es (RGPD, r\u00e8glement
+    UE 2016/679) et \u00e0 la loi \u201cInformatique et Libert\u00e9s\u201d modifi\u00e9e. Le Client dispose
+    d\u2019un droit d\u2019acc\u00e8s, de rectification, d\u2019effacement, de limitation, de portabilit\u00e9
+    et d\u2019opposition, qu\u2019il peut exercer \u00e0 l\u2019adresse {{cgpEmail}}.
+  </p>
+
+  <h2>Article 6 \u2014 M\u00e9diation et r\u00e9clamations</h2>
+  <p>
+    Toute r\u00e9clamation doit \u00eatre adress\u00e9e en premier lieu au Conseiller par courrier ou
+    courriel. \u00c0 d\u00e9faut de r\u00e9ponse satisfaisante dans un d\u00e9lai de deux mois, le Client peut saisir :
+  </p>
+  <ul>
+    <li>Le M\u00e9diateur de l\u2019AMF \u2014 17 place de la Bourse, 75082 Paris Cedex 02.</li>
+    <li>Le M\u00e9diateur de l\u2019ACPR \u2014 61 rue Taitbout, 75436 Paris Cedex 09.</li>
+  </ul>
+
+  <h2>Article 7 \u2014 Dur\u00e9e et r\u00e9siliation</h2>
+  <p>
+    La mission est conclue pour une dur\u00e9e ind\u00e9termin\u00e9e \u00e0 compter de sa signature. Chaque
+    partie peut y mettre fin \u00e0 tout moment par lettre recommand\u00e9e avec accus\u00e9 de
+    r\u00e9ception, sans pr\u00e9avis ni indemnit\u00e9.
+  </p>
+
+  <div class="legal-note">
+    <strong>Avertissement.</strong> Les produits structur\u00e9s sont des instruments financiers
+    complexes pouvant entra\u00eener une perte en capital partielle ou totale. Les
+    performances pass\u00e9es ne pr\u00e9jugent pas des performances futures. Le Client
+    reconna\u00eet avoir pris connaissance des risques avant toute d\u00e9cision d\u2019investissement.
+  </div>
+
+  <div class="signatures">
+    <div class="sign-block">
+      <div class="role-label">Le Conseiller</div>
+      <div class="name">{{cgpFullName}}</div>
+      <div class="location">Fait \u00e0 {{signatureCity}}, le {{currentDate}}</div>
+    </div>
+    <div class="sign-block">
+      <div class="role-label">Le Client</div>
+      <div class="name">{{clientFullName}}</div>
+      <div class="location">Signature pr\u00e9c\u00e9d\u00e9e de la mention \u00ab lu et approuv\u00e9 \u00bb</div>
+    </div>
+  </div>
+</body>
+</html>

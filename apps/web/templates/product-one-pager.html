@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="fr">
+<!--
+  Strick'in — Template "One-Pager Produit" (Phase 1.4)
+  ====================================================
+  Template HTML prêt à imprimer (A4 portrait) utilisé par la fonctionnalité
+  d'export PDF d'une fiche produit structuré. Il embarque en page 1 les
+  7 questions AMF ainsi que l'encart Target Market PRIIPs.
+
+  Les zones interpolables sont signalées par des doubles-accolades : {{VAR}}.
+  La page appelante (app/(app)/products/[id]/page.tsx ou une route /api/pdf
+  à créer) doit remplacer ces tokens par leurs valeurs avant envoi au
+  moteur de rendu (puppeteer / window.print).
+
+  Tokens attendus (chaînes HTML-escapées) :
+  - {{PRODUCT_NAME}}        Nom complet du produit
+  - {{PRODUCT_ISIN}}         ISIN du produit
+  - {{PRODUCT_ISSUER}}       Nom de l'émetteur
+  - {{PRODUCT_PAYOFF_LABEL}} Libellé type payoff ex. "Autocall Phoenix"
+  - {{PRODUCT_SRI}}          Indicateur SRI (1..7)
+  - {{GENERATION_DATE}}      Date FR de génération
+
+  Tokens AMF (Phase 1.4) — réponses issues de computeAMFSevenQuestions :
+  - {{AMF_Q1_MAX_DURATION}}
+  - {{AMF_Q2_CAPITAL_LOSS_RISK}}
+  - {{AMF_Q3_REMUNERATION}}
+  - {{AMF_Q4_ISSUER_CREDIT_RISK}}
+  - {{AMF_Q5_EARLY_EXIT}}
+  - {{AMF_Q6_UNDERLYING}}
+  - {{AMF_Q7_FEES}}
+
+  Tokens Target Market (Phase 1.3) :
+  - {{TM_KNOWLEDGE}}      liste formatée ex. "Informé, Averti"
+  - {{TM_EXPERIENCE}}
+  - {{TM_LOSS_CAPACITY}}
+  - {{TM_RISK_TOLERANCE}}
+  - {{TM_OBJECTIVES}}
+  - {{TM_HORIZONS}}
+
+  Optionnel :
+  - {{SUITABILITY_BADGE_HTML}} Fragment HTML affiché si un client est
+    associé (vide sinon). Conserve un placeholder neutre.
+-->
+<head>
+  <meta charset="UTF-8" />
+  <title>{{PRODUCT_NAME}} — Fiche produit (Strick'in)</title>
+  <style>
+    /* ─ Typographie & couleurs ──────────────────────────────────────── */
+    :root {
+      --violet: #3B1FA8;
+      --violet-mid: #5535C4;
+      --cobalt: #0A2799;
+      --teal: #00B894;
+      --gold: #D4A017;
+      --red: #E8334A;
+      --ink: #1A0A3E;
+      --ink-2: #3D2C6E;
+      --ink-3: #7B6FA0;
+      --surface: #FAFAF8;
+      --surface-2: #F4F3EF;
+      --border: #E2DFF5;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      color: var(--ink);
+      background: white;
+      padding: 18mm 16mm;
+      max-width: 210mm;
+      margin: 0 auto;
+      line-height: 1.45;
+      font-size: 11px;
+    }
+    h1, h2, h3, h4 {
+      font-family: 'Syne', 'DM Sans', sans-serif;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    /* ─ Header ──────────────────────────────────────────────────────── */
+    .header-bar {
+      height: 3px;
+      background: linear-gradient(90deg, var(--violet), var(--violet-mid), var(--cobalt), var(--teal));
+      border-radius: 2px;
+      margin-bottom: 14px;
+    }
+    .brand-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      font-size: 10px;
+      color: var(--ink-3);
+    }
+    .brand {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 14px;
+      color: var(--violet);
+      letter-spacing: -0.01em;
+    }
+    .brand em { color: var(--violet-mid); font-style: normal; }
+
+    h1.product-title {
+      font-size: 22px;
+      margin-bottom: 4px;
+      letter-spacing: -0.015em;
+    }
+    .subtitle {
+      font-size: 11px;
+      color: var(--ink-3);
+      margin-bottom: 14px;
+    }
+    .subtitle strong { color: var(--ink-2); font-weight: 600; }
+    .badge-row { margin-bottom: 14px; }
+    .badge {
+      display: inline-block;
+      background: #EDE8FF;
+      color: var(--violet);
+      border: 1px solid #D5CCFA;
+      border-radius: 6px;
+      padding: 2px 10px;
+      font-size: 10px;
+      font-weight: 700;
+      margin-right: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .badge.sri { background: #FFF8E7; color: #A07800; border-color: #F0E0A8; }
+
+    /* ─ AMF — 7 questions ───────────────────────────────────────────── */
+    .amf-section {
+      margin-top: 6px;
+      margin-bottom: 18px;
+      border: 1px solid #D5CCFA;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .amf-header {
+      background: linear-gradient(90deg, rgba(59,31,168,0.06), rgba(0,184,148,0.03));
+      padding: 8px 12px;
+      border-bottom: 1px solid #D5CCFA;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .amf-header h2 {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+    .amf-header .tag {
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--violet);
+      background: rgba(59,31,168,0.1);
+      border: 1px solid rgba(59,31,168,0.25);
+      border-radius: 999px;
+      padding: 2px 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .amf-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 0;
+    }
+    .amf-grid li {
+      list-style: none;
+      padding: 10px 8px;
+      border-right: 1px solid #ECEAE4;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-height: 82px;
+    }
+    .amf-grid li:last-child { border-right: none; }
+    .amf-qnum {
+      font-size: 8px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .amf-qnum.v-violet { color: var(--violet); }
+    .amf-qnum.v-red { color: var(--red); }
+    .amf-qnum.v-teal { color: var(--teal); }
+    .amf-qnum.v-cobalt { color: var(--cobalt); }
+    .amf-qnum.v-gold { color: #A07800; }
+    .amf-qnum.v-ink { color: var(--ink-2); }
+    .amf-qlabel {
+      font-size: 8.5px;
+      font-weight: 700;
+      color: var(--ink-3);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .amf-qvalue {
+      font-size: 9.5px;
+      font-weight: 600;
+      color: var(--ink);
+      line-height: 1.35;
+    }
+    .amf-footer {
+      background: rgba(255,255,255,0.6);
+      padding: 6px 12px;
+      font-size: 8px;
+      color: var(--ink-3);
+      border-top: 1px solid #ECEAE4;
+    }
+
+    /* ─ Target Market PRIIPs ────────────────────────────────────────── */
+    .tm-section {
+      margin-bottom: 18px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .tm-header {
+      padding: 8px 12px;
+      background: linear-gradient(90deg, rgba(59,31,168,0.04), rgba(0,184,148,0.03));
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .tm-header h2 {
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .tm-header .suitability { font-size: 10px; color: var(--ink-3); }
+    .tm-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      padding: 10px 12px;
+    }
+    .tm-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      background: var(--surface);
+    }
+    .tm-card h4 {
+      font-size: 9px;
+      color: var(--ink-3);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .tm-card p {
+      font-size: 10px;
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    /* ─ Footer disclaimers ──────────────────────────────────────────── */
+    .footer {
+      margin-top: 14px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      font-size: 8px;
+      color: var(--ink-3);
+      line-height: 1.55;
+    }
+
+    /* ─ Print ───────────────────────────────────────────────────────── */
+    @media print {
+      body { padding: 14mm 12mm; }
+      @page { size: A4; margin: 10mm; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header-bar"></div>
+
+  <div class="brand-row">
+    <span class="brand">Strick<em>&lsquo;in</em></span>
+    <span>Fiche produit générée le {{GENERATION_DATE}}</span>
+  </div>
+
+  <h1 class="product-title">{{PRODUCT_NAME}}</h1>
+  <div class="subtitle">
+    ISIN : <strong>{{PRODUCT_ISIN}}</strong> &nbsp;|&nbsp;
+    Émetteur : <strong>{{PRODUCT_ISSUER}}</strong>
+  </div>
+
+  <div class="badge-row">
+    <span class="badge">{{PRODUCT_PAYOFF_LABEL}}</span>
+    <span class="badge sri">SRI {{PRODUCT_SRI}}/7</span>
+    {{SUITABILITY_BADGE_HTML}}
+  </div>
+
+  <!-- ── 7 questions AMF ─────────────────────────────────────────── -->
+  <section class="amf-section">
+    <div class="amf-header">
+      <h2>7 questions AMF</h2>
+      <span class="tag">Information réglementaire clé</span>
+    </div>
+    <ol class="amf-grid">
+      <li>
+        <span class="amf-qnum v-violet">Q1 · Durée</span>
+        <span class="amf-qlabel">Durée maximale</span>
+        <span class="amf-qvalue">{{AMF_Q1_MAX_DURATION}}</span>
+      </li>
+      <li>
+        <span class="amf-qnum v-red">Q2 · Risque</span>
+        <span class="amf-qlabel">Risque capital</span>
+        <span class="amf-qvalue">{{AMF_Q2_CAPITAL_LOSS_RISK}}</span>
+      </li>
+      <li>
+        <span class="amf-qnum v-teal">Q3 · Rendement</span>
+        <span class="amf-qlabel">Rémunération</span>
+        <span class="amf-qvalue">{{AMF_Q3_REMUNERATION}}</span>
+      </li>
+      <li>
+        <span class="amf-qnum v-cobalt">Q4 · Émetteur</span>
+        <span class="amf-qlabel">Risque de crédit</span>
+        <span class="amf-qvalue">{{AMF_Q4_ISSUER_CREDIT_RISK}}</span>
+      </li>
+      <li>
+        <span class="amf-qnum v-gold">Q5 · Liquidité</span>
+        <span class="amf-qlabel">Sortie anticipée</span>
+        <span class="amf-qvalue">{{AMF_Q5_EARLY_EXIT}}</span>
+      </li>
+      <li>
+        <span class="amf-qnum v-violet">Q6 · Marché</span>
+        <span class="amf-qlabel">Sous-jacent</span>
+        <span class="amf-qvalue">{{AMF_Q6_UNDERLYING}}</span>
+      </li>
+      <li>
+        <span class="amf-qnum v-ink">Q7 · Coût</span>
+        <span class="amf-qlabel">Frais</span>
+        <span class="amf-qvalue">{{AMF_Q7_FEES}}</span>
+      </li>
+    </ol>
+    <div class="amf-footer">
+      Synthèse non contractuelle. Consulter le KID PRIIPs et le prospectus avant souscription.
+    </div>
+  </section>
+
+  <!-- ── Target Market PRIIPs ────────────────────────────────────── -->
+  <section class="tm-section">
+    <div class="tm-header">
+      <h2>Marché cible (Target Market PRIIPs)</h2>
+      <span class="suitability">Dimensions positives — MiFID II / PRIIPs</span>
+    </div>
+    <div class="tm-grid">
+      <div class="tm-card">
+        <h4>Connaissance</h4>
+        <p>{{TM_KNOWLEDGE}}</p>
+      </div>
+      <div class="tm-card">
+        <h4>Expérience</h4>
+        <p>{{TM_EXPERIENCE}}</p>
+      </div>
+      <div class="tm-card">
+        <h4>Capacité de perte</h4>
+        <p>{{TM_LOSS_CAPACITY}}</p>
+      </div>
+      <div class="tm-card">
+        <h4>Tolérance au risque</h4>
+        <p>{{TM_RISK_TOLERANCE}}</p>
+      </div>
+      <div class="tm-card">
+        <h4>Objectifs</h4>
+        <p>{{TM_OBJECTIVES}}</p>
+      </div>
+      <div class="tm-card">
+        <h4>Horizon</h4>
+        <p>{{TM_HORIZONS}}</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">
+    <strong>Avertissement :</strong> Ce document est fourni à titre informatif uniquement
+    et ne constitue pas une offre, une recommandation ou un conseil en investissement.
+    Les produits structurés comportent un risque de perte en capital partielle ou totale.
+    Les performances passées ne préjugent pas des performances futures. Le SRI (Summary Risk
+    Indicator) est calculé conformément au règlement PRIIPs. Avant toute souscription,
+    consulter le Document d'Informations Clés (KID) et le prospectus. L'investisseur
+    est exposé au risque de crédit de l'émetteur et du garant éventuel.
+    <br /><br />
+    Document généré automatiquement par Strick'in — Plateforme de distribution de produits structurés.
+  </div>
+</body>
+</html>

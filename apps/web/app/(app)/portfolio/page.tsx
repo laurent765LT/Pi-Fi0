@@ -46,6 +46,15 @@ import { PageHeader } from '@/components/ui/page-header';
 import { generatePortfolioReport } from '@/lib/portfolio-pdf';
 import { useAuthStore } from '@/stores/auth-store';
 import { AICommentaryButton } from '@/components/ai/AICommentaryButton';
+import { SecondaryPricing } from '@/components/portfolio/SecondaryPricing';
+import { SecondaryOpportunityBanner } from '@/components/portfolio/SecondaryOpportunityBanner';
+import { SellBeforeMaturityModal } from '@/components/portfolio/SellBeforeMaturityModal';
+import {
+  useConsolidatedClientsStore,
+  INSURER_COLORS,
+  INSURER_LIST,
+} from '@/stores/clients-consolidated-store';
+import { getClientListRow } from '@/lib/portfolio/aggregation-engine';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -996,11 +1005,16 @@ export default function PortfolioPage() {
   const user = useAuthStore((s) => s.user);
   const [statusOverrides, setStatusOverrides] = useState<Record<string, string>>({});
   const [activeTab, setActiveTab] = useState<PortfolioTab>('products');
+  const [viewScope, setViewScope] = useState<'global' | 'clients' | 'contracts'>('global');
   const [barrierFilter, setBarrierFilter] = useState<BarrierStatus | ''>('');
   const [sortCol, setSortCol] = useState<SortColumn>('name');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [showOptimizeModal, setShowOptimizeModal] = useState(false);
   const [showStressModal, setShowStressModal] = useState(false);
+  const [sellTarget, setSellTarget] = useState<{
+    productId: string;
+    amount: number;
+  } | null>(null);
   const { data: commitments, isLoading: loadingCommitments } = useMyCommitments();
   const { data: productsData, isLoading: loadingProducts } = useProducts({});
   const cancelMutation = useCancelCommitment();
@@ -1369,6 +1383,15 @@ export default function PortfolioPage() {
         </Link>
       </PageHeader>
 
+      {/* ── View Scope Toggle ────────────────────────────────────────── */}
+      <PortfolioScopeToggle value={viewScope} onChange={setViewScope} />
+
+      {viewScope === 'clients' ? (
+        <PortfolioByClientView />
+      ) : viewScope === 'contracts' ? (
+        <PortfolioByContractView />
+      ) : (
+        <>
       {/* ── KPI Cards ──────────────────────────────────────────────── */}
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 stagger-grid">
         <KpiCard
@@ -1484,6 +1507,13 @@ export default function PortfolioPage() {
           );
         })}
       </div>
+
+      {/* ── Secondary opportunity banner ───────────────────────────── */}
+      <SecondaryOpportunityBanner
+        portfolioProductIds={(commitments ?? [])
+          .map((c: any) => (productMap.get(c.shelfId) || productMap.get(c.productId))?.id)
+          .filter((id: string | undefined): id is string => Boolean(id))}
+      />
 
       {/* ── Tab Content ──────────────────────────────────────────────── */}
       {activeTab === 'products' && (
@@ -1601,6 +1631,21 @@ export default function PortfolioPage() {
                           </span>
                         )}
                       </div>
+
+                      {/* Secondary pricing (Phase 3.2) */}
+                      {product?.id && (
+                        <div className="pt-2 mt-2 border-t border-border/30 dark:border-white/6">
+                          <SecondaryPricing
+                            productId={product.id}
+                            onSell={() =>
+                              setSellTarget({
+                                productId: product.id,
+                                amount: c.amount ?? 0,
+                              })
+                            }
+                          />
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -1656,6 +1701,19 @@ export default function PortfolioPage() {
                               )}
                               {(c.isin || product?.isin) && (
                                 <span className="font-mono text-[9px] text-ink-3 dark:text-white/35">{c.isin || product?.isin}</span>
+                              )}
+                              {product?.id && (
+                                <div className="mt-1.5">
+                                  <SecondaryPricing
+                                    productId={product.id}
+                                    onSell={() =>
+                                      setSellTarget({
+                                        productId: product.id,
+                                        amount: c.amount ?? 0,
+                                      })
+                                    }
+                                  />
+                                </div>
                               )}
                             </div>
                           </td>
@@ -2143,8 +2201,254 @@ export default function PortfolioPage() {
       {showStressModal && (
         <StressTestModal onClose={() => setShowStressModal(false)} commitments={commitments ?? []} products={products as any[]} />
       )}
+        </>
+      )}
+
+      {/* ── Sell-before-maturity Modal (Phase 3.2) ── */}
+      {sellTarget && (
+        <SellBeforeMaturityModal
+          isOpen
+          onClose={() => setSellTarget(null)}
+          productId={sellTarget.productId}
+          holdingAmount={sellTarget.amount}
+        />
+      )}
 
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
+    </div>
+  );
+}
+
+// ─── Portfolio Scope Toggle + per-client / per-contract views ──────────────
+
+function PortfolioScopeToggle({
+  value,
+  onChange,
+}: {
+  value: 'global' | 'clients' | 'contracts';
+  onChange: (v: 'global' | 'clients' | 'contracts') => void;
+}) {
+  const tabs: Array<{ id: 'global' | 'clients' | 'contracts'; label: string }> = [
+    { id: 'global', label: 'Vue globale' },
+    { id: 'clients', label: 'Par client' },
+    { id: 'contracts', label: 'Par contrat' },
+  ];
+  return (
+    <div
+      role="tablist"
+      aria-label="Portée du portefeuille"
+      className={cn(
+        'inline-flex items-center gap-0.5 mb-4 rounded-xl bg-[#F8F6FF]/70 dark:bg-white/[0.03]',
+        'p-0.5 border border-border/60 dark:border-white/10',
+      )}
+    >
+      {tabs.map((t) => {
+        const active = value === t.id;
+        return (
+          <button
+            key={t.id}
+            role="tab"
+            type="button"
+            aria-selected={active}
+            onClick={() => onChange(t.id)}
+            className={cn(
+              'h-8 px-3.5 rounded-lg text-[12px] font-semibold',
+              'transition-all duration-150',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet',
+              active
+                ? 'bg-white dark:bg-white/[0.08] text-violet shadow-xs'
+                : 'text-ink-3 hover:text-ink-2',
+            )}
+          >
+            {t.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function formatPortfolioAmount(amount: number): string {
+  return new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: 'EUR',
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+function PortfolioByClientView() {
+  const clients = useConsolidatedClientsStore((s) => s.clients);
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+      {clients.map((c) => {
+        const row = getClientListRow(c);
+        return (
+          <Link
+            key={c.id}
+            href={`/clients/${c.id}`}
+            className={cn(
+              'group rounded-xl border border-border bg-white dark:bg-white/[0.03] p-4',
+              'transition-all duration-200 hover:shadow-md hover:-translate-y-0.5',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet',
+            )}
+          >
+            <div className="flex items-center gap-3">
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white"
+                style={{
+                  background:
+                    'linear-gradient(135deg, #3B1FA8 0%, #5535C4 100%)',
+                }}
+              >
+                <span className="font-display font-bold text-[12px] leading-none">
+                  {(row.firstName[0] ?? '') + (row.lastName[0] ?? '')}
+                </span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-display font-bold text-[14px] text-ink dark:text-white group-hover:text-violet transition-colors truncate">
+                  {row.firstName} {row.lastName}
+                </p>
+                <p className="text-[11px] text-ink-3 truncate">{row.email}</p>
+              </div>
+            </div>
+            <dl className="grid grid-cols-3 gap-2 mt-3 text-center">
+              <div>
+                <dt className="text-[9px] uppercase tracking-wider text-ink-3 font-bold">
+                  Contrats
+                </dt>
+                <dd className="font-display font-bold text-[14px] text-ink dark:text-white mt-0.5 tabular-nums">
+                  {row.contractsCount}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[9px] uppercase tracking-wider text-ink-3 font-bold">
+                  Produits
+                </dt>
+                <dd className="font-display font-bold text-[14px] text-ink dark:text-white mt-0.5 tabular-nums">
+                  {row.productsCount}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[9px] uppercase tracking-wider text-ink-3 font-bold">
+                  Exposition
+                </dt>
+                <dd className="font-display font-bold text-[12px] text-ink dark:text-white mt-0.5 tabular-nums">
+                  {formatPortfolioAmount(row.exposure)}
+                </dd>
+              </div>
+            </dl>
+            <div className="flex items-center gap-1 mt-3 flex-wrap">
+              {c.contracts.map((ctr) => (
+                <span
+                  key={ctr.id}
+                  className="inline-flex items-center gap-1 px-1.5 py-[1px] rounded-sm text-[9px] font-bold uppercase tracking-wider"
+                  style={{
+                    background: `${INSURER_COLORS[ctr.insurer]}18`,
+                    color: INSURER_COLORS[ctr.insurer],
+                  }}
+                >
+                  <span
+                    aria-hidden
+                    className="w-1 h-1 rounded-full"
+                    style={{ background: INSURER_COLORS[ctr.insurer] }}
+                  />
+                  {ctr.insurer}
+                </span>
+              ))}
+            </div>
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
+function PortfolioByContractView() {
+  const clients = useConsolidatedClientsStore((s) => s.clients);
+  const rows = clients.flatMap((c) =>
+    c.contracts.map((ctr) => ({ client: c, contract: ctr })),
+  );
+
+  // Group by insurer
+  const grouped = INSURER_LIST.map((ins) => ({
+    insurer: ins,
+    rows: rows.filter((r) => r.contract.insurer === ins),
+  })).filter((g) => g.rows.length > 0);
+
+  return (
+    <div className="space-y-4">
+      {grouped.map((g) => (
+        <section
+          key={g.insurer}
+          className="rounded-xl border border-border bg-white dark:bg-white/[0.03] overflow-hidden"
+        >
+          <header
+            className="flex items-center justify-between px-4 py-3 border-b border-border"
+            style={{
+              background: `${INSURER_COLORS[g.insurer]}0C`,
+            }}
+          >
+            <div className="flex items-center gap-2">
+              <span
+                aria-hidden
+                className="w-2.5 h-2.5 rounded-full"
+                style={{ background: INSURER_COLORS[g.insurer] }}
+              />
+              <h3 className="font-display font-bold text-[14px] text-ink dark:text-white">
+                {g.insurer}
+              </h3>
+              <span className="text-[11px] text-ink-3 ml-1">
+                {g.rows.length} contrat{g.rows.length > 1 ? 's' : ''}
+              </span>
+            </div>
+            <span className="font-mono text-[12px] font-semibold text-ink-2 dark:text-white/80 tabular-nums">
+              {formatPortfolioAmount(
+                g.rows.reduce((acc, r) => acc + r.contract.amountTotal, 0),
+              )}
+            </span>
+          </header>
+          <ul className="divide-y divide-border/60">
+            {g.rows.map(({ client, contract }) => (
+              <li
+                key={contract.id}
+                className="flex items-center gap-3 px-4 py-2.5 hover:bg-violet-pale/30 dark:hover:bg-white/[0.03] transition-colors"
+              >
+                <Link
+                  href={`/clients/${client.id}`}
+                  className="flex items-center gap-3 min-w-0 flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet rounded"
+                >
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-white"
+                    style={{
+                      background:
+                        'linear-gradient(135deg, #3B1FA8 0%, #5535C4 100%)',
+                    }}
+                  >
+                    <span className="font-display font-bold text-[10px] leading-none">
+                      {(client.firstName[0] ?? '') + (client.lastName[0] ?? '')}
+                    </span>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[12.5px] font-semibold text-ink dark:text-white truncate">
+                      {client.firstName} {client.lastName}
+                    </p>
+                    <p className="text-[10.5px] text-ink-3 truncate font-mono">
+                      {contract.id}
+                    </p>
+                  </div>
+                </Link>
+                <span className="text-[11px] text-ink-3 font-mono tabular-nums">
+                  {contract.productIds.length} produit
+                  {contract.productIds.length > 1 ? 's' : ''}
+                </span>
+                <span className="font-mono text-[12px] font-semibold text-ink-2 dark:text-white/80 tabular-nums">
+                  {formatPortfolioAmount(contract.amountTotal)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
     </div>
   );
 }

@@ -9,6 +9,8 @@ import { ScrollProgress } from '@/components/ui/scroll-progress';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { useRealtimeNotifications } from '@/hooks/use-realtime-notifications';
 import { useNotificationsStore } from '@/stores/notifications-store';
+import { JurisdictionBadge } from '@/components/ui/JurisdictionBadge';
+import { BottomTabNav } from '@/components/mobile/BottomTabNav';
 import { Menu, Search, Bell, X, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 
@@ -169,6 +171,8 @@ export const AppShell = React.memo(function AppShell({ children }: AppShellProps
           <span className="text-ink">Strick</span>
           <span className="text-violet-mid">&lsquo;in</span>
         </span>
+        {/* Jurisdiction badge */}
+        <JurisdictionBadge className="hidden sm:inline-flex" />
         {/* Mobile notification bell */}
         <Link
           href="/notifications"
@@ -193,7 +197,8 @@ export const AppShell = React.memo(function AppShell({ children }: AppShellProps
       </header>
 
       {/* Main content — offset by sidebar width on desktop, full width on mobile */}
-      <main id="main-content" className="min-h-screen md:pl-[248px]" role="main">
+      {/* Bottom padding on mobile reserves space for the BottomTabNav (56px + safe-area) */}
+      <main id="main-content" className="min-h-screen md:pl-[248px] pb-[calc(56px+env(safe-area-inset-bottom))] md:pb-0" role="main">
         <div className="px-4 py-5 md:px-6 lg:px-8 xl:px-10 md:py-6">
           <ErrorBoundary>{children}</ErrorBoundary>
         </div>
@@ -210,6 +215,9 @@ export const AppShell = React.memo(function AppShell({ children }: AppShellProps
 
       {/* Command palette (Cmd+K) — global search overlay */}
       <CommandPalette isOpen={cmdPaletteOpen} onClose={closeCmdPalette} />
+
+      {/* Mobile bottom tab nav — replaces sidebar-style nav on small screens */}
+      <BottomTabNav />
     </div>
   );
 });

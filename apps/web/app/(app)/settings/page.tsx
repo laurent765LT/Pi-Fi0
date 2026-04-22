@@ -24,10 +24,20 @@ import {
   QrCode,
   KeyRound,
   LogOut,
+  FileCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useLocaleStore } from '@/stores/locale-store';
+import { useJurisdictionStore, type Jurisdiction } from '@/stores/jurisdiction-store';
+import { JURISDICTION_CONFIGS } from '@/lib/regulatory/jurisdiction-rules';
 import { PageHeader } from '@/components/ui/page-header';
+import {
+  DEMO_VAPID_PUBLIC_KEY,
+  getCurrentSubscription,
+  requestNotificationPermission,
+  subscribeToPush,
+  unsubscribeFromPush,
+} from '@/lib/push/subscription-manager';
 
 // ---------------------------------------------------------------------------
 // Toggle Switch
@@ -120,6 +130,104 @@ function SectionCard({
       </div>
       <div className="px-6 py-5">{children}</div>
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Jurisdiction Settings Card
+// ---------------------------------------------------------------------------
+
+function JurisdictionSettingsCard({ highlighted = false }: { highlighted?: boolean }) {
+  const current = useJurisdictionStore((s) => s.current);
+  const setJurisdiction = useJurisdictionStore((s) => s.setJurisdiction);
+  const cfg = JURISDICTION_CONFIGS[current];
+
+  return (
+    <SectionCard
+      icon={<FileCheck size={16} className="text-[#00B894]" />}
+      title="Juridiction"
+      description="Juridiction applicable et documents r&eacute;glementaires autoris&eacute;s."
+      accentColor="#00B894"
+      sectionId="section-juridiction"
+      highlighted={highlighted}
+    >
+      <div className="flex items-start gap-3 py-3.5 border-b border-border/20">
+        <span className="text-2xl leading-none shrink-0" aria-hidden="true">
+          {cfg.flag}
+        </span>
+        <div className="flex-1 min-w-0">
+          <p className="font-body text-[13px] font-semibold text-ink leading-tight">
+            {cfg.name} &middot; {cfg.regulator}
+          </p>
+          <p className="text-[11px] text-ink-3 font-body mt-0.5">
+            {cfg.regulatorFullName} &mdash; {cfg.registryName} &middot; devise{' '}
+            {cfg.currency} &middot; TVA {cfg.vatRate}%
+          </p>
+        </div>
+      </div>
+
+      <div className="py-3.5 border-b border-border/20">
+        <p className="font-body text-[12px] font-semibold text-ink leading-tight mb-2">
+          Documents autoris&eacute;s
+        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {cfg.requiredDocs.map((doc) => (
+            <span
+              key={doc}
+              className="text-[10px] uppercase tracking-wider font-bold font-body px-2 py-0.5 rounded-full bg-[#00B894]/10 text-[#008B6E]"
+            >
+              {doc}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className="py-3.5">
+        <p className="font-body text-[12px] font-semibold text-ink leading-tight mb-2">
+          Changer de juridiction
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          {(['FR', 'LU', 'BE', 'CH'] as Jurisdiction[]).map((j) => {
+            const jc = JURISDICTION_CONFIGS[j];
+            const active = current === j;
+            return (
+              <button
+                key={j}
+                type="button"
+                onClick={() => setJurisdiction(j)}
+                aria-pressed={active}
+                className={cn(
+                  'flex items-center gap-2 rounded-xl border px-3 py-2 text-left transition-all duration-150',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B1FA8]/40',
+                  active
+                    ? 'border-[#3B1FA8] bg-[#3B1FA8]/[0.06] shadow-sm'
+                    : 'border-border/50 bg-white dark:bg-white/5 hover:border-[#3B1FA8]/40',
+                )}
+              >
+                <span className="text-base leading-none" aria-hidden="true">
+                  {jc.flag}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[12px] font-semibold text-ink dark:text-white leading-tight">
+                    {jc.name}
+                  </span>
+                  <span className="block text-[10px] text-ink-3 mt-0.5">
+                    {jc.regulator} &middot; {jc.currency}
+                  </span>
+                </span>
+                {active && (
+                  <Check size={12} className="text-[#3B1FA8] shrink-0" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+        <p className="text-[10px] text-ink-3 font-body mt-2 leading-relaxed">
+          Le changement de juridiction adapte les documents r&eacute;glementaires, la devise
+          et le r&eacute;gulateur r&eacute;f&eacute;rent affich&eacute;s sur la plateforme.
+        </p>
+      </div>
+    </SectionCard>
   );
 }
 
@@ -312,6 +420,7 @@ function saveSettings(settings: AppSettings) {
 const SECTION_DEFS = [
   { id: 'section-notifications', title: 'Notifications', keywords: 'notifications email push rapport hebdomadaire alertes' },
   { id: 'section-affichage', title: 'Affichage', keywords: 'affichage theme langue sombre clair personnaliser' },
+  { id: 'section-juridiction', title: 'Juridiction', keywords: 'juridiction pays france luxembourg belgique suisse regulateur orias cssf fsma finma documents kyc' },
   { id: 'section-securite', title: 'Securite', keywords: 'securite mot de passe password 2fa authentification deux facteurs' },
   { id: 'section-sessions', title: 'Sessions actives', keywords: 'sessions actives connexion deconnecter appareil navigateur' },
   { id: 'section-donnees', title: 'Donnees', keywords: 'donnees exporter supprimer compte reinitialiser json telechargement' },
@@ -355,6 +464,64 @@ export default function SettingsPage() {
   // Sessions
   const [sessions, setSessions] = useState(DEMO_SESSIONS);
   const [logoutAllConfirming, setLogoutAllConfirming] = useState(false);
+
+  // Push notifications state
+  const [pushPermission, setPushPermission] = useState<NotificationPermission | 'unsupported'>(
+    'default',
+  );
+  const [pushBusy, setPushBusy] = useState(false);
+  const [pushError, setPushError] = useState<string | null>(null);
+  const ENABLED_PUSH_TOPICS = [
+    'Nouveaux produits structurés',
+    'Fermeture de souscription imminente',
+    'Résultats d\'autocall',
+    'Rappels d\'événements clients',
+  ];
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!('Notification' in window)) {
+      setPushPermission('unsupported');
+      return;
+    }
+    setPushPermission(Notification.permission);
+
+    // Sync the toggle with the actual browser subscription state on mount.
+    void getCurrentSubscription().then((sub) => {
+      if (sub && !pushNotifs) setPushNotifs(true);
+      if (!sub && pushNotifs) setPushNotifs(false);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleTogglePush = async () => {
+    if (pushBusy || pushPermission === 'unsupported') return;
+    setPushError(null);
+    setPushBusy(true);
+    try {
+      if (pushNotifs) {
+        const ok = await unsubscribeFromPush();
+        if (ok) setPushNotifs(false);
+        else setPushError('Échec de la désactivation.');
+      } else {
+        const permission = await requestNotificationPermission();
+        setPushPermission(permission);
+        if (permission !== 'granted') {
+          setPushError(
+            permission === 'denied'
+              ? 'Autorisation refusée. Activez les notifications dans votre navigateur.'
+              : 'Autorisation non accordée.',
+          );
+          return;
+        }
+        const sub = await subscribeToPush(DEMO_VAPID_PUBLIC_KEY);
+        if (sub) setPushNotifs(true);
+        else setPushError('Abonnement impossible.');
+      }
+    } finally {
+      setPushBusy(false);
+    }
+  };
 
   useEffect(() => {
     saveSettings({ emailNotifs, pushNotifs, weeklyReport, language, twoFa });
@@ -463,11 +630,45 @@ export default function SettingsPage() {
 
             <SettingRow
               icon={<BellRing size={14} />}
-              label="Notifications push"
-              description="Activez les notifications push dans votre navigateur."
+              label="Activer les notifications push"
+              description={
+                pushPermission === 'unsupported'
+                  ? 'Ce navigateur ne supporte pas les notifications push.'
+                  : pushPermission === 'denied'
+                    ? 'Autorisation refusée. Gérez dans les réglages du navigateur.'
+                    : 'Recevez les alertes produit et événements sur tous vos appareils.'
+              }
             >
-              <Toggle enabled={pushNotifs} onToggle={() => setPushNotifs(!pushNotifs)} />
+              <Toggle
+                enabled={pushNotifs}
+                onToggle={() => { void handleTogglePush(); }}
+                disabled={pushBusy || pushPermission === 'unsupported' || pushPermission === 'denied'}
+              />
             </SettingRow>
+
+            {pushNotifs && (
+              <div className="px-1 pb-2 pt-1 animate-fade-in">
+                <p className="text-[10px] uppercase tracking-widest text-ink-3/70 font-semibold font-body mb-2">
+                  Types de notifications activés
+                </p>
+                <ul className="flex flex-wrap gap-1.5">
+                  {ENABLED_PUSH_TOPICS.map((topic) => (
+                    <li
+                      key={topic}
+                      className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-[#3B1FA8]/8 border border-[#3B1FA8]/15 text-[10px] text-[#3B1FA8] font-body font-semibold"
+                    >
+                      <Check size={9} strokeWidth={3} />
+                      {topic}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {pushError && (
+              <p role="alert" className="text-[11px] text-[#E8334A] font-body py-1">
+                {pushError}
+              </p>
+            )}
 
             <SettingRow
               icon={<BarChart3 size={14} />}
@@ -477,6 +678,13 @@ export default function SettingsPage() {
               <Toggle enabled={weeklyReport} onToggle={() => setWeeklyReport(!weeklyReport)} />
             </SettingRow>
           </SectionCard>
+        )}
+
+        {/* -- Juridiction ------------------------------------------------- */}
+        {isSectionVisible('section-juridiction') && (
+          <JurisdictionSettingsCard
+            highlighted={isSectionHighlighted('section-juridiction')}
+          />
         )}
 
         {/* -- Display ----------------------------------------------------- */}

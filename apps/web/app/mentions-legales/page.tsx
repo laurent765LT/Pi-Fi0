@@ -1,8 +1,29 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, Building2, Mail } from 'lucide-react';
+import { ArrowLeft, Building2, Mail, Globe } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
+import { useJurisdictionStore } from '@/stores/jurisdiction-store';
+import { JURISDICTION_CONFIGS } from '@/lib/regulatory/jurisdiction-rules';
+
+function JurisdictionNotice() {
+  const current = useJurisdictionStore((s) => s.current);
+  const cfg = JURISDICTION_CONFIGS[current];
+  return (
+    <div className="mb-8 rounded-xl border border-violet/20 bg-violet-pale/50 px-4 py-3 flex items-start gap-3">
+      <Globe className="w-4 h-4 text-violet shrink-0 mt-0.5" />
+      <div>
+        <p className="font-body text-[12px] font-semibold text-violet leading-tight">
+          Juridiction : {cfg.flag} {cfg.name} ({cfg.regulator})
+        </p>
+        <p className="font-body text-[11px] text-ink-3 leading-relaxed mt-0.5">
+          Cette page couvre la juridiction <strong>{cfg.name}</strong>. Pour une autre
+          juridiction, contactez votre gestionnaire.
+        </p>
+      </div>
+    </div>
+  );
+}
 
 export default function MentionsLegalesPage() {
   return (
@@ -43,6 +64,7 @@ export default function MentionsLegalesPage() {
           title="Informations soci&eacute;t&eacute;"
           subtitle="&Eacute;diteur, h&eacute;bergement et agr&eacute;ments r&eacute;glementaires"
         />
+        <JurisdictionNotice />
         <div className="prose-custom">
           <section className="mb-10">
             <p className="text-base text-ink-2 leading-relaxed mb-4">

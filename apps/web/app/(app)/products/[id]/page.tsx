@@ -8,8 +8,9 @@ import {
   Shield, TrendingUp, Info, ExternalLink, Clock, Users, Download,
   Sparkles, Brain, Target, BarChart3, Lightbulb, CheckCircle2,
   XCircle, Minus, Zap, Activity, PieChart, Copy, Check, FileDown,
-  ChevronDown, Bell,
+  ChevronDown, Bell, PenTool,
 } from 'lucide-react';
+import { SignatureModal } from '@/components/signatures/SignatureModal';
 import { cn } from '@/lib/cn';
 import { formatUnderlying } from '@/lib/underlying-labels';
 import { useProduct, useProductPayoff } from '@/hooks/use-products';
@@ -662,6 +663,7 @@ export default function ProductDetailPage() {
   const alreadyCommitted = (myCommitments ?? []).some((c: any) => c.shelfId === (product?.shelfId ?? product?.id));
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [signModalOpen, setSignModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [urlCopied, setUrlCopied] = useState(false);
   const [pdfToast, setPdfToast] = useState(false);
@@ -1239,6 +1241,20 @@ ${description ? `
                     Votre interet a bien ete pris en compte.
                   </p>
                 )}
+
+                {/* Signature \u00e9lectronique */}
+                <button
+                  type="button"
+                  onClick={() => setSignModalOpen(true)}
+                  disabled={isClosed}
+                  className={cn(
+                    'mt-2 inline-flex items-center justify-center gap-1.5 w-full h-10 rounded-xl font-body text-sm font-semibold transition-colors',
+                    'border border-violet/40 text-violet bg-white hover:bg-violet-pale',
+                    'disabled:opacity-40 disabled:cursor-not-allowed',
+                  )}
+                >
+                  <PenTool size={14} /> Signer &eacute;lectroniquement
+                </button>
               </div>
 
               {/* Commentaire client IA */}
@@ -1370,6 +1386,15 @@ ${description ? `
         productName={product.name}
         alreadyCommitted={alreadyCommitted}
       />
+
+      {signModalOpen && (
+        <SignatureModal
+          open={signModalOpen}
+          onClose={() => setSignModalOpen(false)}
+          documentName={`Fiche produit \u2014 ${product.name}`}
+          documentType="fiche-produit"
+        />
+      )}
     </>
   );
 }

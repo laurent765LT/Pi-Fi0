@@ -20,6 +20,7 @@ import {
   FileSearch,
   FileText,
   Calendar,
+  CalendarDays,
   Wallet,
   Settings,
   User,
@@ -27,15 +28,24 @@ import {
   X,
   Radio,
   Brain,
+  PenTool,
+  Layers,
+  Users,
+  GraduationCap,
+  FileBarChart,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useAuthStore } from '@/stores/auth-store';
 import { useNotificationsStore } from '@/stores/notifications-store';
 import { useAlertsStore } from '@/stores/alerts-store';
+import { useEmissionsStore } from '@/stores/emissions-store';
+import { useAcademyStore } from '@/stores/academy-store';
+import { COURSES } from '@/lib/academy/courses-data';
 import { Dropdown, DropdownItem, DropdownSeparator } from '@/components/ui/dropdown';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { LocaleSwitcher } from '@/components/ui/locale-switcher';
 import { Tooltip } from '@/components/ui/tooltip';
+import { JurisdictionBadge } from '@/components/ui/JurisdictionBadge';
 
 // ---------------------------------------------------------------------------
 // Nav items
@@ -46,8 +56,11 @@ const mainNav = [
   { href: '/products', label: 'Produits', icon: Package, shortcut: '\u2318P' },
   { href: '/evenements', label: '\u00c9v\u00e9nements', icon: Calendar, shortcut: '\u2318E' },
   { href: '/dossiers-clients', label: 'Dossiers clients', icon: FileText },
+  { href: '/clients', label: 'Clients', icon: Users },
+  { href: '/signatures', label: 'Signatures', icon: PenTool },
   { href: '/portfolio', label: 'Portfolio', icon: Briefcase, shortcut: '\u2318O' },
   { href: '/portfolio/agent', label: 'Agent IA', icon: Brain },
+  { href: '/sma', label: 'Marketplace SMA', icon: Layers },
   { href: '/commissions', label: 'Commissions', icon: Wallet, shortcut: '\u2318K' },
 ];
 
@@ -55,8 +68,12 @@ const toolsNav = [
   { href: '/pricing', label: 'Pricing', icon: Calculator, shortcut: '\u2318R' },
   { href: '/pricing/live', label: 'Consultation live', icon: Radio },
   { href: '/rfq', label: 'RFQ Screener', icon: FileSearch },
+  { href: '/secondaire', label: 'March\u00e9 secondaire', icon: TrendingUp },
+  { href: '/emissions-a-venir', label: '\u00c9missions \u00e0 venir', icon: CalendarDays },
   { href: '/research', label: 'Research', icon: BookOpen },
   { href: '/glossaire', label: 'Glossaire', icon: Library },
+  { href: '/academy', label: 'Academy', icon: GraduationCap },
+  { href: '/reporting-amf', label: 'Reporting AMF', icon: FileBarChart },
   { href: '/alertes', label: 'Alertes', icon: Bell },
   { href: '/notifications', label: 'Notifications', icon: Bell, shortcut: '\u2318N' },
 ];
@@ -258,8 +275,21 @@ export function Sidebar({ isOpen, onClose }: SidebarProps = {}) {
   const unreadCount = useNotificationsStore((s) => s.notifications.filter((n) => !n.read).length);
   const activeAlertsCount = useAlertsStore((s) => s.alerts.filter((a) => a.enabled).length);
   const triggeredAlertsCount = useAlertsStore((s) => s.alerts.filter((a) => a.triggered).length);
+  const emissionAlertsCount = useEmissionsStore((s) => s.alerts.length);
+  const academyProgress = useAcademyStore((s) => s.progress);
   // Notifications bell also surfaces alerts the user has configured, for a combined unread feel
   const combinedBellCount = unreadCount + triggeredAlertsCount;
+
+  // Academy progress % across all published courses
+  const academyProgressPct = (() => {
+    const totalLessons = COURSES.reduce((sum, c) => sum + c.lessons.length, 0);
+    if (totalLessons === 0) return 0;
+    const done = academyProgress.reduce(
+      (sum, p) => sum + p.completedLessonIds.length,
+      0,
+    );
+    return Math.min(100, Math.round((done / totalLessons) * 100));
+  })();
 
   const [collapsed, setCollapsed] = useState(false);
 
@@ -380,6 +410,18 @@ export function Sidebar({ isOpen, onClose }: SidebarProps = {}) {
         )}
       </div>
 
+      {/* -- Jurisdiction badge (above navigation) ---------------- */}
+      {!collapsed && (
+        <div className="px-3 py-2 border-b border-border/30 shrink-0 flex items-center">
+          <JurisdictionBadge className="w-full justify-start" />
+        </div>
+      )}
+      {collapsed && (
+        <div className="px-2 py-2 border-b border-border/30 shrink-0 flex items-center justify-center">
+          <JurisdictionBadge compact />
+        </div>
+      )}
+
       {/* -- Navigation ------------------------------------------- */}
       <nav
         aria-label="Navigation principale"
@@ -421,6 +463,22 @@ export function Sidebar({ isOpen, onClose }: SidebarProps = {}) {
                 <NotificationBadge count={combinedBellCount} isActive={isActivePath(href)} />
               ) : label === 'Alertes' ? (
                 <NotificationBadge count={activeAlertsCount} isActive={isActivePath(href)} />
+              ) : href === '/emissions-a-venir' ? (
+                <NotificationBadge count={emissionAlertsCount} isActive={isActivePath(href)} />
+              ) : href === '/academy' && academyProgressPct > 0 ? (
+                <span
+                  className={cn(
+                    'inline-flex items-center justify-center h-[18px] min-w-[32px] px-1.5 rounded-full text-[9px] font-bold leading-none tabular-nums',
+                    isActivePath(href)
+                      ? 'bg-white/20 text-[#3B1FA8]'
+                      : academyProgressPct >= 100
+                        ? 'bg-[#00B894] text-white'
+                        : 'bg-[#D4A017]/20 text-[#9B7210]',
+                  )}
+                  aria-label={`Progression ${academyProgressPct}%`}
+                >
+                  {academyProgressPct}%
+                </span>
               ) : undefined
             }
           />

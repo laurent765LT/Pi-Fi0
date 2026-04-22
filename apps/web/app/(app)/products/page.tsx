@@ -30,7 +30,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { useFiltersStore } from '@/stores/filters-store';
 import { useProducts } from '@/hooks/use-products';
 import { ProductCard } from '@/components/products/product-card';
-import type { PayoffType } from '@/components/products/product-card';
+import type { PayoffType, Product } from '@/components/products/product-card';
 import { useFavorites, useToggleFavorite, useMostViewed } from '@/hooks/use-favorites';
 import { useRecommendations, useGenerateRecommendations } from '@/hooks/use-recommendations';
 import { useCompareStore } from '@/stores/compare-store';
@@ -39,6 +39,14 @@ import { Tooltip } from '@/components/ui/tooltip';
 import { TermTooltip, FINANCIAL_GLOSSARY } from '@/components/ui/term-tooltip';
 import { Leaf } from 'lucide-react';
 import { mockESGForProduct } from '@/lib/esg/scoring-engine';
+import {
+  useJurisdictionStore,
+  type Jurisdiction,
+} from '@/stores/jurisdiction-store';
+import {
+  JURISDICTION_CONFIGS,
+  getAvailableProducts,
+} from '@/lib/regulatory/jurisdiction-rules';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -413,6 +421,26 @@ function Pagination({
 
 // ─── Page ────────────────────────────────────────────────────────────────────
 
+// ─── Multi-jurisdiction access ──────────────────────────────────────────────
+//
+// By default users only see products available in their current jurisdiction.
+// Users flagged as having multi-jurisdiction access (MJ) can opt-in to see
+// the full catalogue through a jurisdiction filter. Until the backend
+// exposes a proper flag on the user object, we treat admins as having MJ
+// access and read a localStorage opt-in for everyone else.
+
+const MJ_OPT_IN_KEY = 'strickin-multi-jurisdiction-optin';
+
+function hasMultiJurisdictionAccess(role: string | undefined | null): boolean {
+  if (role === 'SUPER_ADMIN' || role === 'ORG_ADMIN') return true;
+  if (typeof window === 'undefined') return false;
+  try {
+    return localStorage.getItem(MJ_OPT_IN_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+
 export default function ProductsPage() {
   useEffect(() => { document.title = "Catalogue Produits | Strick'in"; }, []);
   const { payoffType, minSri, maxSri, search, status, setFilter, resetFilters } = useFiltersStore();
@@ -425,6 +453,24 @@ export default function ProductsPage() {
   const [minEsgScore, setMinEsgScore] = useState<number>(0);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [page, setPage] = useState(1);
+
+  // Jurisdiction filter (hidden by default, visible only for MJ users)
+  const jurisdiction = useJurisdictionStore((s) => s.current);
+  const [jurisdictionFilter, setJurisdictionFilter] = useState<Jurisdiction | 'ALL'>('ALL');
+  const [mjAccess, setMjAccess] = useState(false);
+  useEffect(() => {
+    // Read once on mount to avoid SSR mismatch. `document.cookie` can be
+    // parsed in a future iteration; for now we read role from localStorage
+    // via the auth-store persisted payload.
+    try {
+      const raw = localStorage.getItem('strickin-auth');
+      const parsed = raw ? JSON.parse(raw) : null;
+      const role = parsed?.state?.user?.role as string | undefined;
+      setMjAccess(hasMultiJurisdictionAccess(role));
+    } catch {
+      setMjAccess(hasMultiJurisdictionAccess(null));
+    }
+  }, []);
 
   // Debounced search
   const [searchInput, setSearchInput] = useState(search);
@@ -488,9 +534,19 @@ export default function ProductsPage() {
   const hasActiveFilters = payoffType !== null || minSri !== null || maxSri !== null || search !== '' || status !== '' || issuerFilter !== '' || esgOnly || minEsgScore > 0;
   const activeFilterCount = [payoffType !== null, minSri !== null, maxSri !== null, search !== '', status !== '', issuerFilter !== '', esgOnly, minEsgScore > 0].filter(Boolean).length;
 
-  // Apply view filter + issuer filter + sorting
+  // Apply view filter + issuer filter + jurisdiction + sorting
   const filtered = useMemo(() => {
     let arr = [...products];
+
+    // Jurisdiction filter
+    // Default: restrict to the current jurisdiction. Multi-jurisdiction users
+    // can select "ALL" or another jurisdiction via the new filter chip.
+    const targetJurisdiction: Jurisdiction | 'ALL' = mjAccess
+      ? jurisdictionFilter
+      : jurisdiction;
+    if (targetJurisdiction !== 'ALL') {
+      arr = getAvailableProducts(targetJurisdiction, arr as Product[]);
+    }
 
     // Issuer filter
     if (issuerFilter) {
@@ -538,7 +594,7 @@ export default function ProductsPage() {
     }
 
     return arr;
-  }, [products, sortField, sortDir, viewFilter, favoriteIds, recommendationMap, mostViewedIds, issuerFilter, esgOnly, minEsgScore]);
+  }, [products, sortField, sortDir, viewFilter, favoriteIds, recommendationMap, mostViewedIds, issuerFilter, esgOnly, minEsgScore, jurisdictionFilter, mjAccess, jurisdiction]);
 
   // Pagination
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
@@ -990,6 +1046,33 @@ export default function ProductsPage() {
                 <option key={name} value={name}>{name}</option>
               ))}
             </select>
+
+            {/* Jurisdiction filter (hidden unless MJ access) */}
+            {mjAccess && (
+              <>
+                <div className="w-px h-4 bg-border/30" />
+                <div className="flex items-center gap-1.5 text-[11px] font-body text-ink-3 dark:text-ink-3">
+                  <span className="font-semibold text-ink dark:text-surface text-[10px] uppercase tracking-wider">
+                    Juridiction
+                  </span>
+                  <select
+                    value={jurisdictionFilter}
+                    onChange={(e) =>
+                      setJurisdictionFilter(e.target.value as Jurisdiction | 'ALL')
+                    }
+                    className={selectCls}
+                    aria-label="Filtrer par juridiction"
+                  >
+                    <option value="ALL">Toutes</option>
+                    {(['FR', 'LU', 'BE', 'CH'] as Jurisdiction[]).map((j) => (
+                      <option key={j} value={j}>
+                        {JURISDICTION_CONFIGS[j].flag} {JURISDICTION_CONFIGS[j].name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
           </div>
 
           {/* ESG Row */}

@@ -1,5 +1,6 @@
 import './globals.css';
 import { Providers } from './providers';
+import { ServiceWorkerRegistrar } from '@/components/layout/ServiceWorkerRegistrar';
 import type { Metadata, Viewport } from 'next';
 
 const organizationSchema = {
@@ -133,7 +134,10 @@ export default function RootLayout({
         >
           Aller au contenu principal
         </a>
-        <Providers>{children}</Providers>
+        <Providers>
+          <ServiceWorkerRegistrar />
+          {children}
+        </Providers>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -144,17 +148,6 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(softwareSchema),
-          }}
-        />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator && location.hostname !== 'localhost') {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').catch(function() {});
-                });
-              }
-            `,
           }}
         />
       </body>

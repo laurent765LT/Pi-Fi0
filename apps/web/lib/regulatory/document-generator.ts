@@ -24,6 +24,11 @@ import {
   OBJECTIVE_LABELS,
   PRODUCT_EXPERIENCE_LABELS,
 } from '@/stores/clients-store';
+import type { Jurisdiction } from '@/stores/jurisdiction-store';
+import {
+  JURISDICTION_CONFIGS,
+  getJurisdictionLegalLabels,
+} from '@/lib/regulatory/jurisdiction-rules';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -604,12 +609,20 @@ const RAPPORT_ADEQUATION_TEMPLATE = `<!DOCTYPE html>
 </html>`;
 
 // ─── Shared data builder ────────────────────────────────────────────────────
+//
+// `jurisdiction` is optional and defaults to 'FR' so existing callers produce
+// identical FR output. When a non-FR jurisdiction is supplied, a small set of
+// regulatory labels (regulator name, registry, legal footer, etc.) is
+// injected so downstream templates can render per-jurisdiction text.
 
 function buildBaseData(
   dossier: ClientDossier,
   cgp: CGPInfo,
+  jurisdiction: Jurisdiction = 'FR',
 ): Record<string, string> {
   const currentDate = formatDate(new Date().toISOString());
+  const jCfg = JURISDICTION_CONFIGS[jurisdiction];
+  const labels = getJurisdictionLegalLabels(jurisdiction);
   return {
     currentDate: escapeHtml(currentDate),
     signatureCity: escapeHtml(cgp.signatureCity),
@@ -634,6 +647,18 @@ function buildBaseData(
     ),
     clientProfession: escapeHtml(dossier.profession || '\u2014'),
     clientRevenues: escapeHtml(formatAmount(dossier.revenuesAnnuel)),
+    // Jurisdiction (new in Phase 3.7 — keys are additive so FR output is unchanged)
+    jurisdictionCode: escapeHtml(jCfg.code),
+    jurisdictionName: escapeHtml(jCfg.name),
+    jurisdictionFlag: jCfg.flag,
+    jurisdictionRegulator: escapeHtml(jCfg.regulator),
+    jurisdictionRegulatorFullName: escapeHtml(jCfg.regulatorFullName),
+    jurisdictionRegistryName: escapeHtml(jCfg.registryName),
+    jurisdictionCurrency: escapeHtml(jCfg.currency),
+    jurisdictionLettreTitle: escapeHtml(labels.lettreMissionTitle),
+    jurisdictionRegulatorAddress: escapeHtml(labels.regulatorAddress),
+    jurisdictionRegistrySentence: escapeHtml(labels.registrySentence),
+    jurisdictionRegulatoryFooter: escapeHtml(labels.regulatoryFooter),
   };
 }
 
@@ -642,23 +667,26 @@ function buildBaseData(
 export function generateLettreMission(
   dossier: ClientDossier,
   cgp: CGPInfo = DEFAULT_CGP_INFO,
+  jurisdiction: Jurisdiction = 'FR',
 ): string {
-  return renderTemplate(LETTRE_MISSION_TEMPLATE, buildBaseData(dossier, cgp));
+  return renderTemplate(LETTRE_MISSION_TEMPLATE, buildBaseData(dossier, cgp, jurisdiction));
 }
 
 export function generateDER(
   dossier: ClientDossier,
   cgp: CGPInfo = DEFAULT_CGP_INFO,
+  jurisdiction: Jurisdiction = 'FR',
 ): string {
-  return renderTemplate(DER_TEMPLATE, buildBaseData(dossier, cgp));
+  return renderTemplate(DER_TEMPLATE, buildBaseData(dossier, cgp, jurisdiction));
 }
 
 export function generateRapportAdequation(
   dossier: ClientDossier,
   cgp: CGPInfo = DEFAULT_CGP_INFO,
   products: GeneratorProduct[] = [],
+  jurisdiction: Jurisdiction = 'FR',
 ): string {
-  const base = buildBaseData(dossier, cgp);
+  const base = buildBaseData(dossier, cgp, jurisdiction);
 
   // Product table rows
   const productRows = products.length > 0
@@ -793,11 +821,12 @@ export function downloadAllDocuments(
   dossier: ClientDossier,
   cgp: CGPInfo = DEFAULT_CGP_INFO,
   products: GeneratorProduct[] = [],
+  jurisdiction: Jurisdiction = 'FR',
 ): DownloadAllResult {
   const name = fullName(dossier);
-  const lettre = generateLettreMission(dossier, cgp);
-  const der = generateDER(dossier, cgp);
-  const rapport = generateRapportAdequation(dossier, cgp, products);
+  const lettre = generateLettreMission(dossier, cgp, jurisdiction);
+  const der = generateDER(dossier, cgp, jurisdiction);
+  const rapport = generateRapportAdequation(dossier, cgp, products, jurisdiction);
 
   let opened = 0;
 
@@ -830,21 +859,23 @@ export function downloadSingleDocument(
   dossier: ClientDossier,
   cgp: CGPInfo = DEFAULT_CGP_INFO,
   products: GeneratorProduct[] = [],
+  jurisdiction: Jurisdiction = 'FR',
 ): boolean {
   const name = fullName(dossier);
+  const labels = getJurisdictionLegalLabels(jurisdiction);
   let html: string;
   let title: string;
   switch (kind) {
     case 'lettre':
-      html = generateLettreMission(dossier, cgp);
-      title = `Lettre de mission \u2014 ${name}`;
+      html = generateLettreMission(dossier, cgp, jurisdiction);
+      title = `${labels.lettreMissionTitle} \u2014 ${name}`;
       break;
     case 'der':
-      html = generateDER(dossier, cgp);
+      html = generateDER(dossier, cgp, jurisdiction);
       title = `DER \u2014 ${name}`;
       break;
     case 'rapport':
-      html = generateRapportAdequation(dossier, cgp, products);
+      html = generateRapportAdequation(dossier, cgp, products, jurisdiction);
       title = `Rapport d'ad\u00e9quation \u2014 ${name}`;
       break;
   }

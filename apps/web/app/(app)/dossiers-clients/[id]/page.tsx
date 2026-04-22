@@ -18,7 +18,10 @@ import {
   Trash2,
   Calendar,
   Clock,
+  PenTool,
 } from 'lucide-react';
+import { SignatureModal } from '@/components/signatures/SignatureModal';
+import type { SignatureDocumentType } from '@/lib/yousign/types';
 import { cn } from '@/lib/cn';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
@@ -81,9 +84,10 @@ interface DocumentCardProps {
   badge: string;
   accent: string;
   onDownload: () => void;
+  onSign: () => void;
 }
 
-function DocumentCard({ title, description, badge, accent, onDownload }: DocumentCardProps) {
+function DocumentCard({ title, description, badge, accent, onDownload, onSign }: DocumentCardProps) {
   return (
     <div
       className="group relative rounded-xl border bg-white dark:bg-white/[0.03] overflow-hidden transition-all duration-200 hover:shadow-md"
@@ -122,10 +126,25 @@ function DocumentCard({ title, description, badge, accent, onDownload }: Documen
           {description}
         </p>
 
-        <Button onClick={onDownload} size="sm" className="w-full">
-          <Download size={13} />
-          T\u00e9l\u00e9charger (PDF)
-        </Button>
+        <div className="flex flex-col gap-1.5">
+          <Button onClick={onDownload} size="sm" className="w-full">
+            <Download size={13} />
+            T\u00e9l\u00e9charger (PDF)
+          </Button>
+          <button
+            type="button"
+            onClick={onSign}
+            className="inline-flex items-center justify-center gap-1.5 w-full h-8 px-3 rounded-md border font-body text-xs font-semibold transition-colors"
+            style={{
+              borderColor: `${accent}66`,
+              color: accent,
+              background: `${accent}10`,
+            }}
+          >
+            <PenTool size={12} />
+            Signer \u00e9lectroniquement
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -152,6 +171,10 @@ export default function DossierDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const [hydrated, setHydrated] = useState(false);
+  const [signModal, setSignModal] = useState<
+    | { kind: 'lettre' | 'der' | 'rapport'; docName: string }
+    | null
+  >(null);
   const { toasts, success, error: toastError, dismiss } = useToast();
 
   const getById = useClientsStore((s) => s.getById);
@@ -225,6 +248,23 @@ export default function DossierDetailPage() {
       return;
     }
     success('Document ouvert dans un nouvel onglet.');
+  };
+
+  const DOC_KIND_TO_TYPE: Record<'lettre' | 'der' | 'rapport', SignatureDocumentType> = {
+    lettre: 'lettre-mission',
+    der: 'der',
+    rapport: 'rapport-adequation',
+  };
+
+  const DOC_KIND_TO_NAME: Record<'lettre' | 'der' | 'rapport', string> = {
+    lettre: 'Lettre de mission',
+    der: "Document d'entr\u00e9e en relation",
+    rapport: "Rapport d'ad\u00e9quation",
+  };
+
+  const handleESign = (kind: 'lettre' | 'der' | 'rapport') => {
+    const docName = `${DOC_KIND_TO_NAME[kind]} \u2014 ${fullName}`;
+    setSignModal({ kind, docName });
   };
 
   const handleSign = () => {
@@ -346,6 +386,7 @@ export default function DossierDetailPage() {
             badge="CIF"
             accent="#3B1FA8"
             onDownload={() => handleDownload('lettre')}
+            onSign={() => handleESign('lettre')}
           />
           <DocumentCard
             kind="der"
@@ -354,6 +395,7 @@ export default function DossierDetailPage() {
             badge="DER"
             accent="#5B3FD4"
             onDownload={() => handleDownload('der')}
+            onSign={() => handleESign('der')}
           />
           <DocumentCard
             kind="rapport"
@@ -362,9 +404,44 @@ export default function DossierDetailPage() {
             badge="MIF II"
             accent="#00B894"
             onDownload={() => handleDownload('rapport')}
+            onSign={() => handleESign('rapport')}
           />
         </div>
       </section>
+
+      {/* Signature modal */}
+      {signModal && (
+        <SignatureModal
+          open
+          onClose={() => setSignModal(null)}
+          documentName={signModal.docName}
+          documentType={DOC_KIND_TO_TYPE[signModal.kind]}
+          defaultSigners={(() => {
+            const parts = DEFAULT_CGP_INFO.fullName.trim().split(/\s+/);
+            const cgpFirst = parts[0] ?? 'Jean';
+            const cgpLast = parts.slice(1).join(' ') || 'Dupont';
+            return [
+              {
+                firstName: cgpFirst,
+                lastName: cgpLast,
+                email: DEFAULT_CGP_INFO.email,
+                role: 'cgp' as const,
+                order: 1,
+              },
+              {
+                firstName: dossier.firstName,
+                lastName: dossier.lastName,
+                email: `${dossier.firstName.toLowerCase()}.${dossier.lastName.toLowerCase()}@exemple.fr`,
+                role: 'client' as const,
+                order: 2,
+              },
+            ];
+          })()}
+          onCreated={() =>
+            success('Demande de signature envoy\u00e9e au client.')
+          }
+        />
+      )}
 
       {/* Details grid */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">

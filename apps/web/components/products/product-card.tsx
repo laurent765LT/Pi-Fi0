@@ -9,6 +9,7 @@ import { useToggleFavorite } from '@/hooks/use-favorites';
 import { useCompareStore } from '@/stores/compare-store';
 import { Tooltip } from '@/components/ui/tooltip';
 import { ESGBadge } from '@/components/products/ESGBadge';
+import { TokenizationBadge, type TokenNetwork } from '@/components/tokenisation/TokenizationBadge';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -38,6 +39,8 @@ export interface Product {
   targetAmount?: number | null;
   createdAt?: string;
   shelfClosingDate?: string;
+  isTokenized?: boolean;
+  tokenNetwork?: TokenNetwork;
 }
 
 interface ProductCardProps {
@@ -111,6 +114,8 @@ export function ProductCard({ product, className, isFavorited = false, recommend
     status,
     createdAt,
     shelfClosingDate,
+    isTokenized,
+    tokenNetwork,
   } = product;
 
   const toggleFavorite = useToggleFavorite();
@@ -268,6 +273,11 @@ export function ProductCard({ product, className, isFavorited = false, recommend
               <span className="w-1.5 h-1.5 rounded-full bg-violet dark:bg-violet-light animate-pulse" />
               IA {recommendationScore}%
             </span>
+          )}
+
+          {/* Tokenization badge */}
+          {isTokenized && (
+            <TokenizationBadge network={tokenNetwork ?? 'canton'} size="sm" />
           )}
 
           <span className="flex-1 min-w-0" />

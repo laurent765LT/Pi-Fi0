@@ -20,6 +20,7 @@ import {
   Layers,
   Tag,
 } from 'lucide-react';
+import { useSMAStore } from '@/stores/sma-store';
 import { cn } from '@/lib/cn';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/ui/page-header';
@@ -555,6 +556,12 @@ export default function CommissionsPage() {
   const grandTotal = totalPaid + totalPayable + totalAccrued;
   const filteredTotal = filtered.reduce((s, c) => s + c.amount, 0);
 
+  // Synthetic SMA commissions — 15 bps p.a. on aggregated AUM
+  const smas = useSMAStore(s => s.smas);
+  const smaCommissions = useMemo(() => {
+    return smas.reduce((acc, sma) => acc + sma.aum * sma.fees, 0);
+  }, [smas]);
+
   const periods = [...new Set(DEMO_COMMISSIONS.map(c => c.period))].sort();
 
   // ── Stacked quarterly data (by status per period) ──
@@ -674,7 +681,7 @@ export default function CommissionsPage() {
       </PageHeader>
 
       {/* ── KPI Cards ──────────────────────────────────────────────── */}
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <section className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         <KpiCard
           icon={<CircleDollarSign size={15} className="text-[#3B1FA8]" />}
           label="Total cumulé"
@@ -699,6 +706,13 @@ export default function CommissionsPage() {
           label="Comptabilisé"
           value={formatEur(totalAccrued)}
           accent="#3D63F5"
+        />
+        <KpiCard
+          icon={<Layers size={15} className="text-[#5535C4]" />}
+          label="Commissions SMA"
+          value={formatEur(smaCommissions)}
+          accent="#5535C4"
+          subtitle="Mandats annualisés"
         />
       </section>
 

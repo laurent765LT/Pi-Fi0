@@ -94,6 +94,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <AdminNavLink href="/admin/shelves">Enveloppes</AdminNavLink>
         <AdminNavLink href="/admin/users">Utilisateurs</AdminNavLink>
         <AdminNavLink href="/admin/stats">Statistiques</AdminNavLink>
+        <AdminNavLink href="/admin/jurisdictions">Juridictions</AdminNavLink>
       </div>
       {children}
     </div>

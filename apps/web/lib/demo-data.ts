@@ -46,6 +46,8 @@ export const DEMO_PRODUCTS = [
     observationDates: ['2026-12-02', '2027-12-02', '2028-12-04', '2029-12-03', '2030-12-02', '2031-12-02', '2032-12-02', '2033-12-02', '2034-12-04'],
     interestedCount: 18, totalEngaged: 6_200_000,
     compatibleInsurers: ['Generali Vie', 'Cardiff Vie', 'Spirica'],
+    isTokenized: true,
+    tokenNetwork: 'canton' as const,
   },
   // ─── 1 · MT4 · M Rendement OR ─────────────────────────────────────────────
   {
@@ -59,6 +61,8 @@ export const DEMO_PRODUCTS = [
     createdAt: '2026-03-01T09:00:00Z',
     interestedCount: 12, totalEngaged: 2_200_000,
     compatibleInsurers: ['Generali Vie', 'Cardiff Vie', 'Apicil', 'Suravenir'],
+    isTokenized: true,
+    tokenNetwork: 'canton' as const,
   },
   // ─── 2 · MT5 · M Rendement Mixte ──────────────────────────────────────────
   {
@@ -100,6 +104,8 @@ export const DEMO_PRODUCTS = [
     createdAt: '2026-02-05T11:00:00Z',
     interestedCount: 6, totalEngaged: 1_680_000,
     compatibleInsurers: ['Generali Vie', 'Spirica'],
+    isTokenized: true,
+    tokenNetwork: 'canton' as const,
   },
   // ─── 5 · MT8 · M Ambition 9 ───────────────────────────────────────────────
   {

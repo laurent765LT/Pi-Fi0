@@ -12,12 +12,22 @@ import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/stores/auth-store';
 import { cn } from '@/lib/cn';
+import { JurisdictionSelector } from '@/components/onboarding/JurisdictionSelector';
+import {
+  useJurisdictionStore,
+  type Jurisdiction,
+} from '@/stores/jurisdiction-store';
+import { JURISDICTION_CONFIGS } from '@/lib/regulatory/jurisdiction-rules';
+import { Globe } from 'lucide-react';
 
 // ─── Step Config ──────────────────────────────────────────────────────────────
 
-type StepKey = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+// Step 0 is the new jurisdiction-selection step (added in Phase 3.7).
+// Steps 1-8 remain unchanged so the rest of the file keeps working as-is.
+type StepKey = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 const STEP_META: { num: StepKey; label: string; icon: React.ElementType }[] = [
+  { num: 0, label: 'Juridiction', icon: Globe },
   { num: 1, label: 'Profil', icon: User },
   { num: 2, label: 'Statut', icon: Briefcase },
   { num: 3, label: 'ORIAS', icon: Shield },
@@ -61,7 +71,7 @@ function EstimatedTime() {
 
 // ─── Step Indicator ───────────────────────────────────────────────────────────
 
-function StepIndicator({ currentStep, totalSteps = 8 }: { currentStep: StepKey; totalSteps?: number }) {
+function StepIndicator({ currentStep, totalSteps = 9 }: { currentStep: StepKey; totalSteps?: number }) {
   return (
     <div className="overflow-x-auto px-4">
       <div className="flex items-center justify-center gap-0 min-w-0">
@@ -255,27 +265,42 @@ function Step2Status({ onNext, onBack }: Step2Props) {
   );
 }
 
-// ─── Step 3: ORIAS ────────────────────────────────────────────────────────────
+// ─── Step 3: ORIAS (jurisdiction-aware) ─────────────────────────────────────
 
 interface Step3Props {
   onNext: (oriasNumber: string) => void;
   onBack: () => void;
   onChange?: (oriasNumber: string) => void;
   initial?: string;
+  jurisdiction?: Jurisdiction;
 }
 
-function Step3Orias({ onNext, onBack, onChange, initial }: Step3Props) {
+function Step3Orias({ onNext, onBack, onChange, initial, jurisdiction = 'FR' }: Step3Props) {
   const [oriasNumber, setOriasNumber] = useState(initial ?? '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [touched, setTouched] = useState(false);
 
-  // Real-time format validation
-  const formatError =
-    touched && oriasNumber.length > 0 && (oriasNumber.length !== 8 || !/^\d{8}$/.test(oriasNumber))
-      ? 'Le num\u00e9ro ORIAS doit contenir exactement 8 chiffres.'
+  const cfg = JURISDICTION_CONFIGS[jurisdiction];
+  const registryLabel = cfg.registryName;
+
+  // FR uses strict 8-digit ORIAS; other jurisdictions just require non-empty
+  // alphanumeric reference since registry formats differ.
+  const isFR = jurisdiction === 'FR';
+  const minLen = isFR ? 8 : 4;
+
+  const formatError = (() => {
+    if (!touched || oriasNumber.length === 0) return null;
+    if (isFR) {
+      return oriasNumber.length !== 8 || !/^\d{8}$/.test(oriasNumber)
+        ? 'Le num\u00e9ro ORIAS doit contenir exactement 8 chiffres.'
+        : null;
+    }
+    return oriasNumber.length < minLen
+      ? `Le num\u00e9ro ${registryLabel} doit contenir au moins ${minLen} caract\u00e8res.`
       : null;
+  })();
 
   useEffect(() => {
     onChange?.(oriasNumber);
@@ -284,8 +309,13 @@ function Step3Orias({ onNext, onBack, onChange, initial }: Step3Props) {
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     setTouched(true);
-    if (oriasNumber.length !== 8 || !/^\d{8}$/.test(oriasNumber)) {
-      setError('Le num\u00e9ro ORIAS doit contenir exactement 8 chiffres.');
+    if (isFR) {
+      if (oriasNumber.length !== 8 || !/^\d{8}$/.test(oriasNumber)) {
+        setError('Le num\u00e9ro ORIAS doit contenir exactement 8 chiffres.');
+        return;
+      }
+    } else if (oriasNumber.length < minLen) {
+      setError(`Le num\u00e9ro ${registryLabel} doit contenir au moins ${minLen} caract\u00e8res.`);
       return;
     }
     setError(null);
@@ -295,7 +325,7 @@ function Step3Orias({ onNext, onBack, onChange, initial }: Step3Props) {
       setSuccess(true);
       setTimeout(() => onNext(oriasNumber), 600);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Impossible de v\u00e9rifier le num\u00e9ro ORIAS.');
+      setError(err instanceof Error ? err.message : `Impossible de v\u00e9rifier le num\u00e9ro ${registryLabel}.`);
     } finally {
       setLoading(false);
     }
@@ -304,28 +334,37 @@ function Step3Orias({ onNext, onBack, onChange, initial }: Step3Props) {
   return (
     <form onSubmit={handleVerify} noValidate className="flex flex-col gap-4">
       <div className="text-center">
-        <h2 className="font-display font-bold text-xl text-ink mb-1">V&eacute;rification ORIAS</h2>
+        <h2 className="font-display font-bold text-xl text-ink mb-1">
+          V&eacute;rification {isFR ? 'ORIAS' : registryLabel}
+        </h2>
         <p className="font-body text-sm text-ink-3">
-          Renseignez votre num&eacute;ro ORIAS &agrave; 8 chiffres pour valider votre inscription.
+          {isFR
+            ? 'Renseignez votre num\u00e9ro ORIAS \u00e0 8 chiffres pour valider votre inscription.'
+            : `Renseignez votre r\u00e9f\u00e9rence ${registryLabel} (${cfg.regulator}) pour valider votre inscription.`}
         </p>
       </div>
 
       <Input
-        label="Num&eacute;ro ORIAS"
-        placeholder="12345678"
+        label={isFR ? 'Num\u00e9ro ORIAS' : `Num\u00e9ro ${registryLabel}`}
+        placeholder={isFR ? '12345678' : `R\u00e9f\u00e9rence ${cfg.regulator}`}
         value={oriasNumber}
-        onChange={(e) => { setOriasNumber(e.target.value.replace(/\D/g, '').slice(0, 8)); setError(null); setTouched(true); }}
+        onChange={(e) => {
+          const raw = e.target.value;
+          const cleaned = isFR ? raw.replace(/\D/g, '').slice(0, 8) : raw.slice(0, 24);
+          setOriasNumber(cleaned);
+          setError(null);
+          setTouched(true);
+        }}
         onBlur={() => setTouched(true)}
-        hint={!formatError && !error ? '8 chiffres, sans espaces' : undefined}
+        hint={!formatError && !error ? (isFR ? '8 chiffres, sans espaces' : `Format ${cfg.regulator}, sans espaces`) : undefined}
         error={error ?? formatError ?? undefined}
         disabled={loading || success}
-        maxLength={8}
-        inputMode="numeric"
-        pattern="\d{8}"
+        maxLength={isFR ? 8 : 24}
+        {...(isFR ? { inputMode: 'numeric' as const, pattern: '\\d{8}' } : {})}
       />
 
-      {/* Digit count indicator */}
-      {!success && oriasNumber.length > 0 && (
+      {/* Character count indicator (FR: 8 chars, others: minLen chars) */}
+      {!success && oriasNumber.length > 0 && isFR && (
         <div className="flex items-center gap-1.5">
           <div className="flex-1 h-1 rounded-full bg-surface-2 overflow-hidden">
             <div
@@ -345,7 +384,9 @@ function Step3Orias({ onNext, onBack, onChange, initial }: Step3Props) {
       {success && (
         <div className="flex items-center gap-2 px-3 py-2.5 rounded-md bg-[#D6F7EF] border border-[#A3EDD9]">
           <CheckCircle2 size={16} className="text-teal shrink-0" />
-          <span className="font-body text-sm font-medium text-[#007A63]">ORIAS valid&eacute; !</span>
+          <span className="font-body text-sm font-medium text-[#007A63]">
+            {isFR ? 'ORIAS valid\u00e9 !' : `${registryLabel} valid\u00e9 !`}
+          </span>
         </div>
       )}
 
@@ -501,6 +542,23 @@ function Step5Kyc({ onNext, onBack }: Step5Props) {
         </p>
       </div>
 
+      {/* Lien vers le parcours KYC automatisé (OCR + screening) */}
+      <a
+        href="/kyc"
+        className="flex items-center gap-3 rounded-lg border border-violet/30 bg-violet-pale/50 hover:bg-violet-pale transition-colors px-4 py-3"
+      >
+        <Eye size={16} className="text-violet shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="font-body text-[12.5px] font-semibold text-violet leading-tight">
+            Parcours KYC automatis&eacute; (OCR + screening PEP)
+          </p>
+          <p className="font-body text-[10.5px] text-violet/70 mt-0.5">
+            Lisez votre pi&egrave;ce d&apos;identit&eacute; en 1 clic, screening inclus.
+          </p>
+        </div>
+        <ChevronRight size={14} className="text-violet" />
+      </a>
+
       <Input
         label="Date de naissance"
         type="date"
@@ -575,6 +633,23 @@ function Step6Company({ onNext, onBack }: Step6Props) {
           Informations sur votre structure professionnelle.
         </p>
       </div>
+
+      {/* Lien vers le parcours KYB automatisé (SIRENE + RBE) */}
+      <a
+        href="/kyb"
+        className="flex items-center gap-3 rounded-lg border border-violet/30 bg-violet-pale/50 hover:bg-violet-pale transition-colors px-4 py-3"
+      >
+        <Building2 size={16} className="text-violet shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="font-body text-[12.5px] font-semibold text-violet leading-tight">
+            Parcours KYB automatis&eacute; (SIRENE + RBE)
+          </p>
+          <p className="font-body text-[10.5px] text-violet/70 mt-0.5">
+            Remplissage auto depuis la base SIRENE, b&eacute;n&eacute;ficiaires effectifs inclus.
+          </p>
+        </div>
+        <ChevronRight size={14} className="text-violet" />
+      </a>
 
       <Input
         label="Raison sociale *"
@@ -918,6 +993,7 @@ interface OnboardingDraft {
   profStatus: ProfStatus | null;
   oriasNumber: string;
   rcpData: { insurer: string; amount: string; policyNumber: string };
+  jurisdiction?: Jurisdiction;
 }
 
 function loadDraft(): OnboardingDraft | null {
@@ -936,12 +1012,15 @@ function loadDraft(): OnboardingDraft | null {
 export default function OnboardingPage() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
+  const jurisdiction = useJurisdictionStore((s) => s.current);
+  const setJurisdictionStore = useJurisdictionStore((s) => s.setJurisdiction);
 
   // Load draft from localStorage on mount
   const [draftLoaded, setDraftLoaded] = useState(false);
   const draft = useRef<OnboardingDraft | null>(null);
 
-  const [step, setStep] = useState<StepKey>(1);
+  // Step 0 = jurisdiction selection (added in Phase 3.7, before the original profile step)
+  const [step, setStep] = useState<StepKey>(0);
   const [oriasNumber, setOriasNumber] = useState('');
   const [profileData, setProfileData] = useState({ firstName: '', lastName: '', phone: '' });
   const [profStatus, setProfStatus] = useState<ProfStatus | null>(null);
@@ -961,9 +1040,12 @@ export default function OnboardingPage() {
       setProfStatus(saved.profStatus);
       setOriasNumber(saved.oriasNumber);
       setRcpData(saved.rcpData);
+      if (saved.jurisdiction) {
+        setJurisdictionStore(saved.jurisdiction);
+      }
     }
     setDraftLoaded(true);
-  }, []);
+  }, [setJurisdictionStore]);
 
   // Save draft whenever form state changes
   const saveDraft = useCallback(() => {
@@ -973,6 +1055,7 @@ export default function OnboardingPage() {
       profStatus,
       oriasNumber,
       rcpData,
+      jurisdiction,
     };
     try {
       localStorage.setItem(DRAFT_KEY, JSON.stringify(draftState));
@@ -983,12 +1066,12 @@ export default function OnboardingPage() {
     setShowDraftSaved(true);
     if (draftTimerRef.current) clearTimeout(draftTimerRef.current);
     draftTimerRef.current = setTimeout(() => setShowDraftSaved(false), 2000);
-  }, [step, profileData, profStatus, oriasNumber, rcpData]);
+  }, [step, profileData, profStatus, oriasNumber, rcpData, jurisdiction]);
 
   useEffect(() => {
     if (!draftLoaded) return;
     saveDraft();
-  }, [step, profileData, profStatus, oriasNumber, rcpData, draftLoaded, saveDraft]);
+  }, [step, profileData, profStatus, oriasNumber, rcpData, jurisdiction, draftLoaded, saveDraft]);
 
   const handleComplete = async () => {
     await api.completeOnboarding();
@@ -1048,6 +1131,15 @@ export default function OnboardingPage() {
           <StepIndicator currentStep={step} />
 
           {/* Step content */}
+          {step === 0 && (
+            <JurisdictionSelector
+              initial={jurisdiction}
+              onContinue={(j) => {
+                setJurisdictionStore(j);
+                setStep(1);
+              }}
+            />
+          )}
           {step === 1 && (
             <Step1Profile
               initial={profileData}
@@ -1064,6 +1156,7 @@ export default function OnboardingPage() {
               onChange={(orias) => setOriasNumber(orias)}
               onNext={(orias) => { setOriasNumber(orias); setStep(4); }}
               onBack={() => setStep(2)}
+              jurisdiction={jurisdiction}
             />
           )}
           {step === 4 && (
@@ -1096,7 +1189,7 @@ export default function OnboardingPage() {
 
         {/* Footer */}
         <p className="text-center text-white/40 text-xs font-body mt-6">
-          &Eacute;tape {step} sur 8 &mdash; Processus d&apos;int&eacute;gration r&eacute;glementaire
+          &Eacute;tape {step + 1} sur 9 &mdash; Processus d&apos;int&eacute;gration r&eacute;glementaire ({JURISDICTION_CONFIGS[jurisdiction].flag} {JURISDICTION_CONFIGS[jurisdiction].name})
         </p>
       </div>
     </div>

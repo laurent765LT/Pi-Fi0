@@ -36,6 +36,7 @@ import {
   useIssuers,
 } from '@/hooks/use-rfq';
 import { useProductTemplates } from '@/hooks/use-pricing';
+import { LiveRfqDispatcher } from '@/components/rfq/LiveRfqDispatcher';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -106,7 +107,7 @@ function safeJsonParse<T = any>(value: unknown, fallback: T | null = null): T | 
 
 export default function RfqPage() {
   useEffect(() => { document.title = "RFQ Screener | Strick'in"; }, []);
-  const [tab, setTab] = useState<'create' | 'list' | 'detail'>('list');
+  const [tab, setTab] = useState<'create' | 'list' | 'detail' | 'live'>('list');
   const [selectedRfqId, setSelectedRfqId] = useState<string | null>(null);
 
   return (
@@ -136,6 +137,7 @@ export default function RfqPage() {
         {[
           { key: 'list', label: 'Mes RFQs' },
           { key: 'create', label: 'Nouvelle RFQ' },
+          { key: 'live', label: 'Consultation live' },
           ...(selectedRfqId ? [{ key: 'detail', label: 'Detail' }] : []),
         ].map((t) => (
           <button
@@ -171,6 +173,7 @@ export default function RfqPage() {
           }}
         />
       )}
+      {tab === 'live' && <LiveRfqDispatcher />}
       {tab === 'detail' && selectedRfqId && (
         <RfqDetailTab rfqId={selectedRfqId} />
       )}

@@ -1,0 +1,91 @@
+{
+  "common": {
+    "loading": "Chargement...",
+    "error": "Une erreur est survenue",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "delete": "Supprimer",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "export": "Exporter",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Pr\u00e9c\u00e9dent",
+    "close": "Fermer",
+    "yes": "Oui",
+    "no": "Non"
+  },
+  "auth": {
+    "login": "Se connecter",
+    "logout": "Se d\u00e9connecter",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "loginTitle": "Connexion",
+    "demoAccounts": "Comptes d\u00e9mo",
+    "invalidCredentials": "Identifiants incorrects",
+    "connecting": "Connexion en cours..."
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "products": "Produits",
+    "events": "\u00c9v\u00e9nements",
+    "portfolio": "Portefeuille",
+    "commissions": "Commissions",
+    "pricing": "Tarification",
+    "rfq": "RFQ Screener",
+    "research": "Recherche",
+    "notifications": "Notifications",
+    "admin": "Administration",
+    "navigation": "Navigation",
+    "tools": "Outils"
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "totalProducts": "Produits actifs",
+    "totalVolume": "Volume total",
+    "pendingCommitments": "Engagements en attente",
+    "conversionRate": "Taux de conversion"
+  },
+  "products": {
+    "title": "Catalogue de produits",
+    "searchPlaceholder": "Rechercher un produit, ISIN, sous-jacent...",
+    "noResults": "Aucun produit trouv\u00e9",
+    "compare": "Comparer",
+    "details": "Voir le d\u00e9tail",
+    "coupon": "Coupon",
+    "barrier": "Barri\u00e8re",
+    "maturity": "\u00c9ch\u00e9ance",
+    "issuer": "\u00c9metteur",
+    "sri": "SRI"
+  },
+  "commitments": {
+    "title": "Engagements",
+    "amount": "Montant",
+    "status": "Statut",
+    "pending": "En attente",
+    "review": "En revue",
+    "confirmed": "Confirm\u00e9",
+    "cancelled": "Annul\u00e9",
+    "approve": "Approuver",
+    "reject": "Rejeter"
+  },
+  "pricing": {
+    "title": "Moteur de tarification",
+    "fairValue": "Fair Value",
+    "issuePrice": "Prix d'\u00e9mission",
+    "consultIssuers": "Consulter les \u00e9metteurs",
+    "aiGuide": "Assistant IA"
+  },
+  "jurisdiction": {
+    "regulator": "FSMA",
+    "regulatorFullName": "Financial Services and Markets Authority",
+    "registry": "Registre FSMA",
+    "documentsRequired": "Documents requis (Belgique)",
+    "disclaimer": "Cette page couvre la juridiction Belgique. Pour une autre juridiction, contactez votre gestionnaire.",
+    "legalFrame": "Document \u00e9tabli dans le cadre du r\u00e8glement FSMA et de MIFID II.",
+    "mediator": "Ombudsman des services financiers \u2014 North Gate II, Boulevard du Roi Albert II 8, 1000 Bruxelles",
+    "vatLabel": "TVA (21%)",
+    "currency": "EUR"
+  }
+}

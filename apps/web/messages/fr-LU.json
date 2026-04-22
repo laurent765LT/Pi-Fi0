@@ -1,0 +1,91 @@
+{
+  "common": {
+    "loading": "Chargement...",
+    "error": "Une erreur est survenue",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "delete": "Supprimer",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "export": "Exporter",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Pr\u00e9c\u00e9dent",
+    "close": "Fermer",
+    "yes": "Oui",
+    "no": "Non"
+  },
+  "auth": {
+    "login": "Se connecter",
+    "logout": "Se d\u00e9connecter",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "loginTitle": "Connexion",
+    "demoAccounts": "Comptes d\u00e9mo",
+    "invalidCredentials": "Identifiants incorrects",
+    "connecting": "Connexion en cours..."
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "products": "Produits",
+    "events": "\u00c9v\u00e9nements",
+    "portfolio": "Portefeuille",
+    "commissions": "R\u00e9tro-commissions",
+    "pricing": "Tarification",
+    "rfq": "RFQ Screener",
+    "research": "Recherche",
+    "notifications": "Notifications",
+    "admin": "Administration",
+    "navigation": "Navigation",
+    "tools": "Outils"
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "totalProducts": "Produits actifs",
+    "totalVolume": "Volume total",
+    "pendingCommitments": "Engagements en attente",
+    "conversionRate": "Taux de conversion"
+  },
+  "products": {
+    "title": "Catalogue de produits",
+    "searchPlaceholder": "Rechercher un produit, ISIN, sous-jacent...",
+    "noResults": "Aucun produit trouv\u00e9",
+    "compare": "Comparer",
+    "details": "Voir le d\u00e9tail",
+    "coupon": "Coupon",
+    "barrier": "Barri\u00e8re",
+    "maturity": "\u00c9ch\u00e9ance",
+    "issuer": "\u00c9metteur",
+    "sri": "SRI"
+  },
+  "commitments": {
+    "title": "Engagements",
+    "amount": "Montant",
+    "status": "Statut",
+    "pending": "En attente",
+    "review": "En revue",
+    "confirmed": "Confirm\u00e9",
+    "cancelled": "Annul\u00e9",
+    "approve": "Approuver",
+    "reject": "Rejeter"
+  },
+  "pricing": {
+    "title": "Moteur de tarification",
+    "fairValue": "Valeur th\u00e9orique",
+    "issuePrice": "Prix d'\u00e9mission",
+    "consultIssuers": "Consulter les \u00e9metteurs",
+    "aiGuide": "Assistant IA"
+  },
+  "jurisdiction": {
+    "regulator": "CSSF",
+    "regulatorFullName": "Commission de Surveillance du Secteur Financier",
+    "registry": "Registre public de la CSSF",
+    "documentsRequired": "Documents requis (Luxembourg)",
+    "disclaimer": "Cette page couvre la juridiction Luxembourg. Pour une autre juridiction, contactez votre gestionnaire.",
+    "legalFrame": "Document \u00e9tabli conform\u00e9ment \u00e0 la Circulaire CSSF 20/758 et \u00e0 MIFID II.",
+    "mediator": "M\u00e9diateur de la CSSF \u2014 283 route d\u2019Arlon, L-2991 Luxembourg",
+    "vatLabel": "TVA (17%)",
+    "currency": "EUR"
+  }
+}

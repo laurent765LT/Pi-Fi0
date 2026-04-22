@@ -13,6 +13,8 @@ const PUBLIC_PATHS = [
   '/confidentialite',
   '/mentions-legales',
   '/status',
+  '/tokenisation',
+  '/offline',
   '/api',
 ];
 

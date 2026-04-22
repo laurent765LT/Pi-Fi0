@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { ComparisonTable } from '@/components/marketing/ComparisonTable';
 
 // ─── Issuer data ─────────────────────────────────────────────────────────────
 const ISSUERS = [
@@ -1193,6 +1194,81 @@ function IssuersSection() {
   );
 }
 
+// ─── Why Strick'in (comparison table) ────────────────────────────────────────
+function WhyStrickinSection() {
+  return (
+    <section
+      id="pourquoi-strickin"
+      style={{
+        background: 'var(--redesign-white)',
+        padding: '120px 32px',
+        borderBottom: '1px solid var(--redesign-border)',
+      }}
+    >
+      <div style={{ maxWidth: 1180, margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', maxWidth: 720, margin: '0 auto 56px' }}>
+          <div
+            className="tag-eyebrow"
+            style={{ marginBottom: 24, justifyContent: 'center', display: 'inline-flex' }}
+          >
+            Pourquoi Strick&apos;in ?
+          </div>
+          <h2
+            className="font-display-new"
+            style={{
+              fontSize: 48,
+              fontWeight: 700,
+              margin: 0,
+              letterSpacing: '-0.025em',
+              lineHeight: 1.1,
+              color: 'var(--redesign-text-primary)',
+            }}
+          >
+            La seule plateforme française pensée pour 2026
+          </h2>
+          <p
+            style={{
+              fontSize: 16,
+              marginTop: 20,
+              color: 'var(--redesign-text-secondary)',
+              lineHeight: 1.6,
+            }}
+          >
+            Comparatif transparent des 25 fonctionnalités critiques. Strick&apos;in
+            face à Feefty et Luma — à vous de juger.
+          </p>
+        </div>
+        <ComparisonTable />
+        <div style={{ textAlign: 'center', marginTop: 48 }}>
+          <Link
+            href="/vs-feefty"
+            style={{
+              color: 'var(--redesign-accent)',
+              fontSize: 14,
+              fontWeight: 600,
+              textDecoration: 'none',
+              marginRight: 24,
+            }}
+          >
+            Analyse détaillée vs Feefty →
+          </Link>
+          <Link
+            href="/vs-luma"
+            style={{
+              color: 'var(--redesign-accent)',
+              fontSize: 14,
+              fontWeight: 600,
+              textDecoration: 'none',
+            }}
+          >
+            Analyse détaillée vs Luma →
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ─── Process ─────────────────────────────────────────────────────────────────
 function ProcessSection() {
   const steps = [
@@ -1663,6 +1739,7 @@ function LandingFooter() {
         { label: 'Pricing', href: '#' },
         { label: 'RFQ', href: '#' },
         { label: 'Research', href: '#' },
+        { label: 'Tokenisation', href: '/tokenisation' },
       ],
     },
     {
@@ -1801,6 +1878,7 @@ export default function Home() {
       <ComparatorDemo />
       <RolesSection />
       <IssuersSection />
+      <WhyStrickinSection />
       <ProcessSection />
       <TestimonialsSection />
       <SecuritySection />

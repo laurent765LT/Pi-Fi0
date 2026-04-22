@@ -1,13 +1,40 @@
 {
-  "name": "Strick'in — Plateforme B2B",
-  "short_name": "Strick'in",
-  "description": "Plateforme de distribution de produits structurés",
+  "name": "Strick'in",
+  "short_name": "Strickin",
+  "description": "Marketplace B2B des produits structurés",
   "start_url": "/dashboard",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#FAFAF8",
+  "orientation": "portrait-primary",
   "theme_color": "#3B1FA8",
+  "background_color": "#FCFCFB",
+  "lang": "fr",
+  "dir": "ltr",
+  "categories": ["finance", "business", "productivity"],
   "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Tableau de bord",
+      "short_name": "Dashboard",
+      "url": "/dashboard",
+      "description": "Accédez à votre tableau de bord"
+    },
+    {
+      "name": "Catalogue",
+      "short_name": "Produits",
+      "url": "/products",
+      "description": "Parcourir le catalogue"
+    },
+    {
+      "name": "Notifications",
+      "short_name": "Notifs",
+      "url": "/notifications",
+      "description": "Voir vos notifications"
+    }
   ]
 }

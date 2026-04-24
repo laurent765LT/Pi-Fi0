@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@sentry/nextjs": "^10.48.0",
+    "@strickin/design-system": "*",
     "@strickin/shared": "*",
     "@tanstack/react-query": "^5.17.0",
     "clsx": "^2.1.0",

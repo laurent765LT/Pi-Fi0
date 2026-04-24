@@ -24,6 +24,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
 import { HealthModule } from './common/health/health.module';
 import { DebugModule } from './common/debug/debug.module';
+import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { DebugModule } from './common/debug/debug.module';
     RedisModule,
     EmailModule,
     AuthModule,
+    UsersModule,
     ProductsModule,
     ShelvesModule,
     CommitmentsModule,

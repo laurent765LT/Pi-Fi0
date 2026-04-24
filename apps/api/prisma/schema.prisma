@@ -1,3 +1,40 @@
+// ═══════════════════════════════════════════════════════════════════════════════
+// STRICK'IN — CONSOLIDATED PRISMA SCHEMA (Sprint 1 T1.2)
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// Design choices:
+// - Postgres (Supabase). DATABASE_URL is the pooled URL (pgbouncer), DIRECT_URL
+//   is the direct connection used by migrations (5432).
+// - All IDs use cuid() for unguessable references across B2B flows.
+// - Legacy models (Organization, Shelf, Commitment, RfqRequest, RfqQuote,
+//   IssuerProfile, ProductTemplate, PricingRun...) are KEPT to preserve
+//   compatibility with existing code paths (Next.js API routes use fallback
+//   demo, NestJS pricing engine uses RfqRequest/RfqQuote).
+// - Sprint 1 production models added (CGP, Insurer, Issuer, Envelope, Client,
+//   Contract, Position, Rfq, IssuerRfqQuote, Order, Signature, AuditLog,
+//   AIInteraction, RefreshToken) follow the Sprint 1 T1.2 spec.
+// - UserRole enum EXTENDED with CGP / INSURER_ADMIN / ISSUER_ADMIN /
+//   PLATFORM_ADMIN while preserving existing values for backwards compat.
+// - onDelete: Restrict is the default (financial safety). Exceptions:
+//     - RefreshToken.user: Cascade (tokens belong to user lifecycle)
+//     - AuditLog.user, AIInteraction.user, ProductFavorite.*, ProductView.*,
+//       AiRecommendation.*, RiskMetrics.product: Cascade (telemetry / tight
+//       ownership)
+//     - Positions / Orders / Contracts: never Cascade (legal records)
+// - `RFQ` and `RFQQuote` from the spec are modelled as `Rfq` and
+//   `IssuerRfqQuote` to avoid Prisma-model-name collision with the legacy
+//   pricing engine's `RfqRequest` / `RfqQuote` which serve a different
+//   purpose. Mapped to SQL tables `rfqs` and `issuer_rfq_quotes`.
+//
+// Required indexes (per spec):
+//   User.email (unique)                   → @unique
+//   Product.isin (unique)                 → @unique
+//   Rfq(status, createdAt) composite      → @@index
+//   Position(contractId, clientId)        → @@index
+//   Order.idempotencyKey (unique)         → @unique
+//   AuditLog.createdAt                    → @@index
+// ═══════════════════════════════════════════════════════════════════════════════
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,7 +45,9 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// ── Enums ────────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+// ENUMS
+// ═══════════════════════════════════════════════════════════════════════════════
 
 enum OrgType {
   INSURER
@@ -16,11 +55,18 @@ enum OrgType {
   ADMIN
 }
 
+// Merged: legacy (SUPER_ADMIN, ORG_ADMIN, MANAGER, VIEWER) + Sprint 1
+// (CGP, INSURER_ADMIN, ISSUER_ADMIN, PLATFORM_ADMIN).
+// Legacy values retained to avoid breaking existing seed/users.
 enum UserRole {
   SUPER_ADMIN
   ORG_ADMIN
   MANAGER
   VIEWER
+  CGP
+  INSURER_ADMIN
+  ISSUER_ADMIN
+  PLATFORM_ADMIN
 }
 
 enum OnboardingStatus {
@@ -37,12 +83,15 @@ enum PayoffType {
   CAPITAL_PROTECTED
   CONDITIONAL_RATE
   BARRIER_NOTE
+  REVERSE
   CUSTOM
 }
 
 enum ProductStatus {
   DRAFT
   ACTIVE
+  LIVE
+  PAUSED
   CLOSED
   MATURED
   RECALLED
@@ -63,7 +112,81 @@ enum CommitmentStatus {
   CANCELLED
 }
 
-// ── Models ───────────────────────────────────────────────────────────────────
+enum CgpStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+}
+
+enum EnvelopeStatus {
+  DRAFT
+  OPEN
+  FULL
+  CLOSED
+  CANCELLED
+}
+
+enum ContractType {
+  AV
+  CAPI
+  CTO
+  PEA
+}
+
+enum KYCStatus {
+  PENDING
+  IN_REVIEW
+  VERIFIED
+  REJECTED
+  EXPIRED
+}
+
+enum RFQStatus {
+  DRAFT
+  SENT
+  QUOTED
+  ACCEPTED
+  EXPIRED
+  CANCELLED
+}
+
+enum IssuerQuoteStatus {
+  PENDING
+  QUOTED
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  SETTLED
+  CANCELLED
+  FAILED
+}
+
+enum SignatureStatus {
+  DRAFT
+  SENT
+  SIGNED
+  REFUSED
+  EXPIRED
+}
+
+enum SignatureDocumentType {
+  MANDATE
+  SUBSCRIPTION
+  KID
+  DDA
+  PRIPPS_STATEMENT
+  CUSTOM
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// LEGACY CORE — kept for backwards compatibility with existing code paths
+// ═══════════════════════════════════════════════════════════════════════════════
 
 model Organization {
   id        String   @id @default(cuid())
@@ -74,13 +197,13 @@ model Organization {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users            User[]
-  products         Product[]
-  shelves          Shelf[]
-  commitments      Commitment[]
-  webhooks         Webhook[]
-  commissionRules  CommissionRule[]
-  insurerRules     InsurerRule[]
+  users           User[]
+  products        Product[]
+  shelves         Shelf[]
+  commitments     Commitment[]
+  webhooks        Webhook[]
+  commissionRules CommissionRule[]
+  insurerRules    InsurerRule[]
 
   @@map("organizations")
 }
@@ -98,69 +221,85 @@ model User {
   rcpInsurer       String?
   rcpAmount        Float?
   onboardingStatus OnboardingStatus @default(PENDING)
+  kycStatus        KYCStatus        @default(PENDING)
   refreshToken     String?
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
 
-  organization      Organization       @relation(fields: [orgId], references: [id])
+  organization      Organization       @relation(fields: [orgId], references: [id], onDelete: Restrict)
   commitments       Commitment[]
   favorites         ProductFavorite[]
   productViews      ProductView[]
   aiRecommendations AiRecommendation[]
   activityLogs      ActivityLog[]
 
+  // Sprint 1 relations
+  cgp                Cgp?
+  insurerAdmin       InsurerAdmin?
+  issuerAdmin        IssuerAdmin?
+  refreshTokens      RefreshToken[]
+  auditLogs          AuditLog[]
+  aiInteractions     AIInteraction[]
+  signaturesAsSigner Signature[]     @relation("SignatureSigner")
+
   @@map("users")
 }
 
 model Product {
-  id                  String        @id @default(cuid())
-  isin                String        @unique
-  name                String
-  payoffType          PayoffType
-  issuerName          String
-  guarantorName       String?
-  underlyingName      String
-  underlyingYahoo     String
-  initialPrice        Float?
-  barrierCapPct       Float
-  autocallBarrierPct  Float?
-  couponPct           Float?
-  maxGainPct          Float
-  sri                 Int
-  maturityDate        DateTime
-  observationDates    DateTime[]
-  entryFeePct         Float
-  managementFeePct    Float        @default(0)
-  reference           String?
-  kidUrl              String?
-  description         String?
-  status              ProductStatus @default(DRAFT)
-  orgId               String?
-  createdAt           DateTime      @default(now())
-  updatedAt           DateTime      @updatedAt
+  id                 String        @id @default(cuid())
+  isin               String        @unique
+  name               String
+  payoffType         PayoffType
+  issuerName         String
+  guarantorName      String?
+  underlyingName     String
+  underlyingYahoo    String
+  initialPrice       Float?
+  barrierCapPct      Float
+  autocallBarrierPct Float?
+  couponPct          Float?
+  maxGainPct         Float
+  sri                Int
+  maturityDate       DateTime
+  observationDates   DateTime[]
+  entryFeePct        Float
+  managementFeePct   Float         @default(0)
+  reference          String?
+  kidUrl             String?
+  description        String?
+  descriptionData    Json?
+  status             ProductStatus @default(DRAFT)
+  orgId              String?
+  issuerId           String?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
 
-  organization      Organization?      @relation(fields: [orgId], references: [id])
+  organization      Organization?      @relation(fields: [orgId], references: [id], onDelete: SetNull)
+  issuer            Issuer?            @relation(fields: [issuerId], references: [id], onDelete: Restrict)
   shelves           Shelf[]
   riskMetrics       RiskMetrics?
   commissionRules   CommissionRule[]
   favorites         ProductFavorite[]
   productViews      ProductView[]
   aiRecommendations AiRecommendation[]
+  envelopes         Envelope[]
+  positions         Position[]
 
   @@index([status])
   @@index([orgId])
+  @@index([issuerId])
   @@map("products")
 }
 
 model RiskMetrics {
-  id              String   @id @default(cuid())
-  productId       String   @unique
-  volatility1Y    Float?
-  sharpeRatio     Float?
-  maxDrawdown     Float?
-  mcSimulations   Int?
-  mcScenarios     Json?
-  calculatedAt    DateTime @default(now())
+  id            String   @id @default(cuid())
+  productId     String   @unique
+  volatility1Y  Float?
+  sharpeRatio   Float?
+  maxDrawdown   Float?
+  mcSimulations Int?
+  mcScenarios   Json?
+  calculatedAt  DateTime @default(now())
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
@@ -168,29 +307,29 @@ model RiskMetrics {
 }
 
 model Shelf {
-  id             String      @id @default(cuid())
-  productId      String
-  orgId          String?
-  status         ShelfStatus @default(OPEN)
-  targetAmount   Float
-  surbookingPct  Float       @default(15)
-  closingDate    DateTime
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  id            String      @id @default(cuid())
+  productId     String
+  orgId         String?
+  status        ShelfStatus @default(OPEN)
+  targetAmount  Float
+  surbookingPct Float       @default(15)
+  closingDate   DateTime
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 
-  product      Product       @relation(fields: [productId], references: [id])
-  organization Organization? @relation(fields: [orgId], references: [id])
+  product      Product       @relation(fields: [productId], references: [id], onDelete: Restrict)
+  organization Organization? @relation(fields: [orgId], references: [id], onDelete: SetNull)
   commitments  Commitment[]
 
   @@map("shelves")
 }
 
 model Commitment {
-  id        String           @id @default(cuid())
-  shelfId   String
-  userId    String
-  orgId     String?
-  amount    Float
+  id              String           @id @default(cuid())
+  shelfId         String
+  userId          String
+  orgId           String?
+  amount          Float
   status          CommitmentStatus @default(PENDING)
   rank            Int?
   rejectionReason String?
@@ -198,9 +337,9 @@ model Commitment {
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 
-  shelf        Shelf         @relation(fields: [shelfId], references: [id])
-  user         User          @relation(fields: [userId], references: [id])
-  organization Organization? @relation(fields: [orgId], references: [id])
+  shelf        Shelf         @relation(fields: [shelfId], references: [id], onDelete: Restrict)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+  organization Organization? @relation(fields: [orgId], references: [id], onDelete: SetNull)
   commissions  Commission[]
 
   @@index([userId])
@@ -218,13 +357,13 @@ model Webhook {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  organization Organization @relation(fields: [orgId], references: [id])
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Restrict)
 
   @@map("webhooks")
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// PRICING ENGINE & RFQ SIMULATOR
+// PRICING ENGINE & RFQ SIMULATOR  (legacy — kept, distinct from Sprint 1 Rfq)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 enum StructureType {
@@ -304,42 +443,38 @@ enum QuoteStatus {
   DECLINED
 }
 
-// ── Pricing Run ──────────────────────────────────────────────────────────────
-
 model PricingRun {
-  id                String       @id @default(cuid())
-  structuredProduct Json         // Full product config snapshot
-  modelUsed         PricingModel
-  fairValue         Float
-  issuePrice        Float
-  indicativeCoupon  Float?
+  id                 String       @id @default(cuid())
+  structuredProduct  Json
+  modelUsed          PricingModel
+  fairValue          Float
+  issuePrice         Float
+  indicativeCoupon   Float?
   expectedRedemption Float?
-  expectedReturn    Float?
-  annualizedReturn  Float?
-  breakEven         Float?
-  maxGain           Float?
-  maxLoss           Float?
-  scenarioTable     Json?        // Spot scenarios grid
-  scenarioGrid      Json?        // Full multi-factor grid
-  costBreakdown     Json?        // { structuringMargin, distributionFee, hedgingCost... }
-  riskSummary       Json?        // { downsideRisk, probAutocall, probCoupon, probCapitalLoss }
-  greeksApprox      Json?        // { delta, gamma, vega, theta, rho }
-  payoffChartData   Json?        // Array of {spot, payoff} points
-  assumptions       Json?        // Array of strings
-  warnings          String[]
-  modelLimitations  String[]
-  mcPaths           Int?
-  mcSeed            Int?
-  computeTimeMs     Int?
-  createdBy         String?
-  createdAt         DateTime     @default(now())
+  expectedReturn     Float?
+  annualizedReturn   Float?
+  breakEven          Float?
+  maxGain            Float?
+  maxLoss            Float?
+  scenarioTable      Json?
+  scenarioGrid       Json?
+  costBreakdown      Json?
+  riskSummary        Json?
+  greeksApprox       Json?
+  payoffChartData    Json?
+  assumptions        Json?
+  warnings           String[]
+  modelLimitations   String[]
+  mcPaths            Int?
+  mcSeed             Int?
+  computeTimeMs      Int?
+  createdBy          String?
+  createdAt          DateTime     @default(now())
 
   rfqQuotes RfqQuote[]
 
   @@map("pricing_runs")
 }
-
-// ── Market Data Snapshot ─────────────────────────────────────────────────────
 
 model MarketDataSnapshot {
   id            String   @id @default(cuid())
@@ -354,26 +489,24 @@ model MarketDataSnapshot {
   @@map("market_data_snapshots")
 }
 
-// ── Issuer Profile (Simulated) ───────────────────────────────────────────────
-
 model IssuerProfile {
   id                       String   @id @default(cuid())
   name                     String   @unique
   shortName                String
-  fundingSpread            Float    @default(0.005)    // 50bps
-  volMarkup                Float    @default(0.01)     // 1 vol point
-  structuringMargin        Float    @default(0.015)    // 1.5%
-  distributionFriendliness Float    @default(0.7)      // 0-1 score
-  couponAggressiveness     Float    @default(0.5)      // 0-1
-  protectionAggressiveness Float    @default(0.5)      // 0-1
-  barrierPreference        Float    @default(60)       // preferred barrier %
-  maxMaturityMonths        Int      @default(120)      // 10 years
-  minTicket                Float    @default(100000)    // 100k
+  fundingSpread            Float    @default(0.005)
+  volMarkup                Float    @default(0.01)
+  structuringMargin        Float    @default(0.015)
+  distributionFriendliness Float    @default(0.7)
+  couponAggressiveness     Float    @default(0.5)
+  protectionAggressiveness Float    @default(0.5)
+  barrierPreference        Float    @default(60)
+  maxMaturityMonths        Int      @default(120)
+  minTicket                Float    @default(100000)
   supportedStructures      String[]
   unsupportedStructures    String[]
-  rejectionProbability     Float    @default(0.1)      // 10%
-  quoteDelayMs             Int      @default(2000)     // 2 seconds simulated
-  commentStyle             String   @default("neutral") // neutral, aggressive, conservative
+  rejectionProbability     Float    @default(0.1)
+  quoteDelayMs             Int      @default(2000)
+  commentStyle             String   @default("neutral")
   pricingModePreference    String   @default("monte_carlo")
   isActive                 Boolean  @default(true)
   createdAt                DateTime @default(now())
@@ -384,15 +517,12 @@ model IssuerProfile {
   @@map("issuer_profiles")
 }
 
-// ── RFQ Request ──────────────────────────────────────────────────────────────
-
 model RfqRequest {
   id                   String    @id @default(cuid())
   internalRef          String    @unique @default(cuid())
-  productConfig        Json      // Full product configuration
+  productConfig        Json
   rfqMode              RfqMode   @default(ISSUER_COMPETITION)
   status               RfqStatus @default(DRAFT)
-  // Client constraints
   targetCoupon         Float?
   targetIssuePrice     Float?    @default(100)
   targetProtection     Float?
@@ -403,13 +533,11 @@ model RfqRequest {
   excludedUnderlyings  String[]
   acceptedIssuers      String[]
   excludedIssuers      String[]
-  // Scoring weights
   yieldWeight          Float     @default(0.3)
   protectionWeight     Float     @default(0.25)
   costWeight           Float     @default(0.2)
   qualityWeight        Float     @default(0.15)
   simplicityWeight     Float     @default(0.1)
-  // Metadata
   createdBy            String?
   deskName             String?
   clientName           String?
@@ -423,70 +551,62 @@ model RfqRequest {
   @@map("rfq_requests")
 }
 
-// ── RFQ Quote ────────────────────────────────────────────────────────────────
-
 model RfqQuote {
-  id                   String      @id @default(cuid())
-  rfqRequestId         String
-  issuerProfileId      String
-  pricingRunId         String?
-  status               QuoteStatus @default(PENDING)
-  // Quote terms
-  indicativeCoupon     Float?
-  issuePrice           Float?
-  couponBarrier        Float?
-  autocallBarrier      Float?
-  protectionBarrier    Float?
-  capitalLevel         Float?
-  maturityMonths       Int?
-  // Costs
-  feesTotal            Float?
-  issuerSpread         Float?
-  structuringMargin    Float?
-  manufacturingFee     Float?
-  distributionFee      Float?
-  // Scoring
-  rankingScore         Float?
-  bestExecutionScore   Float?
-  yieldScore           Float?
-  protectionScore      Float?
-  costScore            Float?
-  qualityScore         Float?
-  simplicityScore      Float?
-  // Metadata
-  comments             String?
-  rejectionReason      String?
-  legalDisclaimer      String    @default("SIMULATED QUOTE — This is a synthetic quote generated for educational/analytical purposes. Not a binding offer.")
-  validUntil           DateTime?
-  quotedAt             DateTime?
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
+  id                 String      @id @default(cuid())
+  rfqRequestId       String
+  issuerProfileId    String
+  pricingRunId       String?
+  status             QuoteStatus @default(PENDING)
+  indicativeCoupon   Float?
+  issuePrice         Float?
+  couponBarrier      Float?
+  autocallBarrier    Float?
+  protectionBarrier  Float?
+  capitalLevel       Float?
+  maturityMonths     Int?
+  feesTotal          Float?
+  issuerSpread       Float?
+  structuringMargin  Float?
+  manufacturingFee   Float?
+  distributionFee    Float?
+  rankingScore       Float?
+  bestExecutionScore Float?
+  yieldScore         Float?
+  protectionScore    Float?
+  costScore          Float?
+  qualityScore       Float?
+  simplicityScore    Float?
+  comments           String?
+  rejectionReason    String?
+  legalDisclaimer    String      @default("SIMULATED QUOTE — This is a synthetic quote generated for educational/analytical purposes. Not a binding offer.")
+  validUntil         DateTime?
+  quotedAt           DateTime?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
 
   rfqRequest    RfqRequest    @relation(fields: [rfqRequestId], references: [id], onDelete: Cascade)
-  issuerProfile IssuerProfile @relation(fields: [issuerProfileId], references: [id])
-  pricingRun    PricingRun?   @relation(fields: [pricingRunId], references: [id])
+  issuerProfile IssuerProfile @relation(fields: [issuerProfileId], references: [id], onDelete: Restrict)
+  pricingRun    PricingRun?   @relation(fields: [pricingRunId], references: [id], onDelete: SetNull)
 
   @@map("rfq_quotes")
 }
 
-// ── Saved Templates ──────────────────────────────────────────────────────────
-
 model ProductTemplate {
-  id            String   @id @default(cuid())
+  id            String        @id @default(cuid())
   name          String
   description   String?
   structureType StructureType
-  config        Json     // Full product configuration as template
-  isDefault     Boolean  @default(false)
+  config        Json
+  isDefault     Boolean       @default(false)
   createdBy     String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
   @@map("product_templates")
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// COMMISSION ENGINE
+// COMMISSION ENGINE (legacy)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 enum CommissionType {
@@ -519,8 +639,8 @@ model CommissionRule {
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
 
-  organization Organization? @relation(fields: [orgId], references: [id])
-  product      Product?      @relation(fields: [productId], references: [id])
+  organization Organization? @relation(fields: [orgId], references: [id], onDelete: SetNull)
+  product      Product?      @relation(fields: [productId], references: [id], onDelete: SetNull)
   commissions  Commission[]
 
   @@map("commission_rules")
@@ -540,8 +660,8 @@ model Commission {
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
 
-  commitment Commitment     @relation(fields: [commitmentId], references: [id])
-  rule       CommissionRule @relation(fields: [ruleId], references: [id])
+  commitment Commitment     @relation(fields: [commitmentId], references: [id], onDelete: Restrict)
+  rule       CommissionRule @relation(fields: [ruleId], references: [id], onDelete: Restrict)
 
   @@index([commitmentId])
   @@index([status])
@@ -549,7 +669,7 @@ model Commission {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// PRODUCT INTEREST & FAVORITES
+// PRODUCT INTEREST, FAVORITES, AI (legacy)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 model ProductFavorite {
@@ -578,10 +698,6 @@ model ProductView {
   @@map("product_views")
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// INSURER RULES ENGINE
-// ═══════════════════════════════════════════════════════════════════════════════
-
 model InsurerRule {
   id                  String   @id @default(cuid())
   orgId               String
@@ -601,14 +717,10 @@ model InsurerRule {
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
-  organization Organization @relation(fields: [orgId], references: [id])
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Restrict)
 
   @@map("insurer_rules")
 }
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// AI RECOMMENDATIONS
-// ═══════════════════════════════════════════════════════════════════════════════
 
 model AiRecommendation {
   id          String   @id @default(cuid())
@@ -629,10 +741,6 @@ model AiRecommendation {
   @@map("ai_recommendations")
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// ACTIVITY LOG
-// ═══════════════════════════════════════════════════════════════════════════════
-
 model ActivityLog {
   id         String   @id @default(cuid())
   userId     String
@@ -649,4 +757,355 @@ model ActivityLog {
   @@index([userId, createdAt])
   @@index([entityType, entityId])
   @@map("activity_logs")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SPRINT 1 T1.2 — PRODUCTION CORE MODELS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// CGP (Conseiller en Gestion de Patrimoine) — one-to-one with User
+model Cgp {
+  id            String    @id @default(cuid())
+  userId        String    @unique
+  companyName   String
+  siren         String    @unique
+  oriasNumber   String    @unique
+  rcpInsurer    String?
+  rcpAmount     Float?
+  rcpValidUntil DateTime?
+  status        CgpStatus @default(PENDING)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  clients Client[]
+  rfqs    Rfq[]
+  orders  Order[]
+
+  @@index([status])
+  @@map("cgps")
+}
+
+// Insurer organisation — holds Envelopes (capacity) and is one end of AV contracts
+model Insurer {
+  id             String   @id @default(cuid())
+  name           String   @unique
+  legalName      String?
+  siren          String?  @unique
+  logoUrl        String?
+  apiBaseUrl     String?
+  apiCredentials Json? // encrypted credential metadata (key refs, not raw secrets)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  admins    InsurerAdmin[]
+  envelopes Envelope[]
+  contracts Contract[]
+
+  @@map("insurers")
+}
+
+model InsurerAdmin {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  insurerId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Restrict)
+  insurer Insurer @relation(fields: [insurerId], references: [id], onDelete: Restrict)
+
+  @@index([insurerId])
+  @@map("insurer_admins")
+}
+
+// Issuer (investment bank / structurer) — produces structured Products and responds to RFQs
+model Issuer {
+  id             String   @id @default(cuid())
+  name           String   @unique
+  legalName      String?
+  lei            String?  @unique
+  logoUrl        String?
+  apiBaseUrl     String?
+  apiCredentials Json?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  admins   IssuerAdmin[]
+  products Product[]
+  quotes   IssuerRfqQuote[]
+
+  @@map("issuers")
+}
+
+model IssuerAdmin {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  issuerId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
+  issuer Issuer @relation(fields: [issuerId], references: [id], onDelete: Restrict)
+
+  @@index([issuerId])
+  @@map("issuer_admins")
+}
+
+// Envelope — allocated capacity of a Product inside an Insurer's life contract shelf
+model Envelope {
+  id              String         @id @default(cuid())
+  insurerId       String
+  productId       String
+  allocatedAmount Float
+  consumedAmount  Float          @default(0)
+  status          EnvelopeStatus @default(OPEN)
+  openedAt        DateTime       @default(now())
+  closedAt        DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  insurer Insurer @relation(fields: [insurerId], references: [id], onDelete: Restrict)
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@unique([insurerId, productId])
+  @@index([status])
+  @@map("envelopes")
+}
+
+// Client — an end-investor managed by a CGP
+model Client {
+  id            String    @id @default(cuid())
+  cgpId         String
+  firstName     String
+  lastName      String
+  birthDate     DateTime?
+  email         String?   @unique
+  phone         String?
+  kycStatus     KYCStatus @default(PENDING)
+  encryptedData Json? // JSONB — encrypted PII (address, tax id, NIR reference...)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  cgp       Cgp        @relation(fields: [cgpId], references: [id], onDelete: Restrict)
+  contracts Contract[]
+  orders    Order[]
+
+  @@index([cgpId])
+  @@index([kycStatus])
+  @@map("clients")
+}
+
+// Contract — life-insurance or custody contract held by a Client with an Insurer
+model Contract {
+  id             String       @id @default(cuid())
+  clientId       String
+  insurerId      String
+  contractNumber String       @unique
+  type           ContractType
+  currentValue   Float        @default(0)
+  openedAt       DateTime     @default(now())
+  closedAt       DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  client    Client     @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  insurer   Insurer    @relation(fields: [insurerId], references: [id], onDelete: Restrict)
+  positions Position[]
+  orders    Order[]
+
+  @@index([clientId])
+  @@index([insurerId])
+  @@map("contracts")
+}
+
+// Position — holding of a Product inside a Contract (active or closed)
+model Position {
+  id           String    @id @default(cuid())
+  contractId   String
+  productId    String
+  clientId     String
+  quantity     Float
+  averagePrice Float
+  openedAt     DateTime  @default(now())
+  closedAt     DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  contract Contract @relation(fields: [contractId], references: [id], onDelete: Restrict)
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([contractId, clientId])
+  @@index([productId])
+  @@map("positions")
+}
+
+// Rfq — Sprint 1 B2B RFQ: a CGP asks issuers for a quote on a product configuration.
+// Distinct from legacy `RfqRequest` (pricing-engine internal tool).
+model Rfq {
+  id            String    @id @default(cuid())
+  cgpId         String
+  status        RFQStatus @default(DRAFT)
+  productConfig Json
+  sentAt        DateTime?
+  expiresAt     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  cgp    Cgp              @relation(fields: [cgpId], references: [id], onDelete: Restrict)
+  quotes IssuerRfqQuote[]
+  orders Order[]
+
+  @@index([status, createdAt])
+  @@index([cgpId])
+  @@map("rfqs")
+}
+
+// IssuerRfqQuote — an Issuer's response to a CGP Rfq.
+// Modelled as `IssuerRfqQuote` (SQL: issuer_rfq_quotes) to avoid Prisma model
+// name collision with the legacy pricing-engine `RfqQuote`.
+model IssuerRfqQuote {
+  id         String            @id @default(cuid())
+  rfqId      String
+  issuerId   String
+  status     IssuerQuoteStatus @default(PENDING)
+  quoteData  Json
+  coupon     Float?
+  price      Float?
+  validUntil DateTime?
+  receivedAt DateTime          @default(now())
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  rfq    Rfq     @relation(fields: [rfqId], references: [id], onDelete: Restrict)
+  issuer Issuer  @relation(fields: [issuerId], references: [id], onDelete: Restrict)
+  orders Order[]
+
+  @@unique([rfqId, issuerId])
+  @@index([status])
+  @@map("issuer_rfq_quotes")
+}
+
+// Order — a subscription/execution order tied to a selected IssuerRfqQuote
+model Order {
+  id             String      @id @default(cuid())
+  rfqId          String
+  quoteId        String
+  clientId       String
+  contractId     String
+  cgpId          String
+  status         OrderStatus @default(PENDING)
+  amount         Float
+  idempotencyKey String      @unique
+  confirmedAt    DateTime?
+  settledAt      DateTime?
+  cancelledAt    DateTime?
+  failureReason  String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  rfq        Rfq            @relation(fields: [rfqId], references: [id], onDelete: Restrict)
+  quote      IssuerRfqQuote @relation(fields: [quoteId], references: [id], onDelete: Restrict)
+  client     Client         @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  contract   Contract       @relation(fields: [contractId], references: [id], onDelete: Restrict)
+  cgp        Cgp            @relation(fields: [cgpId], references: [id], onDelete: Restrict)
+  signatures Signature[]
+
+  @@index([status])
+  @@index([clientId])
+  @@index([cgpId])
+  @@map("orders")
+}
+
+// Signature — Yousign (or other) e-signature procedure tracking
+model Signature {
+  id                  String                @id @default(cuid())
+  documentType        SignatureDocumentType
+  signerId            String
+  orderId             String?
+  yousignProcedureId  String?               @unique
+  yousignSignatureUrl String?
+  status              SignatureStatus       @default(DRAFT)
+  sentAt              DateTime?
+  completedAt         DateTime?
+  refusedAt           DateTime?
+  expiresAt           DateTime?
+  metadata            Json?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+
+  signer User   @relation("SignatureSigner", fields: [signerId], references: [id], onDelete: Restrict)
+  order  Order? @relation(fields: [orderId], references: [id], onDelete: Restrict)
+
+  @@index([status])
+  @@index([signerId])
+  @@index([orderId])
+  @@map("signatures")
+}
+
+// AuditLog — tamper-evident chained audit log. hashCurrent = H(hashPrev || payload)
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  action      String
+  targetType  String
+  targetId    String?
+  payload     Json?
+  ipAddress   String?
+  userAgent   String?
+  hashPrev    String?
+  hashCurrent String
+  createdAt   DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([userId])
+  @@index([targetType, targetId])
+  @@index([action])
+  @@map("audit_logs")
+}
+
+// AIInteraction — metered LLM calls for cost / latency tracking
+model AIInteraction {
+  id               String   @id @default(cuid())
+  userId           String?
+  endpoint         String
+  provider         String?
+  model            String?
+  promptHash       String
+  tokensIn         Int
+  tokensOut        Int
+  latencyMs        Int
+  estimatedCostUsd Float
+  success          Boolean  @default(true)
+  errorMessage     String?
+  createdAt        DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([endpoint])
+  @@map("ai_interactions")
+}
+
+// RefreshToken — hashed refresh tokens for JWT rotation (bcrypt/argon hash)
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
 }

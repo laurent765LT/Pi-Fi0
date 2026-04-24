@@ -1,10 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { useAuthStore } from '@/stores/auth-store';
+import { useAuth } from '@/hooks/use-auth';
 
 function useUserId(): string | null {
-  const user = useAuthStore((s) => s.user);
-  return (user as any)?.id ?? null;
+  const { user } = useAuth();
+  return user?.id ?? null;
 }
 
 export function useToggleFavorite() {

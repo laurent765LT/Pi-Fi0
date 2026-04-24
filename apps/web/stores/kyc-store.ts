@@ -1,5 +1,6 @@
 'use client';
 
+// TODO: migrate Sprint 2 — replace with `useKyc()` TanStack Query hook.
 // ─── stores/kyc-store.ts ─────────────────────────────────────────────────────
 // Store Zustand `strickin-kyc` : enregistrements de KYC (Know Your Customer).
 

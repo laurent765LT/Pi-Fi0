@@ -27,7 +27,7 @@ import {
 import { cn } from '@/lib/cn';
 import { PageHeader } from '@/components/ui/page-header';
 import { Badge } from '@/components/ui/badge';
-import { useAuthStore } from '@/stores/auth-store';
+import { useAuth } from '@/hooks/use-auth';
 import { useProducts } from '@/hooks/use-products';
 import { useMyCommitments } from '@/hooks/use-commitments';
 import { useFavorites } from '@/hooks/use-favorites';
@@ -631,8 +631,7 @@ const PRODUCT_SPARKLINE_DATA: Record<number, number[]> = {
 // ─── Page Component ──────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
-  const user = useAuthStore((s) => s.user);
-  const token = useAuthStore((s) => s.token);
+  const { user, token } = useAuth();
   const firstName = (user as any)?.firstName ?? 'Utilisateur';
   const userRole = (user as any)?.role ?? 'VIEWER';
   const isNewRegistered = typeof token === 'string' && token.startsWith('demo-token-registered-');

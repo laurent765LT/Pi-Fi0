@@ -10,7 +10,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
-import { useAuthStore } from '@/stores/auth-store';
+import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/cn';
 import { JurisdictionSelector } from '@/components/onboarding/JurisdictionSelector';
 import {
@@ -1011,7 +1011,7 @@ function loadDraft(): OnboardingDraft | null {
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const user = useAuthStore((s) => s.user);
+  const { user } = useAuth();
   const jurisdiction = useJurisdictionStore((s) => s.current);
   const setJurisdictionStore = useJurisdictionStore((s) => s.setJurisdiction);
 

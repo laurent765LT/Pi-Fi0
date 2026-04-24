@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
-import { useAuthStore } from '@/stores/auth-store';
+import { useAuth } from '@/hooks/use-auth';
 import { useNotificationsStore } from '@/stores/notifications-store';
 
 export function useRealtimeNotifications() {
-  const token = useAuthStore((s) => s.token);
+  const { token } = useAuth();
   const addNotification = useNotificationsStore((s) => s.addNotification);
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 

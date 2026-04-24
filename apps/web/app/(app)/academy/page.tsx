@@ -10,7 +10,7 @@ import { CourseCard, CATEGORY_LABEL, LEVEL_LABEL } from '@/components/academy/Co
 import { buildCertificateHtml } from '@/components/academy/Certificate';
 import { COURSES } from '@/lib/academy/courses-data';
 import { useAcademyStore } from '@/stores/academy-store';
-import { useAuthStore } from '@/stores/auth-store';
+import { useAuth } from '@/hooks/use-auth';
 import type { CourseCategory, CourseLevel } from '@/stores/academy-store';
 
 // ─── DPC target ──────────────────────────────────────────────────────────────
@@ -71,7 +71,7 @@ function StatTile({
 
 export default function AcademyPage() {
   const progress = useAcademyStore((s) => s.progress);
-  const user = useAuthStore((s) => s.user);
+  const { user } = useAuth();
 
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [levelFilter, setLevelFilter] = useState<string>('all');

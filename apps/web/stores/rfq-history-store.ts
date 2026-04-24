@@ -1,5 +1,6 @@
 'use client';
 
+// TODO: migrate Sprint 2 — replace with `useRfqHistory()` (Vague C / Sprint 2).
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { PricingResponse } from '@/lib/issuers/IssuerPricingAdapter';

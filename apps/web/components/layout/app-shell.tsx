@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useAuthStore, selectIsAuthenticated } from '@/stores/auth-store';
+import { useAuth } from '@/hooks/use-auth';
 import { Sidebar } from './sidebar';
 import { CompareBar, WelcomeSlides, AiChatWidget, CommandPalette } from '@/lib/lazy';
 import { ScrollProgress } from '@/components/ui/scroll-progress';
@@ -26,8 +26,7 @@ export const AppShell = React.memo(function AppShell({ children }: AppShellProps
   useRealtimeNotifications();
   const router = useRouter();
   const pathname = usePathname();
-  const isAuthenticated = useAuthStore(selectIsAuthenticated);
-  const user = useAuthStore((s) => s.user);
+  const { user, isAuthenticated } = useAuth();
   const unreadCount = useNotificationsStore((s) => s.notifications.filter((n) => !n.read).length);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [cmdPaletteOpen, setCmdPaletteOpen] = useState(false);

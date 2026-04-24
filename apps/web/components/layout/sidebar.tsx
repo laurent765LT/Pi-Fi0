@@ -35,7 +35,7 @@ import {
   FileBarChart,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
-import { useAuthStore } from '@/stores/auth-store';
+import { useAuth } from '@/hooks/use-auth';
 import { useNotificationsStore } from '@/stores/notifications-store';
 import { useAlertsStore } from '@/stores/alerts-store';
 import { useEmissionsStore } from '@/stores/emissions-store';
@@ -270,8 +270,7 @@ interface SidebarProps {
 export function Sidebar({ isOpen, onClose }: SidebarProps = {}) {
   const pathname = usePathname();
   const router = useRouter();
-  const user = useAuthStore((s) => s.user);
-  const logoutAction = useAuthStore((s) => s.logout);
+  const { user, logout: logoutAction } = useAuth();
   const unreadCount = useNotificationsStore((s) => s.notifications.filter((n) => !n.read).length);
   const activeAlertsCount = useAlertsStore((s) => s.alerts.filter((a) => a.enabled).length);
   const triggeredAlertsCount = useAlertsStore((s) => s.alerts.filter((a) => a.triggered).length);

@@ -4,6 +4,11 @@ const { withSentryConfig } = require('@sentry/nextjs');
 const nextConfig = {
   swcMinify: true,
   transpilePackages: ['@strickin/shared'],
+  env: {
+    // Injected at build time so Sentry events / system-health page can show
+    // which commit is deployed. Wired in CI: NEXT_PUBLIC_GIT_COMMIT=$GITHUB_SHA.
+    NEXT_PUBLIC_GIT_COMMIT: process.env.NEXT_PUBLIC_GIT_COMMIT || process.env.VERCEL_GIT_COMMIT_SHA || '',
+  },
   images: {
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [
@@ -36,6 +41,22 @@ const nextConfig = {
   },
 };
 
-module.exports = process.env.NEXT_PUBLIC_SENTRY_DSN
-  ? withSentryConfig(nextConfig, { silent: true, org: 'strickin', project: 'web' })
+// ─── Sentry wrapper ──────────────────────────────────────────────────────────
+// We only wrap when a DSN is configured AND the feature flag is not disabled.
+// `withSentryConfig` injects the build-time webpack plugin that uploads source
+// maps using SENTRY_AUTH_TOKEN / SENTRY_ORG / SENTRY_PROJECT_WEB.
+const sentryEnabled =
+  !!process.env.NEXT_PUBLIC_SENTRY_DSN &&
+  process.env.FEATURE_SENTRY_ENABLED !== 'false';
+
+module.exports = sentryEnabled
+  ? withSentryConfig(nextConfig, {
+      org: process.env.SENTRY_ORG || 'strickin',
+      project: process.env.SENTRY_PROJECT_WEB || 'strickin',
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+      silent: !process.env.CI,
+      hideSourceMaps: true,
+      disableLogger: true,
+      widenClientFileUpload: true,
+    })
   : nextConfig;

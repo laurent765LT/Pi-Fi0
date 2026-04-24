@@ -1,5 +1,6 @@
 'use client';
 
+// TODO: migrate Vague C — replace with `useClients()` + contracts hooks.
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 

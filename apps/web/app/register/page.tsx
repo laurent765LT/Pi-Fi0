@@ -101,7 +101,9 @@ const STEPS = [
 
 export default function RegisterPage() {
   const router = useRouter();
-  const setAuth = useAuthStore((s) => s);
+  // NOTE: `useAuthStore.setState(...)` below is a static call — no hook needed.
+  // Component-level reads should go through `useAuth()`, but register writes
+  // directly to the store while the NestJS `/auth/register` endpoint is built.
 
   const [step, setStep] = useState(1);
   const [mounted, setMounted] = useState(false);

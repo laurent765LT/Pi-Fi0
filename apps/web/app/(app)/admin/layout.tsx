@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { cn } from '@/lib/cn';
-import { useAuthStore, selectIsAuthenticated } from '@/stores/auth-store';
+import { useAuth } from '@/hooks/use-auth';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -42,8 +42,7 @@ function AdminNavLink({
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const user = useAuthStore((s) => s.user);
-  const isAuthenticated = useAuthStore(selectIsAuthenticated);
+  const { user, isAuthenticated } = useAuth();
 
   const role = (user as { role?: string } | null)?.role ?? '';
   const hasAccess = isAuthenticated && ADMIN_ROLES.includes(role);
@@ -95,6 +94,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <AdminNavLink href="/admin/users">Utilisateurs</AdminNavLink>
         <AdminNavLink href="/admin/stats">Statistiques</AdminNavLink>
         <AdminNavLink href="/admin/jurisdictions">Juridictions</AdminNavLink>
+        <AdminNavLink href="/admin/system-health">Santé système</AdminNavLink>
       </div>
       {children}
     </div>

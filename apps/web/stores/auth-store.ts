@@ -1,5 +1,13 @@
 'use client';
 
+// @deprecated Use `useAuth()` from `@/hooks/use-auth` instead.
+// This Zustand store is kept for:
+//   - demo-mode authentication (offline/no backend)
+//   - the NestJS auth API migration bridge (Sprint 1, T1.4)
+// Direct consumption of `useAuthStore` from new components is discouraged —
+// prefer `useAuth()` which encapsulates the feature flag + TanStack Query
+// cache wiring. Scheduled for removal once Sprint 2 completes.
+
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { api } from '@/lib/api';

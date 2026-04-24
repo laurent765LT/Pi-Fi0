@@ -1,5 +1,7 @@
 'use client';
 
+// TODO: migrate Sprint 2 — jurisdiction preference is a user-scoped setting
+// that should move to `useUserProfile().locale` / a dedicated settings hook.
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { JURISDICTION_CONFIGS } from '@/lib/regulatory/jurisdiction-rules';

@@ -339,14 +339,31 @@ class ApiClient {
 
   async aiChat(message: string, context?: { productNames?: string[]; productTypes?: string[] }) {
     return this.withDemoFallback(
-      () =>
-        this.request<{ content: string; citations: string[]; model: string; tokensUsed: number }>('/ai/chat', {
+      async () => {
+        // New NestJS AI service expects `{ messages: [{role, content}], context }`
+        // and returns `{ id, model, content, usage, stopReason, cached, latencyMs }`.
+        const raw = await this.request<{
+          id: string;
+          model: string;
+          content: string;
+          usage: { inputTokens: number; outputTokens: number };
+        }>('/ai/chat', {
           method: 'POST',
-          body: JSON.stringify({ message, context }),
-        }),
+          body: JSON.stringify({
+            messages: [{ role: 'user', content: message }],
+            context,
+          }),
+        });
+        return {
+          content: raw.content,
+          citations: [] as string[],
+          model: raw.model,
+          tokensUsed: (raw.usage?.inputTokens ?? 0) + (raw.usage?.outputTokens ?? 0),
+        };
+      },
       () => ({
         content: 'Mode démo : l\'IA n\'est pas disponible sans connexion au backend. Déployez l\'API pour activer les fonctionnalités IA.',
-        citations: [],
+        citations: [] as string[],
         model: 'demo',
         tokensUsed: 0,
       }),

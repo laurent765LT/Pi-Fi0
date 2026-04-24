@@ -4,7 +4,7 @@ import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Zap, Lock, ArrowRight, Building2, Eye, EyeOff, Loader2, ChevronDown } from 'lucide-react';
-import { useAuthStore } from '@/stores/auth-store';
+import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/cn';
 
 const DEMO_ASSUREUR = {
@@ -14,7 +14,7 @@ const DEMO_ASSUREUR = {
 
 export default function AssureurLoginPage() {
   const router = useRouter();
-  const login = useAuthStore((s) => s.login);
+  const { login } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Zap, Eye, EyeOff, Loader2, ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useAuthStore } from '@/stores/auth-store';
+import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/cn';
 
 const DEMO_ACCOUNTS = [
@@ -17,7 +17,7 @@ const DEMO_ACCOUNTS = [
 
 export default function LoginPage() {
   const router = useRouter();
-  const login = useAuthStore((s) => s.login);
+  const { login } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

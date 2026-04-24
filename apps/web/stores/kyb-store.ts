@@ -1,5 +1,6 @@
 'use client';
 
+// TODO: migrate Sprint 2 — replace with `useKyb()` TanStack Query hook.
 // ─── stores/kyb-store.ts ─────────────────────────────────────────────────────
 // Store Zustand `strickin-kyb` : enregistrements KYB (Know Your Business).
 

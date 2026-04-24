@@ -1,5 +1,6 @@
 'use client';
 
+// TODO: migrate Sprint 2 — replace with `useEmissions()` / `useEvents()` TanStack Query hook.
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 

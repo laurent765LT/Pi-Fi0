@@ -21,7 +21,7 @@ import { Quiz } from '@/components/academy/Quiz';
 import { Certificate } from '@/components/academy/Certificate';
 import { getLessonById } from '@/lib/academy/courses-data';
 import { useAcademyStore } from '@/stores/academy-store';
-import { useAuthStore } from '@/stores/auth-store';
+import { useAuth } from '@/hooks/use-auth';
 import {
   CATEGORY_COLOR,
   CATEGORY_LABEL,
@@ -48,7 +48,7 @@ export default function LessonPage() {
   const progressEntry = useAcademyStore((s) =>
     s.progress.find((p) => p.courseId === courseId),
   );
-  const user = useAuthStore((s) => s.user);
+  const { user } = useAuth();
 
   // Track watched minutes submitted via VideoPlayer
   const watchedReportedRef = useRef<number>(0);

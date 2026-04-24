@@ -22,7 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { Certificate } from '@/components/academy/Certificate';
 import { getCourseById } from '@/lib/academy/courses-data';
 import { useAcademyStore } from '@/stores/academy-store';
-import { useAuthStore } from '@/stores/auth-store';
+import { useAuth } from '@/hooks/use-auth';
 import {
   CATEGORY_LABEL,
   CATEGORY_COLOR,
@@ -40,7 +40,7 @@ export default function CoursePage() {
   const progressEntry = useAcademyStore((s) =>
     s.progress.find((p) => p.courseId === courseId),
   );
-  const user = useAuthStore((s) => s.user);
+  const { user } = useAuth();
 
   useEffect(() => {
     if (course) {

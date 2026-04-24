@@ -1,4 +1,5 @@
 'use client';
+// TODO: migrate Sprint 2 — replace with `useMarketData()` TanStack Query hook.
 import { create } from 'zustand';
 
 export interface MarketQuote {

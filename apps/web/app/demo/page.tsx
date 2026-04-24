@@ -2,6 +2,8 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+// Direct store access is OK here because we're in an effect (no render access).
+// The feature flag is ignored — demo page is always local fallback.
 import { useAuthStore } from '@/stores/auth-store';
 
 export default function DemoPage() {

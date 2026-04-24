@@ -22,7 +22,8 @@ import { RecommendationsModule } from './recommendations/recommendations.module'
 import { ActivityModule } from './activity/activity.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
-import { HealthController } from './common/health.controller';
+import { HealthModule } from './common/health/health.module';
+import { DebugModule } from './common/debug/debug.module';
 
 @Module({
   imports: [
@@ -48,8 +49,10 @@ import { HealthController } from './common/health.controller';
     ActivityModule,
     NotificationsModule,
     WebhooksModule,
+    HealthModule,
+    DebugModule,
   ],
-  controllers: [HealthController],
+  controllers: [],
   providers: [
     {
       provide: APP_GUARD,

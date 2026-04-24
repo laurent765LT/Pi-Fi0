@@ -17,7 +17,8 @@ import {
   Activity,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
-import { useAuthStore } from '@/stores/auth-store';
+import { useAuth } from '@/hooks/use-auth';
+import { useUserProfile, useUpdateUserProfile } from '@/hooks/use-user-profile';
 import { PageHeader } from '@/components/ui/page-header';
 
 // ---------------------------------------------------------------------------
@@ -137,8 +138,12 @@ function ActivityStat({
 
 export default function ProfilePage() {
   useEffect(() => { document.title = "Mon Profil | Strick'in"; }, []);
-  const user = useAuthStore((s) => s.user);
-  const u = user as any;
+  const { user } = useAuth();
+  // `useUserProfile()` mirrors the API shape; in demo mode it piggybacks on
+  // the auth store so we always get at least a minimal user record.
+  const profileQuery = useUserProfile();
+  const updateProfile = useUpdateUserProfile();
+  const u = (profileQuery.data ?? user) as any;
 
   const [firstName, setFirstName] = useState(() => {
     if (typeof window === 'undefined') return u?.firstName ?? '';
@@ -187,6 +192,9 @@ export default function ProfilePage() {
     try {
       localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profileData));
     } catch {}
+    // Fire-and-forget the API mutation. In demo mode this writes back into the
+    // auth store + the TanStack cache; in real mode it hits PATCH /users/me.
+    updateProfile.mutate({ firstName, lastName, phone });
     setIsEditing(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);

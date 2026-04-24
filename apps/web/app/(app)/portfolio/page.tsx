@@ -44,7 +44,7 @@ import { exportToExcel } from '@/lib/export-utils';
 import { formatUnderlying } from '@/lib/underlying-labels';
 import { PageHeader } from '@/components/ui/page-header';
 import { generatePortfolioReport } from '@/lib/portfolio-pdf';
-import { useAuthStore } from '@/stores/auth-store';
+import { useAuth } from '@/hooks/use-auth';
 import { AICommentaryButton } from '@/components/ai/AICommentaryButton';
 import { SecondaryPricing } from '@/components/portfolio/SecondaryPricing';
 import { SecondaryOpportunityBanner } from '@/components/portfolio/SecondaryOpportunityBanner';
@@ -1002,7 +1002,7 @@ function AllocationChart({ products, commitments }: { products: any[]; commitmen
 export default function PortfolioPage() {
   useEffect(() => { document.title = "Mon Portfolio | Strick'in"; }, []);
   const { toasts, success: toastSuccess, error: toastError, dismiss: dismissToast } = useToast();
-  const user = useAuthStore((s) => s.user);
+  const { user } = useAuth();
   const [statusOverrides, setStatusOverrides] = useState<Record<string, string>>({});
   const [activeTab, setActiveTab] = useState<PortfolioTab>('products');
   const [viewScope, setViewScope] = useState<'global' | 'clients' | 'contracts'>('global');

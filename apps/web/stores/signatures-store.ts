@@ -1,5 +1,6 @@
 'use client';
 
+// TODO: migrate Sprint 2 — replace with `useSignatures()` TanStack Query hook.
 // ─── stores/signatures-store.ts ──────────────────────────────────────────────
 // Store Zustand `strickin-signatures` pour gérer les demandes de signature
 // électronique Yousign (mode mock).

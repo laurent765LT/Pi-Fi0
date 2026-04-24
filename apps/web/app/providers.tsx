@@ -2,6 +2,8 @@
 
 import { useEffect, useCallback } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+// NOTE: `useAuthStore` kept here as the hydration-only entry point.
+// Component-level auth consumption should go through `useAuth()`.
 import { useAuthStore } from '@/stores/auth-store';
 import { useThemeStore } from '@/stores/theme-store';
 import { useLocaleStore } from '@/stores/locale-store';

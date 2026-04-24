@@ -30,7 +30,7 @@ import { cn } from '@/lib/cn';
 import { useMyCommitments } from '@/hooks/use-commitments';
 import { useProducts } from '@/hooks/use-products';
 import { DEMO_PRODUCTS, DEMO_COMMITMENTS, DEMO_RECOMMENDATIONS } from '@/lib/demo-data';
-import { useAuthStore } from '@/stores/auth-store';
+import { useAuth } from '@/hooks/use-auth';
 import { PageHeader } from '@/components/ui/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -521,7 +521,7 @@ function TimelineItem({ event }: { event: TimelineEvent }) {
 // ---------------------------------------------------------------------------
 
 export default function PortfolioAgentPage() {
-  const user = useAuthStore((s) => s.user);
+  const { user } = useAuth();
   const analysis = useMemo(() => computePortfolioAnalysis(), []);
 
   // Chat state

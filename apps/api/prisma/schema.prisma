@@ -36,7 +36,12 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  // binaryTargets : required for Railway/Docker Alpine runtime.
+  // - native : matches dev env (macOS / Linux)
+  // - linux-musl-openssl-3.0.x : node:20-alpine (OpenSSL 3.x)
+  // - linux-musl : fallback for older Alpine
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x", "linux-musl"]
 }
 
 datasource db {

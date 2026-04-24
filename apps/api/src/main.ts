@@ -98,9 +98,29 @@ async function bootstrap() {
   // Global exception filter — forwards 5xx to Sentry, leaves 4xx alone
   app.useGlobalFilters(new SentryExceptionFilter());
 
-  const port = process.env.PORT ?? 4000;
-  await app.listen(port);
-  logger.log(`[Strick'in API] Running on http://localhost:${port}`, 'Bootstrap');
+  // Railway (and most PaaS) expect the app to bind on 0.0.0.0 so their
+  // internal health-probe can reach the container. Binding on the default
+  // (127.0.0.1) makes the /health route unreachable from outside the process,
+  // which is exactly what caused our "service unavailable" healthchecks.
+  const port = Number(process.env.PORT ?? 4000);
+  await app.listen(port, '0.0.0.0');
+  logger.log(
+    `[Strick'in API] Listening on 0.0.0.0:${port} (NODE_ENV=${process.env.NODE_ENV ?? 'unknown'})`,
+    'Bootstrap',
+  );
 }
 
-bootstrap();
+bootstrap().catch((err) => {
+  // Surface boot failures (Prisma $connect, bad env, etc.) in Railway logs
+  // instead of dying silently.
+  // eslint-disable-next-line no-console
+  console.error(
+    JSON.stringify({
+      level: 'error',
+      time: new Date().toISOString(),
+      message: 'bootstrap_failed',
+      error: err instanceof Error ? { name: err.name, message: err.message, stack: err.stack } : String(err),
+    }),
+  );
+  process.exit(1);
+});
